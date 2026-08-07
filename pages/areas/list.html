@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="is-preload">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รายการพื้นที่ดำเนินงาน | TheFarmConcept</title>
+<title>พื้นที่ดำเนินงาน | TheFarmConcept</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -31,91 +31,12 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav" aria-label="เมนูหลัก">
-      <a href="../../dashboard.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
-        <span class="nav-label">แดชบอร์ด</span>
-      </a>
-
-      <div class="nav-section-title">ข้อมูลพื้นฐาน</div>
-      <a href="../users/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-        <span class="nav-label">ผู้ใช้งาน</span>
-      </a>
-      <a href="../users/roles.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span>
-        <span class="nav-label">บทบาทและสิทธิ์</span>
-      </a>
-      <a href="list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-        <span class="nav-label">พื้นที่ดำเนินงาน</span>
-      </a>
-      <a href="../master-data/programs.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
-        <span class="nav-label">โปรแกรมการเรียนรู้</span>
-      </a>
-      <a href="../master-data/instructors.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
-        <span class="nav-label">วิทยากร</span>
-      </a>
-      <a href="../master-data/target-groups.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
-        <span class="nav-label">กลุ่มเป้าหมาย</span>
-      </a>
-
-      <div class="nav-section-title">กิจกรรม</div>
-      <a href="../activities/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-        <span class="nav-label">รายการกิจกรรม</span>
-      </a>
-      <a href="../registrations/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span>
-        <span class="nav-label">ผู้ลงทะเบียน</span>
-      </a>
-      <a href="../registrations/payments.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
-        <span class="nav-label">ตรวจสอบการชำระเงิน</span>
-      </a>
-      <a href="../checkin/index.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
-        <span class="nav-label">Check-in</span>
-      </a>
-
-      <div class="nav-section-title">แบบฟอร์มและแบบประเมิน</div>
-      <a href="../forms/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
-        <span class="nav-label">แบบฟอร์มทั้งหมด</span>
-      </a>
-      <a href="../forms/rounds.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-        <span class="nav-label">รอบการติดตามสุขภาพ</span>
-      </a>
-
-      <div class="nav-section-title">แบบประเมิน (เดิม)</div>
-      <a href="../evaluations/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
-        <span class="nav-label">รายการแบบประเมิน</span>
-      </a>
-      <a href="../evaluations/respondents.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-        <span class="nav-label">ผู้ตอบแบบประเมิน</span>
-      </a>
-      <a href="../evaluations/follow-up.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-        <span class="nav-label">ติดตามผล 3/6/12 เดือน</span>
-      </a>
-
-      <div class="nav-section-title">อื่นๆ</div>
-      <a href="../samples/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6L3 20a1 1 0 001 2h16a1 1 0 001-2l-6-12V2"/></svg></span>
-        <span class="nav-label">กลุ่มตัวอย่าง</span>
-      </a>
-      <a href="../reports/overview.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/></svg></span>
-        <span class="nav-label">รายงาน</span>
-      </a>
-    </nav>
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
   </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
 
   <div class="app-main">
     <header class="topbar">
@@ -149,37 +70,115 @@
     </header>
 
     <main class="content">
-      <div class="page-header">
-        <div class="page-header-text">
-          <h1>รายการพื้นที่ดำเนินงาน</h1>
-          <p class="page-description">จัดการพื้นที่และชุมชนที่ดำเนินกิจกรรมของโครงการ</p>
-        </div>
-        <div class="page-header-actions">
-          <a href="create.html" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            เพิ่มพื้นที่ดำเนินงาน
-          </a>
-        </div>
-      </div>
+      <div class="page-header" id="area-page-header"></div>
 
-      <div class="page-toolbar">
-        <div class="page-toolbar-search search-input">
-          <span class="search-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
-          <input type="search" class="input" placeholder="ค้นหาชื่อพื้นที่...">
-        </div>
-      </div>
-
-      <p class="small text-secondary mb-3">พบทั้งหมด <strong id="area-result-count">4</strong> พื้นที่</p>
+      <div class="page-toolbar" id="area-filter-row"></div>
 
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
-            <tr><th>ชื่อพื้นที่</th><th>จังหวัด</th><th>ผู้ประสานงาน</th><th>จำนวนกิจกรรม</th><th>การจัดการ</th></tr>
+            <tr>
+              <th>ลำดับ</th>
+              <th>ชื่อพื้นที่</th>
+              <th>ประเภทพื้นที่</th>
+              <th>กลุ่มพื้นที่</th>
+              <th>ผู้ประสานงาน</th>
+              <th>จำนวนจัดกิจกรรม</th>
+              <th>สถานะ</th>
+              <th>ปรับปรุงล่าสุด</th>
+              <th>การจัดการ</th>
+            </tr>
           </thead>
           <tbody id="area-table-body"></tbody>
         </table>
       </div>
     </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="area-form-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 class="modal-title" id="area-form-title">เพิ่มพื้นที่ดำเนินงาน</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form data-mock-submit="บันทึกพื้นที่ดำเนินงานสำเร็จ (ตัวอย่าง)" id="area-form">
+      <div class="modal-body">
+        <div class="form-row-3 mb-4">
+          <div class="form-group form-col-span-2 mb-0">
+            <label class="form-label" for="area-name">ชื่อพื้นที่ดำเนินงาน<span class="form-required">*</span></label>
+            <input class="input" id="area-name" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-type">ประเภทพื้นที่</label>
+            <select class="select" id="area-type"></select>
+          </div>
+        </div>
+
+        <div class="form-row-3 mb-4">
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-group">กลุ่มพื้นที่<span class="form-required">*</span></label>
+            <select class="select" id="area-group" required></select>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-province">จังหวัด</label>
+            <select class="select" id="area-province"></select>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-district">เขต/อำเภอ</label>
+            <select class="select" id="area-district"></select>
+          </div>
+        </div>
+
+        <div class="form-row-3 mb-4">
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-start-date">วันที่เริ่มดำเนินการ</label>
+            <input class="input" type="date" id="area-start-date">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-end-date">สิ้นสุด</label>
+            <input class="input" type="date" id="area-end-date">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-partner-org">ร่วมกับหน่วยงาน</label>
+            <input class="input" id="area-partner-org" placeholder="เช่น สำนักงานเขตสายไหม">
+          </div>
+        </div>
+
+        <div class="form-row-3 mb-4">
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-coordinator">ผู้ประสานงาน<span class="form-required">*</span></label>
+            <input class="input" id="area-coordinator" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-coordinator-phone">เบอร์โทร<span class="form-required">*</span></label>
+            <input class="input" type="tel" id="area-coordinator-phone" pattern="0[0-9]{1,2}-?[0-9]{3}-?[0-9]{4}" placeholder="08x-xxx-xxxx" data-validate required>
+            <div class="form-helper">รูปแบบ 0xx-xxx-xxxx</div>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-coordinator-position">ตำแหน่ง</label>
+            <input class="input" id="area-coordinator-position">
+          </div>
+        </div>
+
+        <div class="form-row-3 mb-0">
+          <div class="form-group form-col-span-2 mb-0">
+            <label class="form-label" for="area-map-url">ลิงก์ Google Map</label>
+            <input class="input" type="url" id="area-map-url" placeholder="https://maps.google.com/...">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="area-status">สถานะ<span class="form-required">*</span></label>
+            <select class="select" id="area-status" required></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -199,32 +198,172 @@
   </div>
 </div>
 
-<script src="../../assets/js/mock-data.js"></script>
+<script src="../../assets/js/data-service.js"></script>
 <script src="../../assets/js/navigation.js"></script>
 <script src="../../assets/js/modal.js"></script>
 <script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
-  var areas = (window.TFC_MOCK ? window.TFC_MOCK.areas : []);
-  document.getElementById('area-table-body').innerHTML = areas.map(function (a) {
-    return '<tr>' +
-      '<td>' + window.TFC.escapeHtml(a.name) + '</td>' +
-      '<td>' + window.TFC.escapeHtml(a.province) + '</td>' +
-      '<td>' + window.TFC.escapeHtml(a.coordinator) + '</td>' +
-      '<td>' + a.activityCount + '</td>' +
-      '<td class="table-row-actions">' +
-      window.TFC.actionMenuTrigger([
-        { key: 'edit', label: 'แก้ไข', icon: 'edit', href: 'create.html', perm: 'areas' },
-        { key: 'report', label: 'รายงานพื้นที่', icon: 'report', href: '../reports/areas.html', perm: 'reports' },
-        { key: 'delete', label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
-      ]) +
-      '</td></tr>';
-  }).join('');
-  document.getElementById('area-result-count').textContent = areas.length;
+  var areaSvc = window.TFC.dataService('areas');
+  var mock = window.TFC_MOCK || {};
+  var statusBadge = { 'ดำเนินการอยู่': 'badge-success', 'ระงับชั่วคราว': 'badge-warning', 'สิ้นสุดแล้ว': 'badge-neutral' };
+
+  function optionsHtml(list, selected) {
+    return list.map(function (v) {
+      return '<option value="' + window.TFC.escapeHtml(v) + '"' + (v === selected ? ' selected' : '') + '>' + window.TFC.escapeHtml(v) + '</option>';
+    }).join('');
+  }
+
+  function populateStaticSelects() {
+    document.getElementById('area-type').innerHTML = optionsHtml(mock.areaTypes || []);
+    document.getElementById('area-group').innerHTML = optionsHtml(mock.areaGroups || []);
+    document.getElementById('area-status').innerHTML = optionsHtml(mock.areaStatuses || []);
+    document.getElementById('area-province').innerHTML = optionsHtml(Object.keys(mock.provinceDistricts || {}));
+  }
+
+  function populateDistricts(province, selectedDistrict) {
+    var districts = (mock.provinceDistricts || {})[province] || [];
+    document.getElementById('area-district').innerHTML = optionsHtml(districts, selectedDistrict);
+  }
+
+  document.getElementById('area-province').addEventListener('change', function () {
+    populateDistricts(this.value, null);
+  });
+
+  function resetAreaForm() {
+    document.getElementById('area-form-title').textContent = 'เพิ่มพื้นที่ดำเนินงาน';
+    document.getElementById('area-form').reset();
+    populateStaticSelects();
+    populateDistricts(document.getElementById('area-province').value, null);
+    document.getElementById('area-form').setAttribute('data-editing-id', '');
+  }
+
+  function fillAreaForm(area) {
+    document.getElementById('area-form-title').textContent = 'แก้ไขพื้นที่ดำเนินงาน';
+    populateStaticSelects();
+    document.getElementById('area-name').value = area.name || '';
+    document.getElementById('area-type').value = area.areaType || '';
+    document.getElementById('area-group').value = area.areaGroup || '';
+    document.getElementById('area-province').value = area.province || '';
+    populateDistricts(area.province, area.district);
+    document.getElementById('area-start-date').value = area.startDate || '';
+    document.getElementById('area-end-date').value = area.endDate || '';
+    document.getElementById('area-partner-org').value = area.partnerOrg || '';
+    document.getElementById('area-coordinator').value = area.coordinator || '';
+    document.getElementById('area-coordinator-phone').value = area.coordinatorPhone || '';
+    document.getElementById('area-coordinator-position').value = area.coordinatorPosition || '';
+    document.getElementById('area-map-url').value = area.mapUrl || '';
+    document.getElementById('area-status').value = area.status || '';
+    document.getElementById('area-form').setAttribute('data-editing-id', area.id);
+  }
+
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-action-key^="edit-"]');
+    if (!trigger) return;
+    var id = trigger.getAttribute('data-action-key').replace('edit-', '');
+    var area = (mock.areas || []).filter(function (a) { return a.id === id; })[0];
+    if (area) fillAreaForm(area);
+  });
+
+  function renderTable() {
+    areaSvc.list().then(function (areas) {
+      var keyword = (document.getElementById('area-search') || {}).value || '';
+      var typeFilter = (document.getElementById('area-filter-type') || {}).value || '';
+      var groupFilter = (document.getElementById('area-filter-group') || {}).value || '';
+      var statusFilter = (document.getElementById('area-filter-status') || {}).value || '';
+      keyword = keyword.trim().toLowerCase();
+
+      var filtered = areas.filter(function (a) {
+        return (!keyword || a.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!typeFilter || a.areaType === typeFilter) &&
+          (!groupFilter || a.areaGroup === groupFilter) &&
+          (!statusFilter || a.status === statusFilter);
+      });
+
+      document.getElementById('area-table-body').innerHTML = filtered.map(function (a, i) {
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td><div class="font-medium">' + window.TFC.escapeHtml(a.name) + '</div>' +
+          '<div class="caption text-secondary">' + window.TFC.escapeHtml(a.district || '') + (a.district ? ' ' : '') + window.TFC.escapeHtml(a.province || '') + '</div></td>' +
+          '<td>' + window.TFC.escapeHtml(a.areaType || '-') + '</td>' +
+          '<td>' + window.TFC.escapeHtml(a.areaGroup || '-') + '</td>' +
+          '<td>' + window.TFC.escapeHtml(a.coordinator) + '</td>' +
+          '<td>' + a.activityCount + '</td>' +
+          '<td><span class="badge ' + (statusBadge[a.status] || 'badge-neutral') + '">' + window.TFC.escapeHtml(a.status || '-') + '</span></td>' +
+          '<td><div class="small">' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt) : '-') + '</div></td>' +
+          '<td class="table-row-actions">' +
+          window.TFC.actionMenuTrigger([
+            { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
+            { key: 'report', label: 'รายงานพื้นที่', icon: 'report', href: '../reports/areas.html', perm: 'reports' },
+            { key: 'delete', label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
+          ]) +
+          '</td></tr>';
+      }).join('');
+
+      var countEl = document.getElementById('area-result-count');
+      if (countEl) countEl.textContent = filtered.length;
+    });
+  }
+
+  window.TFC.renderPageHeader('area-page-header', {
+    title: 'รายการพื้นที่ดำเนินงาน',
+    description: 'จัดการพื้นที่และชุมชนที่ดำเนินกิจกรรมของโครงการ',
+    actions: [
+      {
+        label: 'เพิ่มพื้นที่ดำเนินงาน',
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+        attrs: { id: 'area-add-btn', 'data-open-modal': 'area-form-modal' }
+      }
+    ]
+  });
+  document.getElementById('area-add-btn').addEventListener('click', resetAreaForm);
+
+  window.TFC.renderFilterRow('area-filter-row', {
+    resultCountId: 'area-result-count',
+    resultCount: (mock.areas || []).length,
+    resultLabelSuffix: 'พื้นที่',
+    filters: [
+      { id: 'area-filter-type', placeholder: 'ประเภทพื้นที่ทั้งหมด', options: (mock.areaTypes || []).map(function (v) { return { label: v }; }) },
+      { id: 'area-filter-group', placeholder: 'กลุ่มพื้นที่ทั้งหมด', options: (mock.areaGroups || []).map(function (v) { return { label: v }; }) },
+      { id: 'area-filter-status', placeholder: 'สถานะทั้งหมด', options: (mock.areaStatuses || []).map(function (v) { return { label: v }; }) }
+    ],
+    search: { id: 'area-search', placeholder: 'ค้นหาชื่อพื้นที่...' }
+  });
+
+  ['area-search', 'area-filter-type', 'area-filter-group', 'area-filter-status'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.addEventListener(id === 'area-search' ? 'input' : 'change', renderTable);
+  });
+
+  document.getElementById('area-form').addEventListener('submit', function () {
+    var editingId = this.getAttribute('data-editing-id');
+    var payload = {
+      name: document.getElementById('area-name').value,
+      areaType: document.getElementById('area-type').value,
+      areaGroup: document.getElementById('area-group').value,
+      province: document.getElementById('area-province').value,
+      district: document.getElementById('area-district').value,
+      startDate: document.getElementById('area-start-date').value,
+      endDate: document.getElementById('area-end-date').value,
+      partnerOrg: document.getElementById('area-partner-org').value,
+      coordinator: document.getElementById('area-coordinator').value,
+      coordinatorPhone: document.getElementById('area-coordinator-phone').value,
+      coordinatorPosition: document.getElementById('area-coordinator-position').value,
+      mapUrl: document.getElementById('area-map-url').value,
+      status: document.getElementById('area-status').value,
+      updatedBy: (mock.currentUser || {}).name || ''
+    };
+    var save = editingId ? areaSvc.update(editingId, payload) : areaSvc.create(Object.assign({ activityCount: 0, totalParticipants: 0, avgSatisfaction: 0 }, payload));
+    save.then(renderTable);
+  });
+
+  renderTable();
 })();
 </script>
 </body>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ข้อมูลผู้เข้าร่วม | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">TF</span>
+        <span class="sidebar-title">TheFarmConcept</span>
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">ผู้เข้าร่วมทั้งหมด</a> <span>/</span>
+          <span class="is-current" id="form-breadcrumb-current">เพิ่มผู้เข้าร่วม</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม</span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- ============================================================================
+           ฟอร์มเต็มจอ (Full-page Form) — ข้อยกเว้น Pattern เดียวของระบบที่ไม่ใช้ Popup
+           เหตุผล: ฟอร์มผู้เข้าร่วมมี 5 Section (ประเภท / ข้อมูลส่วนบุคคล / แผนการติดตามที่ render
+           ตามจำนวนรอบแบบ Dynamic / ความยินยอม + ไฟล์แนบ / สถานะการติดตามโครงการ) ซึ่งยาวเกินกว่า
+           ที่ Modal จะใช้งานได้สะดวก โมดูลอื่นยังคงใช้ Forms-Popup Pattern เดิมทั้งหมด ห้ามแก้ตาม
+           ไฟล์นี้ — Component ย่อยทั้งหมด (input / select / switch / upload / form-action-bar)
+           ยัง Reuse จากชุดมาตรฐานเดิมใน assets/css/components.css
+           ============================================================================ -->
+      <div class="page-header" id="participant-form-header"></div>
+
+      <form id="participant-form"
+            data-mock-submit="บันทึกข้อมูลผู้เข้าร่วมสำเร็จ (ตัวอย่าง)"
+            data-mock-redirect="list.html">
+
+        <div class="card mb-5">
+          <h2 class="card-title">ประเภทผู้เข้าร่วม</h2>
+          <div class="flex gap-4 flex-wrap" id="participant-type-group"></div>
+          <div class="form-helper mb-0">เลือก "กลุ่มตัวอย่าง" เพื่อกรอกแผนการติดตามผลตามรอบที่กำหนดไว้ในเมนูพื้นฐาน</div>
+        </div>
+
+        <div class="card mb-5">
+          <h2 class="card-title">ข้อมูลส่วนบุคคล</h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pf-person-code">รหัสบุคคล<span class="form-required">*</span></label>
+              <div class="flex gap-2">
+                <input class="input" id="pf-person-code" placeholder="เช่น TFC-69-0001" required>
+                <button type="button" class="btn btn-outline btn-icon" id="pf-generate-code" aria-label="รันรหัสอัตโนมัติ" title="รันรหัสอัตโนมัติ">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 019-9M13 2v6h6"/><path d="M20 13a9 9 0 01-9 9M11 22v-6H5"/></svg>
+                </button>
+              </div>
+              <div class="form-error-message hidden" id="pf-person-code-error">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span>รหัสบุคคลนี้ถูกใช้แล้ว กรุณาใช้รหัสอื่น</span>
+              </div>
+              <div class="form-helper">กดปุ่มเพื่อรันรหัสอัตโนมัติ หรือกรอกเองก็ได้ — ห้ามซ้ำกับผู้เข้าร่วมรายอื่น</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-target-group">กลุ่มเป้าหมาย<span class="form-required">*</span></label>
+              <select class="select" id="pf-target-group" required></select>
+              <div class="form-helper">ดึงรายการจากเมนูพื้นฐาน &gt; กลุ่มเป้าหมาย</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pf-area">พื้นที่ดำเนินการ<span class="form-required">*</span></label>
+              <select class="select" id="pf-area" required></select>
+              <div class="form-helper">ดึงรายการจากเมนูพื้นฐาน &gt; พื้นที่ดำเนินงาน</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-source">แหล่งที่มาของข้อมูล<span class="form-required">*</span></label>
+              <select class="select" id="pf-source" required></select>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label" for="pf-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
+              <input class="input" id="pf-name" placeholder="เช่น สมชาย ใจงาม" data-validate required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-phone">โทรศัพท์</label>
+              <input class="input" type="tel" id="pf-phone" placeholder="08x-xxx-xxxx">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-gender">เพศ</label>
+              <select class="select" id="pf-gender"></select>
+            </div>
+          </div>
+
+          <!-- อีเมล + ติดต่อผ่าน: เพิ่มเข้ามาเพื่อรองรับคอลัมน์ "ติดต่อผ่าน" และการค้นหาด้วยอีเมลในหน้า Index -->
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label" for="pf-email">อีเมล</label>
+              <input class="input" type="email" id="pf-email" placeholder="เช่น somchai@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-contact-channel">ติดต่อผ่าน</label>
+              <select class="select" id="pf-contact-channel"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-status">สถานะ</label>
+              <select class="select" id="pf-status"></select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pf-has-caregiver">มีผู้ดูแลหรือไม่</label>
+            <div class="flex items-center gap-2">
+              <label class="switch"><input type="checkbox" id="pf-has-caregiver"><span class="switch-track"></span></label>
+              <span class="small text-secondary">เปิดเพื่อระบุข้อมูลผู้ดูแล</span>
+            </div>
+          </div>
+
+          <div class="form-row-3 hidden" id="pf-caregiver-fields">
+            <div class="form-group mb-0">
+              <label class="form-label" for="pf-caregiver-name">ชื่อผู้ดูแล</label>
+              <input class="input" id="pf-caregiver-name" placeholder="เช่น สายฝน พูลสวัสดิ์">
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label" for="pf-caregiver-relation">ความสัมพันธ์</label>
+              <select class="select" id="pf-caregiver-relation"></select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label" for="pf-caregiver-phone">เบอร์โทรศัพท์ผู้ดูแล</label>
+              <input class="input" type="tel" id="pf-caregiver-phone" placeholder="08x-xxx-xxxx">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section นี้แสดงเฉพาะประเภท "กลุ่มตัวอย่าง" และ Loop รอบติดตามจาก TFC_MOCK.sampleFollowUpRounds
+             (ชุดเดียวกับเมนูพื้นฐาน > รอบติดตามกลุ่มตัวอย่าง) — ไม่ hardcode จำนวน/ชื่อรอบไว้ในฟอร์มนี้ -->
+        <div class="card mb-5 hidden" id="pf-followup-section">
+          <h2 class="card-title">แผนการติดตาม</h2>
+          <div class="form-row-3" id="pf-followup-rounds"></div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="pf-line-notify">รับแจ้งเตือนผ่านไลน์</label>
+            <div class="flex items-center gap-2">
+              <label class="switch"><input type="checkbox" id="pf-line-notify"><span class="switch-track"></span></label>
+              <span class="small text-secondary">ส่งแจ้งเตือนก่อนถึงกำหนดติดตามตามที่ตั้งค่าไว้ในแต่ละรอบ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-5">
+          <h2 class="card-title">ความยินยอมในการเก็บข้อมูล</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pf-consent-status">สถานะความยินยอม</label>
+              <select class="select" id="pf-consent-status"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pf-consent-date">วันที่ให้ความยินยอม</label>
+              <input class="input" type="date" id="pf-consent-date">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ไฟล์แนบ</label>
+            <div class="upload-zone" data-upload-zone data-upload-list="pf-consent-upload-list">
+              <div class="upload-zone-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg></div>
+              <div class="small">ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์แบบยินยอม (PDF, JPG, PNG ไม่เกิน 5MB)</div>
+              <input type="file" class="hidden" accept=".pdf,image/*">
+            </div>
+            <div id="pf-consent-upload-list" class="upload-file-list"></div>
+          </div>
+
+          <div class="form-group mb-0">
+            <label class="form-label" for="pf-consent-note">หมายเหตุ</label>
+            <textarea class="textarea" id="pf-consent-note" placeholder="เช่น ผู้ดูแลเป็นผู้ลงนามแทน"></textarea>
+          </div>
+        </div>
+
+        <div class="card mb-5">
+          <h2 class="card-title">สถานะปัจจุบันในการติดตามโครงการ</h2>
+          <div class="flex gap-4 flex-wrap" id="pf-project-status-group"></div>
+        </div>
+
+        <div class="form-action-bar">
+          <a class="btn btn-outline" href="list.html">ยกเลิก</a>
+          <button type="submit" class="btn btn-primary" id="pf-submit">บันทึก</button>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/participants.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var P = window.TFC.participants;
+  var mock = window.TFC_MOCK || {};
+  var svc = P.service();
+
+  var editingId = new URLSearchParams(window.location.search).get('id') || '';
+  var editing = editingId ? P.find(editingId) : null;
+  var isEdit = !!editing;
+
+  var form = document.getElementById('participant-form');
+  var codeInput = document.getElementById('pf-person-code');
+  var codeError = document.getElementById('pf-person-code-error');
+  var submitBtn = document.getElementById('pf-submit');
+  var followUpSection = document.getElementById('pf-followup-section');
+  var caregiverFields = document.getElementById('pf-caregiver-fields');
+  var caregiverToggle = document.getElementById('pf-has-caregiver');
+
+  window.TFC.renderPageHeader('participant-form-header', {
+    title: isEdit ? 'แก้ไขข้อมูลผู้เข้าร่วม' : 'เพิ่มผู้เข้าร่วม',
+    description: isEdit
+      ? 'แก้ไขข้อมูลของ ' + editing.name + ' (' + editing.personCode + ')'
+      : 'กรอกข้อมูลผู้เข้าร่วมโครงการ — ฟิลด์ที่มีเครื่องหมาย * จำเป็นต้องกรอก'
+  });
+  if (isEdit) document.getElementById('form-breadcrumb-current').textContent = 'แก้ไขข้อมูลผู้เข้าร่วม';
+
+  /* ---------- เติมตัวเลือกทุก Dropdown จาก Mock Data กลาง (ไม่ hardcode ในหน้านี้) ---------- */
+  function fillSelect(id, options, selected, placeholder) {
+    document.getElementById(id).innerHTML = P.optionsHtml(options, selected, placeholder);
+  }
+
+  fillSelect('pf-target-group', P.targetGroupNames(), editing && editing.targetGroup, 'เลือกกลุ่มเป้าหมาย');
+  fillSelect('pf-area', P.areaNames(), editing && editing.area, 'เลือกพื้นที่ดำเนินการ');
+  fillSelect('pf-source', P.dataSources(), editing && editing.source, 'เลือกแหล่งที่มาของข้อมูล');
+  fillSelect('pf-gender', mock.participantGenders || [], editing && editing.gender);
+  fillSelect('pf-contact-channel', mock.participantContactChannels || [], editing && editing.contactChannel);
+  fillSelect('pf-status', mock.participantStatuses || [], editing && editing.status);
+  fillSelect('pf-caregiver-relation', mock.participantCaregiverRelations || [], editing && editing.caregiverRelation, 'เลือกความสัมพันธ์');
+  fillSelect('pf-consent-status', mock.participantConsentStatuses || [], editing && editing.consentStatus);
+
+  /* ประเภทผู้เข้าร่วม (Radio) — ควบคุมการแสดง Section "แผนการติดตาม" */
+  var selectedType = (editing && editing.type) || 'sample';
+  document.getElementById('participant-type-group').innerHTML = (mock.participantTypes || []).map(function (type) {
+    return '<label class="radio-item"><input type="radio" name="pf-type" value="' + type.value + '"' +
+      (type.value === selectedType ? ' checked' : '') + '><span>' + window.TFC.escapeHtml(type.label) + '</span></label>';
+  }).join('');
+
+  /* สถานะปัจจุบันในการติดตามโครงการ (Radio) */
+  var selectedProjectStatus = (editing && editing.projectStatus) || 'เข้าร่วม';
+  document.getElementById('pf-project-status-group').innerHTML = (mock.participantProjectStatuses || []).map(function (status) {
+    return '<label class="radio-item"><input type="radio" name="pf-project-status" value="' + window.TFC.escapeHtml(status) + '"' +
+      (status === selectedProjectStatus ? ' checked' : '') + '><span>' + window.TFC.escapeHtml(status) + '</span></label>';
+  }).join('');
+
+  /* ---------- แผนการติดตาม: Loop จากรอบติดตามในโมดูลพื้นฐาน ---------- */
+  function renderFollowUpRounds() {
+    var saved = (editing && editing.followUpPlan) || [];
+    document.getElementById('pf-followup-rounds').innerHTML = P.rounds().map(function (round) {
+      var plan = saved.filter(function (item) { return item.roundId === round.id; })[0];
+      return '<div class="form-group" data-round-field data-round-id="' + window.TFC.escapeHtml(round.id) + '">' +
+        '<label class="form-label">' + window.TFC.escapeHtml(round.name) + '</label>' +
+        '<input class="input" type="date" value="' + window.TFC.escapeHtml((plan && plan.dueDate) || '') + '">' +
+        '<div class="form-helper">กำหนดติดตามหลังเข้าร่วม ' + round.trackDays + ' วัน</div>' +
+        '</div>';
+    }).join('') || '<div class="state-block"><div class="state-title">ยังไม่มีรอบติดตาม</div>' +
+      '<div class="state-description">เพิ่มรอบได้ที่เมนูพื้นฐาน &gt; รอบติดตามกลุ่มตัวอย่าง</div></div>';
+  }
+
+  function currentType() {
+    var checked = form.querySelector('input[name="pf-type"]:checked');
+    return checked ? checked.value : 'sample';
+  }
+
+  function syncTypeSections() {
+    followUpSection.classList.toggle('hidden', currentType() !== 'sample');
+  }
+
+  form.addEventListener('change', function (e) {
+    if (e.target.name === 'pf-type') syncTypeSections();
+  });
+
+  caregiverToggle.addEventListener('change', function () {
+    caregiverFields.classList.toggle('hidden', !caregiverToggle.checked);
+  });
+
+  /* ---------- รหัสบุคคล: รันออโต้ + Validate ห้ามซ้ำ ---------- */
+  function validatePersonCode() {
+    var taken = P.isPersonCodeTaken(codeInput.value, editingId);
+    codeError.classList.toggle('hidden', !taken);
+    codeInput.classList.toggle('is-invalid', taken);
+    submitBtn.disabled = taken;
+    return !taken;
+  }
+
+  codeInput.addEventListener('input', validatePersonCode);
+
+  document.getElementById('pf-generate-code').addEventListener('click', function () {
+    codeInput.value = P.nextPersonCode();
+    validatePersonCode();
+  });
+
+  /* ---------- เติมค่าเดิมเมื่ออยู่ในโหมดแก้ไข ---------- */
+  if (isEdit) {
+    codeInput.value = editing.personCode || '';
+    document.getElementById('pf-name').value = editing.name || '';
+    document.getElementById('pf-phone').value = editing.phone || '';
+    document.getElementById('pf-email').value = editing.email || '';
+    caregiverToggle.checked = !!editing.hasCaregiver;
+    document.getElementById('pf-caregiver-name').value = editing.caregiverName || '';
+    document.getElementById('pf-caregiver-phone').value = editing.caregiverPhone || '';
+    document.getElementById('pf-line-notify').checked = !!editing.lineNotify;
+    document.getElementById('pf-consent-date').value = editing.consentDate || '';
+    document.getElementById('pf-consent-note').value = editing.consentNote || '';
+    if (editing.consentFileName) {
+      document.getElementById('pf-consent-upload-list').innerHTML =
+        '<div class="upload-file-item">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>' +
+        '<span class="file-name">' + window.TFC.escapeHtml(editing.consentFileName) + '</span></div>';
+    }
+  } else {
+    codeInput.value = P.nextPersonCode();
+  }
+
+  caregiverFields.classList.toggle('hidden', !caregiverToggle.checked);
+  renderFollowUpRounds();
+  syncTypeSections();
+  validatePersonCode();
+
+  /* ---------- บันทึกผ่าน Data Service กลาง (Mock — พร้อมสลับเป็น API จริงโดยไม่แก้หน้าจอ) ---------- */
+  form.addEventListener('submit', function () {
+    if (!validatePersonCode()) return;
+
+    var followUpPlan = Array.from(document.querySelectorAll('[data-round-field]')).map(function (field) {
+      return { roundId: field.getAttribute('data-round-id'), dueDate: field.querySelector('input').value };
+    });
+    var hasCaregiver = caregiverToggle.checked;
+
+    var payload = {
+      personCode: codeInput.value.trim(),
+      type: currentType(),
+      name: document.getElementById('pf-name').value.trim(),
+      phone: document.getElementById('pf-phone').value.trim(),
+      email: document.getElementById('pf-email').value.trim(),
+      gender: document.getElementById('pf-gender').value,
+      targetGroup: document.getElementById('pf-target-group').value,
+      area: document.getElementById('pf-area').value,
+      source: document.getElementById('pf-source').value,
+      contactChannel: document.getElementById('pf-contact-channel').value,
+      hasCaregiver: hasCaregiver,
+      caregiverName: hasCaregiver ? document.getElementById('pf-caregiver-name').value.trim() : '',
+      caregiverRelation: hasCaregiver ? document.getElementById('pf-caregiver-relation').value : '',
+      caregiverPhone: hasCaregiver ? document.getElementById('pf-caregiver-phone').value.trim() : '',
+      status: document.getElementById('pf-status').value,
+      /* เก็บแผนติดตามเฉพาะกลุ่มตัวอย่าง — ผู้เข้าร่วมทั่วไปไม่มีรอบติดตาม */
+      followUpPlan: currentType() === 'sample' ? followUpPlan : [],
+      lineNotify: currentType() === 'sample' && document.getElementById('pf-line-notify').checked,
+      consentStatus: document.getElementById('pf-consent-status').value,
+      consentDate: document.getElementById('pf-consent-date').value,
+      consentNote: document.getElementById('pf-consent-note').value.trim(),
+      projectStatus: (form.querySelector('input[name="pf-project-status"]:checked') || {}).value || 'เข้าร่วม',
+      updatedBy: (mock.currentUser || {}).name || ''
+    };
+
+    var fileInput = form.querySelector('[data-upload-zone] input[type="file"]');
+    if (fileInput && fileInput.files.length) {
+      payload.consentFileName = fileInput.files[0].name;
+    } else if (isEdit) {
+      payload.consentFileName = editing.consentFileName || '';
+    }
+
+    if (isEdit) {
+      svc.update(editingId, payload);
+    } else {
+      svc.create(Object.assign({ id: P.nextChildId('PTP') }, payload)).then(function (created) {
+        /* เตรียม bucket ประวัติย่อยของคนใหม่ไว้ล่วงหน้า ให้หน้า Detail เปิดได้ทันที */
+        (mock.participantActivityHistory || {})[created.id] = [];
+        (mock.participantHealthEvaluations || {})[created.id] = [];
+        (mock.participantPurchases || {})[created.id] = [];
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>
