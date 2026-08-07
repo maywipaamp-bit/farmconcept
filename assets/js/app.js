@@ -2,16 +2,6 @@
 window.TFC = window.TFC || {};
 
 (function () {
-  /* Re-enable transitions once the page has settled (the .is-preload guard is set in the <html> tag).
-     Uses both rAF and a timeout: rAF gives the earliest correct moment on a visible page, but it never
-     fires while the tab is hidden/not compositing, which would otherwise leave transitions dead for a
-     page opened in a background tab. */
-  var enableTransitions = function () {
-    document.documentElement.classList.remove('is-preload');
-  };
-  requestAnimationFrame(function () { requestAnimationFrame(enableTransitions); });
-  setTimeout(enableTransitions, 120);
-
   /* Generic row-action navigation: <button data-nav-link="target.html"> */
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('[data-nav-link]');
@@ -20,8 +10,12 @@ window.TFC = window.TFC || {};
     if (e.target.closest('[data-go-back]')) history.back();
   });
 
-  /* Sidebar active-item highlight is now computed in navigation.js's TFC.renderSidebarNav()
-     (needs pathname + query string, e.g. to tell apart multiple placeholder.html?title=... links). */
+  /* Highlight sidebar nav item matching current page (compare resolved pathname, not just filename, since module folders reuse names like list.html) */
+  document.querySelectorAll('.nav-item[href]').forEach(function (link) {
+    if (link.pathname === window.location.pathname) {
+      link.classList.add('is-active');
+    }
+  });
 
   /* Thai date formatter: 2026-08-10 -> 10 ส.ค. 2569 */
   var thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];

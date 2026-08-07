@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" class="is-preload">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,12 +31,91 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
-  </aside>
+    <nav class="sidebar-nav" aria-label="เมนูหลัก">
+      <a href="../../dashboard.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
+        <span class="nav-label">แดชบอร์ด</span>
+      </a>
 
-  <script src="../../assets/js/mock-data.js"></script>
-  <script src="../../assets/js/menu-config.js"></script>
-  <script src="../../assets/js/sidebar-render.js"></script>
+      <div class="nav-section-title">ข้อมูลพื้นฐาน</div>
+      <a href="../users/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ใช้งาน</span>
+      </a>
+      <a href="../users/roles.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span>
+        <span class="nav-label">บทบาทและสิทธิ์</span>
+      </a>
+      <a href="../areas/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="nav-label">พื้นที่ดำเนินงาน</span>
+      </a>
+      <a href="../master-data/programs.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
+        <span class="nav-label">โปรแกรมการเรียนรู้</span>
+      </a>
+      <a href="../master-data/instructors.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <span class="nav-label">วิทยากร</span>
+      </a>
+      <a href="../master-data/target-groups.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <span class="nav-label">กลุ่มเป้าหมาย</span>
+      </a>
+
+      <div class="nav-section-title">กิจกรรม</div>
+      <a href="../activities/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <span class="nav-label">รายการกิจกรรม</span>
+      </a>
+      <a href="../registrations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span>
+        <span class="nav-label">ผู้ลงทะเบียน</span>
+      </a>
+      <a href="../registrations/payments.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+        <span class="nav-label">ตรวจสอบการชำระเงิน</span>
+      </a>
+      <a href="../checkin/index.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span class="nav-label">Check-in</span>
+      </a>
+
+      <div class="nav-section-title">แบบฟอร์มและแบบประเมิน</div>
+      <a href="../forms/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">แบบฟอร์มทั้งหมด</span>
+      </a>
+      <a href="../forms/rounds.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">รอบการติดตามสุขภาพ</span>
+      </a>
+
+      <div class="nav-section-title">แบบประเมิน (เดิม)</div>
+      <a href="../evaluations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">รายการแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/respondents.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ตอบแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/follow-up.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">ติดตามผล 3/6/12 เดือน</span>
+      </a>
+
+      <div class="nav-section-title">อื่นๆ</div>
+      <a href="../samples/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6L3 20a1 1 0 001 2h16a1 1 0 001-2l-6-12V2"/></svg></span>
+        <span class="nav-label">กลุ่มตัวอย่าง</span>
+      </a>
+      <a href="overview.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/></svg></span>
+        <span class="nav-label">รายงาน</span>
+      </a>
+    </nav>
+  </aside>
 
   <div class="app-main">
     <header class="topbar">
@@ -72,11 +151,42 @@
     </header>
 
     <main class="content">
-      <div class="page-header" id="rp-page-header"></div>
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>รายงานผู้เข้าร่วม</h1>
+          <p class="page-description">สรุปข้อมูลผู้เข้าร่วมกิจกรรม ความพึงพอใจ และสถานะการติดตามผล</p>
+        </div>
+        <div class="page-header-actions">
+          <button type="button" class="btn btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+            ส่งออก Excel
+          </button>
+        </div>
+      </div>
 
-      <div class="summary-cards mb-5" id="rp-stat-cards"></div>
+      <div class="page-toolbar">
+        <div class="page-toolbar-search search-input">
+          <span class="search-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
+          <input type="search" class="input" placeholder="ค้นหาชื่อผู้เข้าร่วม...">
+        </div>
+        <select class="select filter-select" id="rp-participant-area-filter">
+          <option value="">พื้นที่ทั้งหมด</option>
+          <option>ชุมชนพูนทรัพย์ เขตสายไหม</option>
+          <option>ศูนย์การเรียนรู้ The Farm Concept</option>
+          <option>ชุมชนหนองแขม</option>
+        </select>
+      </div>
 
-      <div class="page-toolbar" id="rp-filter-row"></div>
+      <div class="summary-cards mb-5">
+        <div class="summary-card">
+          <span class="summary-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></span>
+          <div><div class="summary-card-label">ผู้เข้าร่วมในรายงานนี้</div><div class="summary-card-value" id="rp-participant-count">5</div></div>
+        </div>
+        <div class="summary-card">
+          <span class="summary-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+          <div><div class="summary-card-label">รอติดตามผล/เกินกำหนด</div><div class="summary-card-value" id="rp-participant-pending">1</div></div>
+        </div>
+      </div>
 
       <div class="table-wrapper">
         <table class="data-table">
@@ -90,11 +200,10 @@
   </div>
 </div>
 
-<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/mock-data.js"></script>
 <script src="../../assets/js/navigation.js"></script>
 <script src="../../assets/js/modal.js"></script>
 <script src="../../assets/js/action-menu.js"></script>
-<script src="../../assets/js/index-layout.js"></script>
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
@@ -108,48 +217,6 @@
     'ยังไม่เข้าร่วมกิจกรรม': 'badge-neutral'
   };
   var participants = (window.TFC_MOCK ? window.TFC_MOCK.participantsSummary : []);
-  var areas = participants.map(function (p) { return p.area; }).filter(function (a, i, arr) { return arr.indexOf(a) === i; });
-
-  window.TFC.renderPageHeader('rp-page-header', {
-    title: 'รายงานผู้เข้าร่วม',
-    description: 'สรุปข้อมูลผู้เข้าร่วมกิจกรรม ความพึงพอใจ และสถานะการติดตามผล',
-    actions: [
-      {
-        label: 'ส่งออก Excel',
-        variant: 'outline',
-        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>'
-      }
-    ]
-  });
-
-  window.TFC.renderFilterRow('rp-filter-row', {
-    filters: [
-      {
-        id: 'rp-participant-area-filter',
-        placeholder: 'พื้นที่ทั้งหมด',
-        options: areas.map(function (a) { return { label: a }; })
-      }
-    ],
-    search: { placeholder: 'ค้นหาชื่อผู้เข้าร่วม...' }
-  });
-
-  var pendingCount = participants.filter(function (p) {
-    return p.followUpStatus === 'เกินกำหนดติดตามผล' || p.followUpStatus === 'ติดตามตามกำหนด';
-  }).length;
-
-  window.TFC.renderStatCards('rp-stat-cards', [
-    {
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>',
-      label: 'ผู้เข้าร่วมในรายงานนี้',
-      value: participants.length
-    },
-    {
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-      tone: 'warning',
-      label: 'รอติดตามผล/เกินกำหนด',
-      value: pendingCount
-    }
-  ]);
 
   document.getElementById('rp-participants-body').innerHTML = participants.map(function (p) {
     return '<tr>' +
@@ -161,6 +228,12 @@
       '<td><span class="badge ' + (statusBadge[p.followUpStatus] || 'badge-neutral') + '">' + p.followUpStatus + '</span></td>' +
       '</tr>';
   }).join('');
+
+  var pendingCount = participants.filter(function (p) {
+    return p.followUpStatus === 'เกินกำหนดติดตามผล' || p.followUpStatus === 'ติดตามตามกำหนด';
+  }).length;
+  document.getElementById('rp-participant-count').textContent = participants.length;
+  document.getElementById('rp-participant-pending').textContent = pendingCount;
 })();
 </script>
 </body>

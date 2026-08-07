@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" class="is-preload">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,12 +31,91 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
-  </aside>
+    <nav class="sidebar-nav" aria-label="เมนูหลัก">
+      <a href="../../dashboard.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
+        <span class="nav-label">แดชบอร์ด</span>
+      </a>
 
-  <script src="../../assets/js/mock-data.js"></script>
-  <script src="../../assets/js/menu-config.js"></script>
-  <script src="../../assets/js/sidebar-render.js"></script>
+      <div class="nav-section-title">ข้อมูลพื้นฐาน</div>
+      <a href="../users/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ใช้งาน</span>
+      </a>
+      <a href="../users/roles.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span>
+        <span class="nav-label">บทบาทและสิทธิ์</span>
+      </a>
+      <a href="../areas/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="nav-label">พื้นที่ดำเนินงาน</span>
+      </a>
+      <a href="../master-data/programs.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
+        <span class="nav-label">โปรแกรมการเรียนรู้</span>
+      </a>
+      <a href="../master-data/instructors.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <span class="nav-label">วิทยากร</span>
+      </a>
+      <a href="../master-data/target-groups.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <span class="nav-label">กลุ่มเป้าหมาย</span>
+      </a>
+
+      <div class="nav-section-title">กิจกรรม</div>
+      <a href="list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <span class="nav-label">รายการกิจกรรม</span>
+      </a>
+      <a href="../registrations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span>
+        <span class="nav-label">ผู้ลงทะเบียน</span>
+      </a>
+      <a href="../registrations/payments.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+        <span class="nav-label">ตรวจสอบการชำระเงิน</span>
+      </a>
+      <a href="../checkin/index.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span class="nav-label">Check-in</span>
+      </a>
+
+      <div class="nav-section-title">แบบฟอร์มและแบบประเมิน</div>
+      <a href="../forms/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">แบบฟอร์มทั้งหมด</span>
+      </a>
+      <a href="../forms/rounds.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">รอบการติดตามสุขภาพ</span>
+      </a>
+
+      <div class="nav-section-title">แบบประเมิน (เดิม)</div>
+      <a href="../evaluations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">รายการแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/respondents.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ตอบแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/follow-up.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">ติดตามผล 3/6/12 เดือน</span>
+      </a>
+
+      <div class="nav-section-title">อื่นๆ</div>
+      <a href="../samples/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6L3 20a1 1 0 001 2h16a1 1 0 001-2l-6-12V2"/></svg></span>
+        <span class="nav-label">กลุ่มตัวอย่าง</span>
+      </a>
+      <a href="../reports/overview.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/></svg></span>
+        <span class="nav-label">รายงาน</span>
+      </a>
+    </nav>
+  </aside>
 
   <div class="app-main">
     <header class="topbar">
@@ -74,29 +153,113 @@
     <main class="content">
       <div class="page-header">
         <div class="page-header-text">
-          <h1>เพิ่มกิจกรรม</h1>
-          <p class="page-description">กรอกข้อมูลกิจกรรม แล้วดูตัวอย่างการแสดงผลบนหน้าเว็บฝั่งผู้เข้าร่วมได้ทันทีทางด้านขวา</p>
+          <h1>สร้างกิจกรรมใหม่</h1>
+          <p class="page-description">กรอกรายละเอียดกิจกรรมเพื่อเผยแพร่และเปิดรับลงทะเบียน</p>
         </div>
       </div>
 
-      <div id="activity-form-mount"></div>
+      <form data-mock-submit="สร้างกิจกรรมสำเร็จ (บันทึกเป็นฉบับร่าง)" data-mock-redirect="list.html">
+
+        <div class="card mb-5">
+          <h2 class="card-title">ข้อมูลทั่วไป</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ac-name">ชื่อกิจกรรม<span class="form-required">*</span></label>
+              <input class="input" id="ac-name" placeholder="เช่น ปลูกผักปลอดสารสำหรับครอบครัว" data-validate required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-program">โปรแกรมการเรียนรู้</label>
+              <select class="select" id="ac-program" data-smart-select data-new-item-label="โปรแกรมการเรียนรู้" data-new-item-placeholder="เช่น โครงการเกษตรอินทรีย์ในเมือง">
+                <option>โครงการฟื้นฟูสุขภาวะชุมชน</option>
+                <option>โครงการเกษตรเพื่อสุขภาพ</option>
+                <option>โครงการพัฒนาเยาวชนนักปลูกผัก</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-area">พื้นที่ดำเนินงาน<span class="form-required">*</span></label>
+              <select class="select" id="ac-area" required data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนบางบัว">
+                <option value="">เลือกพื้นที่ดำเนินงาน</option>
+                <option>ชุมชนพูนทรัพย์ เขตสายไหม</option>
+                <option>ศูนย์การเรียนรู้ The Farm Concept</option>
+                <option>ชุมชนหนองแขม</option>
+                <option>ชุมชนบางบัว</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-target">กลุ่มเป้าหมาย</label>
+              <select class="select" id="ac-target" data-smart-select data-new-item-label="กลุ่มเป้าหมาย" data-new-item-placeholder="เช่น กลุ่มผู้ป่วยเรื้อรัง">
+                <option>กลุ่มเด็กและเยาวชน</option>
+                <option>กลุ่มวัยทำงาน</option>
+                <option>กลุ่มผู้สูงอายุ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-instructor">วิทยากร</label>
+              <select class="select" id="ac-instructor" data-smart-select data-new-item-label="วิทยากร" data-new-item-placeholder="เช่น อาจารย์สมหญิง ใจงาม">
+                <option>อาจารย์สมพงษ์ ปลูกดี</option>
+                <option>คุณนภา ทำอาหารเพื่อสุขภาพ</option>
+                <option>อาจารย์ประสิทธิ์ สวนผักงาม</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="ac-desc">รายละเอียดกิจกรรม</label>
+            <textarea class="textarea" id="ac-desc" placeholder="อธิบายรายละเอียด เนื้อหา และสิ่งที่ผู้เข้าร่วมจะได้รับ"></textarea>
+          </div>
+        </div>
+
+        <div class="card mb-5">
+          <h2 class="card-title">กำหนดการและจำนวนรับสมัคร</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ac-start">วันที่จัดกิจกรรม<span class="form-required">*</span></label>
+              <input class="input" type="date" id="ac-start" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-time">เวลาเริ่ม - สิ้นสุด</label>
+              <input class="input" type="time" id="ac-time">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-capacity">จำนวนรับสมัคร (คน)<span class="form-required">*</span></label>
+              <input class="input" type="number" id="ac-capacity" placeholder="เช่น 40" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ac-fee">ค่าลงทะเบียน (บาท)</label>
+              <input class="input" type="number" id="ac-fee" value="0">
+            </div>
+          </div>
+          <div class="form-helper mb-0">สามารถเพิ่มรอบกิจกรรมหลายรอบได้ภายหลังที่หน้า "จัดการรอบกิจกรรม"</div>
+        </div>
+
+        <div class="card mb-5">
+          <h2 class="card-title">ภาพปกกิจกรรม</h2>
+          <div class="form-group mb-0">
+            <div class="upload-zone" data-upload-zone data-upload-list="ac-upload-list">
+              <div class="upload-zone-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg></div>
+              <div class="small">ลากไฟล์ภาพมาวาง หรือคลิกเพื่อเลือกไฟล์ (JPG, PNG ไม่เกิน 5MB)</div>
+              <input type="file" class="hidden" accept="image/*">
+            </div>
+            <div id="ac-upload-list" class="upload-file-list"></div>
+          </div>
+        </div>
+
+        <div class="form-action-bar">
+          <button type="button" class="btn btn-outline" data-go-back>ยกเลิก</button>
+          <button type="button" class="btn btn-secondary">บันทึกฉบับร่าง</button>
+          <button type="submit" class="btn btn-primary">บันทึกและดำเนินการต่อ</button>
+        </div>
+      </form>
     </main>
   </div>
 </div>
 
-<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/mock-data.js"></script>
 <script src="../../assets/js/navigation.js"></script>
 <script src="../../assets/js/modal.js"></script>
 <script src="../../assets/js/action-menu.js"></script>
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
-<script src="../../assets/js/dynamic-row.js"></script>
-<script src="../../assets/js/activity-module.js"></script>
-<script src="../../assets/js/activity-form.js"></script>
 <script src="../../assets/js/app.js"></script>
-<script>
-window.TFC.renderActivityForm('activity-form-mount', { mode: 'create' });
-</script>
 </body>
 </html>
