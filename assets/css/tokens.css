@@ -1,0 +1,123 @@
+/* ==========================================================================
+   TheFarmConcept — Design Tokens
+   ค่ามาตรฐานกลางของระบบ อ้างอิงจาก docs/design-system.md
+   ห้ามแก้ไขค่าที่นี่โดยไม่ตรวจสอบผลกระทบต่อทั้งระบบก่อน
+   ========================================================================== */
+
+:root {
+  /* ---------- Colors : Brand ---------- */
+  --color-primary: #81C060;
+  --color-primary-hover: #6FB24E;
+  --color-primary-dark: #2F6D45;
+  --color-primary-soft: #EEF7E9;
+
+  /* ---------- Colors : Surface ---------- */
+  --color-background: #F8FAF8;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+
+  /* ---------- Colors : Text ---------- */
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-inverse: #FFFFFF;
+  --color-text-disabled: #9CA3AF;
+
+  /* ---------- Colors : Status ---------- */
+  --color-success: #22C55E;
+  --color-success-soft: #EAFBF0;
+  --color-warning: #F59E0B;
+  --color-warning-soft: #FEF6E7;
+  --color-danger: #EF4444;
+  --color-danger-soft: #FDECEC;
+  --color-info: #3B82F6;
+  --color-info-soft: #EAF2FE;
+
+  /* ---------- Font ---------- */
+  --font-family-base: 'Kanit', sans-serif;
+
+  --font-size-page-title: 28px;
+  --font-size-section-title: 22px;
+  --font-size-card-title: 18px;
+  --font-size-body: 16px;
+  --font-size-small: 14px;
+  --font-size-caption: 12px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-base: 1.6;
+  --line-height-tight: 1.3;
+
+  /* ---------- Spacing Scale ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 8px;
+  --radius-input: 12px;
+  --radius-button: 12px;
+  --radius-card: 16px;
+  --radius-modal: 20px;
+  --radius-full: 999px;
+
+  /* ---------- Shadow (Soft only) ---------- */
+  --shadow-sm: 0 1px 2px rgba(31, 41, 55, 0.06);
+  --shadow-md: 0 4px 12px rgba(31, 41, 55, 0.08);
+  --shadow-lg: 0 8px 24px rgba(31, 41, 55, 0.10);
+
+  /* ---------- Transition ---------- */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 240ms ease;
+
+  /* ---------- Z-index ---------- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-drawer: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* ---------- Layout ---------- */
+  --layout-max-width: 1280px;
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 76px;
+  --topbar-height: 64px;
+
+  /* ---------- Breakpoints (reference only, use in media queries directly) ---------- */
+  --breakpoint-mobile: 375px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+
+  /* ---------- Public registration prototype palette (pages/public/activities.html) ----------
+     This SPA prototype (based on the farmconcept.netlify.app reference) ships with its own
+     embedded <style> block using these variable names. Values are very close to — but NOT
+     byte-identical to — the --color-* tokens above (e.g. --primary-hover, --border,
+     --text-secondary, --radius-md differ slightly). Kept separate and literal here for
+     system-wide reference/reuse; do not silently alias to --color-* without confirming the
+     small differences with design first. */
+  --primary: #81C060;
+  --primary-hover: #6FAF50;
+  --primary-soft: #EEF7E9;
+  --dark-green: #2F6D45;
+  --bg: #F7F9F6;
+  --page-bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --border: #E4E8E2;
+  --text-primary: #1F2937;
+  --text-secondary: #667085;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}

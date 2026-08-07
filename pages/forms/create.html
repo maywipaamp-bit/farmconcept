@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สร้างแบบฟอร์ม | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+<style>
+  [data-step-panel]{display:none;}
+  [data-step-panel].is-active{display:block;}
+  .wizard-actions{display:flex;justify-content:space-between;gap:var(--space-3);margin-top:var(--space-5);}
+  .form-type-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);}
+  .form-type-card{border:1.5px solid var(--color-border);border-radius:var(--radius-card);padding:var(--space-4);cursor:pointer;transition:border-color .15s ease,background .15s ease;}
+  .form-type-card:hover{border-color:var(--color-primary);}
+  .form-type-card.is-selected{border-color:var(--color-primary);background:var(--color-primary-soft);}
+  .form-type-card h4{margin:0 0 4px;font-size:var(--font-size-small);font-weight:var(--font-weight-semibold);}
+  .form-type-card p{margin:0;font-size:var(--font-size-caption);color:var(--color-text-secondary);}
+  .note-box{background:var(--color-info-soft);border-radius:var(--radius-sm);padding:var(--space-3);font-size:var(--font-size-small);color:var(--color-text-primary);display:flex;gap:8px;align-items:flex-start;}
+  .note-box svg{flex-shrink:0;margin-top:2px;color:var(--color-info);}
+  .preview-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:var(--font-size-small);}
+  .preview-row:last-child{border-bottom:none;}
+  .preview-row .k{color:var(--color-text-secondary);}
+  .preview-row .v{font-weight:var(--font-weight-medium);text-align:right;}
+
+  /* ===== Step 3: Section/Question builder + live mobile preview ===== */
+  .qb-layout{display:grid;grid-template-columns:1.4fr 1fr;gap:var(--space-5);align-items:start;}
+  .qb-preview-col{position:sticky;top:var(--space-4);}
+  .qb-section-card{border:1px solid var(--color-border);}
+  .qb-move-btns{display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+  .qb-move-btn{width:22px;height:18px;border:1px solid var(--color-border);background:var(--color-surface);border-radius:4px;cursor:pointer;font-size:10px;line-height:1;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:center;padding:0;}
+  .qb-move-btn:hover{background:var(--color-primary-soft);border-color:var(--color-primary);color:var(--color-primary-dark);}
+  .qb-move-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .qb-section-title-input{font-weight:var(--font-weight-semibold);border:none;background:none;padding:4px 6px;flex:1;font-size:var(--font-size-card-title);}
+  .qb-section-title-input:focus{outline:1px solid var(--color-primary);border-radius:6px;}
+  .qb-section-desc-input{border:none;background:none;padding:4px 6px;width:100%;font-size:var(--font-size-small);color:var(--color-text-secondary);}
+  .qb-section-desc-input:focus{outline:1px solid var(--color-primary);border-radius:6px;}
+  .qb-question-row{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);}
+  .qb-question-info{flex:1;min-width:0;}
+  .qb-option-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .qb-option-row .input{flex:1;}
+  .qb-option-row .input[data-option-score]{flex:none;width:90px;}
+
+  /* Mobile Preview Frame — a fixed-width phone-shaped shell rendering the exact same
+     sections/questions as the builder, kept in sync on every state change (no save/refresh). */
+  .mobile-preview-frame{
+    width:320px;max-width:100%;margin:0 auto;border:10px solid #1F2937;border-radius:32px;
+    background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.18);overflow:hidden;
+  }
+  .mobile-preview-notch{width:90px;height:18px;background:#1F2937;border-radius:0 0 12px 12px;margin:0 auto;}
+  .mobile-preview-screen{height:560px;overflow-y:auto;padding:16px 14px;}
+  .mp-section-title{font-size:14px;font-weight:600;color:var(--color-text-primary);margin:16px 0 2px;}
+  .mp-section-title:first-child{margin-top:0;}
+  .mp-section-desc{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;}
+  .mp-question{border:1px solid var(--color-border);border-radius:10px;padding:10px;margin-bottom:10px;}
+  .mp-question-label{font-size:12px;font-weight:500;margin-bottom:6px;}
+  .mp-empty{text-align:center;color:var(--color-text-secondary);font-size:12px;padding:40px 10px;}
+
+  @media (max-width: 1023px){
+    .qb-layout{grid-template-columns:1fr;}
+    .qb-preview-col{position:static;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">TF</span>
+        <span class="sidebar-title">TheFarmConcept</span>
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="เมนูหลัก">
+      <a href="../../dashboard.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
+        <span class="nav-label">แดชบอร์ด</span>
+      </a>
+
+      <div class="nav-section-title">ข้อมูลพื้นฐาน</div>
+      <a href="../users/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ใช้งาน</span>
+      </a>
+      <a href="../users/roles.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span>
+        <span class="nav-label">บทบาทและสิทธิ์</span>
+      </a>
+      <a href="../areas/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="nav-label">พื้นที่ดำเนินงาน</span>
+      </a>
+      <a href="../master-data/programs.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
+        <span class="nav-label">โปรแกรมการเรียนรู้</span>
+      </a>
+      <a href="../master-data/instructors.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <span class="nav-label">วิทยากร</span>
+      </a>
+      <a href="../master-data/target-groups.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <span class="nav-label">กลุ่มเป้าหมาย</span>
+      </a>
+
+      <div class="nav-section-title">กิจกรรม</div>
+      <a href="../activities/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <span class="nav-label">รายการกิจกรรม</span>
+      </a>
+      <a href="../registrations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span>
+        <span class="nav-label">ผู้ลงทะเบียน</span>
+      </a>
+      <a href="../registrations/payments.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+        <span class="nav-label">ตรวจสอบการชำระเงิน</span>
+      </a>
+      <a href="../checkin/index.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span class="nav-label">Check-in</span>
+      </a>
+
+      <div class="nav-section-title">แบบฟอร์มและแบบประเมิน</div>
+      <a href="list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">แบบฟอร์มทั้งหมด</span>
+      </a>
+      <a href="rounds.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">รอบการติดตามสุขภาพ</span>
+      </a>
+
+      <div class="nav-section-title">แบบประเมิน (เดิม)</div>
+      <a href="../evaluations/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav-label">รายการแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/respondents.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <span class="nav-label">ผู้ตอบแบบประเมิน</span>
+      </a>
+      <a href="../evaluations/follow-up.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav-label">ติดตามผล 3/6/12 เดือน</span>
+      </a>
+
+      <div class="nav-section-title">อื่นๆ</div>
+      <a href="../samples/list.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6L3 20a1 1 0 001 2h16a1 1 0 001-2l-6-12V2"/></svg></span>
+        <span class="nav-label">กลุ่มตัวอย่าง</span>
+      </a>
+      <a href="../reports/overview.html" class="nav-item">
+        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/></svg></span>
+        <span class="nav-label">รายงาน</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../dashboard.html">แดชบอร์ด</a> <span>/</span> <a href="list.html">แบบฟอร์มและแบบประเมิน</a> <span>/</span> <span class="is-current">สร้างแบบฟอร์ม</span>
+        </nav>
+      </div>
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม</span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>สร้างแบบฟอร์ม</h1>
+          <p class="page-description">ตัวสร้างแบบฟอร์มกลาง — ใช้ร่วมกันทั้งแบบลงทะเบียน แบบความพึงพอใจ และแบบติดตามสุขภาพ</p>
+        </div>
+      </div>
+
+      <div class="stepper" id="frm-stepper">
+        <div class="step-item" data-step="1"><span class="step-circle">1</span><span class="step-label">ข้อมูลทั่วไป</span></div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="2"><span class="step-circle">2</span><span class="step-label">เงื่อนไขผู้ตอบ</span></div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="3"><span class="step-circle">3</span><span class="step-label">สร้างคำถาม</span></div>
+        <div class="step-line" id="frm-line-4"></div>
+        <div class="step-item" data-step="4" id="frm-step-item-4"><span class="step-circle">4</span><span class="step-label">การให้คะแนน</span></div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="5"><span class="step-circle">5</span><span class="step-label">Preview และเผยแพร่</span></div>
+      </div>
+
+      <div id="wizard-panels">
+
+        <!-- Step 1: ข้อมูลทั่วไป -->
+        <section data-step-panel="1" class="card">
+          <h2 class="card-title">ข้อมูลทั่วไป</h2>
+          <div class="form-group">
+            <label class="form-label" for="frm-name">ชื่อแบบฟอร์ม<span class="form-required">*</span></label>
+            <input class="input" id="frm-name" placeholder="เช่น แบบลงทะเบียนกิจกรรม: ปลูกผักปลอดสารสำหรับครอบครัว" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ประเภทแบบฟอร์ม<span class="form-required">*</span></label>
+            <div class="form-type-choice" id="frm-type-choice">
+              <div class="form-type-card" data-type="registration">
+                <h4>แบบลงทะเบียน</h4>
+                <p>ยืนยันตัวตนทุกครั้ง เชื่อมกับกิจกรรม กรอกใหม่ทุกครั้งที่เข้าร่วม</p>
+              </div>
+              <div class="form-type-card" data-type="satisfaction">
+                <h4>แบบความพึงพอใจ / หลังกิจกรรม</h4>
+                <p>ไม่ต้องยืนยันตัวตน เชื่อมกับกิจกรรม สร้างได้หลายฟอร์มต่อกิจกรรม</p>
+              </div>
+              <div class="form-type-card" data-type="health_tracking">
+                <h4>แบบติดตามสุขภาพ</h4>
+                <p>ยืนยันตัวตนก่อนเข้าทำเสมอ เชื่อมกับกลุ่มตัวอย่างและรอบติดตาม</p>
+              </div>
+            </div>
+            <input type="hidden" id="frm-type" value="">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="frm-desc">คำอธิบาย</label>
+            <textarea class="textarea" id="frm-desc" placeholder="คำชี้แจงที่จะแสดงให้ผู้ตอบเห็นก่อนเริ่มกรอกแบบฟอร์ม"></textarea>
+          </div>
+        </section>
+
+        <!-- Step 2: เงื่อนไขผู้ตอบ (ปรับตาม formType อัตโนมัติ) -->
+        <section data-step-panel="2" class="card">
+          <h2 class="card-title">เงื่อนไขผู้ตอบ</h2>
+
+          <div id="step2-registration" hidden>
+            <div class="form-group">
+              <label class="form-label" for="frm-activity-reg">เชื่อมโยงกับกิจกรรม<span class="form-required">*</span></label>
+              <select class="select" id="frm-activity-reg"><option value="">เลือกกิจกรรม</option></select>
+            </div>
+            <div class="note-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>ผู้ตอบต้องยืนยันตัวตน (เบอร์โทร/อีเมล) เป็นส่วนหนึ่งของการกรอกฟอร์ม — เปิดฟอร์มได้ทันทีโดยไม่ต้องยืนยันตัวตนก่อน และต้องกรอกข้อมูลใหม่ทุกครั้งที่ลงทะเบียนกิจกรรมใหม่ (ไม่ auto-fill จากประวัติเดิม)</span>
+            </div>
+          </div>
+
+          <div id="step2-satisfaction" hidden>
+            <div class="form-group">
+              <label class="form-label" for="frm-activity-sat">เชื่อมโยงกับกิจกรรม<span class="form-required">*</span></label>
+              <select class="select" id="frm-activity-sat"><option value="">เลือกกิจกรรม</option></select>
+            </div>
+            <div class="note-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>ไม่ต้องยืนยันตัวตน — สแกน QR หรือเปิดลิงก์แล้วตอบได้ทันที สร้างได้หลายฟอร์มต่อกิจกรรมเดียวกัน</span>
+            </div>
+          </div>
+
+          <div id="step2-health" hidden>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="frm-sample-group">กลุ่มตัวอย่างที่ได้รับการคัดเลือก<span class="form-required">*</span></label>
+                <select class="select" id="frm-sample-group"><option value="">เลือกกลุ่มตัวอย่าง</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="frm-round">รอบการติดตาม<span class="form-required">*</span></label>
+                <select class="select" id="frm-round"><option value="">เลือกกลุ่มตัวอย่างก่อน</option></select>
+              </div>
+            </div>
+            <div class="note-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>ต้องยืนยันตัวตน (เบอร์โทร/อีเมล) ก่อนเปิดแบบประเมินเสมอ (block การเข้าถึง) — แบบฟอร์มประเภทนี้ห้ามเชื่อมโยงกับกิจกรรมโดยตรง จึงไม่มีตัวเลือกกิจกรรมให้เลือก</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: สร้างคำถาม — แบ่งเป็น Section พร้อม Live Mobile Preview ด้านขวา -->
+        <section data-step-panel="3">
+          <div class="qb-layout">
+            <div class="qb-builder">
+              <div class="flex items-center justify-between mb-3">
+                <h2 class="card-title mb-0">สร้างคำถาม</h2>
+                <button type="button" class="btn btn-primary btn-sm" id="frm-add-section-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  เพิ่ม Section
+                </button>
+              </div>
+              <div class="flex flex-col gap-4" id="frm-section-list"></div>
+              <div class="state-block" id="frm-section-empty">
+                <p class="state-title">ยังไม่มี Section ในแบบฟอร์มนี้</p>
+                <p class="state-description">กด "เพิ่ม Section" เพื่อเริ่มสร้างกลุ่มคำถามแรก</p>
+              </div>
+            </div>
+            <div class="qb-preview-col">
+              <p class="small text-secondary text-center mb-2">ตัวอย่างที่ผู้ตอบจะเห็นจริง — อัปเดตทันทีที่แก้ไข</p>
+              <div class="mobile-preview-frame">
+                <div class="mobile-preview-notch"></div>
+                <div class="mobile-preview-screen" id="frm-preview-screen"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: การให้คะแนนและเกณฑ์ (เฉพาะแบบติดตามสุขภาพ) -->
+        <section data-step-panel="4" class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="card-title mb-0">การให้คะแนนและเกณฑ์</h2>
+            <button type="button" class="btn btn-primary btn-sm" data-open-modal="frm-scoring-modal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              เพิ่มเกณฑ์
+            </button>
+          </div>
+          <p class="small text-secondary mb-3">กำหนดช่วงคะแนนรวมและความหมายของแต่ละช่วง เพื่อใช้แปลผลอัตโนมัติเมื่อผู้เข้าร่วมส่งแบบประเมิน</p>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>ช่วงคะแนน</th><th>ผลการประเมิน</th><th>คำอธิบาย</th></tr></thead>
+              <tbody id="frm-scoring-list"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Step 5: Preview และเผยแพร่ -->
+        <section data-step-panel="5" class="card">
+          <h2 class="card-title">Preview และเผยแพร่</h2>
+          <div id="frm-preview"></div>
+        </section>
+
+      </div>
+
+      <div class="wizard-actions">
+        <button type="button" class="btn btn-outline" id="frm-prev" data-go-back>ยกเลิก</button>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-outline" id="frm-btn-prev">ย้อนกลับ</button>
+          <button type="button" class="btn btn-primary" id="frm-btn-next">ถัดไป</button>
+          <button type="button" class="btn btn-outline" id="frm-btn-draft" hidden>บันทึกฉบับร่าง</button>
+          <button type="button" class="btn btn-primary" id="frm-btn-publish" hidden>เผยแพร่แบบฟอร์ม</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit question modal (same pattern as pages/evaluations/questions.html) -->
+<div class="modal-overlay" id="frm-question-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="frm-question-modal-title">เพิ่มคำถาม</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="frm-q-text">คำถาม<span class="form-required">*</span></label>
+        <input class="input" id="frm-q-text" placeholder="พิมพ์คำถามที่ต้องการ" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="frm-q-type">ประเภทคำตอบ</label>
+        <select class="select" id="frm-q-type">
+          <option>คะแนนความพึงพอใจ (1-5)</option>
+          <option>ตัวเลือกเดียว</option>
+          <option>ตัวเลือกหลายข้อ</option>
+          <option>ข้อความสั้น</option>
+          <option>ข้อความยาว</option>
+        </select>
+      </div>
+      <div class="form-group" id="frm-q-options-wrap" hidden>
+        <label class="form-label">ตัวเลือกคำตอบ (พร้อมคะแนนต่อตัวเลือก)</label>
+        <div id="frm-q-options-list"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="frm-q-add-option">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          เพิ่มตัวเลือก
+        </button>
+      </div>
+      <div class="form-group mb-0">
+        <label class="checkbox-item">
+          <input type="checkbox" id="frm-q-required">
+          <span class="small">บังคับตอบคำถามนี้</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-primary" id="frm-q-save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shared delete-confirm modal for both Section and Question removal (pendingDeleteType decides which) -->
+<div class="modal-overlay" id="frm-delete-confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-danger mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      </span>
+      <h3 class="modal-title mb-3" id="frm-delete-confirm-title">ยืนยันการลบ</h3>
+      <p class="text-secondary" id="frm-delete-confirm-desc"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button class="btn btn-danger" id="frm-delete-confirm-btn" data-close-modal>ลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit scoring criteria modal -->
+<div class="modal-overlay" id="frm-scoring-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="frm-scoring-modal-title">เพิ่มเกณฑ์การให้คะแนน</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="frm-s-min">คะแนนต่ำสุด<span class="form-required">*</span></label>
+          <input class="input" type="number" step="0.1" id="frm-s-min" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="frm-s-max">คะแนนสูงสุด<span class="form-required">*</span></label>
+          <input class="input" type="number" step="0.1" id="frm-s-max" placeholder="5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="frm-s-label">ผลการประเมิน<span class="form-required">*</span></label>
+        <input class="input" id="frm-s-label" placeholder="เช่น ดี / ปานกลาง / ควรปรับปรุง">
+      </div>
+      <div class="form-group mb-0">
+        <label class="form-label" for="frm-s-desc">คำอธิบาย</label>
+        <textarea class="textarea" id="frm-s-desc" placeholder="คำอธิบายผลการประเมินในช่วงคะแนนนี้"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-primary" id="frm-s-save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/mock-data.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/wizard.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var typeLabel = { registration: 'แบบลงทะเบียน', satisfaction: 'แบบความพึงพอใจ / หลังกิจกรรม', health_tracking: 'แบบติดตามสุขภาพ' };
+  var sections = [];
+  var questions = [];
+  var scoring = [];
+  var sectionSeq = 0, questionSeq = 0;
+  var editingQuestionId = null;
+  var addQuestionSectionId = null;
+  var pendingQuestionId = null;
+  var pendingDelete = null; // { type: 'section'|'question', id }
+  var pendingOptions = []; // working copy of the option rows while the question modal is open
+  var editingScoringIndex = null;
+  var TYPE_HAS_OPTIONS = { 'ตัวเลือกเดียว': true, 'ตัวเลือกหลายข้อ': true };
+
+  /* ---- Step 1: form type picker ---- */
+  document.getElementById('frm-type-choice').addEventListener('click', function (e) {
+    var card = e.target.closest('.form-type-card');
+    if (!card) return;
+    document.querySelectorAll('.form-type-card').forEach(function (c) { c.classList.remove('is-selected'); });
+    card.classList.add('is-selected');
+    document.getElementById('frm-type').value = card.getAttribute('data-type');
+    renderStep2Visibility();
+    renderStepFourAvailability();
+  });
+
+  /* ---- Step 2: populate activity/sample-group selects from TFC_MOCK, render conditionally ---- */
+  var activities = (window.TFC_MOCK ? window.TFC_MOCK.activities : []);
+  var sampleGroups = (window.TFC_MOCK ? window.TFC_MOCK.sampleGroups : []);
+  var trackingRounds = (window.TFC_MOCK ? window.TFC_MOCK.trackingRounds : []);
+
+  ['frm-activity-reg', 'frm-activity-sat'].forEach(function (id) {
+    var sel = document.getElementById(id);
+    activities.forEach(function (a) {
+      var opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.name;
+      sel.appendChild(opt);
+    });
+  });
+
+  var sampleGroupSel = document.getElementById('frm-sample-group');
+  sampleGroups.forEach(function (s) {
+    var opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name + ' (' + s.targetGroupName + ')';
+    sampleGroupSel.appendChild(opt);
+  });
+
+  sampleGroupSel.addEventListener('change', function () {
+    var roundSel = document.getElementById('frm-round');
+    var rounds = trackingRounds.filter(function (r) { return r.sampleGroupId === sampleGroupSel.value; });
+    roundSel.innerHTML = '<option value="">เลือกรอบการติดตาม</option>' + rounds.map(function (r) {
+      return '<option value="' + r.id + '">รอบที่ ' + r.roundNumber + ' (' + r.roundLabel + ') — ครบกำหนด ' + window.TFC.formatThaiDate(r.dueDate) + '</option>';
+    }).join('');
+  });
+
+  function renderStep2Visibility() {
+    var type = document.getElementById('frm-type').value;
+    document.getElementById('step2-registration').hidden = type !== 'registration';
+    document.getElementById('step2-satisfaction').hidden = type !== 'satisfaction';
+    document.getElementById('step2-health').hidden = type !== 'health_tracking';
+  }
+
+  /* ---- Step 3: Section + Question builder, with a live mobile preview kept in sync on every
+     state change. `questions` is a flat array (each carries sectionId + order, same convention
+     as the mock schema) rather than nested, so reordering/lookup stays simple. ---- */
+  function newSectionId() { return 'S' + (++sectionSeq); }
+  function newQuestionId() { return 'Q' + (++questionSeq); }
+
+  function sectionQuestions(sectionId) {
+    return questions.filter(function (q) { return q.sectionId === sectionId; })
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+
+  function addSection() {
+    sections.push({ id: newSectionId(), order: sections.length + 1, title: 'Section ' + (sections.length + 1), description: '' });
+    renderBuilder();
+  }
+  document.getElementById('frm-add-section-btn').addEventListener('click', addSection);
+
+  function moveSection(id, dir) {
+    var sorted = sections.slice().sort(function (a, b) { return a.order - b.order; });
+    var idx = sorted.findIndex(function (s) { return s.id === id; });
+    var swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    var tmp = sorted[idx].order; sorted[idx].order = sorted[swapIdx].order; sorted[swapIdx].order = tmp;
+    renderBuilder();
+  }
+
+  function deleteSection(id) {
+    sections = sections.filter(function (s) { return s.id !== id; });
+    questions = questions.filter(function (q) { return q.sectionId !== id; });
+    renderBuilder();
+  }
+
+  function moveQuestion(id, dir) {
+    var q = questions.filter(function (x) { return x.id === id; })[0];
+    if (!q) return;
+    var siblings = sectionQuestions(q.sectionId);
+    var idx = siblings.findIndex(function (x) { return x.id === id; });
+    var swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= siblings.length) return;
+    var tmp = siblings[idx].order; siblings[idx].order = siblings[swapIdx].order; siblings[swapIdx].order = tmp;
+    renderBuilder();
+  }
+
+  function deleteQuestion(id) {
+    questions = questions.filter(function (q) { return q.id !== id; });
+    renderBuilder();
+  }
+
+  function renderBuilder() {
+    var sorted = sections.slice().sort(function (a, b) { return a.order - b.order; });
+    document.getElementById('frm-section-empty').hidden = sorted.length !== 0;
+    document.getElementById('frm-section-list').innerHTML = sorted.map(function (sec, secIdx) {
+      var qs = sectionQuestions(sec.id);
+      var qRows = qs.map(function (q, qIdx) {
+        return '<div class="qb-question-row" data-question-id="' + q.id + '">' +
+          '<div class="qb-move-btns">' +
+          '<button type="button" class="qb-move-btn" data-move-question-up' + (qIdx === 0 ? ' disabled' : '') + ' aria-label="ย้ายคำถามขึ้น">▲</button>' +
+          '<button type="button" class="qb-move-btn" data-move-question-down' + (qIdx === qs.length - 1 ? ' disabled' : '') + ' aria-label="ย้ายคำถามลง">▼</button>' +
+          '</div>' +
+          '<div class="qb-question-info">' +
+          '<div class="font-medium">' + (qIdx + 1) + '. ' + window.TFC.escapeHtml(q.text) + (q.required ? '<span class="form-required">*</span>' : '') + '</div>' +
+          '<span class="badge badge-neutral mt-1">' + window.TFC.escapeHtml(q.type) + '</span>' +
+          '</div>' +
+          '<div class="table-row-actions">' +
+          window.TFC.actionMenuTrigger([
+            { key: 'edit-question', label: 'แก้ไขคำถาม', icon: 'edit', modal: 'frm-question-modal' },
+            { key: 'delete-question', label: 'ลบคำถาม', icon: 'delete', modal: 'frm-delete-confirm-modal', danger: true }
+          ]) +
+          '</div></div>';
+      }).join('') || '<p class="small text-secondary">ยังไม่มีคำถามใน Section นี้</p>';
+
+      return '<div class="card qb-section-card" data-section-id="' + sec.id + '">' +
+        '<div class="flex items-start justify-between gap-2 mb-2">' +
+        '<div class="flex items-start gap-2" style="flex:1;min-width:0;">' +
+        '<div class="qb-move-btns" style="margin-top:6px;">' +
+        '<button type="button" class="qb-move-btn" data-move-section-up' + (secIdx === 0 ? ' disabled' : '') + ' aria-label="ย้าย Section ขึ้น">▲</button>' +
+        '<button type="button" class="qb-move-btn" data-move-section-down' + (secIdx === sorted.length - 1 ? ' disabled' : '') + ' aria-label="ย้าย Section ลง">▼</button>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<input class="qb-section-title-input" data-section-title-input value="' + window.TFC.escapeHtml(sec.title) + '" placeholder="ชื่อ Section">' +
+        '<input class="qb-section-desc-input" data-section-desc-input placeholder="คำอธิบาย Section (ถ้ามี)" value="' + window.TFC.escapeHtml(sec.description || '') + '">' +
+        '</div></div>' +
+        '<button type="button" class="btn btn-icon btn-sm" data-delete-section aria-label="ลบ Section">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+        '</button>' +
+        '</div>' +
+        '<div class="flex flex-col gap-2 mb-2">' + qRows + '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-add-question>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> เพิ่มคำถามใน Section นี้' +
+        '</button>' +
+        '</div>';
+    }).join('');
+    renderMobilePreview();
+  }
+
+  function renderMobilePreview() {
+    var sorted = sections.slice().sort(function (a, b) { return a.order - b.order; });
+    var screen = document.getElementById('frm-preview-screen');
+    if (!sorted.length) {
+      screen.innerHTML = '<p class="mp-empty">ยังไม่มีคำถาม<br>เริ่มเพิ่ม Section ทางซ้ายเพื่อดูตัวอย่าง</p>';
+      return;
+    }
+    screen.innerHTML = sorted.map(function (sec) {
+      var qs = sectionQuestions(sec.id);
+      var qHtml = qs.map(function (q, idx) {
+        var body;
+        if (q.type.indexOf('คะแนน') !== -1) {
+          body = '<div class="flex gap-2">' + [1, 2, 3, 4, 5].map(function (n) { return '<span class="badge badge-neutral">' + n + '</span>'; }).join('') + '</div>';
+        } else if (TYPE_HAS_OPTIONS[q.type]) {
+          var inputType = q.type === 'ตัวเลือกเดียว' ? 'radio' : 'checkbox';
+          body = (q.options || []).map(function (o) {
+            return '<label class="radio-item"><input type="' + inputType + '" disabled><span>' + window.TFC.escapeHtml(o.text || '(ยังไม่ระบุข้อความ)') + '</span></label>';
+          }).join('') || '<span class="small text-secondary">ยังไม่มีตัวเลือก</span>';
+        } else if (q.type === 'ข้อความยาว') {
+          body = '<textarea class="textarea" disabled placeholder="พิมพ์คำตอบ"></textarea>';
+        } else {
+          body = '<input class="input" disabled placeholder="พิมพ์คำตอบสั้นๆ">';
+        }
+        return '<div class="mp-question"><div class="mp-question-label">' + (idx + 1) + '. ' +
+          window.TFC.escapeHtml(q.text || '(ยังไม่ระบุคำถาม)') + (q.required ? '<span class="form-required">*</span>' : '') + '</div>' + body + '</div>';
+      }).join('') || '<p class="small text-secondary">ยังไม่มีคำถามใน Section นี้</p>';
+      return '<div class="mp-section-title">' + window.TFC.escapeHtml(sec.title || 'Section') + '</div>' +
+        (sec.description ? '<div class="mp-section-desc">' + window.TFC.escapeHtml(sec.description) + '</div>' : '') + qHtml;
+    }).join('');
+  }
+
+  // Clicks within the section list: move/delete section, add/move/edit/delete question.
+  document.getElementById('frm-section-list').addEventListener('click', function (e) {
+    var sectionCard = e.target.closest('.qb-section-card');
+    if (!sectionCard) return;
+    var sectionId = sectionCard.getAttribute('data-section-id');
+
+    if (e.target.closest('[data-move-section-up]')) { moveSection(sectionId, 'up'); return; }
+    if (e.target.closest('[data-move-section-down]')) { moveSection(sectionId, 'down'); return; }
+    if (e.target.closest('[data-delete-section]')) {
+      pendingDelete = { type: 'section', id: sectionId };
+      document.getElementById('frm-delete-confirm-title').textContent = 'ยืนยันการลบ Section';
+      document.getElementById('frm-delete-confirm-desc').textContent = 'คำถามทั้งหมดใน Section นี้จะถูกลบไปด้วย การดำเนินการนี้ไม่สามารถย้อนกลับได้';
+      window.TFC.openModal('frm-delete-confirm-modal');
+      return;
+    }
+    if (e.target.closest('[data-add-question]')) {
+      addQuestionSectionId = sectionId;
+      editingQuestionId = null;
+      openQuestionModal();
+      return;
+    }
+    var questionRow = e.target.closest('[data-question-id]');
+    if (!questionRow) return;
+    var questionId = questionRow.getAttribute('data-question-id');
+    if (e.target.closest('[data-move-question-up]')) { moveQuestion(questionId, 'up'); return; }
+    if (e.target.closest('[data-move-question-down]')) { moveQuestion(questionId, 'down'); return; }
+    if (e.target.closest('.action-menu-btn')) { pendingQuestionId = questionId; }
+  });
+
+  // Section title/description are edited inline. Update state only (never re-render the builder
+  // here) so the input the user is actively typing in is never destroyed/recreated mid-keystroke
+  // — only the read-only mobile preview on the right needs to reflect the change live.
+  document.getElementById('frm-section-list').addEventListener('input', function (e) {
+    var sectionCard = e.target.closest('.qb-section-card');
+    if (!sectionCard) return;
+    var sec = sections.filter(function (s) { return s.id === sectionCard.getAttribute('data-section-id'); })[0];
+    if (!sec) return;
+    if (e.target.hasAttribute('data-section-title-input')) sec.title = e.target.value;
+    if (e.target.hasAttribute('data-section-desc-input')) sec.description = e.target.value;
+    renderMobilePreview();
+  });
+
+  function toggleOptionsWrap() {
+    document.getElementById('frm-q-options-wrap').hidden = !TYPE_HAS_OPTIONS[document.getElementById('frm-q-type').value];
+  }
+  document.getElementById('frm-q-type').addEventListener('change', toggleOptionsWrap);
+
+  function renderOptionsEditor() {
+    document.getElementById('frm-q-options-list').innerHTML = pendingOptions.map(function (opt, idx) {
+      return '<div class="qb-option-row" data-option-index="' + idx + '">' +
+        '<input class="input" data-option-text placeholder="ข้อความตัวเลือก" value="' + window.TFC.escapeHtml(opt.text) + '">' +
+        '<input class="input" type="number" step="0.5" data-option-score placeholder="คะแนน" value="' + opt.score + '">' +
+        '<button type="button" class="btn btn-icon btn-sm" data-remove-option aria-label="ลบตัวเลือก">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>' +
+        '</div>';
+    }).join('');
+  }
+
+  document.getElementById('frm-q-add-option').addEventListener('click', function () {
+    pendingOptions.push({ text: '', score: 0 });
+    renderOptionsEditor();
+  });
+  document.getElementById('frm-q-options-list').addEventListener('click', function (e) {
+    var row = e.target.closest('[data-option-index]');
+    if (row && e.target.closest('[data-remove-option]')) {
+      pendingOptions.splice(Number(row.getAttribute('data-option-index')), 1);
+      renderOptionsEditor();
+    }
+  });
+  document.getElementById('frm-q-options-list').addEventListener('input', function (e) {
+    var row = e.target.closest('[data-option-index]');
+    if (!row) return;
+    var idx = Number(row.getAttribute('data-option-index'));
+    if (e.target.hasAttribute('data-option-text')) pendingOptions[idx].text = e.target.value;
+    if (e.target.hasAttribute('data-option-score')) pendingOptions[idx].score = parseFloat(e.target.value) || 0;
+  });
+
+  function openQuestionModal() {
+    if (editingQuestionId) {
+      var q = questions.filter(function (x) { return x.id === editingQuestionId; })[0];
+      document.getElementById('frm-question-modal-title').textContent = 'แก้ไขคำถาม';
+      document.getElementById('frm-q-text').value = q.text;
+      document.getElementById('frm-q-type').value = q.type;
+      document.getElementById('frm-q-required').checked = q.required;
+      pendingOptions = (q.options || []).map(function (o) { return { text: o.text, score: o.score }; });
+    } else {
+      document.getElementById('frm-question-modal-title').textContent = 'เพิ่มคำถาม';
+      document.getElementById('frm-q-text').value = '';
+      document.getElementById('frm-q-type').selectedIndex = 0;
+      document.getElementById('frm-q-required').checked = false;
+      pendingOptions = [];
+    }
+    renderOptionsEditor();
+    toggleOptionsWrap();
+    window.TFC.openModal('frm-question-modal');
+  }
+
+  document.getElementById('frm-q-save').addEventListener('click', function () {
+    var text = document.getElementById('frm-q-text').value.trim();
+    if (!text) { window.TFC.showToast('กรุณาพิมพ์คำถาม', 'danger'); return; }
+    var type = document.getElementById('frm-q-type').value;
+    var required = document.getElementById('frm-q-required').checked;
+    var options = [];
+    if (TYPE_HAS_OPTIONS[type]) {
+      options = pendingOptions.filter(function (o) { return o.text.trim(); }).map(function (o) { return { text: o.text.trim(), score: o.score }; });
+      if (options.length < 2) { window.TFC.showToast('กรุณาเพิ่มตัวเลือกอย่างน้อย 2 ตัวเลือก', 'danger'); return; }
+    }
+
+    if (editingQuestionId) {
+      var q = questions.filter(function (x) { return x.id === editingQuestionId; })[0];
+      q.text = text; q.type = type; q.required = required; q.options = options;
+    } else {
+      questions.push({ id: newQuestionId(), sectionId: addQuestionSectionId, order: sectionQuestions(addQuestionSectionId).length + 1, text: text, type: type, required: required, options: options });
+    }
+    renderBuilder();
+    window.TFC.closeModal('frm-question-modal');
+    window.TFC.showToast('บันทึกคำถามแล้ว', 'success');
+  });
+
+  var pendingScoringIndex = null;
+  document.getElementById('frm-scoring-list').addEventListener('click', function (e) {
+    var trigger = e.target.closest('.action-menu-btn');
+    if (!trigger) return;
+    var row = trigger.closest('tr');
+    pendingScoringIndex = Array.prototype.indexOf.call(document.getElementById('frm-scoring-list').children, row);
+  });
+
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('.dropdown-item[data-action-key]');
+    if (!item) return;
+    var key = item.getAttribute('data-action-key');
+    var modalId = item.getAttribute('data-action-modal');
+
+    if (key === 'edit-question' && pendingQuestionId !== null) {
+      editingQuestionId = pendingQuestionId;
+      openQuestionModal();
+    }
+    if (key === 'delete-question' && pendingQuestionId !== null) {
+      pendingDelete = { type: 'question', id: pendingQuestionId };
+      document.getElementById('frm-delete-confirm-title').textContent = 'ยืนยันการลบคำถาม';
+      document.getElementById('frm-delete-confirm-desc').textContent = '';
+    }
+    if (modalId === 'frm-scoring-modal' && key === 'edit' && pendingScoringIndex !== null) {
+      editingScoringIndex = pendingScoringIndex;
+      var s = scoring[editingScoringIndex];
+      document.getElementById('frm-scoring-modal-title').textContent = 'แก้ไขเกณฑ์การให้คะแนน';
+      document.getElementById('frm-s-min').value = s.minScore;
+      document.getElementById('frm-s-max').value = s.maxScore;
+      document.getElementById('frm-s-label').value = s.label;
+      document.getElementById('frm-s-desc').value = s.description;
+    }
+    if (modalId === 'frm-scoring-delete-modal' && pendingScoringIndex !== null) {
+      editingScoringIndex = pendingScoringIndex;
+    }
+  });
+
+  document.getElementById('frm-delete-confirm-btn').addEventListener('click', function () {
+    if (!pendingDelete) return;
+    if (pendingDelete.type === 'section') {
+      deleteSection(pendingDelete.id);
+      window.TFC.showToast('ลบ Section แล้ว', 'success');
+    } else if (pendingDelete.type === 'question') {
+      deleteQuestion(pendingDelete.id);
+      window.TFC.showToast('ลบคำถามแล้ว', 'success');
+    }
+    pendingDelete = null;
+  });
+
+  /* ---- Step 4: scoring criteria CRUD (health_tracking only) ---- */
+  function renderScoring() {
+    document.getElementById('frm-scoring-list').innerHTML = scoring.map(function (s) {
+      return '<tr>' +
+        '<td>' + s.minScore + ' - ' + s.maxScore + '</td>' +
+        '<td>' + window.TFC.escapeHtml(s.label) + '</td>' +
+        '<td>' + window.TFC.escapeHtml(s.description || '-') + '</td>' +
+        '<td class="table-row-actions">' +
+        window.TFC.actionMenuTrigger([
+          { key: 'edit', label: 'แก้ไข', icon: 'edit', modal: 'frm-scoring-modal' },
+          { key: 'delete', label: 'ลบ', icon: 'delete', modal: 'frm-scoring-delete-modal', danger: true }
+        ]) + '</td></tr>';
+    }).join('');
+  }
+
+  document.querySelector('[data-open-modal="frm-scoring-modal"]').addEventListener('click', function () {
+    editingScoringIndex = null;
+    document.getElementById('frm-scoring-modal-title').textContent = 'เพิ่มเกณฑ์การให้คะแนน';
+    document.getElementById('frm-s-min').value = '';
+    document.getElementById('frm-s-max').value = '';
+    document.getElementById('frm-s-label').value = '';
+    document.getElementById('frm-s-desc').value = '';
+  });
+
+  document.getElementById('frm-s-save').addEventListener('click', function () {
+    var min = parseFloat(document.getElementById('frm-s-min').value);
+    var max = parseFloat(document.getElementById('frm-s-max').value);
+    var label = document.getElementById('frm-s-label').value.trim();
+    if (isNaN(min) || isNaN(max) || !label) { window.TFC.showToast('กรุณากรอกช่วงคะแนนและผลการประเมินให้ครบ', 'danger'); return; }
+    var s = { minScore: min, maxScore: max, label: label, description: document.getElementById('frm-s-desc').value.trim() };
+    if (editingScoringIndex !== null) {
+      scoring[editingScoringIndex] = s;
+    } else {
+      scoring.push(s);
+    }
+    renderScoring();
+    window.TFC.closeModal('frm-scoring-modal');
+    window.TFC.showToast('บันทึกเกณฑ์การให้คะแนนแล้ว', 'success');
+  });
+
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal-overlay" id="frm-scoring-delete-modal"><div class="modal modal-sm"><div class="modal-body text-center">' +
+    '<span class="modal-confirm-icon is-danger mx-auto"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg></span>' +
+    '<h3 class="modal-title mb-3">ยืนยันการลบเกณฑ์นี้</h3></div>' +
+    '<div class="modal-footer"><button class="btn btn-outline" data-close-modal>ยกเลิก</button><button class="btn btn-danger" id="frm-s-delete-confirm" data-close-modal>ลบ</button></div></div></div>'
+  );
+  document.getElementById('frm-s-delete-confirm').addEventListener('click', function () {
+    if (editingScoringIndex !== null) {
+      scoring.splice(editingScoringIndex, 1);
+      editingScoringIndex = null;
+      renderScoring();
+      window.TFC.showToast('ลบเกณฑ์แล้ว', 'success');
+    }
+  });
+
+  /* ---- Wizard wiring ---- */
+  var wizard = window.TFC.createWizard({
+    stepper: document.getElementById('frm-stepper'),
+    panelContainer: document.getElementById('wizard-panels'),
+    steps: [1, 2, 3, 5],
+    validate: function (step) {
+      if (step === 1) {
+        var name = document.getElementById('frm-name').value.trim();
+        var type = document.getElementById('frm-type').value;
+        if (!name) { window.TFC.showToast('กรุณากรอกชื่อแบบฟอร์ม', 'danger'); return false; }
+        if (!type) { window.TFC.showToast('กรุณาเลือกประเภทแบบฟอร์ม', 'danger'); return false; }
+      }
+      if (step === 2) {
+        var type2 = document.getElementById('frm-type').value;
+        if (type2 === 'registration' && !document.getElementById('frm-activity-reg').value) {
+          window.TFC.showToast('กรุณาเลือกกิจกรรมที่เชื่อมโยง', 'danger'); return false;
+        }
+        if (type2 === 'satisfaction' && !document.getElementById('frm-activity-sat').value) {
+          window.TFC.showToast('กรุณาเลือกกิจกรรมที่เชื่อมโยง', 'danger'); return false;
+        }
+        if (type2 === 'health_tracking' && (!document.getElementById('frm-sample-group').value || !document.getElementById('frm-round').value)) {
+          window.TFC.showToast('กรุณาเลือกกลุ่มตัวอย่างและรอบการติดตาม', 'danger'); return false;
+        }
+      }
+      return true;
+    },
+    onChange: function (step) {
+      updateActionButtons(step);
+      if (step === 5) renderStep5Summary();
+    }
+  });
+
+  function renderStepFourAvailability() {
+    var type = document.getElementById('frm-type').value;
+    var isHealth = type === 'health_tracking';
+    document.getElementById('frm-step-item-4').hidden = !isHealth;
+    document.getElementById('frm-line-4').hidden = !isHealth;
+    wizard.setSteps(isHealth ? [1, 2, 3, 4, 5] : [1, 2, 3, 5]);
+    updateActionButtons(wizard.getCurrent());
+  }
+
+  function updateActionButtons(step) {
+    var steps = wizard.getSteps();
+    var isFirst = steps.indexOf(step) === 0;
+    var isLast = steps.indexOf(step) === steps.length - 1;
+    document.getElementById('frm-btn-prev').hidden = isFirst;
+    document.getElementById('frm-btn-next').hidden = isLast;
+    document.getElementById('frm-btn-draft').hidden = !isLast;
+    document.getElementById('frm-btn-publish').hidden = !isLast;
+  }
+
+  document.getElementById('frm-btn-next').addEventListener('click', function () { wizard.next(); });
+  document.getElementById('frm-btn-prev').addEventListener('click', function () { wizard.prev(); });
+
+  function renderStep5Summary() {
+    var type = document.getElementById('frm-type').value;
+    var linkedText = '-';
+    if (type === 'registration') {
+      var actSel = document.getElementById('frm-activity-reg');
+      linkedText = actSel.options[actSel.selectedIndex] ? actSel.options[actSel.selectedIndex].textContent : '-';
+    } else if (type === 'satisfaction') {
+      var actSel2 = document.getElementById('frm-activity-sat');
+      linkedText = actSel2.options[actSel2.selectedIndex] ? actSel2.options[actSel2.selectedIndex].textContent : '-';
+    } else if (type === 'health_tracking') {
+      var grpSel = document.getElementById('frm-sample-group');
+      var rndSel = document.getElementById('frm-round');
+      linkedText = (grpSel.options[grpSel.selectedIndex] ? grpSel.options[grpSel.selectedIndex].textContent : '-') +
+        ' / ' + (rndSel.options[rndSel.selectedIndex] ? rndSel.options[rndSel.selectedIndex].textContent : '-');
+    }
+    document.getElementById('frm-preview').innerHTML =
+      '<div class="preview-row"><span class="k">ชื่อแบบฟอร์ม</span><span class="v">' + window.TFC.escapeHtml(document.getElementById('frm-name').value) + '</span></div>' +
+      '<div class="preview-row"><span class="k">ประเภท</span><span class="v">' + (typeLabel[type] || '-') + '</span></div>' +
+      '<div class="preview-row"><span class="k">เชื่อมโยงกับ</span><span class="v">' + window.TFC.escapeHtml(linkedText) + '</span></div>' +
+      '<div class="preview-row"><span class="k">จำนวน Section</span><span class="v">' + sections.length + ' Section</span></div>' +
+      '<div class="preview-row"><span class="k">จำนวนคำถาม</span><span class="v">' + questions.length + ' ข้อ</span></div>' +
+      (type === 'health_tracking' ? '<div class="preview-row"><span class="k">เกณฑ์การให้คะแนน</span><span class="v">' + scoring.length + ' ช่วง</span></div>' : '');
+  }
+
+  function collectFormPayload(status) {
+    var type = document.getElementById('frm-type').value;
+    var forms = window.TFC_MOCK.forms;
+    var nextNum = forms.length + 1;
+    var id = 'FRM-' + String(nextNum).padStart(3, '0');
+    var payload = {
+      id: id,
+      name: document.getElementById('frm-name').value.trim(),
+      formType: type,
+      requiresIdentityVerification: type !== 'satisfaction',
+      verificationTiming: type === 'health_tracking' ? 'before_access' : (type === 'registration' ? 'during_submission' : 'none'),
+      linkedTo: type === 'health_tracking' ? 'sample_group' : 'activity',
+      linkedActivityId: null, linkedActivityName: null, linkedActivityIds: null,
+      linkedSampleGroupId: null, roundId: null,
+      allowResubmission: type !== 'registration',
+      status: status, questionCount: questions.length, responseCount: 0,
+      createdAt: new Date().toISOString().slice(0, 10)
+    };
+    if (type === 'registration') {
+      var sel = document.getElementById('frm-activity-reg');
+      payload.linkedActivityId = sel.value;
+      payload.linkedActivityName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : null;
+    } else if (type === 'satisfaction') {
+      // Step 2 (out of scope for this task) still only lets you pick one activity at creation
+      // time — many-to-many editing happens afterwards via "เชื่อมโยงกิจกรรม" on the Form List.
+      // Stored as a 1-element array here so both places share the same linkedActivityIds shape.
+      var sel2 = document.getElementById('frm-activity-sat');
+      payload.linkedActivityIds = sel2.value ? [sel2.value] : [];
+    } else if (type === 'health_tracking') {
+      payload.linkedSampleGroupId = document.getElementById('frm-sample-group').value;
+      payload.roundId = document.getElementById('frm-round').value;
+    }
+    return payload;
+  }
+
+  function publish(status) {
+    var payload = collectFormPayload(status);
+    window.TFC_MOCK.forms.push(payload);
+    window.TFC_MOCK.formSections[payload.id] = sections.slice();
+    window.TFC_MOCK.formQuestions[payload.id] = questions.slice();
+    window.TFC_MOCK.formResponses[payload.id] = [];
+    if (payload.formType === 'health_tracking') {
+      window.TFC_MOCK.scoringCriteria[payload.id] = scoring.slice();
+      var round = (window.TFC_MOCK.trackingRounds || []).filter(function (r) { return r.id === payload.roundId; })[0];
+      if (round) round.formId = payload.id;
+    }
+    window.TFC.showToast(status === 'เผยแพร่แล้ว' ? 'เผยแพร่แบบฟอร์มสำเร็จ' : 'บันทึกฉบับร่างสำเร็จ', 'success');
+    setTimeout(function () { window.location.href = 'list.html'; }, 700);
+  }
+
+  document.getElementById('frm-btn-draft').addEventListener('click', function () { publish('ฉบับร่าง'); });
+  document.getElementById('frm-btn-publish').addEventListener('click', function () { publish('เผยแพร่แล้ว'); });
+
+  renderBuilder();
+  renderScoring();
+  renderStep2Visibility();
+  renderStepFourAvailability();
+})();
+</script>
+</body>
+</html>

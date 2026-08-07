@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/utilities.css">
+<link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="sidebar-logo avatar-lg">TF</div>
+      <div>
+        <h1 class="auth-brand-title font-semibold">TheFarmConcept</h1>
+        <p class="caption mb-0">ระบบติดตามและประเมินผลการเปลี่ยนแปลงสุขภาพ</p>
+      </div>
+    </div>
+
+    <form data-mock-submit="เข้าสู่ระบบสำเร็จ (ตัวอย่าง)" data-mock-redirect="dashboard.html">
+      <div class="form-group">
+        <label class="form-label" for="login-email">อีเมลหรือชื่อผู้ใช้งาน<span class="form-required">*</span></label>
+        <input class="input" type="text" id="login-email" name="email" placeholder="เช่น sunisa@thefarmconcept.org" data-validate required>
+        <div class="form-error-message hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          กรุณากรอกอีเมลหรือชื่อผู้ใช้งาน
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">รหัสผ่าน<span class="form-required">*</span></label>
+        <input class="input" type="password" id="login-password" name="password" placeholder="กรอกรหัสผ่าน" data-validate required>
+        <div class="form-error-message hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          กรุณากรอกรหัสผ่าน
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-5">
+        <label class="checkbox-item">
+          <input type="checkbox" name="remember">
+          <span class="small">จดจำการเข้าสู่ระบบ</span>
+        </label>
+        <a class="small" href="#">ลืมรหัสผ่าน?</a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">เข้าสู่ระบบ</button>
+    </form>
+
+    <p class="small text-secondary text-center mt-5 mb-0">
+      สำหรับผู้เข้าร่วมกิจกรรม ดู
+      <a href="pages/public/activities.html">กิจกรรมสาธารณะ</a>
+      โดยไม่ต้องเข้าสู่ระบบ
+    </p>
+  </div>
+</div>
+
+<script src="assets/js/form.js"></script>
+<script src="assets/js/smart-select.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+/* ==========================================================================
+   TheFarmConcept — Base Styles
+   Reset + Typography + Base Element Styles
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--space-3);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+h1 { font-size: var(--font-size-page-title); }
+h2 { font-size: var(--font-size-section-title); }
+h3 { font-size: var(--font-size-card-title); }
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+/* Focus visibility — accessibility requirement, must remain visible everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.small {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}

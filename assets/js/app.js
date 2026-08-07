@@ -1,0 +1,90 @@
+/* TheFarmConcept — App bootstrap & shared helpers (load last, after other assets/js files) */
+window.TFC = window.TFC || {};
+
+(function () {
+  /* Generic row-action navigation: <button data-nav-link="target.html"> */
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-nav-link]');
+    if (trigger) window.location.href = trigger.getAttribute('data-nav-link');
+
+    if (e.target.closest('[data-go-back]')) history.back();
+  });
+
+  /* Highlight sidebar nav item matching current page (compare resolved pathname, not just filename, since module folders reuse names like list.html) */
+  document.querySelectorAll('.nav-item[href]').forEach(function (link) {
+    if (link.pathname === window.location.pathname) {
+      link.classList.add('is-active');
+    }
+  });
+
+  /* Thai date formatter: 2026-08-10 -> 10 ส.ค. 2569 */
+  var thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  window.TFC.formatThaiDate = function (isoDate) {
+    var d = new Date(isoDate);
+    return d.getDate() + ' ' + thaiMonths[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+  };
+
+  /* window.TFC.escapeHtml now lives in mock-data.js (loads first on every page, before this file) */
+
+  /* Simulate a short async load, then swap loading -> content (used by [data-loading-target]) */
+  window.TFC.simulateLoad = function (loadingEl, contentEl, delay) {
+    setTimeout(function () {
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) contentEl.classList.remove('hidden');
+    }, delay || 600);
+  };
+
+  /* Auto-render shared notification dropdown from mock data, if present on the page */
+  var notifBadge = document.querySelector('[data-notification-badge]');
+  var notifList = document.querySelector('[data-notification-list]');
+  var notifications = (window.TFC_MOCK && window.TFC_MOCK.notifications) || [];
+
+  if (notifBadge) {
+    notifBadge.classList.toggle('hidden', notifications.length === 0);
+  }
+
+  if (notifList) {
+    if (notifications.length) {
+      notifList.innerHTML = notifications.map(function (n) {
+        return '<div class="dropdown-item notification-item">' +
+          '<strong>' + window.TFC.escapeHtml(n.title) + '</strong>' +
+          '<span class="text-secondary small">' + window.TFC.escapeHtml(n.detail) + '</span>' +
+          '<span class="caption">' + window.TFC.escapeHtml(n.time) + '</span>' +
+          '</div>';
+      }).join('');
+    } else {
+      notifList.innerHTML = '<div class="notification-empty">ไม่มีการแจ้งเตือนใหม่</div>';
+    }
+  }
+
+  /* Auto-render notification panel (card list, not dropdown) from mock data, if present on the page */
+  var notifPanel = document.querySelector('[data-notification-panel]');
+  if (notifPanel) {
+    var iconByType = { info: 'info', warning: 'warning', danger: 'danger' };
+    notifPanel.innerHTML = notifications.map(function (n) {
+      var iconClass = n.type === 'warning' ? 'is-warning' : (n.type === 'danger' ? 'is-danger' : '');
+      return '<div class="list-row">' +
+        '<span class="list-row-icon ' + iconClass + '">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' +
+        '</span>' +
+        '<span class="list-row-body">' +
+        '<div class="small font-medium">' + window.TFC.escapeHtml(n.title) + '</div>' +
+        '<div class="caption text-secondary">' + window.TFC.escapeHtml(n.detail) + '</div>' +
+        '</span>' +
+        '</div>';
+    }).join('') || '<div class="notification-empty">ไม่มีการแจ้งเตือนใหม่</div>';
+  }
+
+  /* Auto-render recent activity timeline from mock data, if present on the page */
+  var timelineEl = document.querySelector('[data-recent-activity]');
+  var recentLog = (window.TFC_MOCK && window.TFC_MOCK.recentActivityLog) || [];
+  if (timelineEl) {
+    timelineEl.innerHTML = recentLog.map(function (item) {
+      return '<div class="timeline-item">' +
+        '<div class="timeline-time">' + window.TFC.escapeHtml(item.time) + '</div>' +
+        '<div class="timeline-title">' + window.TFC.escapeHtml(item.title) + '</div>' +
+        '<div class="small text-secondary">' + window.TFC.escapeHtml(item.detail) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+})();

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบฟอร์ม | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<header class="public-header">
+  <div class="public-header-inner">
+    <a href="activities.html" class="public-logo">
+      <span class="sidebar-logo">TF</span>
+      <span>TheFarmConcept</span>
+    </a>
+    <nav class="public-nav">
+      <a href="activities.html">กิจกรรม</a>
+      <a href="activities.html#screen-verify">ตรวจสอบสถานะ</a>
+      <a href="history.html">ประวัติการเข้าร่วม</a>
+      <a href="../../login.html" class="btn btn-primary btn-sm">เข้าสู่ระบบ</a>
+    </nav>
+    <button type="button" class="public-menu-btn" aria-label="เปิดเมนู">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="public-content public-content-narrow">
+
+  <!-- ยืนยันตัวตนก่อนเข้าทำ — เฉพาะแบบติดตามสุขภาพ (verificationTiming = before_access) -->
+  <div id="verify-section" class="hidden">
+    <div class="card text-center">
+      <h1 class="mb-2">ยืนยันตัวตนก่อนทำแบบประเมิน</h1>
+      <p class="text-secondary mb-4">กรุณากรอกเบอร์โทรศัพท์หรืออีเมลที่ลงทะเบียนไว้ในกลุ่มตัวอย่าง เพื่อเปิดแบบประเมินรอบนี้</p>
+      <div class="form-group text-start">
+        <input class="input" id="verify-input" placeholder="เบอร์โทรศัพท์ / อีเมล">
+      </div>
+      <button type="button" class="btn btn-primary btn-block" id="verify-btn">ยืนยันตัวตน</button>
+    </div>
+  </div>
+
+  <!-- ไม่พบข้อมูล / ตอบซ้ำ -->
+  <div id="blocked-section" class="hidden">
+    <div class="card text-center">
+      <span class="modal-confirm-icon is-danger mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      </span>
+      <h1 class="mb-2" id="blocked-title">-</h1>
+      <p class="text-secondary mb-4" id="blocked-desc">-</p>
+      <a href="activities.html" class="btn btn-outline">กลับไปหน้ากิจกรรม</a>
+    </div>
+  </div>
+
+  <!-- แบบฟอร์ม (ใช้ร่วมกันทั้ง 3 ประเภท) -->
+  <div id="form-response-section" class="hidden">
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1 id="resp-title">แบบฟอร์ม</h1>
+        <p class="page-description" id="resp-subtitle">-</p>
+      </div>
+    </div>
+
+    <div class="progress mb-5">
+      <div class="progress-bar" id="resp-progress-bar"></div>
+    </div>
+
+    <form id="response-form">
+      <!-- ข้อมูลผู้ลงทะเบียน — เฉพาะแบบลงทะเบียน (ยืนยันตัวตนเป็นส่วนหนึ่งของฟอร์ม ไม่ auto-fill จากประวัติเดิม) -->
+      <div id="identity-fields" class="card mb-4 hidden">
+        <h2 class="card-title">ข้อมูลผู้ลงทะเบียน</h2>
+        <div class="form-group">
+          <label class="form-label" for="resp-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
+          <input class="input" id="resp-name" placeholder="ชื่อ-นามสกุล" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="resp-phone">เบอร์โทรศัพท์<span class="form-required">*</span></label>
+            <input class="input" id="resp-phone" placeholder="08x-xxx-xxxx" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="resp-email">อีเมล<span class="form-required">*</span></label>
+            <input class="input" type="email" id="resp-email" placeholder="name@example.com" required>
+          </div>
+        </div>
+      </div>
+
+      <div id="resp-question-list" class="flex flex-col gap-4"></div>
+
+      <div class="form-action-bar mt-5">
+        <button type="submit" class="btn btn-primary btn-block">ส่งแบบฟอร์ม</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- สำเร็จ -->
+  <div id="success-section" class="hidden">
+    <div class="card text-center">
+      <span class="result-icon-circle">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+      </span>
+      <h1 class="mb-2">ส่งแบบฟอร์มสำเร็จ</h1>
+      <p class="text-secondary mb-5" id="success-desc">ขอบคุณสำหรับข้อมูลของท่าน</p>
+      <a href="activities.html" class="btn btn-primary">กลับไปหน้ากิจกรรม</a>
+    </div>
+  </div>
+
+  <!-- ไม่พบแบบฟอร์ม -->
+  <div id="not-found-section" class="hidden">
+    <div class="card text-center">
+      <h1 class="mb-2">ไม่พบแบบฟอร์มที่ระบุ</h1>
+      <p class="text-secondary mb-4">ลิงก์นี้อาจไม่ถูกต้องหรือแบบฟอร์มถูกปิดใช้งานแล้ว</p>
+      <a href="activities.html" class="btn btn-outline">กลับไปหน้ากิจกรรม</a>
+    </div>
+  </div>
+</main>
+
+<footer class="public-footer">
+  <div class="public-footer-inner">
+    <div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="sidebar-logo">TF</span>
+        <strong>TheFarmConcept</strong>
+      </div>
+      <p class="small mb-0">ระบบติดตามและประเมินผลการเปลี่ยนแปลงสุขภาพ</p>
+    </div>
+    <div>
+      <div class="font-medium mb-2">ลิงก์ด่วน</div>
+      <div class="flex flex-col gap-2">
+        <a href="activities.html">กิจกรรมทั้งหมด</a>
+        <a href="activities.html#screen-verify">ตรวจสอบสถานะการลงทะเบียน</a>
+        <a href="../../login.html">เข้าสู่ระบบเจ้าหน้าที่</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="../../assets/js/mock-data.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var forms = (window.TFC_MOCK && window.TFC_MOCK.forms) || [];
+  var params = new URLSearchParams(window.location.search);
+  var formId = params.get('form');
+  var form = forms.filter(function (f) { return f.id === formId; })[0];
+
+  var sections = ['verify-section', 'blocked-section', 'form-response-section', 'success-section', 'not-found-section'];
+  function showOnly(id) {
+    sections.forEach(function (s) { document.getElementById(s).classList.toggle('hidden', s !== id); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (!form) {
+    showOnly('not-found-section');
+    return;
+  }
+
+  var sections = (window.TFC_MOCK.formSections && window.TFC_MOCK.formSections[formId]) || [];
+  var rawQuestions = (window.TFC_MOCK.formQuestions && window.TFC_MOCK.formQuestions[formId]) || [];
+  var verifiedMember = null; // set once identity is confirmed against the sample group (health_tracking only)
+
+  // Render/scoring order follows (section.order, question.order) — matching what the Question
+  // Builder's Section reordering actually controls — rather than raw array insertion order.
+  // `questions` here is that flattened, correctly-ordered sequence; its position is the same
+  // "q_<index>" / answers[index+1] key basis used everywhere else in this module.
+  var sectionById = {};
+  sections.forEach(function (s) { sectionById[s.id] = s; });
+  var questions = rawQuestions.slice().sort(function (a, b) {
+    var secA = sectionById[a.sectionId], secB = sectionById[b.sectionId];
+    var secOrderA = secA ? secA.order : 0, secOrderB = secB ? secB.order : 0;
+    return secOrderA - secOrderB || a.order - b.order;
+  });
+
+  document.getElementById('resp-title').textContent = form.name;
+  document.getElementById('resp-subtitle').textContent = 'ใช้เวลาเพียง 2-3 นาที คำตอบของท่านจะถูกเก็บเป็นความลับ';
+  document.getElementById('identity-fields').classList.toggle('hidden', form.formType !== 'registration');
+
+  var TYPE_HAS_OPTIONS = { 'ตัวเลือกเดียว': true, 'ตัวเลือกหลายข้อ': true };
+
+  function renderQuestions() {
+    var lastSectionId = null;
+    document.getElementById('resp-question-list').innerHTML = questions.map(function (q, index) {
+      var name = 'q_' + index;
+      var body = '';
+      if (q.type.indexOf('คะแนน') !== -1) {
+        body = '<div class="flex gap-3" role="radiogroup">' + [1, 2, 3, 4, 5].map(function (score) {
+          return '<label class="radio-item"><input type="radio" name="' + name + '" value="' + score + '" data-score="' + score + '" ' + (q.required ? 'required' : '') + '><span>' + score + '</span></label>';
+        }).join('') + '</div>';
+      } else if (q.type === 'ตัวเลือกเดียว' || q.type === 'ตัวเลือกหลายข้อ') {
+        var inputType = q.type === 'ตัวเลือกเดียว' ? 'radio' : 'checkbox';
+        body = '<div class="flex flex-col gap-2">' + (q.options || []).map(function (opt) {
+          return '<label class="radio-item"><input type="' + inputType + '" name="' + name + (inputType === 'checkbox' ? '[]' : '') + '" value="' + window.TFC.escapeHtml(opt.text) + '" data-score="' + opt.score + '"' + (q.required ? ' required' : '') + '><span>' + window.TFC.escapeHtml(opt.text) + '</span></label>';
+        }).join('') + '</div>';
+      } else if (q.type === 'ข้อความยาว') {
+        body = '<textarea class="textarea" name="' + name + '" placeholder="พิมพ์ความคิดเห็นของท่าน"' + (q.required ? ' required' : '') + '></textarea>';
+      } else {
+        body = '<input class="input" type="text" name="' + name + '" placeholder="พิมพ์คำตอบสั้นๆ"' + (q.required ? ' required' : '') + '>';
+      }
+      var sectionHeader = '';
+      if (q.sectionId !== lastSectionId) {
+        lastSectionId = q.sectionId;
+        var sec = sectionById[q.sectionId];
+        if (sec) {
+          sectionHeader = '<h2 class="card-title mt-4 mb-1">' + window.TFC.escapeHtml(sec.title) + '</h2>' +
+            (sec.description ? '<p class="small text-secondary mb-2">' + window.TFC.escapeHtml(sec.description) + '</p>' : '');
+        }
+      }
+      return sectionHeader + '<div class="card">' +
+        '<label class="form-label" for="' + name + '">' + (index + 1) + '. ' + window.TFC.escapeHtml(q.text) + (q.required ? '<span class="form-required">*</span>' : '') + '</label>' +
+        body +
+        '</div>';
+    }).join('');
+  }
+  renderQuestions();
+
+  function updateProgress() {
+    var requiredInputs = document.querySelectorAll('#response-form [required]');
+    var groups = {};
+    requiredInputs.forEach(function (input) { groups[input.name || input.id] = groups[input.name || input.id] || false; });
+    document.querySelectorAll('#response-form input, #response-form textarea').forEach(function (input) {
+      var key = input.name || input.id;
+      if (!groups.hasOwnProperty(key)) return;
+      if (input.type === 'radio' || input.type === 'checkbox') { if (input.checked) groups[key] = true; }
+      else if (input.value.trim()) { groups[key] = true; }
+    });
+    var total = Object.keys(groups).length || 1;
+    var answered = Object.values(groups).filter(Boolean).length;
+    document.getElementById('resp-progress-bar').style.width = Math.round((answered / total) * 100) + '%';
+  }
+  document.getElementById('response-form').addEventListener('change', updateProgress);
+  document.getElementById('response-form').addEventListener('input', updateProgress);
+
+  // Score per question: rating value as-is, or the configured score of whichever option(s)
+  // the respondent picked (averaged for multi-select) — never guessed/derived from position.
+  // Text questions never contribute. Overall score is the average across scored questions.
+  function computeScore(formEl) {
+    var perQuestionScores = [];
+    questions.forEach(function (q, index) {
+      var name = 'q_' + index;
+      if (q.type.indexOf('คะแนน') !== -1) {
+        var checked = formEl.querySelector('[name="' + name + '"]:checked');
+        if (checked) perQuestionScores.push(Number(checked.value));
+      } else if (TYPE_HAS_OPTIONS[q.type]) {
+        var picked = Array.prototype.slice.call(formEl.querySelectorAll('[name="' + name + (q.type === 'ตัวเลือกหลายข้อ' ? '[]' : '') + '"]:checked'));
+        if (picked.length) {
+          var sum = picked.reduce(function (s, el) { return s + parseFloat(el.getAttribute('data-score') || '0'); }, 0);
+          perQuestionScores.push(sum / picked.length);
+        }
+      }
+    });
+    if (!perQuestionScores.length) return null;
+    return perQuestionScores.reduce(function (a, b) { return a + b; }, 0) / perQuestionScores.length;
+  }
+
+  function collectAnswers(formEl) {
+    var answers = {};
+    questions.forEach(function (q, index) {
+      var name = 'q_' + index;
+      if (q.type.indexOf('คะแนน') !== -1 || q.type === 'ตัวเลือกเดียว') {
+        var checked = formEl.querySelector('[name="' + name + '"]:checked');
+        answers[index + 1] = checked ? (q.type.indexOf('คะแนน') !== -1 ? Number(checked.value) : checked.value) : null;
+      } else if (q.type === 'ตัวเลือกหลายข้อ') {
+        var picked = Array.prototype.slice.call(formEl.querySelectorAll('[name="' + name + '[]"]:checked'));
+        answers[index + 1] = picked.map(function (el) { return el.value; });
+      } else {
+        var field = formEl.querySelector('[name="' + name + '"]');
+        answers[index + 1] = field ? field.value : null;
+      }
+    });
+    return answers;
+  }
+
+  document.getElementById('response-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var formEl = e.target;
+    var missingRequired = Array.from(formEl.querySelectorAll('[required]')).some(function (input) {
+      if (input.type === 'radio' || input.type === 'checkbox') return !formEl.querySelector('input[name="' + input.name + '"]:checked');
+      return !input.value.trim();
+    });
+    if (missingRequired) {
+      window.TFC.showToast('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', 'danger');
+      return;
+    }
+
+    var submitBtn = formEl.querySelector('[type="submit"]');
+    if (submitBtn.classList.contains('btn-loading')) return;
+    submitBtn.classList.add('btn-loading');
+    submitBtn.disabled = true;
+
+    setTimeout(function () {
+      var name, phone;
+      if (form.formType === 'registration') {
+        name = document.getElementById('resp-name').value.trim();
+        phone = document.getElementById('resp-phone').value.trim();
+      } else if (verifiedMember) {
+        name = verifiedMember.name;
+        phone = verifiedMember.phone;
+      } else {
+        name = 'ไม่ระบุตัวตน';
+        phone = '-';
+      }
+
+      var score = null;
+      if (form.formType !== 'registration') {
+        score = computeScore(formEl);
+      }
+
+      window.TFC_MOCK.formResponses[formId] = window.TFC_MOCK.formResponses[formId] || [];
+      window.TFC_MOCK.formResponses[formId].push({
+        name: name, phone: phone,
+        submittedAt: new Date().toISOString().slice(0, 10),
+        answers: collectAnswers(formEl),
+        score: score
+      });
+      form.responseCount = window.TFC_MOCK.formResponses[formId].length;
+
+      var scoreBand = null;
+      if (score !== null && window.TFC_MOCK.scoringCriteria[formId]) {
+        scoreBand = window.TFC_MOCK.scoringCriteria[formId].filter(function (b) { return score >= b.minScore && score <= b.maxScore; })[0];
+      }
+      document.getElementById('success-desc').textContent = scoreBand
+        ? 'ผลการประเมินของท่านอยู่ในระดับ "' + scoreBand.label + '" — ' + scoreBand.description
+        : 'ขอบคุณสำหรับข้อมูลของท่าน';
+
+      showOnly('success-section');
+    }, 800);
+  });
+
+  /* ---- Access gating per form type ---- */
+  if (form.verificationTiming === 'before_access') {
+    // health_tracking: verify identity against the linked sample group before opening the form.
+    showOnly('verify-section');
+    document.getElementById('verify-btn').addEventListener('click', function () {
+      var val = document.getElementById('verify-input').value.trim();
+      if (!val) { window.TFC.showToast('กรุณากรอกเบอร์โทรศัพท์หรืออีเมล', 'danger'); return; }
+
+      var group = (window.TFC_MOCK.sampleGroups || []).filter(function (g) { return g.id === form.linkedSampleGroupId; })[0];
+      var member = group ? (group.members || []).filter(function (m) { return m.phone === val || m.email === val; })[0] : null;
+
+      if (!member) {
+        document.getElementById('blocked-title').textContent = 'ไม่พบข้อมูลของท่าน';
+        document.getElementById('blocked-desc').textContent = 'ไม่พบข้อมูลผู้เข้าร่วมในกลุ่มตัวอย่าง กรุณาติดต่อเจ้าหน้าที่';
+        showOnly('blocked-section');
+        return;
+      }
+
+      var existing = (window.TFC_MOCK.formResponses[formId] || []).filter(function (r) { return r.phone === member.phone; })[0];
+      if (existing) {
+        document.getElementById('blocked-title').textContent = 'ตอบแบบประเมินแล้ว';
+        document.getElementById('blocked-desc').textContent = 'คุณได้ตอบแบบประเมินรอบนี้เรียบร้อยแล้ว';
+        showOnly('blocked-section');
+        return;
+      }
+
+      verifiedMember = member;
+      showOnly('form-response-section');
+      updateProgress();
+    });
+  } else {
+    // registration (verification is part of the form itself) and satisfaction (no verification at all).
+    showOnly('form-response-section');
+    updateProgress();
+  }
+})();
+</script>
+</body>
+</html>

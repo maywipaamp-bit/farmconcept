@@ -1,0 +1,195 @@
+/* ==========================================================================
+   TheFarmConcept — Responsive Overrides
+   Desktop: >=1024px (Default) / Tablet: 768–1023px / Mobile: <768px (min 375px)
+   ========================================================================== */
+
+/* ---------- Tablet & Mobile (<1024px): narrower topbar ---------- */
+@media (max-width: 1023px) {
+  .topbar-search {
+    display: none;
+  }
+}
+
+/* ---------- Tablet (768–1023px): sidebar behaves like Desktop (sticky + collapsible via arrow toggle), only grid density changes ---------- */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- Mobile (<768px): Sidebar becomes a Drawer (Desktop/Tablet keep the persistent collapsible sidebar) ---------- */
+@media (max-width: 767px) {
+  .topbar-menu-btn {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+    transition: transform var(--transition-base);
+  }
+
+  .app-shell.is-sidebar-open .sidebar {
+    transform: translateX(0);
+    width: var(--sidebar-width);
+  }
+
+  .app-shell.is-sidebar-open .sidebar-overlay {
+    display: block;
+  }
+
+  /* On mobile the drawer always shows full labels, even if the desktop/tablet collapse preference was persisted */
+  .app-shell.is-sidebar-collapsed .sidebar-title,
+  .app-shell.is-sidebar-collapsed .nav-label,
+  .app-shell.is-sidebar-collapsed .nav-section-title {
+    display: block;
+  }
+
+  .app-shell.is-sidebar-collapsed .sidebar {
+    width: var(--sidebar-width);
+  }
+
+  /* Collapse-to-icons is a Desktop/Tablet affordance; Mobile only needs open/close of the Drawer */
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .content {
+    padding: var(--space-4);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header-actions {
+    width: 100%;
+  }
+
+  .page-header-actions .btn {
+    flex: 1;
+  }
+
+  .form-row,
+  .summary-cards,
+  .stat-list,
+  .description-list,
+  .dashboard-grid,
+  .report-link-grid,
+  .activity-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .register-summary {
+    flex-direction: column;
+  }
+
+  .events-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .event-card-thumb {
+    width: 72px;
+    height: 72px;
+  }
+
+  .event-filter-pills {
+    gap: var(--space-1);
+  }
+
+  .bar-chart-row {
+    grid-template-columns: 100px 1fr 48px;
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: calc(100vh - var(--space-4));
+  }
+
+  .modal-overlay {
+    padding: var(--space-3);
+    align-items: flex-end;
+  }
+
+  .modal-overlay .modal {
+    width: 100%;
+  }
+
+  .drawer {
+    max-width: 100%;
+  }
+
+  .public-nav {
+    display: none;
+  }
+
+  .public-nav.is-open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-md);
+  }
+
+  .public-menu-btn {
+    display: flex;
+  }
+
+  .public-footer-inner {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .form-action-bar {
+    flex-direction: column-reverse;
+  }
+
+  .form-action-bar .btn {
+    width: 100%;
+  }
+
+  .auth-card {
+    padding: var(--space-5);
+  }
+
+  .topbar {
+    padding: 0 var(--space-3);
+  }
+
+  .hidden-mobile {
+    display: none !important;
+  }
+}

@@ -1,0 +1,279 @@
+/* TheFarmConcept — Smart Dropdown: searchable select with an inline "+ เพิ่มรายการใหม่" modal.
+   Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนบางบัว">...options...</select>
+   Progressive enhancement — the original <select> stays in the DOM (hidden) and keeps receiving
+   value updates + a "change" event, so existing form logic that reads select.value keeps working. */
+(function () {
+  var activePanel = null;
+  var activeWidget = null;
+  var highlightIndex = -1;
+
+  var addModal = null;
+  var addModalTarget = null; // { select, widget }
+
+  function closePanel() {
+    if (activePanel) {
+      activePanel.classList.remove('is-open');
+      if (activeWidget) activeWidget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'false');
+    }
+    activePanel = null;
+    activeWidget = null;
+    highlightIndex = -1;
+  }
+
+  function visibleOptions(panel) {
+    return Array.from(panel.querySelectorAll('.smart-select-option')).filter(function (opt) {
+      return opt.style.display !== 'none';
+    });
+  }
+
+  function setHighlight(panel, index) {
+    var opts = visibleOptions(panel);
+    opts.forEach(function (o) { o.classList.remove('is-highlighted'); });
+    if (opts[index]) {
+      opts[index].classList.add('is-highlighted');
+      opts[index].scrollIntoView({ block: 'nearest' });
+    }
+    highlightIndex = index;
+  }
+
+  function selectOption(widget, select, optionEl) {
+    var value = optionEl.getAttribute('data-value');
+    select.value = value;
+    widget.querySelector('.smart-select-value').textContent = optionEl.textContent;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    closePanel();
+    widget.querySelector('.smart-select-trigger').focus();
+  }
+
+  function rebuildOptionsList(widget, select) {
+    var panel = widget.querySelector('.smart-select-panel');
+    var list = panel.querySelector('.smart-select-options');
+    list.innerHTML = Array.from(select.options).map(function (opt) {
+      return '<button type="button" class="dropdown-item smart-select-option" role="option" data-value="' +
+        window.TFC.escapeHtml(opt.value) + '">' + window.TFC.escapeHtml(opt.textContent) + '</button>';
+    }).join('');
+  }
+
+  function openPanel(widget, select) {
+    closePanel();
+    var panel = widget.querySelector('.smart-select-panel');
+    var search = panel.querySelector('.smart-select-search-input');
+    search.value = '';
+    filterOptions(panel, '');
+    panel.classList.add('is-open');
+    widget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'true');
+    activePanel = panel;
+    activeWidget = widget;
+    highlightIndex = -1;
+    setTimeout(function () { search.focus(); }, 0);
+  }
+
+  function filterOptions(panel, keyword) {
+    var kw = keyword.trim().toLowerCase();
+    var any = false;
+    panel.querySelectorAll('.smart-select-option').forEach(function (opt) {
+      var match = !kw || opt.textContent.toLowerCase().indexOf(kw) !== -1;
+      opt.style.display = match ? '' : 'none';
+      if (match) any = true;
+    });
+    var empty = panel.querySelector('.smart-select-empty');
+    if (empty) empty.classList.toggle('hidden', any);
+    highlightIndex = -1;
+  }
+
+  /* ---------- Add-new-item modal (one shared instance, reused by every Smart Dropdown on the page) ---------- */
+  function ensureAddModal() {
+    if (addModal) return addModal;
+    var wrap = document.createElement('div');
+    wrap.className = 'modal-overlay';
+    wrap.id = 'smart-select-add-modal';
+    wrap.innerHTML =
+      '<div class="modal modal-sm">' +
+      '<div class="modal-header">' +
+      '<h3 class="modal-title" data-role="title">เพิ่มรายการใหม่</h3>' +
+      '<button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button></div>' +
+      '<div class="modal-body">' +
+      '<div class="form-group mb-0">' +
+      '<label class="form-label" for="smart-select-add-input" data-role="label">ชื่อรายการ<span class="form-required">*</span></label>' +
+      '<input class="input" id="smart-select-add-input" data-role="input">' +
+      '<div class="form-error-message hidden" data-role="error">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' +
+      '<span data-role="error-text"></span></div>' +
+      '</div></div>' +
+      '<div class="modal-footer">' +
+      '<button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>' +
+      '<button type="button" class="btn btn-primary" data-role="save">บันทึก</button>' +
+      '</div></div>';
+    document.body.appendChild(wrap);
+    addModal = wrap;
+
+    wrap.querySelector('[data-role="save"]').addEventListener('click', handleAddSave);
+    wrap.querySelector('[data-role="input"]').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); handleAddSave(); }
+    });
+    return addModal;
+  }
+
+  function showAddError(message) {
+    var errorEl = addModal.querySelector('[data-role="error"]');
+    addModal.querySelector('[data-role="error-text"]').textContent = message;
+    addModal.querySelector('[data-role="input"]').classList.add('is-invalid');
+    errorEl.classList.remove('hidden');
+  }
+
+  function clearAddError() {
+    addModal.querySelector('[data-role="error"]').classList.add('hidden');
+    addModal.querySelector('[data-role="input"]').classList.remove('is-invalid');
+  }
+
+  function handleAddSave() {
+    if (!addModalTarget) return;
+    var input = addModal.querySelector('[data-role="input"]');
+    var value = input.value.trim();
+    clearAddError();
+
+    if (!value) {
+      showAddError('กรุณากรอกชื่อรายการ');
+      return;
+    }
+
+    var select = addModalTarget.select;
+    var isDuplicate = Array.from(select.options).some(function (opt) {
+      return opt.textContent.trim().toLowerCase() === value.toLowerCase();
+    });
+    if (isDuplicate) {
+      showAddError('มีรายการนี้อยู่แล้ว กรุณาใช้ชื่ออื่น');
+      return;
+    }
+
+    var saveBtn = addModal.querySelector('[data-role="save"]');
+    if (saveBtn.classList.contains('btn-loading')) return;
+    saveBtn.classList.add('btn-loading');
+    saveBtn.disabled = true;
+
+    /* Simulated AJAX save — no backend in this prototype phase */
+    setTimeout(function () {
+      saveBtn.classList.remove('btn-loading');
+      saveBtn.disabled = false;
+
+      var option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      select.appendChild(option);
+      select.value = value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+
+      rebuildOptionsList(addModalTarget.widget, select);
+      addModalTarget.widget.querySelector('.smart-select-value').textContent = value;
+
+      if (window.TFC && window.TFC.closeModal) window.TFC.closeModal('smart-select-add-modal');
+      if (window.TFC && window.TFC.showToast) {
+        window.TFC.showToast('เพิ่ม "' + value + '" สำเร็จ และเลือกให้อัตโนมัติแล้ว', 'success');
+      }
+      input.value = '';
+    }, 700);
+  }
+
+  function openAddModal(widget, select) {
+    closePanel();
+    var modal = ensureAddModal();
+    var label = select.getAttribute('data-new-item-label') || 'รายการ';
+    modal.querySelector('[data-role="title"]').textContent = 'เพิ่ม' + label + 'ใหม่';
+    modal.querySelector('[data-role="label"]').innerHTML = 'ชื่อ' + window.TFC.escapeHtml(label) + '<span class="form-required">*</span>';
+    var input = modal.querySelector('[data-role="input"]');
+    input.value = '';
+    input.placeholder = select.getAttribute('data-new-item-placeholder') || '';
+    clearAddError();
+    addModalTarget = { select: select, widget: widget };
+    if (window.TFC && window.TFC.openModal) window.TFC.openModal('smart-select-add-modal');
+    setTimeout(function () { input.focus(); }, 50);
+  }
+
+  /* ---------- Build one widget per [data-smart-select] element ---------- */
+  function buildWidget(select) {
+    select.classList.add('hidden');
+
+    var widget = document.createElement('div');
+    widget.className = 'smart-select';
+
+    var selectedOption = select.options[select.selectedIndex];
+    var initialText = selectedOption ? selectedOption.textContent : 'เลือกรายการ';
+
+    widget.innerHTML =
+      '<button type="button" class="input smart-select-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+      '<span class="smart-select-value"></span>' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="dropdown-menu smart-select-panel" role="listbox">' +
+      '<div class="smart-select-search"><input type="text" class="input smart-select-search-input" placeholder="ค้นหารายการ..." aria-label="ค้นหารายการ"></div>' +
+      '<div class="smart-select-options"></div>' +
+      '<div class="smart-select-empty notification-empty hidden">ไม่พบรายการที่ค้นหา</div>' +
+      '<div class="dropdown-divider"></div>' +
+      '<button type="button" class="dropdown-item smart-select-add-btn">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' +
+      '<span>เพิ่มรายการใหม่</span></button>' +
+      '</div>';
+
+    widget.querySelector('.smart-select-value').textContent = initialText;
+    select.parentNode.insertBefore(widget, select.nextSibling);
+    rebuildOptionsList(widget, select);
+
+    var trigger = widget.querySelector('.smart-select-trigger');
+    var panel = widget.querySelector('.smart-select-panel');
+    var search = widget.querySelector('.smart-select-search-input');
+
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (activePanel === panel) closePanel();
+      else openPanel(widget, select);
+    });
+
+    search.addEventListener('input', function () {
+      filterOptions(panel, search.value);
+    });
+
+    search.addEventListener('keydown', function (e) {
+      var opts = visibleOptions(panel);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlight(panel, Math.min(highlightIndex + 1, opts.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlight(panel, Math.max(highlightIndex - 1, 0));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (opts[highlightIndex]) selectOption(widget, select, opts[highlightIndex]);
+      } else if (e.key === 'Escape') {
+        closePanel();
+        trigger.focus();
+      }
+    });
+
+    panel.querySelector('.smart-select-options').addEventListener('click', function (e) {
+      var opt = e.target.closest('.smart-select-option');
+      if (opt) selectOption(widget, select, opt);
+    });
+
+    widget.querySelector('.smart-select-add-btn').addEventListener('click', function () {
+      openAddModal(widget, select);
+    });
+  }
+
+  document.querySelectorAll('[data-smart-select]').forEach(function (select) {
+    try {
+      buildWidget(select);
+    } catch (err) {
+      console.error('smart-select: failed to build widget for #' + select.id, err);
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (activePanel && !activeWidget.contains(e.target)) closePanel();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && activePanel) closePanel();
+  });
+})();
