@@ -11,6 +11,21 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Always reserve the vertical scrollbar track. Without this the page width changes between a
+     short page (no scrollbar) and a long one (scrollbar), which reads as the whole layout
+     "jumping" sideways every time you click a menu item. */
+  scrollbar-gutter: stable;
+}
+
+/* Suppress every transition until the first paint is done (the class is removed by app.js on load).
+   Otherwise the sidebar animates its width from 260px to 76px on every page load when the collapsed
+   preference is restored from localStorage, which looks like a flash on each navigation. */
+.is-preload,
+.is-preload *,
+.is-preload *::before,
+.is-preload *::after {
+  transition: none !important;
+  animation: none !important;
 }
 
 body {

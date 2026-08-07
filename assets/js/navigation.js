@@ -1,4 +1,6 @@
-/* TheFarmConcept — Navigation: Sidebar drawer/collapse, Breadcrumb active state, Profile dropdown */
+/* TheFarmConcept — Navigation: Sidebar drawer/collapse, Breadcrumb active state, Profile dropdown.
+   The sidebar markup itself is built earlier by assets/js/sidebar-render.js (loaded right after the
+   sidebar's </aside> so it paints without flashing); this file only wires up the interactions. */
 (function () {
   var appShell = document.querySelector('.app-shell');
 
@@ -118,26 +120,44 @@
     }
   });
 
-  /* Nav submenu expand/collapse */
+  /* Nav submenu expand/collapse (also used by the sidebar's 2-level accordion, rendered above) */
   document.querySelectorAll('[data-nav-submenu-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var submenu = document.getElementById(btn.getAttribute('data-nav-submenu-toggle'));
-      if (submenu) submenu.classList.toggle('hidden');
+      if (!submenu) return;
+      var nowHidden = submenu.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!nowHidden));
     });
   });
 
-  /* Tabs */
+  /* Tabs
+     ค่าเริ่มต้น: หา panel ทั้งหน้า (พฤติกรรมเดิมของทุกหน้าที่ใช้อยู่)
+     ถ้าใส่ data-tab-panels="#selector" ที่แถบแท็บ จะหา panel เฉพาะใน element นั้น
+     -> ใช้ทำแท็บซ้อนแท็บได้ (แท็บย่อยไม่ไปปิด panel ของแท็บหลัก) เช่นหน้ารายละเอียดกิจกรรม
+     แต่ละแท็บที่ถูกเปิดจะยิง event 'tfc:tabshown' (detail = ชื่อ panel) ให้หน้าที่ต้องการรู้จังหวะ เช่นตอนวาดกราฟ */
   document.querySelectorAll('[data-tabs]').forEach(function (tabGroup) {
     var tabs = tabGroup.querySelectorAll('.tab-item');
+    var panelScopeSelector = tabGroup.getAttribute('data-tab-panels');
+
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () {
         tabs.forEach(function (t) { t.classList.remove('is-active'); });
         tab.classList.add('is-active');
+
         var targetId = tab.getAttribute('data-tab-target');
-        var panels = document.querySelectorAll('[data-tab-panel]');
+        var scope = panelScopeSelector ? document.querySelector(panelScopeSelector) : document;
+        if (!scope) return;
+
+        /* ในโหมด scope จะรับเฉพาะ panel ที่เป็นลูกโดยตรง เพื่อไม่ไปปิด panel ของแท็บย่อยที่ซ้อนอยู่ข้างใน */
+        var panels = panelScopeSelector
+          ? scope.querySelectorAll(':scope > [data-tab-panel]')
+          : scope.querySelectorAll('[data-tab-panel]');
+
         panels.forEach(function (panel) {
           panel.classList.toggle('hidden', panel.getAttribute('data-tab-panel') !== targetId);
         });
+
+        document.dispatchEvent(new CustomEvent('tfc:tabshown', { detail: targetId }));
       });
     });
   });

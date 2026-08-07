@@ -16,6 +16,12 @@
         if (window.TFC && window.TFC.showToast) {
           window.TFC.showToast(form.getAttribute('data-mock-submit') || 'บันทึกข้อมูลสำเร็จ', 'success');
         }
+
+        var overlay = form.closest('.modal-overlay, .drawer-overlay');
+        if (overlay && window.TFC && window.TFC.closeModal) {
+          window.TFC.closeModal(overlay.id);
+        }
+
         var redirect = form.getAttribute('data-mock-redirect');
         if (redirect) window.location.href = redirect;
       }, 900);

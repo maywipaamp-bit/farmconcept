@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="is-preload">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,91 +31,12 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav" aria-label="เมนูหลัก">
-      <a href="../../dashboard.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
-        <span class="nav-label">แดชบอร์ด</span>
-      </a>
-
-      <div class="nav-section-title">ข้อมูลพื้นฐาน</div>
-      <a href="../users/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-        <span class="nav-label">ผู้ใช้งาน</span>
-      </a>
-      <a href="../users/roles.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span>
-        <span class="nav-label">บทบาทและสิทธิ์</span>
-      </a>
-      <a href="../areas/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-        <span class="nav-label">พื้นที่ดำเนินงาน</span>
-      </a>
-      <a href="../master-data/programs.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
-        <span class="nav-label">โปรแกรมการเรียนรู้</span>
-      </a>
-      <a href="../master-data/instructors.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
-        <span class="nav-label">วิทยากร</span>
-      </a>
-      <a href="../master-data/target-groups.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
-        <span class="nav-label">กลุ่มเป้าหมาย</span>
-      </a>
-
-      <div class="nav-section-title">กิจกรรม</div>
-      <a href="list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-        <span class="nav-label">รายการกิจกรรม</span>
-      </a>
-      <a href="../registrations/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span>
-        <span class="nav-label">ผู้ลงทะเบียน</span>
-      </a>
-      <a href="../registrations/payments.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
-        <span class="nav-label">ตรวจสอบการชำระเงิน</span>
-      </a>
-      <a href="../checkin/index.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
-        <span class="nav-label">Check-in</span>
-      </a>
-
-      <div class="nav-section-title">แบบฟอร์มและแบบประเมิน</div>
-      <a href="../forms/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
-        <span class="nav-label">แบบฟอร์มทั้งหมด</span>
-      </a>
-      <a href="../forms/rounds.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-        <span class="nav-label">รอบการติดตามสุขภาพ</span>
-      </a>
-
-      <div class="nav-section-title">แบบประเมิน (เดิม)</div>
-      <a href="../evaluations/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
-        <span class="nav-label">รายการแบบประเมิน</span>
-      </a>
-      <a href="../evaluations/respondents.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-        <span class="nav-label">ผู้ตอบแบบประเมิน</span>
-      </a>
-      <a href="../evaluations/follow-up.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-        <span class="nav-label">ติดตามผล 3/6/12 เดือน</span>
-      </a>
-
-      <div class="nav-section-title">อื่นๆ</div>
-      <a href="../samples/list.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6L3 20a1 1 0 001 2h16a1 1 0 001-2l-6-12V2"/></svg></span>
-        <span class="nav-label">กลุ่มตัวอย่าง</span>
-      </a>
-      <a href="../reports/overview.html" class="nav-item">
-        <span class="nav-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/></svg></span>
-        <span class="nav-label">รายงาน</span>
-      </a>
-    </nav>
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
   </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
 
   <div class="app-main">
     <header class="topbar">
@@ -125,7 +46,7 @@
 
       <div class="topbar-breadcrumb">
         <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="../../dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">รายการกิจกรรม</span>
+          <a href="../../dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">จัดการกิจกรรม</span>
         </nav>
       </div>
 
@@ -167,66 +88,30 @@
     </header>
 
     <main class="content">
-      <div class="page-header">
-        <div class="page-header-text">
-          <h1>รายการกิจกรรม</h1>
-          <p class="page-description">จัดการกิจกรรมทั้งหมดของโครงการ TheFarmConcept</p>
-        </div>
-        <div class="page-header-actions">
-          <a href="create.html" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            สร้างกิจกรรมใหม่
-          </a>
-        </div>
-      </div>
+      <div class="page-header" id="activity-page-header"></div>
 
-      <div class="page-toolbar">
-        <div class="page-toolbar-search search-input">
-          <span class="search-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
-          <input type="search" class="input" placeholder="ค้นหาชื่อกิจกรรมหรือรหัส...">
-        </div>
-        <select class="select filter-select" id="activity-filter-status">
-          <option value="">สถานะทั้งหมด</option>
-          <option>เปิดรับสมัคร</option>
-          <option>เต็มแล้ว</option>
-          <option>ฉบับร่าง</option>
-          <option>ดำเนินการเสร็จสิ้น</option>
-        </select>
-        <button type="button" class="btn btn-outline">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-          ตัวกรองเพิ่มเติม
-        </button>
-      </div>
+      <div class="summary-cards" id="activity-stat-cards"></div>
 
-      <p class="small text-secondary mb-3">พบทั้งหมด <strong id="activity-result-count">5</strong> รายการ</p>
+      <div class="page-toolbar" id="activity-filter-row"></div>
 
       <div class="table-wrapper mb-4">
         <table class="data-table">
           <thead>
             <tr>
-              <th>รหัสกิจกรรม</th>
-              <th>ชื่อกิจกรรม</th>
+              <th>ลำดับ</th>
+              <th data-sort="name">ชื่อกิจกรรม <span class="sort-icon">↕</span></th>
               <th>พื้นที่ดำเนินงาน</th>
-              <th>วันที่จัดกิจกรรม</th>
-              <th>ผู้ลงทะเบียน</th>
+              <th data-sort="startDate">วันที่จัดกิจกรรม <span class="sort-icon">↕</span></th>
+              <th data-sort="registered">ผู้ลงทะเบียน <span class="sort-icon">↕</span></th>
               <th>สถานะ</th>
-              <th>การจัดการ</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="activity-table-body"></tbody>
         </table>
       </div>
 
-      <div class="table-wrapper">
-        <div class="pagination">
-          <div class="pagination-info">แสดง 1-5 จาก 5 รายการ</div>
-          <div class="pagination-controls">
-            <button class="pagination-btn" disabled aria-label="ก่อนหน้า">‹</button>
-            <button class="pagination-btn is-active">1</button>
-            <button class="pagination-btn" aria-label="ถัดไป">›</button>
-          </div>
-        </div>
-      </div>
+      <div class="table-wrapper" id="activity-pagination"></div>
     </main>
   </div>
 </div>
@@ -238,59 +123,298 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
       </span>
       <h3 class="modal-title mb-3">ยืนยันการลบกิจกรรม</h3>
-      <p class="text-secondary">การลบกิจกรรมนี้จะไม่สามารถย้อนกลับได้ และผู้ลงทะเบียนทั้งหมดจะถูกยกเลิกไปด้วย</p>
+      <p class="text-secondary" id="activity-delete-message"></p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
-      <button class="btn btn-danger" data-close-modal>ลบข้อมูล</button>
+      <button class="btn btn-danger" id="activity-delete-confirm" data-close-modal>ลบกิจกรรม</button>
     </div>
   </div>
 </div>
 
-<script src="../../assets/js/mock-data.js"></script>
+<script src="../../assets/js/data-service.js"></script>
 <script src="../../assets/js/navigation.js"></script>
 <script src="../../assets/js/modal.js"></script>
 <script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
-  var statusBadgeMap = {
-    'เปิดรับสมัคร': 'badge-success',
-    'เต็มแล้ว': 'badge-neutral',
-    'ฉบับร่าง': 'badge-info',
-    'ดำเนินการเสร็จสิ้น': 'badge-neutral'
-  };
-  var activities = (window.TFC_MOCK ? window.TFC_MOCK.activities : []);
+  var mock = window.TFC_MOCK;
+  var activities = mock.activities || [];
+  var PAGE_SIZE = 10;
+  var state = { search: '', participantType: '', targetGroup: '', dataSource: '', sortKey: 'startDate', sortDir: 'asc', page: 1 };
+  var deleteTargetId = null;
 
-  document.getElementById('activity-table-body').innerHTML = activities.map(function (item) {
-    var badgeClass = statusBadgeMap[item.status] || 'badge-neutral';
-    return '<tr>' +
-      '<td>' + item.id + '</td>' +
-      '<td>' + window.TFC.escapeHtml(item.name) + '</td>' +
-      '<td>' + window.TFC.escapeHtml(item.area) + '</td>' +
-      '<td>' + window.TFC.formatThaiDate(item.startDate) + '</td>' +
-      '<td>' + item.registered + '/' + item.capacity + '</td>' +
-      '<td><span class="badge ' + badgeClass + '">' + item.status + '</span></td>' +
+  window.TFC.renderPageHeader('activity-page-header', {
+    title: 'จัดการกิจกรรม',
+    description: 'จัดการกิจกรรมและอีเวนท์ทั้งหมดของโครงการ TheFarmConcept',
+    actions: [
+      {
+        label: 'เพิ่มกิจกรรม',
+        href: 'create.html',
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
+      }
+    ]
+  });
+
+  var totalRegistered = activities.reduce(function (sum, item) { return sum + item.registered; }, 0);
+  var totalCapacity = activities.reduce(function (sum, item) { return sum + item.capacity; }, 0);
+  var openCount = activities.filter(function (item) { return item.status === 'เปิดรับสมัคร'; }).length;
+  var fullCount = activities.filter(function (item) { return item.status === 'เต็มแล้ว'; }).length;
+
+  window.TFC.renderStatCards('activity-stat-cards', [
+    {
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+      label: 'กิจกรรมทั้งหมด',
+      value: activities.length
+    },
+    {
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+      tone: 'success',
+      label: 'เปิดรับสมัคร',
+      value: openCount
+    },
+    {
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+      tone: 'warning',
+      label: 'เต็มแล้ว',
+      value: fullCount
+    },
+    {
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>',
+      tone: 'info',
+      label: 'ผู้ลงทะเบียนรวม',
+      value: totalRegistered,
+      target: totalCapacity
+    }
+  ]);
+
+  window.TFC.renderFilterRow('activity-filter-row', {
+    resultCountId: 'activity-result-count',
+    resultCount: activities.length,
+    filters: [
+      {
+        id: 'activity-filter-type',
+        placeholder: 'ประเภททั้งหมด',
+        options: (mock.activityParticipantTypes || []).map(function (value) { return { label: value }; })
+      },
+      {
+        id: 'activity-filter-target',
+        placeholder: 'กลุ่มเป้าหมายทั้งหมด',
+        options: (mock.targetGroups || []).map(function (group) { return { label: group.name }; })
+      },
+      {
+        id: 'activity-filter-source',
+        placeholder: 'แหล่งที่มาข้อมูลทั้งหมด',
+        options: (mock.activityDataSources || []).map(function (value) { return { label: value }; })
+      }
+    ],
+    search: { id: 'activity-search', placeholder: 'ค้นหาชื่อกิจกรรม/รหัส หรือชื่อ-เบอร์-อีเมลผู้เข้าร่วม...' },
+    extraButton: {
+      label: 'ล้างตัวกรอง',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>',
+      attrs: { id: 'activity-clear-filter' }
+    }
+  });
+
+  var tbody = document.getElementById('activity-table-body');
+  var resultCountEl = document.getElementById('activity-result-count');
+  var clearBtn = document.getElementById('activity-clear-filter');
+  var searchEl = document.getElementById('activity-search');
+
+  /* ค้นหาแบบ partial match: ชื่อ/รหัสกิจกรรม หรือ ชื่อ-เบอร์-อีเมล ของผู้เข้าร่วมในกิจกรรมนั้น
+     (สเปกระบุให้ค้นจากผู้เข้าร่วม แต่ตารางแสดงกิจกรรม จึงตีความว่า "กรองกิจกรรมที่มีผู้เข้าร่วมตรงเงื่อนไข" — รอยืนยัน) */
+  function matchSearch(activity, term) {
+    if (!term) return true;
+    if ((activity.name + ' ' + activity.id).toLowerCase().indexOf(term) !== -1) return true;
+    return (mock.activityRegistrations[activity.id] || []).some(function (person) {
+      return (person.name + ' ' + person.phone + ' ' + person.email).toLowerCase().indexOf(term) !== -1;
+    });
+  }
+
+  function filteredRows() {
+    var term = state.search.trim().toLowerCase();
+    var rows = activities.filter(function (activity) {
+      if (state.participantType && activity.participantType !== state.participantType) return false;
+      if (state.targetGroup && (activity.targetGroups || []).indexOf(state.targetGroup) === -1) return false;
+      if (state.dataSource && activity.dataSource !== state.dataSource) return false;
+      return matchSearch(activity, term);
+    });
+
+    var dir = state.sortDir === 'asc' ? 1 : -1;
+    return rows.sort(function (a, b) {
+      var left = a[state.sortKey];
+      var right = b[state.sortKey];
+      if (state.sortKey === 'registered') return (left - right) * dir;
+      return String(left).localeCompare(String(right), 'th') * dir;
+    });
+  }
+
+  function activeFilterCount() {
+    return ['participantType', 'targetGroup', 'dataSource'].filter(function (key) { return state[key]; }).length +
+      (state.search.trim() ? 1 : 0);
+  }
+
+  function rowHtml(activity, index) {
+    var schedules = window.TFC.activity.schedules(activity);
+    var roundBadge = schedules.length > 1
+      ? ' <span class="badge badge-info">+' + schedules.length + ' รอบ</span>'
+      : '';
+    var areas = (activity.areaList && activity.areaList.length ? activity.areaList : [activity.area]);
+
+    return '<tr data-id="' + activity.id + '">' +
+      '<td>' + index + '</td>' +
+      '<td><div class="cell-stack">' +
+      '<span class="cell-stack-title">' + window.TFC.escapeHtml(activity.name) + '</span>' +
+      '<span class="cell-stack-sub">' + activity.id + '</span>' +
+      '</div></td>' +
+      '<td><div class="tag-list">' + areas.map(function (area) {
+        return '<span class="tag">' + window.TFC.escapeHtml(area) + '</span>';
+      }).join('') + '</div></td>' +
+      '<td>' + window.TFC.activity.dateLabel(activity) + roundBadge + '</td>' +
+      '<td>' + activity.registered + '/' + activity.capacity + '</td>' +
+      '<td>' + window.TFC.activity.statusSelectHTML('activity', activity.status, {
+        rowId: activity.id, ariaLabel: 'สถานะกิจกรรม ' + activity.name
+      }) + '</td>' +
       '<td class="table-row-actions">' +
       window.TFC.actionMenuTrigger([
-        { key: 'view', label: 'ดูรายละเอียด', icon: 'view', href: 'detail.html' },
-        { key: 'edit', label: 'แก้ไข', icon: 'edit', href: 'edit.html', perm: 'activities' },
-        { key: 'sessions', label: 'จัดการรอบกิจกรรม', icon: 'sessions', href: 'sessions.html', perm: 'activities' },
-        { key: 'publish', label: 'กำหนดการเผยแพร่', icon: 'publish', href: 'publish.html', perm: 'activities' },
-        { key: 'registrants', label: 'ผู้ลงทะเบียน', icon: 'users', href: '../registrations/list.html', perm: 'activities' },
-        { key: 'checkin', label: 'Check-in', icon: 'checkin', href: '../checkin/index.html', perm: 'activities' },
-        { key: 'evaluation', label: 'แบบประเมิน', icon: 'evaluation', href: '../evaluations/list.html', perm: 'evaluations' },
-        { key: 'report', label: 'รายงาน', icon: 'report', href: '../reports/activities.html', perm: 'reports' },
-        { key: 'export', label: 'Export', icon: 'export', perm: 'reports' },
+        { key: 'view', label: 'ดูรายละเอียด', icon: 'view', href: 'detail.html?id=' + activity.id },
+        { key: 'edit', label: 'แก้ไข', icon: 'edit', href: 'edit.html?id=' + activity.id, perm: 'activities' },
         { key: 'delete', label: 'ลบกิจกรรม', icon: 'delete', modal: 'activity-delete-modal', perm: 'activities', danger: true }
       ]) +
       '</td></tr>';
-  }).join('');
+  }
 
-  document.getElementById('activity-result-count').textContent = activities.length;
+  var EMPTY_HTML = '<tr><td colspan="7">' +
+    '<div class="state-placeholder">' +
+    '<span class="state-placeholder-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>' +
+    '<div class="state-placeholder-title">ไม่พบกิจกรรมที่ตรงกับเงื่อนไข</div>' +
+    '<div class="state-placeholder-desc">ลองปรับคำค้นหาหรือล้างตัวกรองแล้วค้นหาอีกครั้ง</div>' +
+    '</div></td></tr>';
+
+  function render() {
+    var rows = filteredRows();
+    var pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (state.page > pageCount) state.page = pageCount;
+    var start = (state.page - 1) * PAGE_SIZE;
+    var pageRows = rows.slice(start, start + PAGE_SIZE);
+
+    tbody.innerHTML = pageRows.length
+      ? pageRows.map(function (activity, i) { return rowHtml(activity, start + i + 1); }).join('')
+      : EMPTY_HTML;
+
+    resultCountEl.textContent = rows.length;
+
+    /* badge จำนวนตัวกรองที่ Active บนปุ่ม "ล้างตัวกรอง" */
+    var count = activeFilterCount();
+    var badge = clearBtn.querySelector('.filter-count');
+    if (count) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'filter-count';
+        clearBtn.appendChild(badge);
+      }
+      badge.textContent = count;
+    } else if (badge) {
+      badge.remove();
+    }
+
+    document.querySelectorAll('.data-table th[data-sort]').forEach(function (th) {
+      var isSorted = th.getAttribute('data-sort') === state.sortKey;
+      th.classList.toggle('is-sorted', isSorted);
+      th.querySelector('.sort-icon').textContent = isSorted ? (state.sortDir === 'asc' ? '↑' : '↓') : '↕';
+    });
+
+    window.TFC.renderPagination('activity-pagination', {
+      page: state.page,
+      pageSize: PAGE_SIZE,
+      total: rows.length,
+      onChange: function (page) { state.page = page; render(); }
+    });
+  }
+
+  /* Loading skeleton ก่อนข้อมูลชุดแรกจะพร้อม (mock: หน่วง 500ms) */
+  tbody.innerHTML = new Array(5).fill('<tr><td colspan="7"><div class="skeleton skeleton-text"></div></td></tr>').join('');
+  setTimeout(render, 500);
+
+  /* ---------- ตัวกรอง ---------- */
+  var searchTimer = null;
+  searchEl.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      state.search = searchEl.value;
+      state.page = 1;
+      render();
+    }, 300);
+  });
+
+  [['activity-filter-type', 'participantType'], ['activity-filter-target', 'targetGroup'], ['activity-filter-source', 'dataSource']]
+    .forEach(function (pair) {
+      document.getElementById(pair[0]).addEventListener('change', function (e) {
+        state[pair[1]] = e.target.value;
+        state.page = 1;
+        render();
+      });
+    });
+
+  clearBtn.addEventListener('click', function () {
+    state.search = state.participantType = state.targetGroup = state.dataSource = '';
+    state.page = 1;
+    searchEl.value = '';
+    ['activity-filter-type', 'activity-filter-target', 'activity-filter-source'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    render();
+  });
+
+  /* ---------- เรียงลำดับ ---------- */
+  document.querySelectorAll('.data-table th[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var key = th.getAttribute('data-sort');
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortKey = key;
+        state.sortDir = 'asc';
+      }
+      render();
+    });
+  });
+
+  /* ---------- ลบกิจกรรม: จำแถวที่กดจากปุ่ม ⋮ แล้วปรับข้อความ/ปุ่มในโมดัลตามจำนวนผู้ลงทะเบียน ---------- */
+  tbody.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-action-menu]');
+    if (!trigger) return;
+    var row = trigger.closest('tr');
+    deleteTargetId = row ? row.getAttribute('data-id') : null;
+
+    var activity = window.TFC.activity.get(deleteTargetId);
+    var messageEl = document.getElementById('activity-delete-message');
+    var confirmBtn = document.getElementById('activity-delete-confirm');
+    if (!activity) return;
+
+    if (activity.registered > 0) {
+      messageEl.innerHTML = 'กิจกรรม "' + window.TFC.escapeHtml(activity.name) + '" มีผู้ลงทะเบียนแล้ว ' +
+        activity.registered + ' คน จึงลบไม่ได้<br>หากต้องการยุติกิจกรรม ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน';
+      confirmBtn.disabled = true;
+    } else {
+      messageEl.textContent = 'ต้องการลบกิจกรรม "' + activity.name + '" ใช่หรือไม่ การลบนี้ไม่สามารถย้อนกลับได้';
+      confirmBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('activity-delete-confirm').addEventListener('click', function () {
+    var index = activities.findIndex(function (a) { return a.id === deleteTargetId; });
+    if (index === -1) return;
+    var removed = activities.splice(index, 1)[0];
+    render();
+    if (window.TFC.showToast) window.TFC.showToast('ลบกิจกรรม "' + removed.name + '" แล้ว', 'success');
+  });
 })();
 </script>
 </body>
