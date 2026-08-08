@@ -175,12 +175,40 @@ window.TFC = window.TFC || {};
     }
   };
 
+  /* Dropdown สถานะแบบมีสีสำหรับข้อมูลชุดอื่นที่ไม่ได้อยู่ใน master list ของโมดูลกิจกรรม
+     (เช่น ใช้งาน/ไม่ใช้งาน ของข้อมูลพื้นฐาน) — ส่ง options มาพร้อมสี badge ได้เลย
+     TFC.statusSelectHTML({ options: [{ value, badge }], value, rowId, ariaLabel }) */
+  window.TFC.statusSelectHTML = function (opts) {
+    opts = opts || {};
+    var tones = {};
+    var optionsHtml = (opts.options || []).map(function (item) {
+      tones[item.value] = (item.badge || 'badge-neutral').replace('badge-', 'is-');
+      return '<option value="' + window.TFC.escapeHtml(item.value) + '"' +
+        (item.value === opts.value ? ' selected' : '') + '>' +
+        window.TFC.escapeHtml(item.value) + '</option>';
+    }).join('');
+
+    return '<select class="select status-select ' + (tones[opts.value] || 'is-neutral') + '"' +
+      ' data-status-select="custom" data-status-tones="' + window.TFC.escapeHtml(JSON.stringify(tones)) + '"' +
+      (opts.rowId ? ' data-row-id="' + window.TFC.escapeHtml(opts.rowId) + '"' : '') +
+      ' aria-label="' + window.TFC.escapeHtml(opts.ariaLabel || 'เปลี่ยนสถานะ') + '">' +
+      optionsHtml + '</select>';
+  };
+
   /* เปลี่ยนสีตามค่าที่เลือกทันที + แจ้ง toast (mock: ยังไม่บันทึกลงฐานข้อมูลจริง) */
   document.addEventListener('change', function (e) {
     var select = e.target.closest('[data-status-select]');
     if (!select) return;
-    var kind = select.getAttribute('data-status-select');
-    select.className = 'select status-select ' + toneOf(kind, select.value);
+
+    var toneAttr = select.getAttribute('data-status-tones');
+    var tone;
+    if (toneAttr) {
+      try { tone = JSON.parse(toneAttr)[select.value]; } catch (err) { tone = null; }
+    } else {
+      tone = toneOf(select.getAttribute('data-status-select'), select.value);
+    }
+
+    select.className = 'select status-select ' + (tone || 'is-neutral');
     if (window.TFC.showToast) window.TFC.showToast('เปลี่ยนสถานะเป็น "' + select.value + '" แล้ว', 'success');
   });
 })();

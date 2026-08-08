@@ -314,13 +314,12 @@
           '<td>' + window.TFC.escapeHtml(a.areaGroup || '-') + '</td>' +
           '<td>' + window.TFC.escapeHtml(a.coordinator) + '</td>' +
           '<td>' + a.activityCount + '</td>' +
-          '<td><span class="badge ' + (statusBadge[a.status] || 'badge-neutral') + '">' + window.TFC.escapeHtml(a.status || '-') + '</span></td>' +
+          '<td class="nowrap">' + window.TFC.statusSelectHTML({ options: mock.areaStatusList, value: a.status, rowId: a.id, ariaLabel: 'สถานะของ ' + a.name }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
-            { key: 'report', label: 'รายงานพื้นที่', icon: 'report', href: '../reports/areas.html', perm: 'reports' },
             { key: 'delete', label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
           ]) +
           '</td></tr>';

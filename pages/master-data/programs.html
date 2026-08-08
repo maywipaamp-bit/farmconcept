@@ -252,7 +252,7 @@
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(p.name) + '</td>' +
           '<td>' + coursesHtml + '</td>' +
-          '<td><span class="badge ' + (statusBadge[p.active !== false] || 'badge-neutral') + '">' + (p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน') + '</span></td>' +
+          '<td class="nowrap">' + window.TFC.statusSelectHTML({ options: mock.masterActiveStatuses, value: p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน', rowId: p.id, ariaLabel: 'สถานะของ ' + p.name }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(p.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
