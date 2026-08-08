@@ -3486,3 +3486,229 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* ==========================================================================
+   15. Activity Card List — หน้ารายการกิจกรรมแบบการ์ด (pages/activities/list.html)
+   ========================================================================== */
+.list-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* ชิปกรองตามสถานะ พร้อมจำนวนในวงเล็บ */
+.status-pills {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.status-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.status-pill.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-pill-count {
+  color: var(--color-text-disabled);
+}
+
+.status-pill.is-active .status-pill-count {
+  color: var(--color-primary-dark);
+}
+
+.list-filter-bar .search-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.list-filter-bar .sort-select {
+  width: 190px;
+  flex-shrink: 0;
+}
+
+/* ---------- การ์ดกิจกรรม ---------- */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.activity-item {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.activity-item:hover {
+  border-color: var(--color-primary);
+}
+
+/* ช่องวางรูปกิจกรรม (ลากวางหรือคลิกเลือกไฟล์) */
+.activity-thumb {
+  width: 124px;
+  min-height: 116px;
+  flex-shrink: 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  text-align: center;
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+  overflow: hidden;
+  padding: var(--space-2);
+}
+
+.activity-thumb:hover,
+.activity-thumb.is-dragover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.activity-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.activity-thumb-browse {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.activity-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.activity-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.activity-title {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+a.activity-title:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.activity-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.activity-meta-row .cell-meta {
+  gap: var(--space-1);
+}
+
+/* ป้ายกำกับ: ประเภท / รูปแบบ / ค่าลงทะเบียน */
+.activity-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tag-outline {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.tag-fee {
+  background: var(--color-success-soft);
+  color: #16803D;
+}
+
+.tag-fee.is-paid {
+  background: var(--color-warning-soft);
+  color: #B45309;
+}
+
+/* แถวล่าง: จำนวนผู้ลงทะเบียน + สถานะ + ผู้แก้ไขล่าสุด */
+.activity-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  margin-top: var(--space-1);
+  border-top: 1px solid var(--color-border);
+}
+
+.activity-progress {
+  min-width: 190px;
+}
+
+.activity-progress-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.activity-progress-label strong {
+  font-size: var(--font-size-small);
+  color: var(--color-text-primary);
+}
+
+.activity-progress .progress {
+  height: 5px;
+}
+
+.activity-updated {
+  margin-left: auto;
+  text-align: right;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-tight);
+}

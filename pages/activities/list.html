@@ -89,37 +89,23 @@
     <main class="content">
       <div class="page-header is-tight" id="activity-page-header"></div>
 
-      <div class="list-toolbar">
-        <button type="button" class="filter-chip" id="activity-filter-chip">
-          <span id="activity-filter-chip-label">แสดงทั้งหมด</span>
-        </button>
-        <span class="toolbar-divider"></span>
-        <button type="button" class="icon-btn-sm" id="activity-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
-        </button>
-        <div class="ml-auto" id="activity-search-popover"></div>
+      <div class="list-filter-bar">
+        <div class="status-pills" id="activity-status-pills"></div>
+        <div class="search-input">
+          <span class="search-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
+          <input type="search" class="input" id="activity-search" placeholder="ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่">
+        </div>
+        <select class="select sort-select" id="activity-sort" aria-label="เรียงลำดับ">
+          <option value="updatedAt">แก้ไขล่าสุด</option>
+          <option value="startDate">วันที่จัดกิจกรรม</option>
+          <option value="name">ชื่อกิจกรรม</option>
+          <option value="registered">จำนวนผู้ลงทะเบียน</option>
+        </select>
       </div>
 
-      <div class="table-wrapper mb-4">
-        <div class="table-scroll">
-          <table class="data-table is-header-filled">
-            <thead>
-              <tr>
-                <th class="col-no">#</th>
-                <th data-sort="name">ชื่อกิจกรรม <span class="sort-icon">↕</span></th>
-                <th class="col-type">ประเภท</th>
-                <th class="col-format">รูปแบบกิจกรรม</th>
-                <th data-sort="registered" class="text-right">ผู้ลงทะเบียน <span class="sort-icon">↕</span></th>
-                <th>สถานะ</th>
-                <th class="col-updated" data-sort="updatedAt">ปรับปรุงล่าสุด <span class="sort-icon">↕</span></th>
-                <th class="col-actions">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="activity-table-body"></tbody>
-          </table>
-        </div>
-        <div id="activity-pagination"></div>
-      </div>
+      <div class="activity-list" id="activity-list"></div>
+
+      <div id="activity-pagination"></div>
     </main>
   </div>
 </div>
@@ -156,9 +142,16 @@
   var mock = window.TFC_MOCK;
   var activities = mock.activities || [];
   var PAGE_SIZES = [10, 20, 50];
-  var MAX_RESULTS = 250;      /* เพดานจำนวนแถวที่แสดงต่อการค้นหา 1 ครั้ง (แจ้งไว้ในหัวแผงค้นหา) */
-  var state = { search: '', participantType: '', targetGroup: '', dataSource: '', sortKey: 'startDate', sortDir: 'asc', page: 1, pageSize: PAGE_SIZES[0] };
+  var state = { status: '', search: '', sort: 'updatedAt', page: 1, pageSize: PAGE_SIZES[0] };
   var deleteTargetId = null;
+  var covers = {};   /* รูปที่ผู้ใช้ลากวางในหน้านี้ (mock: เก็บในหน่วยความจำ ยังไม่อัปโหลดจริง) */
+
+  var ICON = {
+    date: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    place: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    person: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    image: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+  };
 
   window.TFC.renderPageHeader('activity-page-header', {
     title: 'จัดการกิจกรรม',
@@ -171,165 +164,161 @@
     ]
   });
 
-  /* แถบค้นหา/ตัวกรองเดิมถูกย้ายเข้า Search Panel Popover (ไอคอนแว่นขยายมุมขวาของแถบเครื่องมือ)
-     เงื่อนไขการค้นหาเหมือนเดิมทุกข้อ เปลี่ยนแค่วิธีเปิดใช้งาน เพื่อคืนพื้นที่หน้าจอให้ตาราง */
-  var searchPanel = window.TFC.searchPopover('activity-search-popover', {
-    search: { placeholder: 'ค้นหากิจกรรมหรือผู้เข้าร่วม' },
-    filters: [
-      {
-        id: 'participantType',
-        label: 'ประเภท',
-        placeholder: 'ประเภททั้งหมด',
-        options: (mock.activityParticipantTypes || []).map(function (value) { return { label: value }; })
-      },
-      {
-        id: 'targetGroup',
-        label: 'กลุ่มเป้าหมาย',
-        placeholder: 'กลุ่มเป้าหมายทั้งหมด',
-        options: (mock.targetGroups || []).map(function (group) { return { label: group.name }; })
-      },
-      {
-        id: 'dataSource',
-        label: 'แหล่งที่มาข้อมูล',
-        placeholder: 'แหล่งที่มาข้อมูลทั้งหมด',
-        options: (mock.activityDataSources || []).map(function (value) { return { label: value }; })
-      }
-    ],
-    onSearch: function (values, done) {
-      state.search = values.keyword;
-      state.participantType = values.filters.participantType;
-      state.targetGroup = values.filters.targetGroup;
-      state.dataSource = values.filters.dataSource;
-      state.page = 1;
-      renderWithLoading(done);
-    },
-    onClear: function () {
-      state.search = state.participantType = state.targetGroup = state.dataSource = '';
-      state.page = 1;
-      renderWithLoading();
-    }
+  /* ---------- ชิปกรองตามสถานะ พร้อมจำนวน ---------- */
+  function statusesInUse() {
+    return (mock.activityStatuses || []).filter(function (item) {
+      return activities.some(function (a) { return a.status === item.value; });
+    });
+  }
+
+  function renderPills() {
+    var pills = [{ value: '', label: 'ทั้งหมด', count: activities.length }].concat(
+      statusesInUse().map(function (item) {
+        return {
+          value: item.value,
+          label: item.value,
+          count: activities.filter(function (a) { return a.status === item.value; }).length
+        };
+      }));
+
+    document.getElementById('activity-status-pills').innerHTML = pills.map(function (pill) {
+      return '<button type="button" class="status-pill' + (state.status === pill.value ? ' is-active' : '') +
+        '" data-status="' + window.TFC.escapeHtml(pill.value) + '">' +
+        window.TFC.escapeHtml(pill.label) +
+        '<span class="status-pill-count">' + pill.count + '</span></button>';
+    }).join('');
+  }
+
+  document.getElementById('activity-status-pills').addEventListener('click', function (e) {
+    var pill = e.target.closest('[data-status]');
+    if (!pill) return;
+    state.status = pill.getAttribute('data-status');
+    state.page = 1;
+    renderPills();
+    render();
   });
 
-  var tbody = document.getElementById('activity-table-body');
-  var chipLabel = document.getElementById('activity-filter-chip-label');
-  var chipBtn = document.getElementById('activity-filter-chip');
+  /* ---------- ค้นหา / เรียงลำดับ ---------- */
+  function responsible(activity) {
+    return (activity.instructorList && activity.instructorList.length ? activity.instructorList : [activity.instructor]).filter(Boolean);
+  }
 
-  /* ค้นหาแบบ partial match: ชื่อ/รหัสกิจกรรม หรือ ชื่อ-เบอร์-อีเมล ของผู้เข้าร่วมในกิจกรรมนั้น
-     (สเปกระบุให้ค้นจากผู้เข้าร่วม แต่ตารางแสดงกิจกรรม จึงตีความว่า "กรองกิจกรรมที่มีผู้เข้าร่วมตรงเงื่อนไข" — รอยืนยัน) */
-  function matchSearch(activity, term) {
-    if (!term) return true;
-    if ((activity.name + ' ' + activity.id).toLowerCase().indexOf(term) !== -1) return true;
-    return (mock.activityRegistrations[activity.id] || []).some(function (person) {
-      return (person.name + ' ' + person.phone + ' ' + person.email).toLowerCase().indexOf(term) !== -1;
-    });
+  function areasOf(activity) {
+    return (activity.areaList && activity.areaList.length ? activity.areaList : [activity.area]).filter(Boolean);
   }
 
   function filteredRows() {
     var term = state.search.trim().toLowerCase();
-    var rows = activities.filter(function (activity) {
-      if (state.participantType && activity.participantType !== state.participantType) return false;
-      if (state.targetGroup && (activity.targetGroups || []).indexOf(state.targetGroup) === -1) return false;
-      if (state.dataSource && activity.dataSource !== state.dataSource) return false;
-      return matchSearch(activity, term);
+    var rows = activities.filter(function (a) {
+      if (state.status && a.status !== state.status) return false;
+      if (!term) return true;
+      return [a.name, a.id].concat(responsible(a), areasOf(a)).join(' ').toLowerCase().indexOf(term) !== -1;
     });
 
-    var dir = state.sortDir === 'asc' ? 1 : -1;
-    rows.sort(function (a, b) {
-      var left = a[state.sortKey];
-      var right = b[state.sortKey];
-      if (state.sortKey === 'registered') return (left - right) * dir;
-      return String(left).localeCompare(String(right), 'th') * dir;
+    return rows.sort(function (a, b) {
+      if (state.sort === 'registered') return b.registered - a.registered;
+      if (state.sort === 'updatedAt') return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+      if (state.sort === 'startDate') return String(a.startDate).localeCompare(String(b.startDate));
+      return String(a.name).localeCompare(String(b.name), 'th');
     });
-
-    return rows.slice(0, MAX_RESULTS);
   }
 
-  /* ไอคอนของบรรทัดข้อมูลย่อยในเซลล์ชื่อกิจกรรม */
-  var META_ICON = {
-    date: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-    place: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-    person: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    price: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><path d="M7 7h.01"/></svg>'
-  };
+  var searchTimer = null;
+  document.getElementById('activity-search').addEventListener('input', function (e) {
+    clearTimeout(searchTimer);
+    var value = e.target.value;
+    searchTimer = setTimeout(function () {
+      state.search = value;
+      state.page = 1;
+      render();
+    }, 300);
+  });
 
-  function metaRow(icon, text, extraClass) {
-    return '<span class="cell-meta' + (extraClass ? ' ' + extraClass : '') + '">' + icon +
-      '<span>' + window.TFC.escapeHtml(text) + '</span></span>';
+  document.getElementById('activity-sort').addEventListener('change', function (e) {
+    state.sort = e.target.value;
+    render();
+  });
+
+  /* ---------- การ์ดกิจกรรม ---------- */
+  function metaItem(icon, text) {
+    return '<span class="cell-meta">' + icon + '<span>' + window.TFC.escapeHtml(text) + '</span></span>';
   }
 
-  /* โครงคอลัมน์: # | ชื่อกิจกรรม (เรียงลงมา: วันเวลา / พื้นที่ / วิทยากร / ค่าลงทะเบียน) | ประเภท | รูปแบบกิจกรรม | ผู้ลงทะเบียน | สถานะ | ปรับปรุงล่าสุด | จัดการ */
-  function rowHtml(activity, index) {
+  function thumbHtml(activity) {
+    if (covers[activity.id]) {
+      return '<img src="' + covers[activity.id] + '" alt="ภาพกิจกรรม ' + window.TFC.escapeHtml(activity.name) + '">';
+    }
+    return ICON.image + '<span>วางรูปกิจกรรม</span>' +
+      '<span>or <span class="activity-thumb-browse">browse files</span></span>';
+  }
+
+  function cardHtml(activity) {
     var schedules = window.TFC.activity.schedules(activity);
-    var roundBadge = schedules.length > 1
-      ? ' <span class="badge badge-info">+' + schedules.length + ' รอบ</span>'
+    var time = schedules.length && schedules[0].timeStart
+      ? ' · ' + schedules[0].timeStart + '–' + schedules[0].timeEnd + ' น.'
       : '';
-    var areas = (activity.areaList && activity.areaList.length ? activity.areaList : [activity.area]);
-    var instructors = (activity.instructorList && activity.instructorList.length ? activity.instructorList : [activity.instructor]);
-    var statusTone = window.TFC.badgeClassOf(mock.activityStatuses, activity.status).replace('badge-', 'is-');
-    var timeText = schedules.length && schedules[0].timeStart
-      ? ' · ' + schedules[0].timeStart + '-' + schedules[0].timeEnd + ' น.'
-      : '';
+    var rounds = schedules.length > 1 ? ' <span class="badge badge-info">+' + schedules.length + ' รอบ</span>' : '';
+    var tone = window.TFC.badgeClassOf(mock.activityStatuses, activity.status).replace('badge-', 'is-');
+    var percent = activity.capacity ? Math.min(100, Math.round((activity.registered / activity.capacity) * 100)) : 0;
 
-    return '<tr data-id="' + activity.id + '">' +
-      '<td class="col-no nowrap">' + index + '</td>' +
-      '<td><div class="cell-stack">' +
-      '<span class="cell-stack-title-row">' +
-      '<span class="status-dot ' + statusTone + '"></span>' +
-      /* คลิกชื่อกิจกรรมเพื่อเข้าหน้าแก้ไขได้ทันที */
-      '<a class="cell-stack-title cell-link" href="edit.html?id=' + activity.id + '">' +
-      window.TFC.escapeHtml(activity.name) + '</a>' +
-      '</span>' +
-      '<div class="cell-meta-list">' +
-      '<span class="cell-meta">' + META_ICON.date +
-      '<span>' + window.TFC.activity.dateLabel(activity) + timeText + roundBadge + '</span></span>' +
-      metaRow(META_ICON.place, areas.join(' · ')) +
-      (instructors.filter(Boolean).length ? metaRow(META_ICON.person, instructors.join(' · ')) : '') +
-      metaRow(META_ICON.price, window.TFC.activity.feeLabel(activity), 'is-price') +
-      '</div></div></td>' +
-      '<td class="nowrap"><span class="tag tag-primary">' + window.TFC.escapeHtml(activity.type) + '</span></td>' +
-      '<td><span class="tag">' + window.TFC.escapeHtml(activity.format) + '</span></td>' +
-      '<td class="nowrap text-right">' + activity.registered + '/' + activity.capacity + '</td>' +
-      '<td class="nowrap">' + window.TFC.activity.statusSelectHTML('activity', activity.status, {
-        rowId: activity.id, ariaLabel: 'สถานะกิจกรรม ' + activity.name
-      }) + '</td>' +
-      '<td class="col-updated nowrap"><div class="cell-stack">' +
-      '<span class="cell-updated-by">' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</span>' +
-      '<span class="cell-updated-at">' + window.TFC.formatThaiShort(activity.updatedAt) + '</span>' +
-      '</div></td>' +
-      '<td class="table-row-actions">' +
+    return '<article class="activity-item" data-id="' + activity.id + '">' +
+      '<div class="activity-thumb" data-cover-drop tabindex="0" role="button" aria-label="เพิ่มรูปกิจกรรม">' +
+      thumbHtml(activity) +
+      '<input type="file" class="hidden" accept="image/*" data-cover-input></div>' +
+
+      '<div class="activity-body">' +
+      '<div class="activity-title-row">' +
+      '<span class="status-dot ' + tone + '"></span>' +
+      '<a class="activity-title" href="edit.html?id=' + activity.id + '">' + window.TFC.escapeHtml(activity.name) + '</a>' +
+      '</div>' +
+
+      '<div class="activity-meta-row">' +
+      '<span class="cell-meta">' + ICON.date + '<span>' + window.TFC.activity.dateLabel(activity) + time + rounds + '</span></span>' +
+      metaItem(ICON.place, areasOf(activity).join(' · ')) +
+      (responsible(activity).length ? metaItem(ICON.person, responsible(activity).join(' · ')) : '') +
+      '</div>' +
+
+      '<div class="activity-tag-row">' +
+      '<span class="tag tag-primary">' + window.TFC.escapeHtml(activity.type) + '</span>' +
+      '<span class="tag tag-outline">' + window.TFC.escapeHtml(activity.format) + '</span>' +
+      '<span class="tag tag-fee' + (activity.hasFee && activity.fee ? ' is-paid' : '') + '">' +
+      window.TFC.escapeHtml(activity.hasFee && activity.fee ? 'ค่าลงทะเบียน ' + Number(activity.fee).toLocaleString('th-TH') + ' บาท' : 'ไม่มีค่าใช้จ่าย') +
+      '</span></div>' +
+
+      '<div class="activity-foot">' +
+      '<div class="activity-progress">' +
+      '<div class="activity-progress-label">ผู้ลงทะเบียน <strong>' + activity.registered + '/' + activity.capacity + '</strong></div>' +
+      '<div class="progress"><div class="progress-bar" style="width:' + percent + '%"></div></div>' +
+      '</div>' +
+      window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
+      '<div class="activity-updated">' +
+      '<div>แก้ไขโดย ' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +
+      '<div>' + window.TFC.formatThaiShort(activity.updatedAt) + '</div>' +
+      '</div>' +
       window.TFC.actionMenuTrigger([
         { key: 'view', label: 'ดูรายละเอียด', icon: 'view', href: 'detail.html?id=' + activity.id },
         { key: 'edit', label: 'แก้ไข', icon: 'edit', href: 'edit.html?id=' + activity.id, perm: 'activities' },
         { key: 'delete', label: 'ลบกิจกรรม', icon: 'delete', modal: 'activity-delete-modal', perm: 'activities', danger: true }
       ]) +
-      '</td></tr>';
+      '</div></div></article>';
   }
 
-  var EMPTY_HTML = '<tr><td colspan="8">' +
-    '<div class="state-placeholder">' +
+  var EMPTY_HTML = '<div class="state-placeholder">' +
     '<span class="state-placeholder-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>' +
     '<div class="state-placeholder-title">ไม่พบกิจกรรมที่ตรงกับเงื่อนไข</div>' +
-    '<div class="state-placeholder-desc">ลองปรับคำค้นหาหรือล้างตัวกรองแล้วค้นหาอีกครั้ง</div>' +
-    '</div></td></tr>';
+    '<div class="state-placeholder-desc">ลองเปลี่ยนคำค้นหาหรือเลือกสถานะอื่น</div></div>';
+
+  var listEl = document.getElementById('activity-list');
 
   function render() {
     var rows = filteredRows();
     var pageCount = Math.max(1, Math.ceil(rows.length / state.pageSize));
     if (state.page > pageCount) state.page = pageCount;
     var start = (state.page - 1) * state.pageSize;
-    var pageRows = rows.slice(start, start + state.pageSize);
 
-    tbody.innerHTML = pageRows.length
-      ? pageRows.map(function (activity, i) { return rowHtml(activity, start + i + 1); }).join('')
+    listEl.innerHTML = rows.length
+      ? rows.slice(start, start + state.pageSize).map(cardHtml).join('')
       : EMPTY_HTML;
-
-    syncChip();
-
-    document.querySelectorAll('.data-table th[data-sort]').forEach(function (th) {
-      var isSorted = th.getAttribute('data-sort') === state.sortKey;
-      th.classList.toggle('is-sorted', isSorted);
-      th.querySelector('.sort-icon').textContent = isSorted ? (state.sortDir === 'asc' ? '↑' : '↓') : '↕';
-    });
 
     window.TFC.renderPagination('activity-pagination', {
       page: state.page,
@@ -342,76 +331,56 @@
     });
   }
 
-  /* ---------- ชิปบอกสถานะการกรอง ---------- */
-  function activeFilters() {
-    return [
-      state.search.trim() ? '"' + state.search.trim() + '"' : '',
-      state.participantType,
-      state.targetGroup,
-      state.dataSource
-    ].filter(Boolean);
+  /* ---------- วางรูปกิจกรรมลงการ์ด (mock: แสดงตัวอย่างทันที ยังไม่อัปโหลดจริง) ---------- */
+  function readCover(card, file) {
+    if (!file || file.type.indexOf('image/') !== 0) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      covers[card.getAttribute('data-id')] = e.target.result;
+      render();
+      if (window.TFC.showToast) window.TFC.showToast('เพิ่มรูปกิจกรรมแล้ว (ตัวอย่าง)', 'success');
+    };
+    reader.readAsDataURL(file);
   }
 
-  function syncChip() {
-    var active = activeFilters();
-    chipBtn.classList.toggle('is-active', active.length > 0);
-    chipLabel.textContent = active.length ? 'กรองอยู่: ' + active.join(' · ') : 'แสดงทั้งหมด';
-  }
-
-  chipBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    searchPanel.open();
+  listEl.addEventListener('click', function (e) {
+    var drop = e.target.closest('[data-cover-drop]');
+    if (drop) drop.querySelector('[data-cover-input]').click();
   });
 
-  /* ---------- ส่งออก Excel (CSV UTF-8) ---------- */
-  function exportRows(rows, filename) {
-    window.TFC.exportCsv(filename,
-      ['รหัสกิจกรรม', 'ชื่อกิจกรรม', 'ประเภท', 'รูปแบบกิจกรรม', 'พื้นที่ดำเนินงาน', 'วันที่จัดกิจกรรม',
-        'ผู้ลงทะเบียน', 'จำนวนรับสมัคร', 'สถานะ', 'ผู้บันทึกล่าสุด', 'วันเวลาที่บันทึก'],
-      rows.map(function (activity) {
-        return [activity.id, activity.name, activity.type, activity.format,
-          (activity.areaList || [activity.area]).join(', '),
-          window.TFC.activity.dateLabel(activity),
-          activity.registered, activity.capacity, activity.status,
-          activity.updatedBy || '', window.TFC.formatThaiShort(activity.updatedAt)];
-      }));
-  }
-
-  document.getElementById('activity-export').addEventListener('click', function () {
-    exportRows(filteredRows(), 'รายการกิจกรรม.csv');
+  listEl.addEventListener('change', function (e) {
+    var input = e.target.closest('[data-cover-input]');
+    if (input && input.files.length) readCover(input.closest('.activity-item'), input.files[0]);
   });
 
-  /* Loading state: โชว์ skeleton ระหว่างค้นหา แล้วค่อยวาดตาราง (mock ของการเรียก API) */
-  function renderWithLoading(done) {
-    tbody.innerHTML = new Array(5).fill('<tr><td colspan="8"><div class="skeleton skeleton-text"></div></td></tr>').join('');
-    setTimeout(function () {
-      render();
-      if (typeof done === 'function') done();
-    }, 400);
-  }
-
-  renderWithLoading();
-
-  /* ---------- เรียงลำดับ ---------- */
-  document.querySelectorAll('.data-table th[data-sort]').forEach(function (th) {
-    th.addEventListener('click', function () {
-      var key = th.getAttribute('data-sort');
-      if (state.sortKey === key) {
-        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        state.sortKey = key;
-        state.sortDir = 'asc';
-      }
-      render();
+  ['dragover', 'dragenter'].forEach(function (evt) {
+    listEl.addEventListener(evt, function (e) {
+      var drop = e.target.closest('[data-cover-drop]');
+      if (!drop) return;
+      e.preventDefault();
+      drop.classList.add('is-dragover');
     });
   });
 
-  /* ---------- ลบกิจกรรม: จำแถวที่กดจากปุ่ม ⋮ แล้วปรับข้อความ/ปุ่มในโมดัลตามจำนวนผู้ลงทะเบียน ---------- */
-  tbody.addEventListener('click', function (e) {
+  listEl.addEventListener('dragleave', function (e) {
+    var drop = e.target.closest('[data-cover-drop]');
+    if (drop) drop.classList.remove('is-dragover');
+  });
+
+  listEl.addEventListener('drop', function (e) {
+    var drop = e.target.closest('[data-cover-drop]');
+    if (!drop) return;
+    e.preventDefault();
+    drop.classList.remove('is-dragover');
+    readCover(drop.closest('.activity-item'), e.dataTransfer.files[0]);
+  });
+
+  /* ---------- ลบกิจกรรม ---------- */
+  listEl.addEventListener('click', function (e) {
     var trigger = e.target.closest('[data-action-menu]');
     if (!trigger) return;
-    var row = trigger.closest('tr');
-    deleteTargetId = row ? row.getAttribute('data-id') : null;
+    var card = trigger.closest('.activity-item');
+    deleteTargetId = card ? card.getAttribute('data-id') : null;
 
     var activity = window.TFC.activity.get(deleteTargetId);
     var messageEl = document.getElementById('activity-delete-message');
@@ -432,9 +401,13 @@
     var index = activities.findIndex(function (a) { return a.id === deleteTargetId; });
     if (index === -1) return;
     var removed = activities.splice(index, 1)[0];
+    renderPills();
     render();
     if (window.TFC.showToast) window.TFC.showToast('ลบกิจกรรม "' + removed.name + '" แล้ว', 'success');
   });
+
+  renderPills();
+  render();
 })();
 </script>
 </body>
