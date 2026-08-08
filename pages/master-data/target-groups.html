@@ -217,7 +217,7 @@
           '<td>' + g.memberCount + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
-          '<td class="nowrap">' + window.TFC.statusSelectHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน', rowId: g.id, ariaLabel: 'สถานะของ ' + g.name }) + '</td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'tg-edit-' + g.id, label: 'แก้ไข', icon: 'edit', modal: 'target-group-create-modal', perm: 'master_data' },

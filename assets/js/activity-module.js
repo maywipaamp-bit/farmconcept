@@ -195,6 +195,15 @@ window.TFC = window.TFC || {};
       optionsHtml + '</select>';
   };
 
+  /* สถานะแบบข้อความอย่างเดียว (ไม่ให้แก้ในตาราง) — ตัวหนังสือสี พื้นหลังจาง
+     TFC.statusTextHTML({ options: [{ value, badge }], value }) */
+  window.TFC.statusTextHTML = function (opts) {
+    opts = opts || {};
+    var hit = (opts.options || []).filter(function (item) { return item.value === opts.value; })[0];
+    var tone = ((hit && hit.badge) || 'badge-neutral').replace('badge-', 'is-');
+    return '<span class="status-text ' + tone + '">' + window.TFC.escapeHtml(opts.value || '-') + '</span>';
+  };
+
   /* เปลี่ยนสีตามค่าที่เลือกทันที + แจ้ง toast (mock: ยังไม่บันทึกลงฐานข้อมูลจริง) */
   document.addEventListener('change', function (e) {
     var select = e.target.closest('[data-status-select]');

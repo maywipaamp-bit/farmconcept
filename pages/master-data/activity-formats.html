@@ -227,7 +227,7 @@
           '<td><span class="badge badge-' + (f.badgeColor || 'primary') + '">' + window.TFC.escapeHtml(f.name) + '</span></td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
-          '<td class="nowrap">' + window.TFC.statusSelectHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน', rowId: f.id, ariaLabel: 'สถานะของ ' + f.name }) + '</td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },

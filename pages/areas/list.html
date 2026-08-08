@@ -109,7 +109,7 @@
 </div>
 
 <div class="modal-overlay" id="area-form-modal">
-  <div class="modal modal-lg">
+  <div class="modal modal-xl">
     <div class="modal-header">
       <h3 class="modal-title" id="area-form-title">เพิ่มพื้นที่ดำเนินงาน</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -118,7 +118,7 @@
     </div>
     <form data-mock-submit="บันทึกพื้นที่ดำเนินงานสำเร็จ (ตัวอย่าง)" id="area-form">
       <div class="modal-body">
-        <div class="form-row-3 mb-3">
+        <div class="form-row-3 mb-4">
           <div class="form-group form-col-span-2 mb-0">
             <label class="form-label" for="area-name">ชื่อพื้นที่ดำเนินงาน<span class="form-required">*</span></label>
             <input class="input" id="area-name" data-validate required>
@@ -129,7 +129,7 @@
           </div>
         </div>
 
-        <div class="form-row-3 mb-3">
+        <div class="form-row-3 mb-4">
           <div class="form-group mb-0">
             <label class="form-label" for="area-group">กลุ่มพื้นที่<span class="form-required">*</span></label>
             <select class="select" id="area-group" required data-smart-select></select>
@@ -144,22 +144,22 @@
           </div>
         </div>
 
-        <div class="form-row-3 mb-3">
+        <div class="form-row-3 mb-4">
           <div class="form-group mb-0">
             <label class="form-label" for="area-start-date">วันที่เริ่มดำเนินการ</label>
-            <input class="input" type="date" id="area-start-date">
+            <input type="hidden" id="area-start-date" data-thai-date>
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-end-date">สิ้นสุด</label>
-            <input class="input" type="date" id="area-end-date">
+            <input type="hidden" id="area-end-date" data-thai-date>
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-partner-org">ร่วมกับหน่วยงาน</label>
-            <input class="input" id="area-partner-org">
+            <input type="hidden" id="area-partner-org" data-tags-input data-tags-placeholder="พิมพ์ชื่อหน่วยงานแล้วกด Enter">
           </div>
         </div>
 
-        <div class="form-row-3 mb-3">
+        <div class="form-row-3 mb-4">
           <div class="form-group mb-0">
             <label class="form-label" for="area-coordinator">ผู้ประสานงาน<span class="form-required">*</span></label>
             <input class="input" id="area-coordinator" data-validate required>
@@ -217,6 +217,7 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/search-popover.js"></script>
 <script src="../../assets/js/app.js"></script>
@@ -254,6 +255,9 @@
     document.getElementById('area-form').reset();
     populateStaticSelects();
     populateDistricts(document.getElementById('area-province').value, null);
+    window.TFC.setDateValue('area-start-date', '');
+    window.TFC.setDateValue('area-end-date', '');
+    window.TFC.setTagsValue('area-partner-org', '');
     document.getElementById('area-form').setAttribute('data-editing-id', '');
   }
 
@@ -265,9 +269,9 @@
     document.getElementById('area-group').value = area.areaGroup || '';
     document.getElementById('area-province').value = area.province || '';
     populateDistricts(area.province, area.district);
-    document.getElementById('area-start-date').value = area.startDate || '';
-    document.getElementById('area-end-date').value = area.endDate || '';
-    document.getElementById('area-partner-org').value = area.partnerOrg || '';
+    window.TFC.setDateValue('area-start-date', area.startDate);
+    window.TFC.setDateValue('area-end-date', area.endDate);
+    window.TFC.setTagsValue('area-partner-org', area.partnerOrg);
     document.getElementById('area-coordinator').value = area.coordinator || '';
     document.getElementById('area-coordinator-phone').value = area.coordinatorPhone || '';
     document.getElementById('area-coordinator-position').value = area.coordinatorPosition || '';
@@ -313,7 +317,7 @@
           '<td>' + window.TFC.escapeHtml(a.areaGroup || '-') + '</td>' +
           '<td>' + window.TFC.escapeHtml(a.coordinator) + '</td>' +
           '<td>' + a.activityCount + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusSelectHTML({ options: mock.areaStatusList, value: a.status, rowId: a.id, ariaLabel: 'สถานะของ ' + a.name }) + '</td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.areaStatusList, value: a.status }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +

@@ -3182,3 +3182,138 @@
 .smart-select-trigger {
   font-weight: var(--font-weight-regular);
 }
+
+/* ==========================================================================
+   14. Field Widgets — วันที่แบบไทย / Tags Input (assets/js/field-widgets.js)
+   ========================================================================== */
+.thai-date {
+  position: relative;
+}
+
+.thai-date-hint {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-disabled);
+  pointer-events: none;
+}
+
+.tags-input {
+  align-items: center;
+  min-height: 34px;
+  padding: var(--space-1) var(--space-2);
+  cursor: text;
+}
+
+.tags-input-field {
+  flex: 1;
+  min-width: 90px;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-small);
+  color: var(--color-text-primary);
+}
+
+.tags-input .multiselect-tag button {
+  cursor: pointer;
+}
+
+/* ---------- ฟอร์มใน popup: ช่องกรอกเตี้ยและตัวเล็กลง ให้เนื้อหาพอดีจอ ---------- */
+.modal-body .input,
+.modal-body .select,
+.modal-body .smart-select-trigger {
+  height: 34px;
+  font-size: var(--font-size-small);
+}
+
+.modal-body .textarea {
+  font-size: var(--font-size-small);
+}
+
+.modal-body .form-row,
+.modal-body .form-row-3 {
+  gap: var(--space-2) var(--space-3);
+}
+
+/* ---------- คอลัมน์ปรับปรุงล่าสุด: ขนาดเท่าคอลัมน์อื่นในตาราง ---------- */
+.cell-updated-by,
+.cell-updated-at {
+  font-size: var(--font-size-small);
+}
+
+/* ---------- สถานะแบบข้อความ (ไม่ใช่ dropdown) — ตัวหนังสือสี พื้นหลังจาง ---------- */
+.status-text {
+  display: inline-block;
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+}
+
+.status-text.is-success { background: var(--color-success-soft); color: #16803D; }
+.status-text.is-warning { background: var(--color-warning-soft); color: #B45309; }
+.status-text.is-danger { background: var(--color-danger-soft); color: #B91C1C; }
+.status-text.is-info { background: var(--color-info-soft); color: #1D4ED8; }
+.status-text.is-primary { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+
+/* ---------- แถบล่างตาราง: ย่อขนาดลง ---------- */
+.pagination.is-footer {
+  padding: var(--space-2) var(--space-3);
+}
+
+.pagination-info {
+  font-size: var(--font-size-caption);
+}
+
+.pagination-btn {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-caption);
+}
+
+.pagination-controls {
+  gap: var(--space-1);
+}
+
+.pagination-size .select {
+  height: 26px;
+  padding-right: var(--space-5);
+  background-position: right var(--space-2) center;
+}
+
+/* ---------- Popup: ไม่ให้เหลือพื้นที่ว่างท้ายกรอบ + ขยายความกว้างได้ ---------- */
+.modal-xl { max-width: 920px; }
+
+/* ฟอร์มใน popup เป็น flex column เพื่อให้ body สูงเท่าเนื้อหาจริง
+   (เนื้อหาสั้น = ไม่มีช่องว่างเหลือ, เนื้อหายาว = body หดแล้วเลื่อนแทน) */
+.modal > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.modal-body {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+/* ระยะห่างระหว่างฟิลด์ให้หายใจได้ ไม่อึดอัด */
+.modal-body .form-row,
+.modal-body .form-row-3 {
+  gap: var(--space-4) var(--space-4);
+}
+
+.modal-body .input,
+.modal-body .select,
+.modal-body .smart-select-trigger,
+.modal-body .tags-input {
+  height: 38px;
+}
