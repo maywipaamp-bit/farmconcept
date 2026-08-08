@@ -189,7 +189,6 @@
 
   window.TFC.renderPageHeader('program-page-header', {
     title: 'รายการโปรแกรมการเรียนรู้',
-    description: 'จัดการโปรแกรม/โครงการหลักที่ใช้จัดกลุ่มกิจกรรมย่อยภายใน',
     actions: [
       {
         label: 'เพิ่มโปรแกรมใหม่',
@@ -254,8 +253,8 @@
           '<td>' + window.TFC.escapeHtml(p.name) + '</td>' +
           '<td>' + coursesHtml + '</td>' +
           '<td><span class="badge ' + (statusBadge[p.active !== false] || 'badge-neutral') + '">' + (p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน') + '</span></td>' +
-          '<td><div class="small">' + window.TFC.escapeHtml(p.updatedBy || '-') + '</div>' +
-          '<div class="caption text-secondary">' + (p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : '-') + '</div></td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(p.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'program-edit-' + p.id, label: 'แก้ไข', icon: 'edit', modal: 'program-create-modal', perm: 'master_data' },

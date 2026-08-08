@@ -172,7 +172,6 @@
 
   window.TFC.renderPageHeader('fmt-page-header', {
     title: 'รูปแบบกิจกรรม',
-    description: 'จัดการรูปแบบ/ประเภทของกิจกรรมที่ใช้จัดหมวดหมู่และแสดง Badge',
     actions: [
       {
         label: 'เพิ่มรูปแบบกิจกรรม',
@@ -226,8 +225,8 @@
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(f.name) + '</td>' +
           '<td><span class="badge badge-' + (f.badgeColor || 'primary') + '">' + window.TFC.escapeHtml(f.name) + '</span></td>' +
-          '<td><div class="small">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
-          '<div class="caption text-secondary">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
           '<td><span class="badge ' + (f.active === false ? 'badge-neutral' : 'badge-success') + '">' + (f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน') + '</span></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([

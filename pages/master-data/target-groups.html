@@ -163,7 +163,6 @@
 
   window.TFC.renderPageHeader('target-group-page-header', {
     title: 'รายการกลุ่มเป้าหมาย',
-    description: 'จัดการกลุ่มเป้าหมายที่ใช้อ้างอิงในการวางแผนกิจกรรมและติดตามผล',
     actions: [
       {
         label: 'เพิ่มกลุ่มเป้าหมาย',
@@ -216,8 +215,8 @@
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(g.name) + '</td>' +
           '<td>' + g.memberCount + '</td>' +
-          '<td><div class="small">' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
-          '<div class="caption text-secondary">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
           '<td><span class="badge ' + (g.active === false ? 'badge-neutral' : 'badge-success') + '">' + (g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน') + '</span></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([

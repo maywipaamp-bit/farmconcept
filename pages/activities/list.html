@@ -107,7 +107,6 @@
             <thead>
               <tr>
                 <th class="col-no">#</th>
-                <th class="col-thumb">ภาพ</th>
                 <th data-sort="name">ชื่อกิจกรรม <span class="sort-icon">↕</span></th>
                 <th class="col-type">ประเภท</th>
                 <th class="col-format">รูปแบบกิจกรรม</th>
@@ -274,7 +273,6 @@
 
     return '<tr data-id="' + activity.id + '">' +
       '<td class="col-no nowrap">' + index + '</td>' +
-      '<td class="col-thumb">' + window.TFC.activity.thumbHTML(activity) + '</td>' +
       '<td><div class="cell-stack">' +
       '<span class="cell-stack-title-row">' +
       '<span class="status-dot ' + statusTone + '"></span>' +
@@ -308,7 +306,7 @@
       '</td></tr>';
   }
 
-  var EMPTY_HTML = '<tr><td colspan="9">' +
+  var EMPTY_HTML = '<tr><td colspan="8">' +
     '<div class="state-placeholder">' +
     '<span class="state-placeholder-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>' +
     '<div class="state-placeholder-title">ไม่พบกิจกรรมที่ตรงกับเงื่อนไข</div>' +
@@ -386,7 +384,7 @@
 
   /* Loading state: โชว์ skeleton ระหว่างค้นหา แล้วค่อยวาดตาราง (mock ของการเรียก API) */
   function renderWithLoading(done) {
-    tbody.innerHTML = new Array(5).fill('<tr><td colspan="9"><div class="skeleton skeleton-text"></div></td></tr>').join('');
+    tbody.innerHTML = new Array(5).fill('<tr><td colspan="8"><div class="skeleton skeleton-text"></div></td></tr>').join('');
     setTimeout(function () {
       render();
       if (typeof done === 'function') done();

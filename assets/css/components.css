@@ -3065,3 +3065,17 @@
 .search-popover-panel .search-input-icon {
   left: var(--space-2);
 }
+
+/* ---------- ความหนาแน่นของเนื้อหาในตารางหน้ารายการ ให้เท่ากันทุกหน้า ---------- */
+/* รายการย่อยในเซลล์ (เช่น หลักสูตรใต้ชื่อโปรแกรม, ความเชี่ยวชาญของวิทยากร) ใช้ขนาดเดียวกับ .cell-meta */
+.data-table td ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  list-style: disc;
+}
+
+.data-table td .small {
+  font-size: var(--font-size-caption);
+}

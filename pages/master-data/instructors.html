@@ -200,7 +200,6 @@
 
   window.TFC.renderPageHeader('instructor-page-header', {
     title: 'รายการวิทยากร',
-    description: 'จัดการข้อมูลวิทยากรที่ร่วมสอนในกิจกรรมต่างๆ',
     actions: [
       {
         label: 'เพิ่มวิทยากร',
@@ -264,8 +263,8 @@
           '<td>' + window.TFC.escapeHtml(i.name) + '</td>' +
           '<td>' + window.TFC.escapeHtml(i.phone) + '</td>' +
           '<td>' + expertiseHtml + '</td>' +
-          '<td><div class="small">' + window.TFC.escapeHtml(i.updatedBy || '-') + '</div>' +
-          '<div class="caption text-secondary">' + (i.updatedAt ? window.TFC.formatThaiDate(i.updatedAt) : '-') + '</div></td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(i.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (i.updatedAt ? window.TFC.formatThaiDate(i.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'instr-edit-' + i.id, label: 'แก้ไข', icon: 'edit', modal: 'instructor-create-modal', perm: 'master_data' },

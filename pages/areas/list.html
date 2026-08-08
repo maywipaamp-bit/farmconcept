@@ -315,8 +315,8 @@
           '<td>' + window.TFC.escapeHtml(a.coordinator) + '</td>' +
           '<td>' + a.activityCount + '</td>' +
           '<td><span class="badge ' + (statusBadge[a.status] || 'badge-neutral') + '">' + window.TFC.escapeHtml(a.status || '-') + '</span></td>' +
-          '<td><div class="small">' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
-          '<div class="caption text-secondary">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt) : '-') + '</div></td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
@@ -340,7 +340,6 @@
 
   window.TFC.renderPageHeader('area-page-header', {
     title: 'รายการพื้นที่ดำเนินงาน',
-    description: 'จัดการพื้นที่และชุมชนที่ดำเนินกิจกรรมของโครงการ',
     actions: [
       {
         label: 'เพิ่มพื้นที่ดำเนินงาน',
