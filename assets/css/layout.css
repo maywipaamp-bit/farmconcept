@@ -542,3 +542,31 @@
   font-size: var(--font-size-card-title);
   margin-bottom: 4px;
 }
+
+/* ---------- Branding: โลโก้จริงของ The Farm Concept ---------- */
+img.sidebar-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 0;
+  background: none;
+  object-fit: contain;
+}
+
+.sidebar-title img {
+  height: 26px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ปุ่มโปรไฟล์มุมขวาบน: เป็น <button> จึงติดกรอบมาตรฐานของเบราว์เซอร์ -> เอาออก */
+.topbar-profile {
+  border: none;
+  background: none;
+}
+
+.topbar-profile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

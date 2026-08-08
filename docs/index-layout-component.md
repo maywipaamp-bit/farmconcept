@@ -172,3 +172,8 @@ TFC.renderPagination('activity-pagination', {
 - No screenshots are attached to this doc — the sandboxed browser pane in this environment can't composite
   frames for pixel screenshots; all pages were instead verified via the accessibility tree, page text, and
   live DOM/computed-style checks (grid columns, overflow, icon positioning) at 375px / 768px / 1280px.
+
+## Branding
+
+- โลโก้: `assets/images/logo-mark.png` (ไอคอน) + `assets/images/logo-farm.jpg` (ตัวอักษรโลโก้) ใช้ในแถบเมนูทุกหน้า
+- รูปโปรไฟล์เริ่มต้น: วางไฟล์ที่ `assets/images/avatar-default.jpg` — ถ้าไม่มีไฟล์ ระบบจะแสดงตัวอักษรย่อแทนอัตโนมัติ
