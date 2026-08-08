@@ -108,27 +108,24 @@
     </div>
     <form data-mock-submit="บันทึกโปรแกรมการเรียนรู้สำเร็จ (ตัวอย่าง)" id="program-form">
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="program-name">ชื่อโปรแกรมการเรียนรู้<span class="form-required">*</span></label>
-          <input class="input" id="program-name" data-validate required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="program-category">หมวดหมู่</label>
-          <input class="input" id="program-category">
-        </div>
-        <div class="form-group mb-2">
-          <label class="form-label" for="program-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="program-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="program-active-label">ใช้งาน</span>
+        <div class="form-row mb-3">
+          <div class="form-group form-col-span-2 mb-0">
+            <label class="form-label" for="program-name">ชื่อโปรแกรมการเรียนรู้<span class="form-required">*</span></label>
+            <input class="input" id="program-name" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="program-active">สถานะ<span class="form-required">*</span></label>
+            <div class="flex items-center gap-2" style="height:38px;">
+              <label class="switch"><input type="checkbox" id="program-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="program-active-label">ใช้งาน</span>
+            </div>
           </div>
         </div>
         <div class="form-group mb-0">
           <label class="form-label">หลักสูตร</label>
           <div class="dynamic-row-list" id="program-courses-list"></div>
-          <button type="button" class="btn btn-outline btn-sm" id="program-add-course-btn">
+          <button type="button" class="dynamic-row-add" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            เพิ่มหลักสูตร
           </button>
         </div>
       </div>
@@ -221,7 +218,6 @@
     if (!program) return;
     document.getElementById('program-form-title').textContent = 'แก้ไขโปรแกรมการเรียนรู้';
     document.getElementById('program-name').value = program.name || '';
-    document.getElementById('program-category').value = program.category || '';
     document.getElementById('program-active').checked = program.active !== false;
     document.getElementById('program-active-label').textContent = program.active !== false ? 'ใช้งาน' : 'ไม่ใช้งาน';
     coursesList.reset((program.courses || []).map(function (c) { return c.name; }));
@@ -231,13 +227,11 @@
   function renderTable() {
     programSvc.list().then(function (programs) {
       var keyword = (document.getElementById('program-search') || {}).value || '';
-      var category = (document.getElementById('program-filter-category') || {}).value || '';
       keyword = keyword.trim().toLowerCase();
 
       var filtered = programs.filter(function (p) {
         var matchesKeyword = !keyword || p.name.toLowerCase().indexOf(keyword) !== -1;
-        var matchesCategory = !category || p.category === category;
-        return matchesKeyword && matchesCategory;
+        return matchesKeyword;
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -280,7 +274,6 @@
     });
   }
 
-  var categories = (mock.programs || []).map(function (p) { return p.category; }).filter(function (c, i, arr) { return arr.indexOf(c) === i; });
 
   /* แถบค้นหา/ตัวกรองย้ายเข้า Search Panel Popover (โครงเดียวกับหน้าจัดการกิจกรรม)
      ยังใช้ id เดิม program-search / program-filter-category เพื่อให้ renderTable() อ่านค่าได้เหมือนเดิม */
@@ -289,15 +282,6 @@
     chipLabelId: 'program-filter-chip-label',
     popoverId: 'program-search-popover',
     search: { id: 'program-search', placeholder: 'ค้นหาชื่อโปรแกรม' },
-    filters: [
-      {
-        id: 'category',
-        inputId: 'program-filter-category',
-        label: 'หมวดหมู่',
-        placeholder: 'หมวดหมู่ทั้งหมด',
-        options: categories.map(function (c) { return { label: c }; })
-      }
-    ],
     onApply: function (values, done) {
       pageState.page = 1;
       renderTable();
@@ -325,7 +309,6 @@
       .filter(function (v) { return v; });
     var payload = {
       name: document.getElementById('program-name').value,
-      category: document.getElementById('program-category').value,
       active: document.getElementById('program-active').checked,
       courses: courseNames.map(function (name, i) { return { order: i + 1, name: name }; }),
       updatedBy: (mock.currentUser || {}).name || ''
