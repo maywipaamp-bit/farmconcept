@@ -1,7 +1,12 @@
 /* TheFarmConcept — Smart Dropdown: searchable select with an inline "+ เพิ่มรายการใหม่" modal.
    Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนตึกร้าง">...options...</select>
    Progressive enhancement — the original <select> stays in the DOM (hidden) and keeps receiving
-   value updates + a "change" event, so existing form logic that reads select.value keeps working. */
+   value updates + a "change" event, so existing form logic that reads select.value keeps working.
+
+   หมายเหตุ: บางหน้า (เช่น login.html) ไม่ได้โหลด mock-data.js ซึ่งเป็นที่สร้าง window.TFC
+   จึงต้องประกาศไว้ที่นี่ด้วย ไม่อย่างนั้นสคริปต์จะพังทั้งไฟล์ */
+window.TFC = window.TFC || {};
+
 (function () {
   var activePanel = null;
   var activeWidget = null;
