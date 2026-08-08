@@ -2937,12 +2937,14 @@
   height: 18px;
 }
 
-.list-toolbar .search-popover-trigger {
+.list-toolbar .search-popover-trigger,
+.list-filter-bar .search-popover-trigger {
   width: 30px;
   height: 30px;
 }
 
-.list-toolbar .search-popover-trigger svg {
+.list-toolbar .search-popover-trigger svg,
+.list-filter-bar .search-popover-trigger svg {
   width: 15px;
   height: 15px;
 }
@@ -3711,4 +3713,9 @@ a.activity-title:hover {
   font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   line-height: var(--line-height-tight);
+}
+
+/* สถานะกิจกรรมอยู่มุมขวาบนของการ์ด (บรรทัดเดียวกับชื่อกิจกรรม) */
+.activity-title-row .status-text {
+  margin-left: auto;
 }

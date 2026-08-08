@@ -276,6 +276,7 @@
       '<div class="activity-title-row">' +
       '<span class="status-dot ' + tone + '"></span>' +
       '<a class="activity-title" href="edit.html?id=' + activity.id + '">' + window.TFC.escapeHtml(activity.name) + '</a>' +
+      window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
       '</div>' +
 
       '<div class="activity-meta-row">' +
@@ -296,7 +297,6 @@
       '<div class="activity-progress-label">ผู้ลงทะเบียน <strong>' + activity.registered + '/' + activity.capacity + '</strong></div>' +
       '<div class="progress"><div class="progress-bar" style="width:' + percent + '%"></div></div>' +
       '</div>' +
-      window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
       '<div class="activity-updated">' +
       '<div>แก้ไขโดย ' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +
       '<div>' + window.TFC.formatThaiShort(activity.updatedAt) + '</div>' +
