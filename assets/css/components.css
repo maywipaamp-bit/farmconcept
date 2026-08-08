@@ -3465,3 +3465,11 @@
   color: var(--color-primary-dark);
   cursor: pointer;
 }
+
+/* ---------- แถวรวมท้ายตาราง ---------- */
+.data-table tfoot td {
+  background: var(--color-surface-muted);
+  font-weight: var(--font-weight-medium);
+  border-top: 1px solid var(--color-border);
+  border-bottom: none;
+}

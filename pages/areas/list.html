@@ -100,6 +100,7 @@
             </tr>
           </thead>
           <tbody id="area-table-body"></tbody>
+          <tfoot id="area-table-foot"></tfoot>
         </table>
       </div>
       <div id="area-pagination"></div>
@@ -328,6 +329,12 @@
           '</td></tr>';
       }).join('');
 
+      var totalActivities = filtered.reduce(function (sum, row) { return sum + (row.activityCount || 0); }, 0);
+      document.getElementById('area-table-foot').innerHTML = filtered.length
+        ? '<tr><td colspan="5">รวม ' + filtered.length + ' พื้นที่</td>' +
+          '<td>' + totalActivities + '</td><td></td><td></td><td></td></tr>'
+        : '';
+
       window.TFC.renderPagination('area-pagination', {
         page: pageState.page,
         pageSize: pageState.pageSize,
@@ -341,7 +348,7 @@
   }
 
   window.TFC.renderPageHeader('area-page-header', {
-    title: 'รายการพื้นที่ดำเนินงาน',
+    title: 'พื้นที่ดำเนินงาน',
     actions: [
       {
         label: 'เพิ่มพื้นที่ดำเนินงาน',
