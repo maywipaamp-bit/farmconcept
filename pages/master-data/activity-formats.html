@@ -87,9 +87,10 @@
         <div class="table-scroll">
           <table class="data-table is-header-filled">
           <thead>
-            <tr><th class="col-no">#</th><th>ชื่อรูปแบบกิจกรรม</th><th>ป้ายกำกับ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th>สถานะ</th><th class="col-actions">จัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อรูปแบบกิจกรรม</th><th>ป้ายกำกับ</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="fmt-table-body"></tbody>
+          <tfoot id="fmt-table-foot"></tfoot>
         </table>
       </div>
       <div id="format-pagination"></div>
@@ -114,7 +115,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="fmt-badge-color">สีป้ายกำกับ (Badge Color)</label>
-          <select class="select" id="fmt-badge-color"></select>
+          <select class="select" id="fmt-badge-color" data-smart-select></select>
           <div class="form-helper">🔸 รอยืนยัน: ใช้สีนี้แสดง Badge รูปแบบกิจกรรมในหน้า Homepage หรือไม่</div>
         </div>
         <div class="form-group mb-0">
@@ -159,6 +160,7 @@
 <script src="../../assets/js/smart-select.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
@@ -225,9 +227,9 @@
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(f.name) + '</td>' +
           '<td><span class="badge badge-' + (f.badgeColor || 'primary') + '">' + window.TFC.escapeHtml(f.name) + '</span></td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },
@@ -235,6 +237,10 @@
           ]) +
           '</td></tr>';
       }).join('');
+
+      document.getElementById('fmt-table-foot').innerHTML = filtered.length
+        ? '<tr><td colspan="3">รวม ' + filtered.length + ' รูปแบบ</td><td></td><td></td><td></td></tr>'
+        : '';
 
       window.TFC.renderPagination('format-pagination', {
         page: pageState.page,

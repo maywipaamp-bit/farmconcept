@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รายการโปรแกรมการเรียนรู้ | TheFarmConcept</title>
+<title>โปรแกรมการเรียนรู้ | TheFarmConcept</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -90,6 +90,7 @@
             <tr><th class="col-no">#</th><th>ชื่อโปรแกรมการเรียนรู้</th><th>หลักสูตร</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="program-table-body"></tbody>
+          <tfoot id="program-table-foot"></tfoot>
         </table>
       </div>
       <div id="program-pagination"></div>
@@ -167,6 +168,7 @@
 <script src="../../assets/js/smart-select.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
@@ -188,7 +190,7 @@
   coursesList.reset([]);
 
   window.TFC.renderPageHeader('program-page-header', {
-    title: 'รายการโปรแกรมการเรียนรู้',
+    title: 'โปรแกรมการเรียนรู้',
     actions: [
       {
         label: 'เพิ่มโปรแกรมใหม่',
@@ -262,6 +264,10 @@
           ]) +
           '</td></tr>';
       }).join('');
+
+      document.getElementById('program-table-foot').innerHTML = filtered.length
+        ? '<tr><td colspan="3">รวม ' + filtered.length + ' โปรแกรม</td>' + '<td></td><td></td><td></td></tr>'
+        : '';
 
       window.TFC.renderPagination('program-pagination', {
         page: pageState.page,

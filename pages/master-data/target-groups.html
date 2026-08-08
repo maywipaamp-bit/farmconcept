@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รายการกลุ่มเป้าหมาย | TheFarmConcept</title>
+<title>กลุ่มเป้าหมาย | TheFarmConcept</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -87,9 +87,10 @@
         <div class="table-scroll">
           <table class="data-table is-header-filled">
           <thead>
-            <tr><th class="col-no">#</th><th>ชื่อกลุ่มเป้าหมาย</th><th>จำนวนสมาชิก</th><th class="col-updated">ปรับปรุงล่าสุด</th><th>สถานะ</th><th class="col-actions">จัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อกลุ่มเป้าหมาย</th><th>จำนวนสมาชิก</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="target-group-table-body"></tbody>
+          <tfoot id="target-group-table-foot"></tfoot>
         </table>
       </div>
       <div id="target-group-pagination"></div>
@@ -154,6 +155,7 @@
 <script src="../../assets/js/smart-select.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
@@ -162,7 +164,7 @@
   var mock = window.TFC_MOCK || {};
 
   window.TFC.renderPageHeader('target-group-page-header', {
-    title: 'รายการกลุ่มเป้าหมาย',
+    title: 'กลุ่มเป้าหมาย',
     actions: [
       {
         label: 'เพิ่มกลุ่มเป้าหมาย',
@@ -215,9 +217,9 @@
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(g.name) + '</td>' +
           '<td>' + g.memberCount + '</td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'tg-edit-' + g.id, label: 'แก้ไข', icon: 'edit', modal: 'target-group-create-modal', perm: 'master_data' },
@@ -225,6 +227,11 @@
           ]) +
           '</td></tr>';
       }).join('');
+
+      var totalNumber = filtered.reduce(function (sum, row) { return sum + (row.memberCount || 0); }, 0);
+      document.getElementById('target-group-table-foot').innerHTML = filtered.length
+        ? '<tr><td colspan="2">รวม ' + filtered.length + ' กลุ่ม</td>' + '<td>' + totalNumber + '</td>' + '<td></td><td></td><td></td></tr>'
+        : '';
 
       window.TFC.renderPagination('target-group-pagination', {
         page: pageState.page,

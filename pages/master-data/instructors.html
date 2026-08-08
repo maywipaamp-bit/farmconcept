@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รายการวิทยากร | TheFarmConcept</title>
+<title>วิทยากร | TheFarmConcept</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -90,6 +90,7 @@
             <tr><th class="col-no">#</th><th>ชื่อวิทยากร</th><th>เบอร์โทร</th><th>ความเชี่ยวชาญ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="instructor-table-body"></tbody>
+          <tfoot id="instructor-table-foot"></tfoot>
         </table>
       </div>
       <div id="instructor-pagination"></div>
@@ -180,6 +181,7 @@
 <script src="../../assets/js/smart-select.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
@@ -199,7 +201,7 @@
   expertiseList.reset([]);
 
   window.TFC.renderPageHeader('instructor-page-header', {
-    title: 'รายการวิทยากร',
+    title: 'วิทยากร',
     actions: [
       {
         label: 'เพิ่มวิทยากร',
@@ -272,6 +274,10 @@
           ]) +
           '</td></tr>';
       }).join('');
+
+      document.getElementById('instructor-table-foot').innerHTML = filtered.length
+        ? '<tr><td colspan="4">รวม ' + filtered.length + ' คน</td>' + '<td></td><td></td></tr>'
+        : '';
 
       window.TFC.renderPagination('instructor-pagination', {
         page: pageState.page,
