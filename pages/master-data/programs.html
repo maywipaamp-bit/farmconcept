@@ -151,7 +151,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
-      <button class="btn btn-danger" data-close-modal>ลบโปรแกรม</button>
+      <button class="btn btn-danger" id="program-delete-confirm" data-close-modal>ลบโปรแกรม</button>
     </div>
   </div>
 </div>
@@ -258,7 +258,7 @@
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'program-edit-' + p.id, label: 'แก้ไข', icon: 'edit', modal: 'program-create-modal', perm: 'master_data' },
-            { key: 'delete', label: 'ลบโปรแกรม', icon: 'delete', modal: 'program-delete-modal', perm: 'master_data', danger: true }
+            { key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', icon: 'delete', modal: 'program-delete-modal', perm: 'master_data', danger: true }
           ]) +
           '</td></tr>';
       }).join('');
@@ -330,6 +330,22 @@
   });
 
   renderTable();
+
+  /* ลบรายการ: จำ id จากเมนู ⋮ แล้วลบจริงเมื่อกดยืนยันในโมดัล */
+  var pendingDeleteId = null;
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-action-key^="program-delete-"]');
+    if (item) pendingDeleteId = item.getAttribute('data-action-key').replace('program-delete-', '');
+  });
+
+  document.getElementById('program-delete-confirm').addEventListener('click', function () {
+    if (!pendingDeleteId) return;
+    programSvc.remove(pendingDeleteId).then(function () {
+      pendingDeleteId = null;
+      renderTable();
+      if (window.TFC.showToast) window.TFC.showToast('ลบโปรแกรมเรียบร้อย', 'success');
+    });
+  });
 })();
 </script>
 </body>

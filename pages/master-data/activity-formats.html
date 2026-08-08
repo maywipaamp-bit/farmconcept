@@ -144,7 +144,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
-      <button class="btn btn-danger" data-close-modal>ลบรูปแบบกิจกรรม</button>
+      <button class="btn btn-danger" id="fmt-delete-confirm" data-close-modal>ลบรูปแบบกิจกรรม</button>
     </div>
   </div>
 </div>
@@ -231,7 +231,7 @@
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },
-            { key: 'delete', label: 'ลบรูปแบบกิจกรรม', icon: 'delete', modal: 'fmt-delete-modal', perm: 'master_data', danger: true }
+            { key: 'fmt-delete-' + f.id, label: 'ลบรูปแบบกิจกรรม', icon: 'delete', modal: 'fmt-delete-modal', perm: 'master_data', danger: true }
           ]) +
           '</td></tr>';
       }).join('');
@@ -278,6 +278,22 @@
   });
 
   renderTable();
+
+  /* ลบรายการ: จำ id จากเมนู ⋮ แล้วลบจริงเมื่อกดยืนยันในโมดัล */
+  var pendingDeleteId = null;
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-action-key^="fmt-delete-"]');
+    if (item) pendingDeleteId = item.getAttribute('data-action-key').replace('fmt-delete-', '');
+  });
+
+  document.getElementById('fmt-delete-confirm').addEventListener('click', function () {
+    if (!pendingDeleteId) return;
+    fmtSvc.remove(pendingDeleteId).then(function () {
+      pendingDeleteId = null;
+      renderTable();
+      if (window.TFC.showToast) window.TFC.showToast('ลบรูปแบบกิจกรรมเรียบร้อย', 'success');
+    });
+  });
 })();
 </script>
 </body>

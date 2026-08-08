@@ -3079,3 +3079,74 @@
 .data-table td .small {
   font-size: var(--font-size-caption);
 }
+
+/* ---------- สถานะในตาราง: ตัวหนังสือสี พื้นหลังจาง ไม่มีกรอบ ---------- */
+.status-select {
+  border-color: transparent;
+  font-weight: var(--font-weight-medium);
+}
+
+.status-select.is-success { background-color: var(--color-success-soft); border-color: transparent; }
+.status-select.is-warning { background-color: var(--color-warning-soft); border-color: transparent; }
+.status-select.is-danger { background-color: var(--color-danger-soft); border-color: transparent; }
+.status-select.is-info { background-color: var(--color-info-soft); border-color: transparent; }
+.status-select.is-primary { background-color: var(--color-primary-soft); border-color: transparent; }
+.status-select.is-neutral { background-color: var(--color-background); border-color: transparent; }
+
+/* ลูกศร dropdown ใช้สีเดียวกับตัวหนังสือ (currentColor) เพื่อให้กลมกลืน */
+.status-select:focus {
+  border-color: var(--color-primary);
+}
+
+/* ==========================================================================
+   13. Modal (Forms-Popup) — กระชับ อ่านสบาย ไม่แข็ง
+   หัวและปุ่มค้างไว้เสมอ เนื้อหาเลื่อนได้ในตัว ป้ายกำกับฟิลด์ไม่หนาเกินไป
+   ========================================================================== */
+.modal {
+  max-height: calc(100vh - var(--space-5));
+}
+
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+}
+
+.modal-title {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.modal-body {
+  padding: var(--space-4);
+}
+
+/* ป้ายกำกับในฟอร์ม popup: ตัวเล็ก น้ำหนักปกติ สีรอง — ให้ค่าที่กรอกเด่นกว่าป้าย */
+.modal-body .form-label {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.modal-body .form-row,
+.modal-body .form-row-3 {
+  gap: var(--space-3);
+}
+
+/* ปุ่มยืนยัน/ยกเลิก ค้างท้ายกรอบเสมอ ไม่ต้องเลื่อนตามไปหา */
+.modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-surface);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 0 0 var(--radius-modal) var(--radius-modal);
+}
+
+.modal-footer .btn {
+  height: 34px;
+  font-size: var(--font-size-small);
+}

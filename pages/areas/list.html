@@ -118,7 +118,7 @@
     </div>
     <form data-mock-submit="บันทึกพื้นที่ดำเนินงานสำเร็จ (ตัวอย่าง)" id="area-form">
       <div class="modal-body">
-        <div class="form-row-3 mb-4">
+        <div class="form-row-3 mb-3">
           <div class="form-group form-col-span-2 mb-0">
             <label class="form-label" for="area-name">ชื่อพื้นที่ดำเนินงาน<span class="form-required">*</span></label>
             <input class="input" id="area-name" data-validate required>
@@ -129,7 +129,7 @@
           </div>
         </div>
 
-        <div class="form-row-3 mb-4">
+        <div class="form-row-3 mb-3">
           <div class="form-group mb-0">
             <label class="form-label" for="area-group">กลุ่มพื้นที่<span class="form-required">*</span></label>
             <select class="select" id="area-group" required></select>
@@ -144,7 +144,7 @@
           </div>
         </div>
 
-        <div class="form-row-3 mb-4">
+        <div class="form-row-3 mb-3">
           <div class="form-group mb-0">
             <label class="form-label" for="area-start-date">วันที่เริ่มดำเนินการ</label>
             <input class="input" type="date" id="area-start-date">
@@ -155,11 +155,11 @@
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-partner-org">ร่วมกับหน่วยงาน</label>
-            <input class="input" id="area-partner-org" placeholder="เช่น สำนักงานเขตสายไหม">
+            <input class="input" id="area-partner-org">
           </div>
         </div>
 
-        <div class="form-row-3 mb-4">
+        <div class="form-row-3 mb-3">
           <div class="form-group mb-0">
             <label class="form-label" for="area-coordinator">ผู้ประสานงาน<span class="form-required">*</span></label>
             <input class="input" id="area-coordinator" data-validate required>
@@ -167,7 +167,6 @@
           <div class="form-group mb-0">
             <label class="form-label" for="area-coordinator-phone">เบอร์โทร<span class="form-required">*</span></label>
             <input class="input" type="tel" id="area-coordinator-phone" pattern="0[0-9]{1,2}-?[0-9]{3}-?[0-9]{4}" placeholder="08x-xxx-xxxx" data-validate required>
-            <div class="form-helper">รูปแบบ 0xx-xxx-xxxx</div>
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-coordinator-position">ตำแหน่ง</label>
@@ -178,7 +177,7 @@
         <div class="form-row-3 mb-0">
           <div class="form-group form-col-span-2 mb-0">
             <label class="form-label" for="area-map-url">ลิงก์ Google Map</label>
-            <input class="input" type="url" id="area-map-url" placeholder="https://maps.google.com/...">
+            <input class="input" type="url" id="area-map-url">
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-status">สถานะ<span class="form-required">*</span></label>
@@ -205,7 +204,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
-      <button class="btn btn-danger" data-close-modal>ลบพื้นที่</button>
+      <button class="btn btn-danger" id="area-delete-confirm" data-close-modal>ลบพื้นที่</button>
     </div>
   </div>
 </div>
@@ -320,7 +319,7 @@
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
-            { key: 'delete', label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
+            { key: 'area-delete-' + a.id, label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
           ]) +
           '</td></tr>';
       }).join('');
@@ -402,6 +401,22 @@
   });
 
   renderTable();
+
+  /* ลบรายการ: จำ id จากเมนู ⋮ แล้วลบจริงเมื่อกดยืนยันในโมดัล */
+  var pendingDeleteId = null;
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-action-key^="area-delete-"]');
+    if (item) pendingDeleteId = item.getAttribute('data-action-key').replace('area-delete-', '');
+  });
+
+  document.getElementById('area-delete-confirm').addEventListener('click', function () {
+    if (!pendingDeleteId) return;
+    areaSvc.remove(pendingDeleteId).then(function () {
+      pendingDeleteId = null;
+      renderTable();
+      if (window.TFC.showToast) window.TFC.showToast('ลบพื้นที่ดำเนินงานเรียบร้อย', 'success');
+    });
+  });
 })();
 </script>
 </body>
