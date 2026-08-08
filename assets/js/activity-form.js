@@ -27,16 +27,6 @@ window.TFC = window.TFC || {};
     qr: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M17 21h.01M21 21h.01M14 21h.01"/></svg>'
   };
 
-  var SECTIONS = [
-    { no: 1, label: 'กิจกรรมนี้คืออะไร' },
-    { no: 2, label: 'จัดที่ไหน เมื่อไหร่' },
-    { no: 3, label: 'ใครเข้าร่วมได้ และค่าใช้จ่าย' },
-    { no: 4, label: 'วิทยากร' },
-    { no: 5, label: 'กำหนดแบบประเมิน' },
-    { no: 6, label: 'การเผยแพร่' },
-    { no: 7, label: 'สื่อสำหรับหน้างาน' }
-  ];
-
   function esc(v) { return window.TFC.escapeHtml(v); }
 
   function chipRow(name, items, selected, multi) {
@@ -113,19 +103,8 @@ window.TFC = window.TFC || {};
         '</div>';
     }
 
+    /* ไม่มีแถบขั้นตอน/ความครบถ้วนด้านบนแล้ว — ใช้ชื่อหน้าจอกับตัวเลขสรุปที่แถบปุ่มท้ายฟอร์มแทน */
     mount.innerHTML =
-      '<div class="form-steps">' +
-      '<div class="form-steps-list">' +
-      SECTIONS.map(function (s) {
-        return '<button type="button" class="form-step-chip" data-step="' + s.no + '">' +
-          '<span class="form-step-no">' + s.no + '</span>' + esc(s.label) + '</button>';
-      }).join('') +
-      '</div>' +
-      '<div class="form-progress">ความครบถ้วน' +
-      '<div class="progress"><div class="progress-bar" id="af-progress-bar" style="width:0%"></div></div>' +
-      '<strong id="af-progress-text">0%</strong></div>' +
-      '</div>' +
-
       '<form id="af-form" novalidate><div class="form-split"><div>' +
 
       /* ===== 1 ===== */
@@ -525,19 +504,9 @@ window.TFC = window.TFC || {};
     function syncProgress() {
       var items = requiredState();
       var done = items.filter(function (i) { return i.ok; }).length;
-      var pct = Math.round((done / items.length) * 100);
-      el('af-progress-bar').style.width = pct + '%';
-      el('af-progress-text').textContent = pct + '%';
-      el('af-valid-text').textContent = pct === 100
+      el('af-valid-text').textContent = done === items.length
         ? 'กรอกครบแล้ว พร้อมเผยแพร่'
         : 'กรอกครบ ' + done + '/' + items.length + ' ข้อที่จำเป็น';
-
-      /* ทำเครื่องหมายส่วนที่กรอกครบแล้วบนแถบด้านบน */
-      SECTIONS.forEach(function (s) {
-        var need = items.filter(function (i) { return i.section === s.no; });
-        var chip = mount.querySelector('[data-step="' + s.no + '"]');
-        chip.classList.toggle('is-done', need.length > 0 && need.every(function (i) { return i.ok; }));
-      });
     }
 
     /* ---------- ตัวอย่างบนมือถือ ---------- */
@@ -593,16 +562,6 @@ window.TFC = window.TFC || {};
       syncProgress();
       renderPreview();
     }
-
-    /* ---------- แถบขั้นตอน ---------- */
-    mount.querySelector('.form-steps-list').addEventListener('click', function (e) {
-      var chip = e.target.closest('[data-step]');
-      if (!chip) return;
-      var target = el('af-section-' + chip.getAttribute('data-step'));
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      mount.querySelectorAll('[data-step]').forEach(function (c) { c.classList.remove('is-active'); });
-      chip.classList.add('is-active');
-    });
 
     /* ---------- validation + บันทึก ---------- */
     function validate(forPublish) {
@@ -680,7 +639,6 @@ window.TFC = window.TFC || {};
     renderRounds();
     mount.addEventListener('input', sync);
     mount.addEventListener('change', sync);
-    mount.querySelector('[data-step="1"]').classList.add('is-active');
     sync();
   };
 })();

@@ -71,13 +71,12 @@
     </header>
 
     <main class="content">
-      <div class="page-header">
+      <div class="page-header is-tight">
         <div class="page-header-text">
           <h1 id="edit-page-title">แก้ไขกิจกรรม</h1>
-          <p class="page-description" id="edit-page-subtitle">ปรับข้อมูลกิจกรรม แล้วดูตัวอย่างการแสดงผลบนหน้าเว็บฝั่งผู้เข้าร่วมได้ทันทีทางด้านขวา</p>
         </div>
         <div class="page-header-actions">
-          <a class="btn btn-outline" id="edit-detail-link" href="detail.html">ดูรายละเอียด</a>
+          <a class="btn btn-outline btn-sm" id="edit-detail-link" href="detail.html">ดูรายละเอียด</a>
         </div>
       </div>
 
@@ -104,7 +103,6 @@
   if (!activity) return;
 
   document.getElementById('edit-page-title').textContent = 'แก้ไข: ' + activity.name;
-  document.getElementById('edit-page-subtitle').textContent = 'รหัสกิจกรรม ' + activity.id + ' · ปรับข้อมูลแล้วดูตัวอย่างการแสดงผลได้ทางด้านขวา';
   document.getElementById('edit-detail-link').href = 'detail.html?id=' + activity.id;
 
   window.TFC.renderActivityForm('activity-form-mount', { mode: 'edit', activity: activity });

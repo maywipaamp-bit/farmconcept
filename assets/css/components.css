@@ -3745,72 +3745,10 @@ a.activity-title:hover {
    16. Activity Form v2 — ฟอร์มกิจกรรมแบบแบ่งส่วน (assets/js/activity-form.js)
    ซ้าย: 7 ส่วนพร้อมแถบความครบถ้วน / ขวา: ตัวอย่างบนมือถือแบบ sticky
    ========================================================================== */
-.form-steps {
-  position: sticky;
-  top: var(--topbar-height);
-  z-index: var(--z-sticky);
-  background: var(--color-background);
-  padding: var(--space-2) 0;
-  margin-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.form-steps-list {
-  display: flex;
-  gap: var(--space-1);
-  overflow-x: auto;
-  padding-bottom: var(--space-1);
-}
-
-.form-step-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  height: 26px;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.form-step-chip:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
-
-.form-step-chip.is-active {
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-  font-weight: var(--font-weight-medium);
-}
-
-.form-step-chip.is-done .form-step-no { background: var(--color-primary); color: var(--color-text-inverse); }
-
-.form-step-no {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-background);
-  font-size: 10px;
-}
-
-.form-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-caption);
-  color: var(--color-text-secondary);
-}
-
-.form-progress .progress { flex: 1; height: 4px; }
-
 /* ---------- การ์ดของแต่ละส่วน ---------- */
+/* ฟอร์ม v2 ไม่มีแถบขั้นตอนแล้ว ให้ช่องกรอกกว้างขึ้นและตัวอย่างมือถือแคบลง */
+.form-split:has(.form-section) { grid-template-columns: minmax(0, 72fr) minmax(0, 28fr); }
+
 .form-section {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -4036,3 +3974,35 @@ a.activity-title:hover {
   color: var(--color-text-secondary);
   margin-right: auto;
 }
+
+/* ---------- ตัวอย่างบนมือถือ: ย่อให้เห็นครบทั้งเครื่องโดยไม่ต้องสกอ ---------- */
+.form-split-side .phone-frame {
+  max-width: 248px;
+  border-width: 6px;
+  border-radius: 26px;
+}
+
+.form-split-side .phone-notch { height: 16px; }
+.form-split-side .phone-notch::after { width: 72px; height: 4px; }
+
+.form-split-side .phone-screen {
+  /* สูงเท่าที่จอเหลือ เพื่อให้เห็นตัวอย่างครบทั้งเครื่องพร้อมกัน */
+  height: min(520px, calc(100vh - var(--topbar-height) - 110px));
+  border-radius: 20px;
+}
+
+.form-split-side .preview-cover { height: 124px; }
+
+.form-split-side .preview-body {
+  padding: var(--space-3);
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+}
+
+.form-split-side .preview-title { font-size: var(--font-size-small); }
+.form-split-side .preview-meta { font-size: var(--font-size-caption); }
+.form-split-side .preview-price { font-size: var(--font-size-small); }
+.form-split-side .preview-description { font-size: var(--font-size-caption); }
+.form-split-side .preview-body .tag { font-size: 10px; padding: 1px var(--space-2); }
+.form-split-side .preview-body .btn { height: 30px; font-size: var(--font-size-caption); }
+.form-split-side .preview-caption { margin-top: var(--space-2); font-size: 10px; }
