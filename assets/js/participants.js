@@ -15,9 +15,9 @@ window.TFC = window.TFC || {};
 
   var TYPE_BADGE = { sample: 'badge-primary', general: 'badge-neutral' };
   var TARGET_GROUP_BADGE = {
-    'กลุ่มเด็กและเยาวชน': 'badge-info',
-    'กลุ่มวัยทำงาน': 'badge-primary',
-    'กลุ่มผู้สูงอายุ': 'badge-warning'
+    'เด็กและเยาวชน': 'badge-info',
+    'วัยทำงาน': 'badge-primary',
+    'ผู้สูงอายุ': 'badge-warning'
   };
   var PROJECT_STATUS_BADGE = {
     'เข้าร่วม': 'badge-success',

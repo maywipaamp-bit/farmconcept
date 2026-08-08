@@ -10,7 +10,7 @@ window.TFC_MOCK = {
   notifications: [
     { title: 'มีผู้ลงทะเบียนใหม่', detail: 'กิจกรรมปลูกผักปลอดสารสำหรับครอบครัว รอบที่ 2', time: '10 นาทีที่แล้ว', type: 'info' },
     { title: 'รอตรวจสอบสลิปการชำระเงิน', detail: 'Workshop อาหารสุขภาพจากสวน มีสลิปรอตรวจ 5 รายการ', time: '1 ชั่วโมงที่แล้ว', type: 'warning' },
-    { title: 'ถึงกำหนดติดตามผล 3 เดือน', detail: 'ผู้เข้าร่วมกลุ่มผู้สูงอายุ 12 คน ครบกำหนดติดตามแล้ว', time: 'เมื่อวาน', type: 'danger' }
+    { title: 'ถึงกำหนดติดตามผล 3 เดือน', detail: 'ผู้เข้าร่วมผู้สูงอายุ 12 คน ครบกำหนดติดตามแล้ว', time: 'เมื่อวาน', type: 'danger' }
   ],
 
   /* หมายเหตุ: ฟิลด์ชุดเดิม (area/program/time/instructor/...) คงไว้ทั้งหมดเพื่อไม่ให้หน้าจออื่นที่อ่านอยู่พัง
@@ -22,15 +22,15 @@ window.TFC_MOCK = {
     {
       id: 'ACT-2026-014',
       name: 'ปลูกผักปลอดสารสำหรับครอบครัว',
-      area: 'ชุมชนพูนทรัพย์ เขตสายไหม',
-      areaList: ['ชุมชนพูนทรัพย์ เขตสายไหม'],
-      program: 'โครงการฟื้นฟูสุขภาวะชุมชน',
-      course: 'หลักสูตรปลูกผักปลอดสารพิษ',
+      area: 'ชุมชนพูนทรัพย์',
+      areaList: ['ชุมชนพูนทรัพย์'],
+      program: 'โปรแกรมกินดี อยู่ดี',
+      course: 'ปลูกผักสวนครัวเบื้องต้น',
       type: 'กิจกรรม',
       participantType: 'กลุ่มตัวอย่าง',
-      format: 'Workshop ลงมือปฏิบัติ',
+      format: 'WORKSHOP',
       dataSource: 'ลงทะเบียนออนไลน์',
-      targetGroups: ['กลุ่มวัยทำงาน'],
+      targetGroups: ['วัยทำงาน'],
       startDate: '2026-08-10',
       endDate: '2026-08-10',
       time: '09:00 - 12:00',
@@ -40,8 +40,8 @@ window.TFC_MOCK = {
       hasFee: false,
       fee: 0,
       organizer: 'The Farm Concept ร่วมกับสำนักงานเขตสายไหม',
-      instructor: 'อาจารย์สมพงษ์ ปลูกดี',
-      instructorList: ['อาจารย์สมพงษ์ ปลูกดี'],
+      instructor: 'ดร.กิตติพงศ์ วัฒนสุข',
+      instructorList: ['ดร.กิตติพงศ์ วัฒนสุข'],
       coverImage: '',
       evaluationFormIds: ['EVL-001'],
       checkinStart: '2026-08-10T08:00',
@@ -59,15 +59,15 @@ window.TFC_MOCK = {
     {
       id: 'ACT-2026-015',
       name: 'Workshop อาหารสุขภาพจากสวน',
-      area: 'ศูนย์การเรียนรู้ The Farm Concept',
-      areaList: ['ศูนย์การเรียนรู้ The Farm Concept'],
-      program: 'โครงการฟื้นฟูสุขภาวะชุมชน',
-      course: 'หลักสูตรโภชนาการเบื้องต้น',
+      area: 'The Farm Concept',
+      areaList: ['The Farm Concept'],
+      program: 'โปรแกรมกินดี อยู่ดี',
+      course: 'รู้จักอาหารหลัก 5 หมู่',
       type: 'กิจกรรม',
-      participantType: 'ทั่วไป',
-      format: 'Workshop ลงมือปฏิบัติ',
+      participantType: 'กลุ่มทั่วไป',
+      format: 'WORKSHOP',
       dataSource: 'ลงทะเบียนออนไลน์',
-      targetGroups: ['กลุ่มวัยทำงาน', 'กลุ่มผู้สูงอายุ'],
+      targetGroups: ['วัยทำงาน', 'ผู้สูงอายุ'],
       startDate: '2026-08-17',
       endDate: '2026-08-17',
       time: '09:00 - 15:00',
@@ -77,8 +77,8 @@ window.TFC_MOCK = {
       hasFee: true,
       fee: 200,
       organizer: 'The Farm Concept',
-      instructor: 'คุณนภา ทำอาหารเพื่อสุขภาพ',
-      instructorList: ['คุณนภา ทำอาหารเพื่อสุขภาพ'],
+      instructor: 'อาจารย์พิมพ์ชนก ศรีสมบัติ',
+      instructorList: ['อาจารย์พิมพ์ชนก ศรีสมบัติ'],
       coverImage: '',
       evaluationFormIds: ['EVL-002'],
       checkinStart: '2026-08-17T08:00',
@@ -96,15 +96,15 @@ window.TFC_MOCK = {
     {
       id: 'ACT-2026-016',
       name: 'เรียนรู้การทำปุ๋ยหมัก',
-      area: 'ชุมชนหนองแขม',
-      areaList: ['ชุมชนหนองแขม'],
-      program: 'โครงการเกษตรเพื่อสุขภาพ',
-      course: 'หลักสูตรทำปุ๋ยหมักอินทรีย์',
+      area: 'ชุมชนตึกร้าง',
+      areaList: ['ชุมชนตึกร้าง'],
+      program: 'โปรแกรมปลูกกินเอง',
+      course: 'ทำปุ๋ยหมักจากเศษอาหาร',
       type: 'กิจกรรม',
-      participantType: 'ทั่วไป',
-      format: 'บรรยาย/อบรม',
+      participantType: 'กลุ่มทั่วไป',
+      format: 'MIND',
       dataSource: 'ลงทะเบียนหน้างาน',
-      targetGroups: ['กลุ่มวัยทำงาน'],
+      targetGroups: ['วัยทำงาน'],
       startDate: '2026-08-24',
       endDate: '2026-09-07',
       time: '09:00 - 12:00',
@@ -113,9 +113,9 @@ window.TFC_MOCK = {
       status: 'เปิดรับสมัคร',
       hasFee: false,
       fee: 0,
-      organizer: 'The Farm Concept ร่วมกับชุมชนหนองแขม',
-      instructor: 'อาจารย์สมพงษ์ ปลูกดี',
-      instructorList: ['อาจารย์สมพงษ์ ปลูกดี'],
+      organizer: 'The Farm Concept ร่วมกับชุมชนตึกร้าง',
+      instructor: 'ดร.กิตติพงศ์ วัฒนสุข',
+      instructorList: ['ดร.กิตติพงศ์ วัฒนสุข'],
       coverImage: '',
       evaluationFormIds: ['EVL-004'],
       checkinStart: '2026-08-24T08:00',
@@ -133,15 +133,15 @@ window.TFC_MOCK = {
     {
       id: 'ACT-2026-017',
       name: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน',
-      area: 'ชุมชนพูนทรัพย์ เขตสายไหม',
-      areaList: ['ชุมชนพูนทรัพย์ เขตสายไหม', 'ชุมชนบางบัว'],
-      program: 'โครงการฟื้นฟูสุขภาวะชุมชน',
-      course: 'หลักสูตรออกกำลังกายเพื่อสุขภาพ',
-      type: 'อีเวนท์',
+      area: 'ชุมชนพูนทรัพย์',
+      areaList: ['ชุมชนพูนทรัพย์', 'ชุมชนตึกร้าง'],
+      program: 'โปรแกรมกินดี อยู่ดี',
+      course: 'ลดหวาน มัน เค็ม',
+      type: 'อีเว้นท์',
       participantType: 'กลุ่มตัวอย่าง',
-      format: 'ตลาดนัด/กิจกรรมเปิด',
+      format: 'COMMUNITY',
       dataSource: 'นำเข้าจากไฟล์',
-      targetGroups: ['กลุ่มผู้สูงอายุ', 'กลุ่มวัยทำงาน'],
+      targetGroups: ['ผู้สูงอายุ', 'วัยทำงาน'],
       startDate: '2026-07-20',
       endDate: '2026-07-20',
       time: '09:00 - 16:00',
@@ -151,8 +151,8 @@ window.TFC_MOCK = {
       hasFee: false,
       fee: 0,
       organizer: 'The Farm Concept',
-      instructor: 'ทีมงาน The Farm Concept',
-      instructorList: ['ทีมงาน The Farm Concept'],
+      instructor: 'คุณกัญญารัตน์ มีสุข',
+      instructorList: ['คุณกัญญารัตน์ มีสุข'],
       coverImage: '',
       evaluationFormIds: ['EVL-003'],
       checkinStart: '2026-07-20T08:00',
@@ -170,15 +170,15 @@ window.TFC_MOCK = {
     {
       id: 'ACT-2026-018',
       name: 'ตลาดนัดผักปลอดสารประจำเดือน',
-      area: 'ชุมชนบางบัว',
-      areaList: ['ชุมชนบางบัว'],
-      program: 'โครงการเกษตรเพื่อสุขภาพ',
+      area: 'ชุมชนตึกร้าง',
+      areaList: ['ชุมชนตึกร้าง'],
+      program: 'โปรแกรมปลูกกินเอง',
       course: '',
-      type: 'อีเวนท์',
-      participantType: 'ทั่วไป',
-      format: 'ตลาดนัด/กิจกรรมเปิด',
+      type: 'อีเว้นท์',
+      participantType: 'กลุ่มทั่วไป',
+      format: 'COMMUNITY',
       dataSource: 'บันทึกโดยเจ้าหน้าที่',
-      targetGroups: ['กลุ่มเด็กและเยาวชน', 'กลุ่มวัยทำงาน', 'กลุ่มผู้สูงอายุ'],
+      targetGroups: ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ'],
       startDate: '2026-09-05',
       endDate: '2026-09-05',
       time: '08:00 - 12:00',
@@ -187,9 +187,9 @@ window.TFC_MOCK = {
       status: 'ฉบับร่าง',
       hasFee: false,
       fee: 0,
-      organizer: 'The Farm Concept ร่วมกับชุมชนบางบัว',
-      instructor: 'ทีมเกษตรกรอินทรีย์',
-      instructorList: ['ทีมเกษตรกรอินทรีย์'],
+      organizer: 'The Farm Concept ร่วมกับชุมชนตึกร้าง',
+      instructor: 'คุณปกรณ์ชัย ใจดี',
+      instructorList: ['คุณปกรณ์ชัย ใจดี'],
       coverImage: '',
       evaluationFormIds: [],
       checkinStart: '',
@@ -207,8 +207,8 @@ window.TFC_MOCK = {
   ],
 
   /* ---------- Master list ของโมดูลจัดการกิจกรรม ---------- */
-  activityTypes: ['กิจกรรม', 'อีเวนท์'],
-  activityParticipantTypes: ['กลุ่มตัวอย่าง', 'ทั่วไป'],
+  activityTypes: ['กิจกรรม', 'อีเว้นท์'],
+  activityParticipantTypes: ['กลุ่มตัวอย่าง', 'กลุ่มทั่วไป'],
   activityDataSources: ['ลงทะเบียนออนไลน์', 'ลงทะเบียนหน้างาน', 'นำเข้าจากไฟล์', 'บันทึกโดยเจ้าหน้าที่'],
   activityVisibilityLevels: ['สาธารณะ', 'เฉพาะกลุ่มเป้าหมาย', 'เฉพาะผู้มีลิงก์'],
 
@@ -266,64 +266,56 @@ window.TFC_MOCK = {
 
   areas: [
     {
-      id: 'AREA-001', name: 'ชุมชนพูนทรัพย์ เขตสายไหม', province: 'กรุงเทพมหานคร', district: 'เขตสายไหม',
-      areaType: 'ชุมชนเมือง', areaGroup: 'กลุ่มกรุงเทพและปริมณฑล',
-      startDate: '2025-01-15', endDate: '', partnerOrg: 'สำนักงานเขตสายไหม',
-      coordinator: 'อรุณี ทองสุข', coordinatorPhone: '081-111-2222', coordinatorPosition: 'ผู้ประสานงานชุมชน',
-      mapUrl: 'https://maps.google.com/?q=ชุมชนพูนทรัพย์+เขตสายไหม', status: 'ดำเนินการอยู่',
+      id: 'AREA-001', name: 'The Farm Concept', province: 'กรุงเทพมหานคร', district: 'เขตบางนา',
+      areaType: 'เอกชน', areaGroup: 'พื้นที่ต้นแบบ',
+      startDate: '2024-06-01', endDate: '', partnerOrg: 'สสส. พลเมืองอาสา',
+      coordinator: 'วีระ ศรีสมบัติ', coordinatorPhone: '082-222-3333', coordinatorPosition: 'หัวหน้าพื้นที่ต้นแบบ',
+      mapUrl: 'https://maps.google.com/?q=The+Farm+Concept+บางนา', status: 'ดำเนินการอยู่',
       activityCount: 6, totalParticipants: 172, avgSatisfaction: 4.6,
       updatedAt: '2026-08-01', updatedBy: 'สุนิสา แก้วมณี'
     },
     {
-      id: 'AREA-002', name: 'ศูนย์การเรียนรู้ The Farm Concept', province: 'ปทุมธานี', district: 'อำเภอเมืองปทุมธานี',
-      areaType: 'ศูนย์การเรียนรู้', areaGroup: 'กลุ่มกรุงเทพและปริมณฑล',
-      startDate: '2024-06-01', endDate: '', partnerOrg: '',
-      coordinator: 'วีระ ศรีสมบัติ', coordinatorPhone: '082-222-3333', coordinatorPosition: 'หัวหน้าศูนย์การเรียนรู้',
-      mapUrl: 'https://maps.google.com/?q=The+Farm+Concept+ปทุมธานี', status: 'ดำเนินการอยู่',
+      id: 'AREA-002', name: 'ชุมชนพูนทรัพย์', province: 'กรุงเทพมหานคร', district: 'เขตสายไหม',
+      areaType: 'ชุมชน/หมู่บ้าน', areaGroup: 'พื้นที่ต้นแบบส่วนขยาย',
+      startDate: '2025-01-15', endDate: '', partnerOrg: 'สสส. พลเมืองอาสา',
+      coordinator: 'อรุณี ทองสุข', coordinatorPhone: '081-111-2222', coordinatorPosition: 'ผู้ประสานงานชุมชน',
+      mapUrl: 'https://maps.google.com/?q=ชุมชนพูนทรัพย์+เขตสายไหม', status: 'ดำเนินการอยู่',
       activityCount: 4, totalParticipants: 98, avgSatisfaction: 4.7,
       updatedAt: '2026-07-28', updatedBy: 'สุนิสา แก้วมณี'
     },
     {
-      id: 'AREA-003', name: 'ชุมชนหนองแขม', province: 'กรุงเทพมหานคร', district: 'เขตหนองแขม',
-      areaType: 'ชุมชนเมือง', areaGroup: 'กลุ่มกรุงเทพและปริมณฑล',
-      startDate: '2025-03-10', endDate: '', partnerOrg: 'สำนักงานเขตหนองแขม',
+      id: 'AREA-003', name: 'ชุมชนตึกร้าง', province: 'กรุงเทพมหานคร', district: 'เขตบางพลัด',
+      areaType: 'ชุมชน/หมู่บ้าน', areaGroup: 'พื้นที่ต้นแบบส่วนขยาย',
+      startDate: '2025-03-10', endDate: '', partnerOrg: 'สสส. พลเมืองอาสา',
       coordinator: 'ปิยะดา รุ่งเรือง', coordinatorPhone: '083-333-4444', coordinatorPosition: 'ผู้ประสานงานชุมชน',
-      mapUrl: 'https://maps.google.com/?q=ชุมชนหนองแขม', status: 'ดำเนินการอยู่',
+      mapUrl: 'https://maps.google.com/?q=ชุมชนตึกร้าง+เขตบางพลัด', status: 'ดำเนินการอยู่',
       activityCount: 3, totalParticipants: 41, avgSatisfaction: 4.3,
       updatedAt: '2026-07-15', updatedBy: 'วีระ ศรีสมบัติ'
-    },
-    {
-      id: 'AREA-004', name: 'ชุมชนบางบัว', province: 'กรุงเทพมหานคร', district: 'เขตบางเขน',
-      areaType: 'ชุมชนเมือง', areaGroup: 'กลุ่มกรุงเทพและปริมณฑล',
-      startDate: '2025-09-01', endDate: '', partnerOrg: '',
-      coordinator: 'ธนากร ใจดี', coordinatorPhone: '084-444-5555', coordinatorPosition: 'ผู้ประสานงานชุมชน',
-      mapUrl: 'https://maps.google.com/?q=ชุมชนบางบัว', status: 'ระงับชั่วคราว',
-      activityCount: 2, totalParticipants: 26, avgSatisfaction: 4.1,
-      updatedAt: '2026-06-30', updatedBy: 'สุนิสา แก้วมณี'
     }
   ],
 
-  areaTypes: ['ชุมชนเมือง', 'ชุมชนชนบท', 'ศูนย์การเรียนรู้', 'สถานศึกษา', 'หน่วยงานราชการ', 'อื่นๆ'],
-  areaGroups: ['กลุ่มกรุงเทพและปริมณฑล', 'กลุ่มภาคกลาง', 'กลุ่มภาคเหนือ', 'กลุ่มภาคตะวันออกเฉียงเหนือ', 'กลุ่มภาคใต้'],
+  areaTypes: ['เอกชน', 'ชุมชน/หมู่บ้าน', 'โรงเรียน', 'สถานประกอบการเอกชน', 'โรงพยาบาล'],
+  areaGroups: ['พื้นที่ต้นแบบ', 'พื้นที่ต้นแบบส่วนขยาย', 'พื้นที่จัดกิจกรรม'],
   areaStatuses: ['ดำเนินการอยู่', 'ระงับชั่วคราว', 'สิ้นสุดแล้ว'],
 
   provinceDistricts: {
-    'กรุงเทพมหานคร': ['เขตสายไหม', 'เขตหนองแขม', 'เขตบางเขน', 'เขตบางบัว', 'เขตดอนเมือง', 'เขตจตุจักร'],
+    'กรุงเทพมหานคร': ['เขตบางนา', 'เขตสายไหม', 'เขตบางพลัด', 'เขตบางเขน', 'เขตดอนเมือง', 'เขตจตุจักร'],
     'ปทุมธานี': ['อำเภอเมืองปทุมธานี', 'อำเภอคลองหลวง', 'อำเภอลำลูกกา', 'อำเภอธัญบุรี'],
     'นนทบุรี': ['อำเภอเมืองนนทบุรี', 'อำเภอปากเกร็ด', 'อำเภอบางบัวทอง'],
     'สมุทรปราการ': ['อำเภอเมืองสมุทรปราการ', 'อำเภอบางพลี', 'อำเภอบางบ่อ']
   },
 
   targetGroups: [
-    { id: 'TG-001', name: 'กลุ่มเด็กและเยาวชน', ageRange: '6-18 ปี', memberCount: 84, avgScoreChange: 0.6, active: true, updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'TG-002', name: 'กลุ่มวัยทำงาน', ageRange: '19-59 ปี', memberCount: 156, avgScoreChange: 0.9, active: true, updatedAt: '2026-07-22', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'TG-003', name: 'กลุ่มผู้สูงอายุ', ageRange: '60 ปีขึ้นไป', memberCount: 97, avgScoreChange: 1.2, active: true, updatedAt: '2026-07-18', updatedBy: 'วีระ ศรีสมบัติ' }
+    { id: 'TG-001', name: 'เด็กและเยาวชน', ageRange: '6-18 ปี', targetCount: 5000, memberCount: 84, avgScoreChange: 0.6, active: true, updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'TG-002', name: 'วัยทำงาน', ageRange: '19-59 ปี', targetCount: 2000, memberCount: 156, avgScoreChange: 0.9, active: true, updatedAt: '2026-07-22', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'TG-003', name: 'ผู้สูงอายุ', ageRange: '60 ปีขึ้นไป', targetCount: 1000, memberCount: 97, avgScoreChange: 1.2, active: true, updatedAt: '2026-07-18', updatedBy: 'วีระ ศรีสมบัติ' },
+    { id: 'TG-004', name: 'กลุ่มเปราะบาง', ageRange: 'ทุกช่วงวัย', targetCount: 1000, memberCount: 32, avgScoreChange: 0.8, active: true, updatedAt: '2026-08-02', updatedBy: 'สุนิสา แก้วมณี' }
   ],
 
   sampleGroups: [
-    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 1', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', targetGroupName: 'กลุ่มผู้สูงอายุ', sampleSize: 20, trackedCount: 12, avgScoreChange: 1.1 },
-    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 2', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', targetGroupName: 'กลุ่มวัยทำงาน', sampleSize: 15, trackedCount: 3, avgScoreChange: 0.7 },
-    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 3', activityName: 'Workshop อาหารสุขภาพจากสวน', targetGroupName: 'กลุ่มเด็กและเยาวชน', sampleSize: 10, trackedCount: 10, avgScoreChange: 0.9 }
+    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 1', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', targetGroupName: 'ผู้สูงอายุ', sampleSize: 20, trackedCount: 12, avgScoreChange: 1.1 },
+    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 2', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', targetGroupName: 'วัยทำงาน', sampleSize: 15, trackedCount: 3, avgScoreChange: 0.7 },
+    { name: 'กลุ่มตัวอย่างติดตามผล รุ่นที่ 3', activityName: 'Workshop อาหารสุขภาพจากสวน', targetGroupName: 'เด็กและเยาวชน', sampleSize: 10, trackedCount: 10, avgScoreChange: 0.9 }
   ],
 
   scoreTrend: [
@@ -335,18 +327,18 @@ window.TFC_MOCK = {
   ],
 
   participantsSummary: [
-    { name: 'สมชาย ใจงาม', area: 'ชุมชนพูนทรัพย์ เขตสายไหม', targetGroup: 'กลุ่มวัยทำงาน', activitiesJoined: 3, avgSatisfaction: 4.6, followUpStatus: 'ติดตามตามกำหนด' },
-    { name: 'วิภาดา สายใจ', area: 'ชุมชนพูนทรัพย์ เขตสายไหม', targetGroup: 'กลุ่มวัยทำงาน', activitiesJoined: 2, avgSatisfaction: 4.2, followUpStatus: 'ติดตามตามกำหนด' },
-    { name: 'อดิศักดิ์ พูลสวัสดิ์', area: 'ชุมชนพูนทรัพย์ เขตสายไหม', targetGroup: 'กลุ่มผู้สูงอายุ', activitiesJoined: 1, avgSatisfaction: 4.8, followUpStatus: 'เกินกำหนดติดตามผล' },
-    { name: 'ประภาส ทองแท้', area: 'ศูนย์การเรียนรู้ The Farm Concept', targetGroup: 'กลุ่มเด็กและเยาวชน', activitiesJoined: 1, avgSatisfaction: 4.4, followUpStatus: 'ติดตามครบแล้ว' },
-    { name: 'กัลยา รุ่งเจริญ', area: 'ชุมชนหนองแขม', targetGroup: 'กลุ่มวัยทำงาน', activitiesJoined: 1, avgSatisfaction: 0, followUpStatus: 'ยังไม่เข้าร่วมกิจกรรม' }
+    { name: 'สมชาย ใจงาม', area: 'ชุมชนพูนทรัพย์', targetGroup: 'วัยทำงาน', activitiesJoined: 3, avgSatisfaction: 4.6, followUpStatus: 'ติดตามตามกำหนด' },
+    { name: 'วิภาดา สายใจ', area: 'ชุมชนพูนทรัพย์', targetGroup: 'วัยทำงาน', activitiesJoined: 2, avgSatisfaction: 4.2, followUpStatus: 'ติดตามตามกำหนด' },
+    { name: 'อดิศักดิ์ พูลสวัสดิ์', area: 'ชุมชนพูนทรัพย์', targetGroup: 'ผู้สูงอายุ', activitiesJoined: 1, avgSatisfaction: 4.8, followUpStatus: 'เกินกำหนดติดตามผล' },
+    { name: 'ประภาส ทองแท้', area: 'The Farm Concept', targetGroup: 'เด็กและเยาวชน', activitiesJoined: 1, avgSatisfaction: 4.4, followUpStatus: 'ติดตามครบแล้ว' },
+    { name: 'กัลยา รุ่งเจริญ', area: 'ชุมชนตึกร้าง', targetGroup: 'วัยทำงาน', activitiesJoined: 1, avgSatisfaction: 0, followUpStatus: 'ยังไม่เข้าร่วมกิจกรรม' }
   ],
 
   users: [
-    { id: 'USR-001', name: 'สุนิสา แก้วมณี', username: 'sunisa01', email: 'sunisa@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนพูนทรัพย์ เขตสายไหม', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' },
-    { id: 'USR-002', name: 'วีระ ศรีสมบัติ', username: 'weera02', email: 'weera@thefarmconcept.org', role: 'ผู้ดูแลโครงการ', roles: ['ผู้ดูแลโครงการ', 'เจ้าหน้าที่โครงการ'], area: 'ศูนย์การเรียนรู้ The Farm Concept', status: 'ใช้งานอยู่', lastLogin: '2026-08-02' },
-    { id: 'USR-003', name: 'ปิยะดา รุ่งเรือง', username: 'piyada03', email: 'piyada@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนหนองแขม', status: 'ระงับการใช้งาน', lastLogin: '2026-07-20' },
-    { id: 'USR-004', name: 'ธนากร ใจดี', username: 'thanakorn04', email: 'thanakorn@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนบางบัว', status: 'ใช้งานอยู่', lastLogin: '2026-08-01' },
+    { id: 'USR-001', name: 'สุนิสา แก้วมณี', username: 'sunisa01', email: 'sunisa@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนพูนทรัพย์', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' },
+    { id: 'USR-002', name: 'วีระ ศรีสมบัติ', username: 'weera02', email: 'weera@thefarmconcept.org', role: 'ผู้ดูแลโครงการ', roles: ['ผู้ดูแลโครงการ', 'เจ้าหน้าที่โครงการ'], area: 'The Farm Concept', status: 'ใช้งานอยู่', lastLogin: '2026-08-02' },
+    { id: 'USR-003', name: 'ปิยะดา รุ่งเรือง', username: 'piyada03', email: 'piyada@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ระงับการใช้งาน', lastLogin: '2026-07-20' },
+    { id: 'USR-004', name: 'ธนากร ใจดี', username: 'thanakorn04', email: 'thanakorn@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ใช้งานอยู่', lastLogin: '2026-08-01' },
     { id: 'USR-005', name: 'อรุณี ทองสุข', username: 'arunee05', email: 'arunee@thefarmconcept.org', role: 'ผู้ดูแลระบบสูงสุด', roles: ['ผู้ดูแลระบบสูงสุด'], area: 'ส่วนกลาง', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' }
   ],
 
@@ -430,60 +422,91 @@ window.TFC_MOCK = {
 
   programs: [
     {
-      id: 'PROG-001', name: 'โครงการฟื้นฟูสุขภาวะชุมชน', category: 'สุขภาวะชุมชน', activityCount: 3, status: 'ดำเนินการอยู่', active: true,
+      id: 'PROG-001', name: 'โปรแกรมกินดี อยู่ดี', category: 'โภชนาการ', activityCount: 2, status: 'ดำเนินการอยู่', active: true,
       courses: [
-        { order: 1, name: 'หลักสูตรออกกำลังกายเพื่อสุขภาพ' },
-        { order: 2, name: 'หลักสูตรโภชนาการเบื้องต้น' },
-        { order: 3, name: 'หลักสูตรการจัดการความเครียด' }
+        { order: 1, name: 'รู้จักอาหารหลัก 5 หมู่' },
+        { order: 2, name: 'ผัก 5 สี สุขภาพดีทุกวัน' },
+        { order: 3, name: 'ลดหวาน มัน เค็ม' },
+        { order: 4, name: 'อ่านฉลากอาหารให้เป็น' }
       ],
       updatedAt: '2026-07-30', updatedBy: 'สุนิสา แก้วมณี'
     },
     {
-      id: 'PROG-002', name: 'โครงการเกษตรเพื่อสุขภาพ', category: 'เกษตรและอาหาร', activityCount: 2, status: 'ดำเนินการอยู่', active: true,
+      id: 'PROG-002', name: 'โปรแกรมปลูกกินเอง', category: 'เกษตรและอาหาร', activityCount: 2, status: 'ดำเนินการอยู่', active: true,
       courses: [
-        { order: 1, name: 'หลักสูตรปลูกผักปลอดสารพิษ' },
-        { order: 2, name: 'หลักสูตรทำปุ๋ยหมักอินทรีย์' }
+        { order: 1, name: 'ปลูกผักสวนครัวเบื้องต้น' },
+        { order: 2, name: 'ปลูกผักในพื้นที่จำกัด' },
+        { order: 3, name: 'ทำปุ๋ยหมักจากเศษอาหาร' },
+        { order: 4, name: 'จากแปลงสู่จาน' }
       ],
       updatedAt: '2026-07-25', updatedBy: 'วีระ ศรีสมบัติ'
     },
     {
-      id: 'PROG-003', name: 'โครงการพัฒนาเยาวชนนักปลูกผัก', category: 'เยาวชน', activityCount: 0, status: 'ฉบับร่าง', active: false,
+      id: 'PROG-003', name: 'โปรแกรม Food Literacy', category: 'ความรอบรู้ด้านอาหาร', activityCount: 1, status: 'ดำเนินการอยู่', active: true,
       courses: [
-        { order: 1, name: 'หลักสูตรเกษตรกรน้อยรุ่นใหม่' }
+        { order: 1, name: 'รู้เลือก รู้กิน' },
+        { order: 2, name: 'จ่ายตลาดอย่างฉลาด' },
+        { order: 3, name: 'รู้จักอาหารปลอดภัย' },
+        { order: 4, name: 'วางแผนมื้ออาหารสุขภาพ' }
       ],
       updatedAt: '2026-08-02', updatedBy: 'สุนิสา แก้วมณี'
+    },
+    {
+      id: 'PROG-004', name: 'โปรแกรมครัวสุขภาวะ', category: 'ครัวและการปรุงอาหาร', activityCount: 0, status: 'ดำเนินการอยู่', active: true,
+      courses: [
+        { order: 1, name: 'เมนูสุขภาพทำง่าย' },
+        { order: 2, name: 'Cooking Workshop ลดหวาน มัน เค็ม' },
+        { order: 3, name: 'อาหารสำหรับครอบครัว' },
+        { order: 4, name: 'ครัวชุมชนเพื่อสุขภาวะ' }
+      ],
+      updatedAt: '2026-08-05', updatedBy: 'วีระ ศรีสมบัติ'
     }
   ],
 
   instructors: [
     {
-      id: 'INS-001', name: 'อาจารย์สมพงษ์ ปลูกดี', phone: '08x-xxx-1111', activityCount: 4, active: true,
-      photo: '', expertise: 'เกษตรอินทรีย์และปุ๋ยหมัก',
-      expertiseList: ['เกษตรอินทรีย์', 'การทำปุ๋ยหมัก', 'การปลูกผักปลอดสารพิษ'],
-      bio: 'มีประสบการณ์ด้านเกษตรอินทรีย์กว่า 15 ปี เป็นวิทยากรประจำของ The Farm Concept',
+      id: 'INS-001', name: 'ดร.กิตติพงศ์ วัฒนสุข', phone: '08x-xxx-1111', activityCount: 4, active: true,
+      photo: '', expertise: 'ผู้เชี่ยวชาญด้านโภชนาการและสุขภาวะ',
+      expertiseList: ['โภชนาการ', 'สุขภาวะชุมชน'],
+      bio: '',
       updatedAt: '2026-07-28', updatedBy: 'สุนิสา แก้วมณี'
     },
     {
-      id: 'INS-002', name: 'คุณนภา ทำอาหารเพื่อสุขภาพ', phone: '08x-xxx-2222', activityCount: 2, active: true,
-      photo: '', expertise: 'โภชนาการและอาหารสุขภาพจากวัตถุดิบในสวน',
-      expertiseList: ['โภชนาการ', 'อาหารสุขภาพจากผักสวนครัว'],
-      bio: 'นักโภชนาการที่เชี่ยวชาญการนำวัตถุดิบจากสวนมาปรุงเป็นเมนูเพื่อสุขภาพ',
+      id: 'INS-002', name: 'อาจารย์พิมพ์ชนก ศรีสมบัติ', phone: '08x-xxx-2222', activityCount: 3, active: true,
+      photo: '', expertise: 'วิทยากรด้านอาหารและการปรับเปลี่ยนพฤติกรรม',
+      expertiseList: ['อาหารเพื่อสุขภาพ', 'การปรับเปลี่ยนพฤติกรรม'],
+      bio: '',
       updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี'
     },
     {
-      id: 'INS-003', name: 'อาจารย์ประสิทธิ์ สวนผักงาม', phone: '08x-xxx-3333', activityCount: 3, active: true,
-      photo: '', expertise: 'การออกแบบสวนผักในเมือง',
-      expertiseList: ['การออกแบบสวนผักในเมือง', 'สวนผักคอนโด'],
+      id: 'INS-003', name: 'คุณภูริณัฐ วงศ์สวัสดิ์', phone: '08x-xxx-3333', activityCount: 2, active: true,
+      photo: '', expertise: 'วิทยากรด้านสุขภาพและการออกกำลังกาย',
+      expertiseList: ['สุขภาพ', 'การออกกำลังกาย'],
       bio: '',
       updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ'
+    },
+    {
+      id: 'INS-004', name: 'คุณกัญญารัตน์ มีสุข', phone: '08x-xxx-4444', activityCount: 2, active: true,
+      photo: '', expertise: 'วิทยากรด้านการดูแลสุขภาวะครอบครัว',
+      expertiseList: ['สุขภาวะครอบครัว', 'การดูแลผู้สูงอายุ'],
+      bio: '',
+      updatedAt: '2026-08-01', updatedBy: 'สุนิสา แก้วมณี'
+    },
+    {
+      id: 'INS-005', name: 'คุณปกรณ์ชัย ใจดี', phone: '08x-xxx-5555', activityCount: 1, active: true,
+      photo: '', expertise: 'วิทยากรด้านการแปรรูปผลิตภัณฑ์ชุมชน',
+      expertiseList: ['การแปรรูปอาหาร', 'ผลิตภัณฑ์ชุมชน'],
+      bio: '',
+      updatedAt: '2026-08-03', updatedBy: 'วีระ ศรีสมบัติ'
     }
   ],
 
   activityFormats: [
-    { id: 'FMT-001', name: 'Workshop ลงมือปฏิบัติ', active: true, badgeColor: 'primary', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'FMT-002', name: 'บรรยาย/อบรม', active: true, badgeColor: 'info', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'FMT-003', name: 'ตลาดนัด/กิจกรรมเปิด', active: true, badgeColor: 'warning', updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ' },
-    { id: 'FMT-004', name: 'ทัศนศึกษา/ดูงาน', active: false, badgeColor: 'neutral', updatedAt: '2026-06-20', updatedBy: 'สุนิสา แก้วมณี' }
+    { id: 'FMT-001', name: 'CRAFT', active: true, badgeColor: 'primary', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-002', name: 'MIND', active: true, badgeColor: 'info', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-003', name: 'FOOD', active: true, badgeColor: 'warning', updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ' },
+    { id: 'FMT-004', name: 'WORKSHOP', active: true, badgeColor: 'primary', updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-005', name: 'COMMUNITY', active: true, badgeColor: 'neutral', updatedAt: '2026-07-22', updatedBy: 'วีระ ศรีสมบัติ' }
   ],
 
   activityFormatBadgeColors: [
@@ -526,7 +549,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0001', personCode: 'TFC-69-0001', type: 'sample', name: 'สมชาย ใจงาม',
       phone: '081-234-5671', email: 'somchai.j@example.com', gender: 'ชาย',
-      targetGroup: 'กลุ่มวัยทำงาน', area: 'ชุมชนพูนทรัพย์ เขตสายไหม',
+      targetGroup: 'วัยทำงาน', area: 'ชุมชนพูนทรัพย์',
       source: 'ลงทะเบียนออนไลน์', contactChannel: 'LINE',
       hasCaregiver: false, caregiverName: '', caregiverRelation: '', caregiverPhone: '',
       status: 'ใช้งานอยู่',
@@ -544,7 +567,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0002', personCode: 'TFC-69-0002', type: 'sample', name: 'วิภาดา สายใจ',
       phone: '082-345-6782', email: 'wipada.s@example.com', gender: 'หญิง',
-      targetGroup: 'กลุ่มวัยทำงาน', area: 'ชุมชนพูนทรัพย์ เขตสายไหม',
+      targetGroup: 'วัยทำงาน', area: 'ชุมชนพูนทรัพย์',
       source: 'บันทึกโดยเจ้าหน้าที่', contactChannel: 'โทรศัพท์',
       hasCaregiver: false, caregiverName: '', caregiverRelation: '', caregiverPhone: '',
       status: 'ใช้งานอยู่',
@@ -562,7 +585,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0003', personCode: 'TFC-69-0003', type: 'sample', name: 'อดิศักดิ์ พูลสวัสดิ์',
       phone: '085-678-9015', email: '', gender: 'ชาย',
-      targetGroup: 'กลุ่มผู้สูงอายุ', area: 'ชุมชนพูนทรัพย์ เขตสายไหม',
+      targetGroup: 'ผู้สูงอายุ', area: 'ชุมชนพูนทรัพย์',
       source: 'ลงทะเบียนหน้างาน', contactChannel: 'ผ่านผู้ดูแล',
       hasCaregiver: true, caregiverName: 'สายฝน พูลสวัสดิ์', caregiverRelation: 'บุตร/ธิดา', caregiverPhone: '089-111-2233',
       status: 'ใช้งานอยู่',
@@ -580,7 +603,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0004', personCode: 'TFC-69-0004', type: 'general', name: 'ประภาส ทองแท้',
       phone: '083-456-7893', email: 'prapas.t@example.com', gender: 'ชาย',
-      targetGroup: 'กลุ่มเด็กและเยาวชน', area: 'ศูนย์การเรียนรู้ The Farm Concept',
+      targetGroup: 'เด็กและเยาวชน', area: 'The Farm Concept',
       source: 'ลงทะเบียนออนไลน์', contactChannel: 'อีเมล',
       hasCaregiver: true, caregiverName: 'มณีรัตน์ ทองแท้', caregiverRelation: 'บิดา/มารดา', caregiverPhone: '084-567-8904',
       status: 'ใช้งานอยู่',
@@ -594,7 +617,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0005', personCode: 'TFC-69-0005', type: 'general', name: 'กัลยา รุ่งเจริญ',
       phone: '086-789-0126', email: 'kanlaya.r@example.com', gender: 'หญิง',
-      targetGroup: 'กลุ่มวัยทำงาน', area: 'ชุมชนหนองแขม',
+      targetGroup: 'วัยทำงาน', area: 'ชุมชนตึกร้าง',
       source: 'นำเข้าจากไฟล์', contactChannel: 'โทรศัพท์',
       hasCaregiver: false, caregiverName: '', caregiverRelation: '', caregiverPhone: '',
       status: 'ใช้งานอยู่',
@@ -608,7 +631,7 @@ window.TFC_MOCK = {
     {
       id: 'PTP-0006', personCode: 'TFC-69-0006', type: 'sample', name: 'พิมพ์ใจ เพียรทำ',
       phone: '087-222-3344', email: '', gender: 'หญิง',
-      targetGroup: 'กลุ่มผู้สูงอายุ', area: 'ชุมชนบางบัว',
+      targetGroup: 'ผู้สูงอายุ', area: 'ชุมชนตึกร้าง',
       source: 'ลงทะเบียนออนไลน์', contactChannel: 'LINE',
       hasCaregiver: false, caregiverName: '', caregiverRelation: '', caregiverPhone: '',
       status: 'ระงับการใช้งาน',
@@ -629,23 +652,23 @@ window.TFC_MOCK = {
      evaluated = ทำแบบประเมินความพึงพอใจของกิจกรรมนั้นแล้วหรือยัง (ใช้นับคอลัมน์ "จำนวนทำแบบประเมิน") */
   participantActivityHistory: {
     'PTP-0001': [
-      { id: 'PAH-0001', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', price: 0, joinDate: '2026-07-20', evaluated: true },
-      { id: 'PAH-0002', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', price: 0, joinDate: '2026-08-10', evaluated: true },
-      { id: 'PAH-0003', activityName: 'Workshop อาหารสุขภาพจากสวน', location: 'ศูนย์การเรียนรู้ The Farm Concept', price: 200, joinDate: '2026-08-17', evaluated: false }
+      { id: 'PAH-0001', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์', price: 0, joinDate: '2026-07-20', evaluated: true },
+      { id: 'PAH-0002', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', location: 'ชุมชนพูนทรัพย์', price: 0, joinDate: '2026-08-10', evaluated: true },
+      { id: 'PAH-0003', activityName: 'Workshop อาหารสุขภาพจากสวน', location: 'The Farm Concept', price: 200, joinDate: '2026-08-17', evaluated: false }
     ],
     'PTP-0002': [
-      { id: 'PAH-0004', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', price: 0, joinDate: '2026-08-10', evaluated: true },
-      { id: 'PAH-0005', activityName: 'เรียนรู้การทำปุ๋ยหมัก', location: 'ชุมชนหนองแขม', price: 0, joinDate: '2026-08-24', evaluated: false }
+      { id: 'PAH-0004', activityName: 'ปลูกผักปลอดสารสำหรับครอบครัว', location: 'ชุมชนพูนทรัพย์', price: 0, joinDate: '2026-08-10', evaluated: true },
+      { id: 'PAH-0005', activityName: 'เรียนรู้การทำปุ๋ยหมัก', location: 'ชุมชนตึกร้าง', price: 0, joinDate: '2026-08-24', evaluated: false }
     ],
     'PTP-0003': [
-      { id: 'PAH-0006', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', price: 0, joinDate: '2026-07-20', evaluated: true }
+      { id: 'PAH-0006', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์', price: 0, joinDate: '2026-07-20', evaluated: true }
     ],
     'PTP-0004': [
-      { id: 'PAH-0007', activityName: 'Workshop อาหารสุขภาพจากสวน', location: 'ศูนย์การเรียนรู้ The Farm Concept', price: 200, joinDate: '2026-08-17', evaluated: true }
+      { id: 'PAH-0007', activityName: 'Workshop อาหารสุขภาพจากสวน', location: 'The Farm Concept', price: 200, joinDate: '2026-08-17', evaluated: true }
     ],
     'PTP-0005': [],
     'PTP-0006': [
-      { id: 'PAH-0008', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', price: 0, joinDate: '2026-07-20', evaluated: false }
+      { id: 'PAH-0008', activityName: 'กิจกรรมฟื้นฟูสุขภาวะชุมชน', location: 'ชุมชนพูนทรัพย์', price: 0, joinDate: '2026-07-20', evaluated: false }
     ]
   },
 
@@ -736,20 +759,20 @@ window.TFC_MOCK = {
 
   activitySessions: {
     'ACT-2026-014': [
-      { date: '2026-08-10', time: '09:00 - 12:00', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', capacity: 40, registered: 32 }
+      { date: '2026-08-10', time: '09:00 - 12:00', location: 'ชุมชนพูนทรัพย์', capacity: 40, registered: 32 }
     ],
     'ACT-2026-015': [
-      { date: '2026-08-17', time: '09:00 - 15:00', location: 'ศูนย์การเรียนรู้ The Farm Concept', capacity: 30, registered: 30 }
+      { date: '2026-08-17', time: '09:00 - 15:00', location: 'The Farm Concept', capacity: 30, registered: 30 }
     ],
     'ACT-2026-016': [
-      { date: '2026-08-24', time: '09:00 - 12:00', location: 'ชุมชนหนองแขม', capacity: 25, registered: 9 },
-      { date: '2026-09-07', time: '09:00 - 12:00', location: 'ชุมชนหนองแขม', capacity: 25, registered: 0 }
+      { date: '2026-08-24', time: '09:00 - 12:00', location: 'ชุมชนตึกร้าง', capacity: 25, registered: 9 },
+      { date: '2026-09-07', time: '09:00 - 12:00', location: 'ชุมชนตึกร้าง', capacity: 25, registered: 0 }
     ],
     'ACT-2026-017': [
-      { date: '2026-07-20', time: '09:00 - 16:00', location: 'ชุมชนพูนทรัพย์ เขตสายไหม', capacity: 50, registered: 47 }
+      { date: '2026-07-20', time: '09:00 - 16:00', location: 'ชุมชนพูนทรัพย์', capacity: 50, registered: 47 }
     ],
     'ACT-2026-018': [
-      { date: '2026-09-05', time: '08:00 - 12:00', location: 'ชุมชนบางบัว', capacity: 60, registered: 4 }
+      { date: '2026-09-05', time: '08:00 - 12:00', location: 'ชุมชนตึกร้าง', capacity: 60, registered: 4 }
     ]
   },
 

@@ -1,5 +1,5 @@
 /* TheFarmConcept — Smart Dropdown: searchable select with an inline "+ เพิ่มรายการใหม่" modal.
-   Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนบางบัว">...options...</select>
+   Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนตึกร้าง">...options...</select>
    Progressive enhancement — the original <select> stays in the DOM (hidden) and keeps receiving
    value updates + a "change" event, so existing form logic that reads select.value keeps working. */
 (function () {
