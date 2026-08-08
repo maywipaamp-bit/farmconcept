@@ -54,9 +54,23 @@
     }).join('');
   }
 
+  /* รายการไม่เกิน 6 ตัวเลือก ซ่อนช่องค้นหา และซ่อนปุ่มเพิ่มรายการใหม่ถ้าไม่ได้ตั้งค่าไว้ */
+  function syncCompact(widget, select) {
+    var searchBox = widget.querySelector('.smart-select-search');
+    var addBtn = widget.querySelector('.smart-select-add-btn');
+    var divider = widget.querySelector('.smart-select-panel .dropdown-divider');
+    var isShort = select.options.length <= 6;
+    searchBox.classList.toggle('hidden', isShort);
+    var allowAdd = select.hasAttribute('data-new-item-label');
+    addBtn.classList.toggle('hidden', !allowAdd);
+    if (divider) divider.classList.toggle('hidden', !allowAdd);
+  }
+
   function openPanel(widget, select) {
     closePanel();
     var panel = widget.querySelector('.smart-select-panel');
+    rebuildOptionsList(widget, select);
+    syncCompact(widget, select);
     var search = panel.querySelector('.smart-select-search-input');
     search.value = '';
     filterOptions(panel, '');
@@ -192,6 +206,20 @@
   }
 
   /* ---------- Build one widget per [data-smart-select] element ---------- */
+  function syncValueLabel(widget, select) {
+    var opt = select.options[select.selectedIndex];
+    var label = widget.querySelector('.smart-select-value');
+    if (label) label.textContent = opt ? opt.textContent : 'เลือกรายการ';
+  }
+
+  /* หน้าจอที่เติม options / set value ให้ select เองภายหลัง (เช่น ฟอร์มใน popup) เรียกใช้เพื่อให้ป้ายตรงกับค่าจริง */
+  window.TFC.refreshSmartSelects = function (root) {
+    (root || document).querySelectorAll('select[data-smart-select]').forEach(function (select) {
+      var widget = select.nextElementSibling;
+      if (widget && widget.classList.contains('smart-select')) syncValueLabel(widget, select);
+    });
+  };
+
   function buildWidget(select) {
     select.classList.add('hidden');
 
@@ -223,6 +251,8 @@
     var trigger = widget.querySelector('.smart-select-trigger');
     var panel = widget.querySelector('.smart-select-panel');
     var search = widget.querySelector('.smart-select-search-input');
+
+    select.addEventListener('change', function () { syncValueLabel(widget, select); });
 
     trigger.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -276,4 +306,15 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && activePanel) closePanel();
   });
+
+  /* ทุกครั้งที่ popup เปิด ให้ซิงก์ป้ายของ Smart Dropdown ข้างในอีกครั้ง
+     เพราะหน้าจอมักเติม options แล้ว set value หลังจากสร้าง widget ไปแล้ว (และ set value ตรง ๆ ไม่ยิง change) */
+  new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      var el = record.target;
+      if (!el.classList || !el.classList.contains('is-open')) return;
+      if (!el.classList.contains('modal-overlay') && !el.classList.contains('drawer-overlay')) return;
+      setTimeout(function () { window.TFC.refreshSmartSelects(el); }, 0);
+    });
+  }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 })();

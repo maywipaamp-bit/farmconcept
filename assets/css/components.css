@@ -3150,3 +3150,35 @@
   height: 34px;
   font-size: var(--font-size-small);
 }
+
+/* ---------- Dropdown: ตัวหนังสือไม่หนา ขอบมน เมาส์เป็นรูปมือ ---------- */
+.select {
+  cursor: pointer;
+  font-weight: var(--font-weight-regular);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+}
+
+/* รายการตัวเลือกของ Smart Dropdown (แผงที่เรา render เอง จึงคุมหน้าตาได้ทั้งหมด) */
+.smart-select-panel {
+  border-radius: var(--radius-input);
+  padding: var(--space-2);
+}
+
+.smart-select-option {
+  font-weight: var(--font-weight-regular);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.smart-select-option.is-highlighted,
+.smart-select-option:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.smart-select-trigger {
+  font-weight: var(--font-weight-regular);
+}
