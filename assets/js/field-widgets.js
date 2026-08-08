@@ -16,6 +16,8 @@ window.TFC = window.TFC || {};
 
 (function () {
   var TH_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  var TH_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
   /* ---------- 1) วันที่แบบไทย ---------- */
   function isoToThai(iso) {
@@ -41,7 +43,20 @@ window.TFC = window.TFC || {};
     wrap.innerHTML =
       '<input type="text" class="input thai-date-text" inputmode="numeric" maxlength="10"' +
       ' placeholder="วว/ดด/ปปปป" aria-label="วันที่ (พ.ศ.)">' +
-      '<span class="thai-date-hint"></span>';
+      '<button type="button" class="thai-date-toggle" aria-label="เลือกจากปฏิทิน">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>' +
+      '<div class="thai-date-panel" role="dialog" aria-label="ปฏิทิน">' +
+      '<div class="thai-date-head">' +
+      '<button type="button" class="thai-date-nav" data-nav="-1" aria-label="เดือนก่อนหน้า">‹</button>' +
+      '<span class="thai-date-title"></span>' +
+      '<button type="button" class="thai-date-nav" data-nav="1" aria-label="เดือนถัดไป">›</button>' +
+      '</div>' +
+      '<div class="thai-date-grid"></div>' +
+      '<div class="thai-date-foot">' +
+      '<button type="button" data-clear>ล้างวันที่</button>' +
+      '<button type="button" data-today>วันนี้</button>' +
+      '</div></div>';
 
     input.parentNode.insertBefore(wrap, input.nextSibling);
     var text = wrap.querySelector('.thai-date-text');
@@ -54,6 +69,7 @@ window.TFC = window.TFC || {};
 
     /* บอกวันที่แบบเต็มไว้ข้าง ๆ กันกรอกสลับวัน/เดือน */
     function showHint() {
+      if (!hint) return;          /* เวอร์ชันที่มีปฏิทินแล้ว ไม่ต้องมีข้อความช่วยด้านขวา */
       var iso = input.value;
       if (!iso) { hint.textContent = ''; return; }
       var d = new Date(iso);
@@ -75,9 +91,105 @@ window.TFC = window.TFC || {};
       if (iso) input.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
+    /* ---------- ปฏิทินให้เลือก (แสดงปี พ.ศ.) ---------- */
+    var panel = wrap.querySelector('.thai-date-panel');
+    var view = { year: null, month: null };   /* ค.ศ. ภายใน, แสดงผลเป็น พ.ศ. */
+
+    function openCalendar() {
+      closeAllCalendars();
+      var base = input.value ? new Date(input.value) : new Date();
+      view.year = base.getFullYear();
+      view.month = base.getMonth();
+      renderCalendar();
+      panel.classList.add('is-open');
+
+      /* ที่ว่างด้านล่างไม่พอ -> กางขึ้นด้านบน จะได้ไม่ดันกรอบให้เลื่อนยาว */
+      panel.classList.remove('is-above');
+      var rect = text.getBoundingClientRect();
+      if (window.innerHeight - rect.bottom < panel.offsetHeight + 16 &&
+        rect.top > window.innerHeight - rect.bottom) {
+        panel.classList.add('is-above');
+      }
+    }
+
+    function renderCalendar() {
+      var first = new Date(view.year, view.month, 1);
+      var daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
+      var offset = first.getDay();
+      var today = new Date();
+      var selected = input.value ? new Date(input.value) : null;
+
+      var cells = '';
+      for (var i = 0; i < offset; i++) cells += '<button type="button" class="thai-date-day is-empty" tabindex="-1"></button>';
+      for (var day = 1; day <= daysInMonth; day++) {
+        var isToday = today.getFullYear() === view.year && today.getMonth() === view.month && today.getDate() === day;
+        var isSelected = selected && selected.getFullYear() === view.year &&
+          selected.getMonth() === view.month && selected.getDate() === day;
+        cells += '<button type="button" class="thai-date-day' + (isToday ? ' is-today' : '') +
+          (isSelected ? ' is-selected' : '') + '" data-day="' + day + '">' + day + '</button>';
+      }
+
+      panel.querySelector('.thai-date-title').textContent = TH_MONTHS_FULL[view.month] + ' ' + (view.year + 543);
+      panel.querySelector('.thai-date-grid').innerHTML =
+        ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(function (d) {
+          return '<div class="thai-date-dow">' + d + '</div>';
+        }).join('') + cells;
+    }
+
+    function pick(day) {
+      var iso = view.year + '-' + String(view.month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      input.value = iso;
+      syncFromIso();
+      panel.classList.remove('is-open');
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    wrap.querySelector('.thai-date-toggle').addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (panel.classList.contains('is-open')) panel.classList.remove('is-open');
+      else openCalendar();
+    });
+
+    text.addEventListener('focus', openCalendar);
+
+    panel.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var nav = e.target.closest('[data-nav]');
+      if (nav) {
+        view.month += Number(nav.getAttribute('data-nav'));
+        if (view.month < 0) { view.month = 11; view.year--; }
+        if (view.month > 11) { view.month = 0; view.year++; }
+        renderCalendar();
+        return;
+      }
+      if (e.target.closest('[data-today]')) {
+        var now = new Date();
+        view.year = now.getFullYear();
+        view.month = now.getMonth();
+        pick(now.getDate());
+        return;
+      }
+      if (e.target.closest('[data-clear]')) {
+        input.value = '';
+        syncFromIso();
+        panel.classList.remove('is-open');
+        return;
+      }
+      var dayBtn = e.target.closest('[data-day]');
+      if (dayBtn) pick(Number(dayBtn.getAttribute('data-day')));
+    });
+
+    wrap.closeCalendar = function () { panel.classList.remove('is-open'); };
     wrap.syncFromIso = syncFromIso;
     syncFromIso();
   }
+
+  function closeAllCalendars() {
+    document.querySelectorAll('.thai-date-panel.is-open').forEach(function (p) { p.classList.remove('is-open'); });
+  }
+
+  document.addEventListener('click', closeAllCalendars);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAllCalendars(); });
 
   window.TFC.setDateValue = function (inputId, iso) {
     var input = typeof inputId === 'string' ? document.getElementById(inputId) : inputId;

@@ -66,6 +66,8 @@
     if (divider) divider.classList.toggle('hidden', !allowAdd);
   }
 
+  function trigger0(widget) { return widget.querySelector('.smart-select-trigger'); }
+
   function openPanel(widget, select) {
     closePanel();
     var panel = widget.querySelector('.smart-select-panel');
@@ -75,6 +77,14 @@
     search.value = '';
     filterOptions(panel, '');
     panel.classList.add('is-open');
+
+    /* ที่ว่างด้านล่างไม่พอ -> กางขึ้นด้านบนแทน จะได้ไม่ดันให้กรอบเลื่อนยาวออกไป */
+    panel.classList.remove('is-above');
+    var rect = trigger0(widget).getBoundingClientRect();
+    var needed = panel.scrollHeight + 16;
+    if (window.innerHeight - rect.bottom < needed && rect.top > window.innerHeight - rect.bottom) {
+      panel.classList.add('is-above');
+    }
     widget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'true');
     activePanel = panel;
     activeWidget = widget;
