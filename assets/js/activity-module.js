@@ -68,6 +68,41 @@ window.TFC = window.TFC || {};
     if (window.TFC.showToast) window.TFC.showToast('ส่งออกไฟล์ ' + filename + ' เรียบร้อย', 'success');
   };
 
+  /* '2026-08-08T12:00' -> '8 ส.ค. 69 | 12.00' (รูปแบบสั้นของคอลัมน์ "ปรับปรุงล่าสุด") */
+  window.TFC.formatThaiShort = function (value) {
+    if (!value) return '-';
+    var parts = String(value).split('T');
+    var short = window.TFC.formatThaiDate(parts[0]).replace(/\d{2}(\d{2})$/, '$1');
+    if (!parts[1]) return short;
+    return short + ' | ' + parts[1].slice(0, 5).replace(':', '.');
+  };
+
+  /* ส่งออกตารางที่กำลังแสดงอยู่เป็น CSV โดยอ่านจาก DOM ตรง ๆ (ข้ามคอลัมน์ปุ่มจัดการ)
+     ใช้ได้กับทุกหน้ารายการโดยไม่ต้องเขียน mapping ข้อมูลซ้ำในแต่ละหน้า */
+  window.TFC.exportTableCsv = function (tableSelector, filename) {
+    var table = typeof tableSelector === 'string' ? document.querySelector(tableSelector) : tableSelector;
+    if (!table) return;
+
+    var heads = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+    var keepIndexes = [];
+    var headers = [];
+    heads.forEach(function (th, index) {
+      if (th.classList.contains('col-actions') || !th.textContent.trim()) return;
+      keepIndexes.push(index);
+      headers.push(th.textContent.replace(/[↕↑↓]/g, '').trim());
+    });
+
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'))
+      .filter(function (tr) { return tr.children.length === heads.length; })
+      .map(function (tr) {
+        return keepIndexes.map(function (index) {
+          return (tr.children[index].textContent || '').replace(/s+/g, ' ').trim();
+        });
+      });
+
+    window.TFC.exportCsv(filename, headers, rows);
+  };
+
   window.TFC.activity = {
     currentId: function () {
       var id = new URLSearchParams(window.location.search).get('id');
@@ -80,6 +115,18 @@ window.TFC = window.TFC || {};
       return ((window.TFC_MOCK && window.TFC_MOCK.activities) || []).filter(function (a) {
         return a.id === id;
       })[0];
+    },
+
+    /* ภาพปกกิจกรรมขนาดย่อ — ยังไม่มีไฟล์จริงในข้อมูลจำลอง จึงใช้กล่อง placeholder แทน */
+    thumbHTML: function (activity) {
+      if (activity && activity.coverImage) {
+        return '<span class="thumb"><img src="' + window.TFC.escapeHtml(activity.coverImage) +
+          '" alt="ภาพกิจกรรม ' + window.TFC.escapeHtml(activity.name) + '"></span>';
+      }
+      return '<span class="thumb is-empty" aria-label="ยังไม่มีภาพกิจกรรม">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>' +
+        '</svg></span>';
     },
 
     /* รอบกิจกรรม: อ่านจาก activitySessions แล้วแตก '09:00 - 12:00' เป็นเวลาเริ่ม/สิ้นสุด */

@@ -70,11 +70,12 @@
     </header>
 
     <main class="content">
-      <div class="page-header" id="round-page-header"></div>
+      <div class="page-header is-tight" id="round-page-header"></div>
 
       <form data-mock-submit="บันทึกรอบติดตามกลุ่มตัวอย่างสำเร็จ (ตัวอย่าง)" id="round-form">
         <div class="table-wrapper mb-4">
-          <table class="data-table">
+          <div class="table-scroll">
+            <table class="data-table is-header-filled">
             <thead>
               <tr>
                 <th>ชื่อรอบ</th>
@@ -87,6 +88,7 @@
             <tbody id="round-table-body"></tbody>
           </table>
         </div>
+      </div>
 
         <button type="button" class="btn btn-outline btn-sm mb-4" id="round-add-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -109,6 +111,7 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {

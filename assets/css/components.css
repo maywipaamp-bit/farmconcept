@@ -190,7 +190,7 @@
 .select,
 .textarea {
   width: 100%;
-  height: 44px;
+  height: 38px;
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
@@ -518,8 +518,8 @@
 }
 
 .summary-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   background: var(--color-primary-soft);
   color: var(--color-primary-dark);
@@ -574,13 +574,13 @@
 
 .data-table {
   width: 100%;
-  min-width: 640px;
+  min-width: 0;
   border-collapse: collapse;
 }
 
 .data-table th,
 .data-table td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   text-align: left;
   font-size: var(--font-size-small);
   border-bottom: 1px solid var(--color-border);
@@ -2018,9 +2018,9 @@
 
 /* ---------- Status Select (Dropdown สถานะแบบมีสี ใช้แก้ไขในตารางได้ทันที) ---------- */
 .status-select {
-  height: 34px;
-  min-width: 148px;
-  font-size: var(--font-size-small);
+  height: 26px;
+  min-width: 0;
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
   border-radius: var(--radius-full);
   cursor: pointer;
@@ -2368,4 +2368,700 @@
 .cell-feedback .truncate {
   display: block;
   max-width: 100%;
+}
+
+/* ==========================================================================
+   10. Search Panel Popover — แผงค้นหา/ตัวกรองที่ซ่อนในไอคอนแว่นขยาย
+   Component กลางของหน้ารายการ (assets/js/search-popover.js)
+   ========================================================================== */
+.search-popover {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ปุ่มแว่นขยายทรงกลม */
+.search-popover-trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+
+.search-popover-trigger:hover,
+.search-popover.is-open .search-popover-trigger {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.search-popover-trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* กำลังกรองอยู่ -> ไอคอนเปลี่ยนสีและมี badge จำนวนเงื่อนไข */
+.search-popover-trigger.is-active {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.search-popover-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: 2px solid var(--color-surface);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+
+/* กรอบลอย — ชิดขวาใต้ไอคอน */
+.search-popover-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - var(--space-5));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4);
+  z-index: var(--z-dropdown);
+  overflow-y: auto;
+  display: none;
+}
+
+.search-popover.is-open .search-popover-panel {
+  display: block;
+}
+
+/* พลิกตำแหน่งเมื่อพื้นที่ด้านขวา/ด้านล่างไม่พอ (จัดการคลาสจาก search-popover.js) */
+.search-popover-panel.is-align-left {
+  right: auto;
+  left: 0;
+}
+
+.search-popover-panel.is-above {
+  top: auto;
+  bottom: calc(100% + var(--space-2));
+}
+
+.search-popover-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.search-popover-title {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.search-popover-note {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.search-popover-subtitle {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.search-popover-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.search-popover-field .form-label {
+  font-size: var(--font-size-caption);
+}
+
+.search-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---------- Popup ทั้งระบบต้องไม่ล้นจอ: จำกัดความสูงแล้วเลื่อนดูข้างในแทน ---------- */
+.dropdown-menu {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.drawer {
+  overflow-y: auto;
+}
+
+/* ---------- ปรับตารางรายการให้พอดีหน้าจอ (ไม่ต้องเลื่อนแนวนอน) ---------- */
+/* คอลัมน์ข้อความยาวตัดบรรทัดได้ ส่วนคอลัมน์ที่ตัดบรรทัดแล้วอ่านยาก (วันที่/ตัวเลข/ปุ่ม) ยังคง nowrap */
+.data-table td {
+  white-space: normal;
+}
+
+.data-table th {
+  white-space: nowrap;
+}
+
+.data-table td.table-row-actions,
+.data-table td.nowrap {
+  white-space: nowrap;
+}
+
+/* ปุ่มสถานะ: ลูกศร dropdown ชิดขึ้นเมื่อกล่องเล็กลง */
+.status-select {
+  padding-right: var(--space-5);
+  padding-left: var(--space-2);
+  background-position: right var(--space-2) center;
+}
+
+/* ปุ่มจัดการ (⋮) ให้เล็กลงเท่าความสูงแถว */
+.action-menu-btn.btn-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* ชื่อรายการในตารางกดเข้าหน้าแก้ไขได้ */
+.cell-link {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.cell-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   11. Clean List — ปรับความหนาแน่น/น้ำหนักสายตาของหน้ารายการให้กระชับแบบ Enterprise
+   (อ้างอิงมาตรฐานหน้ารายการเอกสารทั่วไป: แถวเตี้ย เส้นบาง สีน้อย เน้นข้อมูล)
+   ========================================================================== */
+
+/* หัวตาราง: ตัวเล็ก สีรอง ไม่ตะโกนแข่งกับข้อมูล */
+.data-table th {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+/* hover แถวเป็นสีเทาอ่อน แทนเขียวเข้ม เพื่อไม่ให้แย่งความสนใจจากปุ่ม/สถานะ */
+.data-table tbody tr:hover {
+  background: var(--color-background);
+}
+
+/* จุดสีบอกสถานะหน้าชื่อรายการ — อ่านสถานะได้ตั้งแต่กวาดตา ไม่ต้องไปดูคอลัมน์ขวาสุด */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-text-disabled);
+}
+
+.status-dot.is-success { background: var(--color-success); }
+.status-dot.is-warning { background: var(--color-warning); }
+.status-dot.is-danger { background: var(--color-danger); }
+.status-dot.is-info { background: var(--color-info); }
+.status-dot.is-primary { background: var(--color-primary); }
+.status-dot.is-neutral { background: var(--color-text-disabled); }
+
+.cell-stack-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* สถานะในตาราง: กล่องมีขอบบาง อ่านออกว่าแก้ไขได้ (จากเดิมเป็นป้ายกลมทึบ) */
+.status-select {
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.status-select.is-success { background-color: var(--color-success-soft); border-color: #BBE9C9; }
+.status-select.is-warning { background-color: var(--color-warning-soft); border-color: #F6DDAE; }
+.status-select.is-danger { background-color: var(--color-danger-soft); border-color: #F5C2C2; }
+.status-select.is-info { background-color: var(--color-info-soft); border-color: #C3D9FB; }
+.status-select.is-primary { background-color: var(--color-primary-soft); border-color: #C6E3B4; }
+.status-select.is-neutral { background-color: var(--color-surface); border-color: var(--color-border); }
+
+/* การ์ดสรุปแบบกระชับ ใช้เป็นแถบข้อมูลย่อเหนือคอนเทนต์ ไม่ใช่บล็อกใหญ่ */
+.summary-cards.is-compact {
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.summary-cards.is-compact .summary-card {
+  padding: var(--space-3) var(--space-4);
+  align-items: center;
+}
+
+.summary-cards.is-compact .summary-card-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.summary-cards.is-compact .summary-card-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.summary-cards.is-compact .summary-card-label {
+  font-size: var(--font-size-caption);
+  margin-bottom: 0;
+}
+
+.summary-cards.is-compact .summary-card-value {
+  font-size: var(--font-size-card-title);
+  line-height: var(--line-height-tight);
+}
+
+/* แถบล่างตาราง: จำนวนต่อหน้า + ปุ่มหน้า อยู่ระนาบเดียวกัน */
+.pagination-size {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.pagination-size .select {
+  width: auto;
+  height: 30px;
+  padding-right: var(--space-6);
+  font-size: var(--font-size-caption);
+}
+
+/* ---------- แถบสรุปแบบแถวเดียว (is-strip) — ใช้แทนการ์ด 4 ใบเมื่อพื้นที่บนจอมีค่า ---------- */
+.summary-cards.is-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.summary-cards.is-strip .summary-card {
+  flex: 1 1 180px;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: var(--space-3) var(--space-4);
+  align-items: center;
+}
+
+.summary-cards.is-strip .summary-card:first-child {
+  border-left: none;
+}
+
+.summary-cards.is-strip .summary-card-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.summary-cards.is-strip .summary-card-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.summary-cards.is-strip .summary-card-label {
+  font-size: var(--font-size-caption);
+  margin-bottom: 0;
+}
+
+.summary-cards.is-strip .summary-card-value {
+  font-size: var(--font-size-card-title);
+  line-height: var(--line-height-tight);
+}
+
+/* หัวหน้าจอแบบแถวเดียว: ชื่อหน้า + จำนวนผลลัพธ์ + ค้นหา + ปุ่มหลัก อยู่บรรทัดเดียวกัน
+   (ประหยัดพื้นที่แนวตั้งไปหนึ่งแถวเมื่อเทียบกับการมี .page-toolbar แยก) */
+.page-header-actions {
+  align-items: center;
+}
+
+/* ==========================================================================
+   12. List Page Structure — โครงหน้ารายการมาตรฐาน (Header → Toolbar → Table → Footer)
+   ใช้ที่ pages/activities/list.html เป็นหน้าอ้างอิง
+   ========================================================================== */
+
+/* แถบเครื่องมือเหนือตาราง: ชิปสถานะตัวกรอง + ปุ่มไอคอน (ซ้าย) / ค้นหา (ขวา) */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+}
+
+/* ชิปบอกว่าตอนนี้กำลังแสดงอะไรอยู่ — คลิกเพื่อเปิดแผงค้นหา */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  background: var(--color-primary-soft);
+}
+
+.filter-chip.is-active {
+  background: var(--color-primary-soft);
+  font-weight: var(--font-weight-medium);
+}
+
+.filter-chip-clear {
+  display: flex;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.icon-btn-sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-btn-sm:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+/* หัวตารางแบบพื้นทึบ (โครงเดียวกับระบบเอกสารมาตรฐาน) */
+.data-table.is-header-filled th {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table.is-header-filled th[data-sort]:hover {
+  color: var(--color-primary-dark);
+}
+
+.data-table.is-header-filled th.is-sorted .sort-icon {
+  color: var(--color-primary-dark);
+}
+
+/* ตัวตารางเลื่อนในกรอบตัวเอง หัวตารางค้างไว้ และแถบหน้าอยู่ใต้กรอบเสมอ */
+.table-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* คอลัมน์ checkbox เลือกแถว */
+.data-table .col-select {
+  width: 36px;
+  padding-right: 0;
+}
+
+.col-select input {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+}
+
+/* แถบเมื่อเลือกหลายแถว */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  font-size: var(--font-size-small);
+  color: var(--color-primary-dark);
+}
+
+/* แถบล่างตาราง: กลุ่มปุ่มหน้า+จำนวนต่อหน้า (ซ้าย) / สรุปจำนวน (ขวา) */
+.pagination.is-footer {
+  flex-direction: row-reverse;
+  padding: var(--space-3) var(--space-4);
+}
+
+/* ---------- ส่วนหัวหน้ารายการแบบกระชับ (ลดช่องว่างระหว่าง Header → Toolbar → Table) ---------- */
+.page-header.is-tight {
+  margin-bottom: var(--space-3);
+}
+
+.page-header.is-tight .page-header-text h1 {
+  margin-bottom: 0;
+}
+
+.list-toolbar {
+  margin-bottom: var(--space-3);
+}
+
+/* ---------- เซลล์ข้อมูลแบบเรียงลงมา (ชื่อ + วันเวลา + สถานที่ + วิทยากร + ราคา) ---------- */
+.cell-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-1);
+}
+
+.cell-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-tight);
+}
+
+.cell-meta svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-disabled);
+}
+
+.cell-meta.is-price {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.cell-meta.is-price svg {
+  color: var(--color-primary);
+}
+
+.cell-code {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-disabled);
+}
+
+/* ---------- ปุ่มจัดการ: ตรึงความกว้างคอลัมน์และจัดกึ่งกลางแนวตั้งให้ตรงทุกแถว ---------- */
+.data-table td,
+.data-table th {
+  vertical-align: middle;
+}
+
+.data-table .col-actions {
+  width: 48px;
+  text-align: center;
+}
+
+/* ต้นเหตุที่ปุ่ม ⋮ ไม่ตรงกับแถว: .table-row-actions เดิมเป็น display:flex ทำให้เซลล์ไม่ยืดสูงเท่าแถว
+   ในตารางให้กลับไปเป็น table-cell ปกติ แล้วจัดกึ่งกลางแทน */
+.data-table td.table-row-actions {
+  display: table-cell;
+  text-align: center;
+  padding-left: 0;
+  padding-right: var(--space-2);
+}
+
+/* คอลัมน์ลำดับ (#) แคบสุด ชิดซ้าย */
+.data-table .col-no {
+  width: 44px;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- ปรับสเกลส่วนหัวหน้ารายการให้เล็กลงอีกขั้น ---------- */
+.page-header.is-tight .page-header-text h1 {
+  font-size: var(--font-size-section-title);
+}
+
+/* ชิป/ปุ่มไอคอน/ปุ่มค้นหา ในแถบเครื่องมือ — ลดขนาดให้เป็นตัวช่วย ไม่แย่งความสนใจจากข้อมูล */
+.list-toolbar .filter-chip {
+  height: 26px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-caption);
+}
+
+.list-toolbar .icon-btn-sm {
+  width: 26px;
+  height: 26px;
+}
+
+.list-toolbar .icon-btn-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.list-toolbar .toolbar-divider {
+  height: 18px;
+}
+
+.list-toolbar .search-popover-trigger {
+  width: 30px;
+  height: 30px;
+}
+
+.list-toolbar .search-popover-trigger svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- คอลัมน์ประเภท / รูปแบบกิจกรรม ---------- */
+.data-table .col-type {
+  width: 96px;
+}
+
+.data-table .col-format {
+  width: 150px;
+}
+
+/* ---------- ภาพกิจกรรมขนาดย่อในตาราง ---------- */
+.data-table .col-thumb {
+  width: 60px;
+}
+
+.thumb {
+  display: block;
+  width: 52px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-primary-soft);
+  flex-shrink: 0;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  border: 1px dashed var(--color-border);
+}
+
+/* ---------- คอลัมน์ปรับปรุงล่าสุด (ชื่อผู้บันทึก + วันเวลา) ---------- */
+.data-table .col-updated {
+  width: 150px;
+}
+
+.cell-updated-by {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-primary);
+}
+
+.cell-updated-at {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* ปุ่มหลักในหัวหน้ารายการแบบกระชับ — เล็กลงให้เข้ากับสเกลของชื่อหน้า */
+.page-header.is-tight .page-header-actions .btn {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-small);
+}
+
+.page-header.is-tight .page-header-actions .btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- แผงค้นหา: ย่อสเกลทั้งแผงให้เนื้อหาพอดีจอ ไม่ต้องเลื่อนดู ---------- */
+.search-popover-panel {
+  width: 340px;
+  padding: var(--space-3);
+}
+
+.search-popover-title {
+  font-size: var(--font-size-caption);
+}
+
+.search-popover-subtitle {
+  font-size: var(--font-size-caption);
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.search-popover-panel .form-label {
+  font-size: var(--font-size-caption);
+  margin-bottom: 2px;
+}
+
+.search-popover-panel .input,
+.search-popover-panel .select {
+  height: 32px;
+  font-size: var(--font-size-small);
+}
+
+.search-popover-panel .search-input .input {
+  padding-left: 34px;
+}
+
+.search-popover-filters {
+  gap: var(--space-2);
+}
+
+.search-popover-footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.search-popover-footer .btn {
+  height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-small);
+}
+
+.search-popover-panel .search-input-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.search-popover-panel .search-input-icon {
+  left: var(--space-2);
 }

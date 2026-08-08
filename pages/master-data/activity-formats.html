@@ -70,18 +70,30 @@
     </header>
 
     <main class="content">
-      <div class="page-header" id="fmt-page-header"></div>
+      <div class="page-header is-tight" id="fmt-page-header"></div>
 
-      <div class="page-toolbar" id="fmt-filter-row"></div>
+      <div class="list-toolbar">
+        <button type="button" class="filter-chip" id="format-filter-chip">
+          <span id="format-filter-chip-label">แสดงทั้งหมด</span>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" class="icon-btn-sm" id="format-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <div class="ml-auto" id="format-search-popover"></div>
+      </div>
 
-      <div class="table-wrapper">
-        <table class="data-table">
+      <div class="table-wrapper mb-4">
+        <div class="table-scroll">
+          <table class="data-table is-header-filled">
           <thead>
-            <tr><th>ลำดับ</th><th>ชื่อรูปแบบกิจกรรม</th><th>ป้ายกำกับ</th><th>ปรับปรุงล่าสุด</th><th>สถานะ</th><th>การจัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อรูปแบบกิจกรรม</th><th>ป้ายกำกับ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th>สถานะ</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="fmt-table-body"></tbody>
         </table>
       </div>
+      <div id="format-pagination"></div>
+    </div>
     </main>
   </div>
 </div>
@@ -145,9 +157,12 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
+  var pageState = { page: 1, pageSize: 10 };
   var fmtSvc = window.TFC.dataService('activityFormats');
   var mock = window.TFC_MOCK || {};
 
@@ -201,9 +216,14 @@
         return !keyword || f.name.toLowerCase().indexOf(keyword) !== -1;
       });
 
-      document.getElementById('fmt-table-body').innerHTML = filtered.map(function (f, i) {
+      var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
+      if (pageState.page > pageCount) pageState.page = pageCount;
+      var start = (pageState.page - 1) * pageState.pageSize;
+      var pageRows = filtered.slice(start, start + pageState.pageSize);
+
+      document.getElementById('fmt-table-body').innerHTML = pageRows.map(function (f, i) {
         return '<tr>' +
-          '<td>' + (i + 1) + '</td>' +
+          '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(f.name) + '</td>' +
           '<td><span class="badge badge-' + (f.badgeColor || 'primary') + '">' + window.TFC.escapeHtml(f.name) + '</span></td>' +
           '<td><div class="small">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
@@ -217,19 +237,34 @@
           '</td></tr>';
       }).join('');
 
-      var countEl = document.getElementById('fmt-result-count');
-      if (countEl) countEl.textContent = filtered.length;
+      window.TFC.renderPagination('format-pagination', {
+        page: pageState.page,
+        pageSize: pageState.pageSize,
+        total: filtered.length,
+        pageSizeOptions: [10, 20, 50],
+        footer: true,
+        onChange: function (p) { pageState.page = p; renderTable(); },
+        onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
+      });
     });
   }
 
-  window.TFC.renderFilterRow('fmt-filter-row', {
-    resultCountId: 'fmt-result-count',
-    resultCount: (mock.activityFormats || []).length,
-    resultLabelSuffix: 'รูปแบบ',
-    search: { id: 'fmt-search', placeholder: 'ค้นหาชื่อรูปแบบกิจกรรม...' }
+  /* แถบค้นหา/ตัวกรองย้ายเข้า Search Panel Popover — ใช้ id เดิมเพื่อให้ renderTable() อ่านค่าได้เหมือนเดิม */
+  window.TFC.attachListToolbar({
+    chipId: 'format-filter-chip',
+    chipLabelId: 'format-filter-chip-label',
+    popoverId: 'format-search-popover',
+    search: { id: 'fmt-search', placeholder: 'ค้นหาชื่อรูปแบบกิจกรรม' },
+    onApply: function (values, done) {
+      pageState.page = 1;
+      renderTable();
+      done();
+    }
   });
 
-  document.getElementById('fmt-search').addEventListener('input', renderTable);
+  document.getElementById('format-export').addEventListener('click', function () {
+    window.TFC.exportTableCsv('#fmt-table-body', 'รูปแบบกิจกรรม.csv');
+  });
 
   document.getElementById('fmt-form').addEventListener('submit', function () {
     var editingId = this.getAttribute('data-editing-id');

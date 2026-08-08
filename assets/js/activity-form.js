@@ -99,8 +99,8 @@ window.TFC = window.TFC || {};
       '<label class="form-label" for="af-cover">รูปภาพกิจกรรม<span class="form-required">*</span></label>' +
       '<div class="upload-zone" id="af-cover-zone">' +
       '<div class="upload-zone-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg></div>' +
-      '<div class="small">ลากไฟล์ภาพมาวาง หรือคลิกเพื่อเลือกไฟล์</div>' +
-      '<div class="caption text-secondary">แนะนำสัดส่วน 16:9 (เช่น 1200×675 px) · JPG/PNG ไม่เกิน 5MB</div>' +
+      '<div class="small">ลากไฟล์มาวางหรือคลิกเพื่อเลือก</div>' +
+      '<div class="caption text-secondary">JPG/PNG · 16:9 · ไม่เกิน 5MB</div>' +
       '<input type="file" id="af-cover" class="hidden" accept="image/*">' +
       '</div>' +
       '<div id="af-cover-list" class="upload-file-list"></div>' +
@@ -109,7 +109,7 @@ window.TFC = window.TFC || {};
       '<div class="form-row">' +
       '<div class="form-group form-col-span-2">' +
       '<label class="form-label" for="af-name">ชื่อกิจกรรม<span class="form-required">*</span></label>' +
-      '<input class="input" id="af-name" maxlength="' + NAME_MAX + '" placeholder="เช่น ปลูกผักปลอดสารสำหรับครอบครัว" value="' + esc(activity.name || '') + '">' +
+      '<input class="input" id="af-name" maxlength="' + NAME_MAX + '" placeholder="ชื่อกิจกรรม" value="' + esc(activity.name || '') + '">' +
       '<div class="form-helper"><span id="af-name-count">0</span>/' + NAME_MAX + ' ตัวอักษร</div>' +
       '</div>' +
 
@@ -125,7 +125,7 @@ window.TFC = window.TFC || {};
       '<div class="form-group">' +
       '<label class="form-label" for="af-participant-type">ประเภทผู้เข้าร่วม</label>' +
       '<select class="select" id="af-participant-type">' + selectOptions(mock.activityParticipantTypes || [], activity.participantType) + '</select>' +
-      '<div class="form-helper">ใช้เป็นตัวกรอง "ประเภท" ในหน้ารายการกิจกรรม</div>' +
+      
       '</div>' +
 
       '<div class="form-group">' +
@@ -160,13 +160,13 @@ window.TFC = window.TFC || {};
       '<span>มีค่าสมัคร (ไม่ติ๊ก = เข้าร่วมฟรี)</span></label>' +
       '<div id="af-fee-wrap" class="' + (activity.hasFee ? '' : 'hidden') + '">' +
       '<label class="form-label" for="af-fee">ค่าลงทะเบียน (บาท)</label>' +
-      '<input type="number" class="input" id="af-fee" min="0" placeholder="เช่น 200" value="' + esc(activity.fee || '') + '">' +
+      '<input type="number" class="input" id="af-fee" min="0" placeholder="0" value="' + esc(activity.fee || '') + '">' +
       '</div></div>' +
 
       '<div class="form-group mb-0">' +
       '<label class="form-label" for="af-desc">รายละเอียด (แบบย่อ)<span class="form-required">*</span></label>' +
-      '<textarea class="textarea" id="af-desc" maxlength="' + DESC_MAX + '" placeholder="อธิบายสั้น ๆ ว่ากิจกรรมนี้ทำอะไร ผู้เข้าร่วมจะได้อะไรกลับไป">' + esc(activity.description || '') + '</textarea>' +
-      '<div class="form-helper"><span id="af-desc-count">0</span>/' + DESC_MAX + ' ตัวอักษร · ข้อความนี้จะแสดงบนหน้าเว็บฝั่งผู้เข้าร่วม</div>' +
+      '<textarea class="textarea" id="af-desc" maxlength="' + DESC_MAX + '" placeholder="รายละเอียดโดยย่อ">' + esc(activity.description || '') + '</textarea>' +
+      '<div class="form-helper"><span id="af-desc-count">0</span>/' + DESC_MAX + ' ตัวอักษร</div>' +
       '</div>' +
       '</div>' +
 
@@ -181,7 +181,7 @@ window.TFC = window.TFC || {};
       '<div class="dynamic-row-list" id="af-schedule-list"></div>' +
       '<button type="button" class="btn btn-outline btn-sm" id="af-add-schedule">' +
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> เพิ่มรอบ</button>' +
-      '<div class="form-helper mb-0">เพิ่มได้สูงสุด ' + MAX_SCHEDULES + ' รอบ · เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด และรอบต้องไม่ทับซ้อนกัน</div>' +
+      
       '</div>' +
 
       /* Section 4.3 — กำหนดแบบประเมิน */
@@ -203,7 +203,7 @@ window.TFC = window.TFC || {};
       '<div class="form-group mb-0"><label class="form-label" for="af-checkin-end">ถึง</label>' +
       '<input type="datetime-local" class="input" id="af-checkin-end" value="' + esc(activity.checkinEnd || '') + '"></div>' +
       '</div>' +
-      '<div class="form-helper mb-0">ช่วงเวลานี้ใช้ร่วมกันทุกชุดแบบประเมินที่เลือก (รอยืนยันกับทีมธุรกิจว่าต้องแยกรายชุดหรือไม่)</div>' +
+      
       '</div>' +
 
       /* Section 4.4 — กำหนดการเผยแพร่ */

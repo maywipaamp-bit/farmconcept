@@ -131,7 +131,9 @@ window.TFC = window.TFC || {};
 
   /* D. Pagination — optional per screen. เดิมทุกหน้าเขียน markup แบบ static ไว้; ฟังก์ชันนี้ทำให้หน้าที่ต้องการ
      paginate จริงเรียกใช้ได้โดยไม่ต้องเขียน logic ซ้ำ (หน้าที่ยังใช้ markup เดิมไม่ได้รับผลกระทบ)
-     TFC.renderPagination(mountId, { page, pageSize, total, onChange }) */
+     TFC.renderPagination(mountId, { page, pageSize, total, onChange, pageSizeOptions, onPageSizeChange, footer })
+     - pageSizeOptions (เช่น [10, 20, 50]) -> แสดงตัวเลือก "รายการต่อหน้า" (ไม่ใส่ = ไม่แสดง, พฤติกรรมเดิม)
+     - footer: true -> วางกลุ่มปุ่มหน้าไว้ซ้าย และข้อความสรุปไว้ขวา ตามโครงหน้ารายการมาตรฐาน */
   window.TFC.renderPagination = function (target, opts) {
     var el = mountEl(target);
     if (!el) return;
@@ -150,12 +152,25 @@ window.TFC = window.TFC || {};
         '" data-page="' + i + '">' + i + '</button>';
     }
 
-    el.innerHTML = '<div class="pagination">' +
+    var sizeHtml = '';
+    if (opts.pageSizeOptions && opts.pageSizeOptions.length) {
+      sizeHtml = '<label class="pagination-size">รายการต่อหน้า' +
+        '<select class="select" data-page-size>' +
+        opts.pageSizeOptions.map(function (size) {
+          return '<option value="' + size + '"' + (size === pageSize ? ' selected' : '') + '>' + size + '</option>';
+        }).join('') +
+        '</select></label>';
+    }
+
+    el.innerHTML = '<div class="pagination' + (opts.footer ? ' is-footer' : '') + '">' +
       '<div class="pagination-info">แสดง ' + from + '-' + to + ' จาก ' + total + ' รายการ</div>' +
       '<div class="pagination-controls">' +
+      '<button type="button" class="pagination-btn" data-page="1"' + (page === 1 ? ' disabled' : '') + ' aria-label="หน้าแรก">«</button>' +
       '<button type="button" class="pagination-btn" data-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + ' aria-label="ก่อนหน้า">‹</button>' +
       numbersHtml +
       '<button type="button" class="pagination-btn" data-page="' + (page + 1) + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="ถัดไป">›</button>' +
+      '<button type="button" class="pagination-btn" data-page="' + pageCount + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="หน้าสุดท้าย">»</button>' +
+      sizeHtml +
       '</div></div>';
 
     if (typeof opts.onChange === 'function') {
@@ -164,6 +179,13 @@ window.TFC = window.TFC || {};
           var next = Number(btn.getAttribute('data-page'));
           if (next >= 1 && next <= pageCount && next !== page) opts.onChange(next);
         });
+      });
+    }
+
+    var sizeSelect = el.querySelector('[data-page-size]');
+    if (sizeSelect && typeof opts.onPageSizeChange === 'function') {
+      sizeSelect.addEventListener('change', function () {
+        opts.onPageSizeChange(Number(sizeSelect.value));
       });
     }
   };

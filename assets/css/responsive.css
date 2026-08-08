@@ -234,8 +234,29 @@
   .schedule-row-head {
     display: none;
   }
+}
 
-  .status-select {
-    min-width: 130px;
+/* ---------- Search Panel Popover ---------- */
+@media (max-width: 767px) {
+  /* จอเล็ก: แผงกว้างเท่าที่เหลือในจอ (ยังชิดขวาใต้ไอคอนเหมือนเดิม แต่ไม่หลุดขอบ) */
+  .search-popover-panel {
+    width: calc(100vw - var(--space-6));
+    padding: var(--space-3);
+  }
+}
+
+/* แถบสรุปแบบแถวเดียวบนจอเล็ก: 2 ช่องต่อแถว และมีเส้นคั่นแนวนอน */
+@media (max-width: 767px) {
+  .summary-cards.is-strip .summary-card {
+    flex: 1 1 50%;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .summary-cards.is-strip .summary-card:nth-child(-n+2) {
+    border-top: none;
+  }
+
+  .summary-cards.is-strip .summary-card:nth-child(odd) {
+    border-left: none;
   }
 }

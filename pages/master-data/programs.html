@@ -70,18 +70,30 @@
     </header>
 
     <main class="content">
-      <div class="page-header" id="program-page-header"></div>
+      <div class="page-header is-tight" id="program-page-header"></div>
 
-      <div class="page-toolbar" id="program-filter-row"></div>
+      <div class="list-toolbar">
+        <button type="button" class="filter-chip" id="program-filter-chip">
+          <span id="program-filter-chip-label">แสดงทั้งหมด</span>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" class="icon-btn-sm" id="program-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <div class="ml-auto" id="program-search-popover"></div>
+      </div>
 
-      <div class="table-wrapper">
-        <table class="data-table">
+      <div class="table-wrapper mb-4">
+        <div class="table-scroll">
+          <table class="data-table is-header-filled">
           <thead>
-            <tr><th>ลำดับ</th><th>ชื่อโปรแกรมการเรียนรู้</th><th>หลักสูตร</th><th>สถานะ</th><th>ปรับปรุงล่าสุด</th><th>การจัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อโปรแกรมการเรียนรู้</th><th>หลักสูตร</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="program-table-body"></tbody>
         </table>
       </div>
+      <div id="program-pagination"></div>
+    </div>
     </main>
   </div>
 </div>
@@ -153,12 +165,15 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
   var programSvc = window.TFC.dataService('programs');
   var mock = window.TFC_MOCK || {};
   var statusBadge = { true: 'badge-success', false: 'badge-neutral' };
+  var pageState = { page: 1, pageSize: 10 };
 
   function courseRowHtml(value) {
     return '<div class="dynamic-row">' +
@@ -225,12 +240,17 @@
         return matchesKeyword && matchesCategory;
       });
 
-      document.getElementById('program-table-body').innerHTML = filtered.map(function (p, i) {
+      var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
+      if (pageState.page > pageCount) pageState.page = pageCount;
+      var start = (pageState.page - 1) * pageState.pageSize;
+      var pageRows = filtered.slice(start, start + pageState.pageSize);
+
+      document.getElementById('program-table-body').innerHTML = pageRows.map(function (p, i) {
         var coursesHtml = (p.courses || []).length
           ? '<ul class="pl-0" style="margin:0;padding-left:18px;">' + p.courses.map(function (c) { return '<li>' + window.TFC.escapeHtml(c.name) + '</li>'; }).join('') + '</ul>'
           : '<span class="text-secondary">-</span>';
         return '<tr>' +
-          '<td>' + (i + 1) + '</td>' +
+          '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(p.name) + '</td>' +
           '<td>' + coursesHtml + '</td>' +
           '<td><span class="badge ' + (statusBadge[p.active !== false] || 'badge-neutral') + '">' + (p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน') + '</span></td>' +
@@ -244,29 +264,55 @@
           '</td></tr>';
       }).join('');
 
-      var countEl = document.getElementById('program-result-count');
-      if (countEl) countEl.textContent = filtered.length;
+      window.TFC.renderPagination('program-pagination', {
+        page: pageState.page,
+        pageSize: pageState.pageSize,
+        total: filtered.length,
+        pageSizeOptions: [10, 20, 50],
+        footer: true,
+        onChange: function (page) { pageState.page = page; renderTable(); },
+        onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
+      });
     });
   }
 
   var categories = (mock.programs || []).map(function (p) { return p.category; }).filter(function (c, i, arr) { return arr.indexOf(c) === i; });
 
-  window.TFC.renderFilterRow('program-filter-row', {
-    resultCountId: 'program-result-count',
-    resultCount: (mock.programs || []).length,
-    resultLabelSuffix: 'โปรแกรม',
+  /* แถบค้นหา/ตัวกรองย้ายเข้า Search Panel Popover (โครงเดียวกับหน้าจัดการกิจกรรม)
+     ยังใช้ id เดิม program-search / program-filter-category เพื่อให้ renderTable() อ่านค่าได้เหมือนเดิม */
+  window.TFC.attachListToolbar({
+    chipId: 'program-filter-chip',
+    chipLabelId: 'program-filter-chip-label',
+    popoverId: 'program-search-popover',
+    search: { id: 'program-search', placeholder: 'ค้นหาชื่อโปรแกรม' },
     filters: [
       {
-        id: 'program-filter-category',
+        id: 'category',
+        inputId: 'program-filter-category',
+        label: 'หมวดหมู่',
         placeholder: 'หมวดหมู่ทั้งหมด',
         options: categories.map(function (c) { return { label: c }; })
       }
     ],
-    search: { id: 'program-search', placeholder: 'ค้นหาชื่อโปรแกรม...' }
+    onApply: function (values, done) {
+      pageState.page = 1;
+      renderTable();
+      done();
+    }
   });
 
-  document.getElementById('program-search').addEventListener('input', renderTable);
-  document.getElementById('program-filter-category').addEventListener('change', renderTable);
+  document.getElementById('program-export').addEventListener('click', function () {
+    programSvc.list().then(function (programs) {
+      window.TFC.exportCsv('โปรแกรมการเรียนรู้.csv',
+        ['ลำดับ', 'ชื่อโปรแกรมการเรียนรู้', 'หมวดหมู่', 'หลักสูตร', 'สถานะ', 'ผู้บันทึกล่าสุด', 'วันที่บันทึก'],
+        programs.map(function (p, i) {
+          return [i + 1, p.name, p.category || '',
+            (p.courses || []).map(function (c) { return c.name; }).join(' / '),
+            p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน',
+            p.updatedBy || '', p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : ''];
+        }));
+    });
+  });
 
   document.getElementById('program-form').addEventListener('submit', function () {
     var editingId = this.getAttribute('data-editing-id');

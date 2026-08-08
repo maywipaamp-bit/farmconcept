@@ -15,6 +15,7 @@
   --color-background: #F8FAF8;
   --color-surface: #FFFFFF;
   --color-border: #E5E7EB;
+  --color-surface-muted: #F3F4F6;   /* พื้นเทาอ่อนสำหรับหัวตาราง/แถบรอง */
 
   /* ---------- Colors : Text ---------- */
   --color-text-primary: #1F2937;
@@ -35,19 +36,19 @@
   /* ---------- Font ---------- */
   --font-family-base: 'Kanit', sans-serif;
 
-  --font-size-page-title: 28px;
-  --font-size-section-title: 22px;
-  --font-size-card-title: 18px;
-  --font-size-body: 16px;
-  --font-size-small: 14px;
-  --font-size-caption: 12px;
+  --font-size-page-title: 22px;
+  --font-size-section-title: 18px;
+  --font-size-card-title: 15px;
+  --font-size-body: 14px;
+  --font-size-small: 13px;
+  --font-size-caption: 11px;
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --line-height-base: 1.6;
+  --line-height-base: 1.5;
   --line-height-tight: 1.3;
 
   /* ---------- Spacing Scale ---------- */
@@ -89,7 +90,7 @@
   --layout-max-width: 1280px;
   --sidebar-width: 260px;
   --sidebar-width-collapsed: 76px;
-  --topbar-height: 64px;
+  --topbar-height: 56px;
 
   /* ---------- Breakpoints (reference only, use in media queries directly) ---------- */
   --breakpoint-mobile: 375px;

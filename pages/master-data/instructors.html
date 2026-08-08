@@ -70,18 +70,30 @@
     </header>
 
     <main class="content">
-      <div class="page-header" id="instructor-page-header"></div>
+      <div class="page-header is-tight" id="instructor-page-header"></div>
 
-      <div class="page-toolbar" id="instructor-filter-row"></div>
+      <div class="list-toolbar">
+        <button type="button" class="filter-chip" id="instructor-filter-chip">
+          <span id="instructor-filter-chip-label">แสดงทั้งหมด</span>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" class="icon-btn-sm" id="instructor-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <div class="ml-auto" id="instructor-search-popover"></div>
+      </div>
 
-      <div class="table-wrapper">
-        <table class="data-table">
+      <div class="table-wrapper mb-4">
+        <div class="table-scroll">
+          <table class="data-table is-header-filled">
           <thead>
-            <tr><th>ลำดับ</th><th>ชื่อวิทยากร</th><th>เบอร์โทร</th><th>ความเชี่ยวชาญ</th><th>ปรับปรุงล่าสุด</th><th>การจัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อวิทยากร</th><th>เบอร์โทร</th><th>ความเชี่ยวชาญ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="instructor-table-body"></tbody>
         </table>
       </div>
+      <div id="instructor-pagination"></div>
+    </div>
     </main>
   </div>
 </div>
@@ -166,9 +178,12 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
 <script src="../../assets/js/app.js"></script>
 <script>
 (function () {
+  var pageState = { page: 1, pageSize: 10 };
   var instructorSvc = window.TFC.dataService('instructors');
   var mock = window.TFC_MOCK || {};
 
@@ -235,12 +250,17 @@
           (i.expertiseList || []).join(' ').toLowerCase().indexOf(keyword) !== -1;
       });
 
-      document.getElementById('instructor-table-body').innerHTML = filtered.map(function (i, idx) {
+      var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
+      if (pageState.page > pageCount) pageState.page = pageCount;
+      var start = (pageState.page - 1) * pageState.pageSize;
+      var pageRows = filtered.slice(start, start + pageState.pageSize);
+
+      document.getElementById('instructor-table-body').innerHTML = pageRows.map(function (i, idx) {
         var expertiseHtml = (i.expertiseList || []).length
           ? '<ul class="pl-0" style="margin:0;padding-left:18px;">' + i.expertiseList.map(function (e) { return '<li>' + window.TFC.escapeHtml(e) + '</li>'; }).join('') + '</ul>'
           : '<span class="text-secondary">-</span>';
         return '<tr>' +
-          '<td>' + (idx + 1) + '</td>' +
+          '<td class="col-no nowrap">' + (start + idx + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(i.name) + '</td>' +
           '<td>' + window.TFC.escapeHtml(i.phone) + '</td>' +
           '<td>' + expertiseHtml + '</td>' +
@@ -254,19 +274,34 @@
           '</td></tr>';
       }).join('');
 
-      var countEl = document.getElementById('instructor-result-count');
-      if (countEl) countEl.textContent = filtered.length;
+      window.TFC.renderPagination('instructor-pagination', {
+        page: pageState.page,
+        pageSize: pageState.pageSize,
+        total: filtered.length,
+        pageSizeOptions: [10, 20, 50],
+        footer: true,
+        onChange: function (p) { pageState.page = p; renderTable(); },
+        onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
+      });
     });
   }
 
-  window.TFC.renderFilterRow('instructor-filter-row', {
-    resultCountId: 'instructor-result-count',
-    resultCount: (mock.instructors || []).length,
-    resultLabelSuffix: 'คน',
-    search: { id: 'instructor-search', placeholder: 'ค้นหาชื่อวิทยากรหรือความเชี่ยวชาญ...' }
+  /* แถบค้นหา/ตัวกรองย้ายเข้า Search Panel Popover — ใช้ id เดิมเพื่อให้ renderTable() อ่านค่าได้เหมือนเดิม */
+  window.TFC.attachListToolbar({
+    chipId: 'instructor-filter-chip',
+    chipLabelId: 'instructor-filter-chip-label',
+    popoverId: 'instructor-search-popover',
+    search: { id: 'instructor-search', placeholder: 'ค้นหาชื่อวิทยากรหรือความเชี่ยวชาญ' },
+    onApply: function (values, done) {
+      pageState.page = 1;
+      renderTable();
+      done();
+    }
   });
 
-  document.getElementById('instructor-search').addEventListener('input', renderTable);
+  document.getElementById('instructor-export').addEventListener('click', function () {
+    window.TFC.exportTableCsv('#instructor-table-body', 'วิทยากร.csv');
+  });
 
   document.getElementById('instr-form').addEventListener('submit', function () {
     var editingId = this.getAttribute('data-editing-id');
