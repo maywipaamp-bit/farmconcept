@@ -3740,3 +3740,299 @@ a.activity-title:hover {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }
+
+/* ==========================================================================
+   16. Activity Form v2 — ฟอร์มกิจกรรมแบบแบ่งส่วน (assets/js/activity-form.js)
+   ซ้าย: 7 ส่วนพร้อมแถบความครบถ้วน / ขวา: ตัวอย่างบนมือถือแบบ sticky
+   ========================================================================== */
+.form-steps {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: var(--z-sticky);
+  background: var(--color-background);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.form-steps-list {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.form-step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 26px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.form-step-chip:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
+
+.form-step-chip.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.form-step-chip.is-done .form-step-no { background: var(--color-primary); color: var(--color-text-inverse); }
+
+.form-step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-background);
+  font-size: 10px;
+}
+
+.form-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.form-progress .progress { flex: 1; height: 4px; }
+
+/* ---------- การ์ดของแต่ละส่วน ---------- */
+.form-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  scroll-margin-top: 120px;
+}
+
+/* ในฟอร์มนี้ระยะห่างระหว่างฟิลด์ให้กระชับกว่าฟอร์มทั่วไป */
+.form-section .form-group { margin-bottom: var(--space-3); }
+.form-section .form-group:last-child { margin-bottom: 0; }
+.form-section .form-row,
+.form-section .form-row-3 { gap: var(--space-3); margin-bottom: var(--space-3); }
+.form-section .form-label { font-size: var(--font-size-caption); margin-bottom: 2px; }
+.form-section .form-helper { font-size: var(--font-size-caption); }
+.form-section .input,
+.form-section .select,
+.form-section .textarea { font-size: var(--font-size-small); }
+.form-section .textarea { min-height: 72px; }
+
+.form-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.form-section-no {
+  font-size: var(--font-size-caption);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-full);
+  padding: 1px var(--space-2);
+  white-space: nowrap;
+}
+
+.form-section-title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.form-section-note {
+  margin-left: auto;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.field-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ---------- ปุ่มตัวเลือกแบบชิป (หมวดหมู่ / ประเภท / ค่าเข้าร่วม / กลุ่มเป้าหมาย) ---------- */
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.choice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+  text-align: left;
+}
+
+.choice-chip:hover { border-color: var(--color-primary); }
+
+.choice-chip.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.choice-chip-hint {
+  display: block;
+  font-size: 10px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- ช่องอัปโหลดรูปปก 16:9 ---------- */
+.image-slot {
+  aspect-ratio: 16 / 9;
+  max-height: 190px;
+  width: 100%;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+  font-size: var(--font-size-caption);
+}
+
+.image-slot:hover,
+.image-slot.is-dragover { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-dark); }
+
+.image-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- แถวรอบกิจกรรม ---------- */
+.round-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.round-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.round-card-head .dynamic-row-remove { margin-left: auto; }
+
+.round-fields {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.round-fields .form-label { font-size: 10px; margin-bottom: 1px; }
+
+/* ---------- ตัวเลือกหลายค่าแบบค้นหา (วิทยากร / แบบประเมิน) ---------- */
+.multi-picker { position: relative; }
+
+.multi-picker-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.multi-picker-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.multi-picker-option {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.multi-picker-option:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+
+.multi-picker-option.is-selected { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+
+.multi-picker-option span { font-size: 10px; color: var(--color-text-secondary); }
+
+/* ---------- แถวสวิตช์เปิด/ปิด ---------- */
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.switch-row:last-of-type { border-bottom: none; }
+
+.switch-row-text { flex: 1; }
+
+.switch-row-text strong { display: block; font-size: var(--font-size-caption); font-weight: var(--font-weight-medium); }
+
+.switch-row-text span { font-size: 10px; color: var(--color-text-secondary); }
+
+/* ---------- แถบปุ่มท้ายฟอร์ม ---------- */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  position: sticky;
+  bottom: var(--space-3);
+}
+
+.form-actions-valid {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  margin-right: auto;
+}

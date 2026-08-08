@@ -283,3 +283,10 @@
     text-align: left;
   }
 }
+
+/* ---------- ฟอร์มกิจกรรม v2 ---------- */
+@media (max-width: 767px) {
+  .round-fields { grid-template-columns: 1fr 1fr; }
+  .form-actions { flex-wrap: wrap; }
+  .form-actions .btn { flex: 1; }
+}

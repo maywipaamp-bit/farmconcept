@@ -275,6 +275,11 @@ window.TFC = window.TFC || {};
   };
 
   /* ---------- init ---------- */
-  document.querySelectorAll('input[data-thai-date]').forEach(buildThaiDate);
-  document.querySelectorAll('input[data-tags-input]').forEach(buildTagsInput);
+  /* เรียกซ้ำได้ เมื่อหน้าจอสร้างฟิลด์ใหม่ภายหลัง (เช่น ฟอร์มที่ render ด้วย JS) */
+  window.TFC.initFieldWidgets = function (root) {
+    (root || document).querySelectorAll('input[data-thai-date]:not(.hidden)').forEach(buildThaiDate);
+    (root || document).querySelectorAll('input[data-tags-input]:not(.hidden)').forEach(buildTagsInput);
+  };
+
+  window.TFC.initFieldWidgets(document);
 })();
