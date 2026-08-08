@@ -2359,3 +2359,13 @@
 .alert-list li + li {
   margin-top: 2px;
 }
+
+/* ---------- ช่องข้อเสนอแนะในตารางแบบประเมิน (ตัดข้อความ + tooltip ดูเต็ม) ---------- */
+.cell-feedback {
+  max-width: 280px;
+}
+
+.cell-feedback .truncate {
+  display: block;
+  max-width: 100%;
+}
