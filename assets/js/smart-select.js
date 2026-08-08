@@ -306,13 +306,19 @@ window.TFC = window.TFC || {};
     });
   }
 
-  document.querySelectorAll('[data-smart-select]').forEach(function (select) {
-    try {
-      buildWidget(select);
-    } catch (err) {
-      console.error('smart-select: failed to build widget for #' + select.id, err);
-    }
-  });
+  /* แถวที่สร้างทีหลัง (เช่น แถวหลักสูตรในฟอร์มวิทยากร) เรียกใช้เพื่อแปลง select ที่เพิ่งเพิ่มเข้ามา
+     ข้าม select ที่แปลงไปแล้วเพื่อไม่ให้สร้าง widget ซ้ำ */
+  window.TFC.initSmartSelects = function (root) {
+    (root || document).querySelectorAll('select[data-smart-select]:not(.hidden)').forEach(function (select) {
+      try {
+        buildWidget(select);
+      } catch (err) {
+        console.error('smart-select: failed to build widget for #' + select.id, err);
+      }
+    });
+  };
+
+  window.TFC.initSmartSelects(document);
 
   document.addEventListener('click', function (e) {
     if (activePanel && !activeWidget.contains(e.target)) closePanel();

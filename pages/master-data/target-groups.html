@@ -86,7 +86,7 @@
         <div class="table-scroll">
           <table class="data-table is-header-filled">
           <thead>
-            <tr><th class="col-no">#</th><th>ชื่อกลุ่มเป้าหมาย</th><th>จำนวนสมาชิก</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ชื่อกลุ่มเป้าหมาย</th><th>จำนวนเป้าหมาย (คน)</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="target-group-table-body"></tbody>
           <tfoot id="target-group-table-foot"></tfoot>
@@ -108,9 +108,15 @@
     </div>
     <form data-mock-submit="บันทึกกลุ่มเป้าหมายสำเร็จ (ตัวอย่าง)" id="tg-form">
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="tg-name">ชื่อกลุ่มเป้าหมาย<span class="form-required">*</span></label>
-          <input class="input" id="tg-name" data-validate required>
+        <div class="form-row mb-3">
+          <div class="form-group mb-0">
+            <label class="form-label" for="tg-name">ชื่อกลุ่มเป้าหมาย<span class="form-required">*</span></label>
+            <input class="input" id="tg-name" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="tg-target-count">จำนวนเป้าหมาย (คน)<span class="form-required">*</span></label>
+            <input class="input" type="number" min="0" id="tg-target-count" data-validate required>
+          </div>
         </div>
         <div class="form-group mb-0">
           <label class="form-label" for="tg-active">สถานะ<span class="form-required">*</span></label>
@@ -194,6 +200,7 @@
     if (!group) return;
     document.getElementById('tg-form-title').textContent = 'แก้ไขกลุ่มเป้าหมาย';
     document.getElementById('tg-name').value = group.name || '';
+    document.getElementById('tg-target-count').value = group.targetCount != null ? group.targetCount : '';
     document.getElementById('tg-active').checked = group.active !== false;
     document.getElementById('tg-active-label').textContent = group.active !== false ? 'ใช้งาน' : 'ไม่ใช้งาน';
     document.getElementById('tg-form').setAttribute('data-editing-id', group.id);
@@ -215,7 +222,7 @@
         return '<tr>' +
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td>' + window.TFC.escapeHtml(g.name) + '</td>' +
-          '<td>' + g.memberCount + '</td>' +
+          '<td>' + Number(g.targetCount || 0).toLocaleString('th-TH') + '</td>' +
           '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
@@ -227,9 +234,10 @@
           '</td></tr>';
       }).join('');
 
-      var totalNumber = filtered.reduce(function (sum, row) { return sum + (row.memberCount || 0); }, 0);
+      var totalNumber = filtered.reduce(function (sum, row) { return sum + (row.targetCount || 0); }, 0);
       document.getElementById('target-group-table-foot').innerHTML = filtered.length
-        ? '<tr><td colspan="2">รวม ' + filtered.length + ' กลุ่ม</td>' + '<td>' + totalNumber + '</td>' + '<td></td><td></td><td></td></tr>'
+        ? '<tr><td colspan="2">รวม ' + filtered.length + ' กลุ่ม</td>' +
+          '<td>' + totalNumber.toLocaleString('th-TH') + '</td>' + '<td></td><td></td><td></td></tr>'
         : '';
 
       window.TFC.renderPagination('target-group-pagination', {
@@ -265,6 +273,7 @@
     var editingId = this.getAttribute('data-editing-id');
     var payload = {
       name: document.getElementById('tg-name').value,
+      targetCount: Number(document.getElementById('tg-target-count').value) || 0,
       active: document.getElementById('tg-active').checked,
       updatedBy: (mock.currentUser || {}).name || ''
     };

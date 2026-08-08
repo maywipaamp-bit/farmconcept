@@ -11,10 +11,12 @@
      list.reset(['หลักสูตร A', 'หลักสูตร B']);          // re-seed rows (e.g. when opening the Edit popup)
      list.container.querySelectorAll('.input')          // read current values back out on submit
    rowHtmlFn(value) must return a single root element with class "dynamic-row" containing one element
-   with [data-row-order] — the repeater fills that element's text with "1.", "2." etc after every change. */
+   with [data-row-order] — the repeater fills that element's text with "1.", "2." etc after every change.
+   onRowAdd(rowEl) (optional, 4th arg) runs right after a row is inserted — use it to init widgets that
+   only enhance elements present at page load (e.g. TFC.initSmartSelects). */
 window.TFC = window.TFC || {};
 
-window.TFC.dynamicRowList = function (containerId, addBtnId, rowHtmlFn) {
+window.TFC.dynamicRowList = function (containerId, addBtnId, rowHtmlFn, onRowAdd) {
   var container = document.getElementById(containerId);
   var addBtn = addBtnId ? document.getElementById(addBtnId) : null;
 
@@ -30,6 +32,8 @@ window.TFC.dynamicRowList = function (containerId, addBtnId, rowHtmlFn) {
     var rowEl = wrapper.firstElementChild;
     container.appendChild(rowEl);
     renumber();
+    /* แถวที่เพิ่งสร้างอาจมี widget ที่ต้อง init เอง (เช่น Smart Dropdown) */
+    if (onRowAdd) onRowAdd(rowEl);
     return rowEl;
   }
 

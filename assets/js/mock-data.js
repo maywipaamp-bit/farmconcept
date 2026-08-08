@@ -491,6 +491,7 @@ window.TFC_MOCK = {
       id: 'INS-001', name: 'ดร.กิตติพงศ์ วัฒนสุข', phone: '08x-xxx-1111', activityCount: 4, active: true,
       photo: '', expertise: 'ผู้เชี่ยวชาญด้านโภชนาการและสุขภาวะ',
       expertiseList: ['โภชนาการ', 'สุขภาวะชุมชน'],
+      courseList: ['รู้จักอาหารหลัก 5 หมู่', 'อ่านฉลากอาหารให้เป็น'],
       bio: '',
       updatedAt: '2026-07-28', updatedBy: 'สุนิสา แก้วมณี'
     },
@@ -498,6 +499,7 @@ window.TFC_MOCK = {
       id: 'INS-002', name: 'อาจารย์พิมพ์ชนก ศรีสมบัติ', phone: '08x-xxx-2222', activityCount: 3, active: true,
       photo: '', expertise: 'วิทยากรด้านอาหารและการปรับเปลี่ยนพฤติกรรม',
       expertiseList: ['อาหารเพื่อสุขภาพ', 'การปรับเปลี่ยนพฤติกรรม'],
+      courseList: ['ผัก 5 สี สุขภาพดีทุกวัน', 'ลดหวาน มัน เค็ม', 'รู้เลือก รู้กิน'],
       bio: '',
       updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี'
     },
@@ -505,6 +507,7 @@ window.TFC_MOCK = {
       id: 'INS-003', name: 'คุณภูริณัฐ วงศ์สวัสดิ์', phone: '08x-xxx-3333', activityCount: 2, active: true,
       photo: '', expertise: 'วิทยากรด้านสุขภาพและการออกกำลังกาย',
       expertiseList: ['สุขภาพ', 'การออกกำลังกาย'],
+      courseList: ['วางแผนมื้ออาหารสุขภาพ'],
       bio: '',
       updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ'
     },
@@ -512,6 +515,7 @@ window.TFC_MOCK = {
       id: 'INS-004', name: 'คุณกัญญารัตน์ มีสุข', phone: '08x-xxx-4444', activityCount: 2, active: true,
       photo: '', expertise: 'วิทยากรด้านการดูแลสุขภาวะครอบครัว',
       expertiseList: ['สุขภาวะครอบครัว', 'การดูแลผู้สูงอายุ'],
+      courseList: ['ปลูกผักสวนครัวเบื้องต้น', 'จากแปลงสู่จาน'],
       bio: '',
       updatedAt: '2026-08-01', updatedBy: 'สุนิสา แก้วมณี'
     },
@@ -519,6 +523,7 @@ window.TFC_MOCK = {
       id: 'INS-005', name: 'คุณปกรณ์ชัย ใจดี', phone: '08x-xxx-5555', activityCount: 1, active: true,
       photo: '', expertise: 'วิทยากรด้านการแปรรูปผลิตภัณฑ์ชุมชน',
       expertiseList: ['การแปรรูปอาหาร', 'ผลิตภัณฑ์ชุมชน'],
+      courseList: ['ทำปุ๋ยหมักจากเศษอาหาร', 'จ่ายตลาดอย่างฉลาด'],
       bio: '',
       updatedAt: '2026-08-03', updatedBy: 'วีระ ศรีสมบัติ'
     }

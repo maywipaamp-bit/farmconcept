@@ -86,7 +86,7 @@
         <div class="table-scroll">
           <table class="data-table is-header-filled">
           <thead>
-            <tr><th class="col-no">#</th><th>ชื่อรูปแบบกิจกรรม</th><th>ป้ายกำกับ</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
+            <tr><th class="col-no">#</th><th>ป้ายกำกับ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
           </thead>
           <tbody id="fmt-table-body"></tbody>
           <tfoot id="fmt-table-foot"></tfoot>
@@ -224,9 +224,7 @@
       document.getElementById('fmt-table-body').innerHTML = pageRows.map(function (f, i) {
         return '<tr>' +
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
-          '<td>' + window.TFC.escapeHtml(f.name) + '</td>' +
           '<td><span class="badge badge-' + (f.badgeColor || 'primary') + '">' + window.TFC.escapeHtml(f.name) + '</span></td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
           '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
           '<div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
           '<td class="table-row-actions">' +
@@ -238,7 +236,7 @@
       }).join('');
 
       document.getElementById('fmt-table-foot').innerHTML = filtered.length
-        ? '<tr><td colspan="3">รวม ' + filtered.length + ' รูปแบบ</td><td></td><td></td><td></td></tr>'
+        ? '<tr><td colspan="2">รวม ' + filtered.length + ' รูปแบบ</td><td></td><td></td></tr>'
         : '';
 
       window.TFC.renderPagination('format-pagination', {

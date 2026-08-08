@@ -99,7 +99,7 @@
 </div>
 
 <div class="modal-overlay" id="instructor-create-modal">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <h3 class="modal-title" id="instr-form-title">เพิ่มวิทยากร</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -108,40 +108,55 @@
     </div>
     <form data-mock-submit="บันทึกวิทยากรสำเร็จ (ตัวอย่าง)" id="instr-form">
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">รูปภาพ</label>
-          <div class="upload-zone" data-upload-zone data-upload-list="instr-upload-list">
-            <div class="upload-zone-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg></div>
-            <div class="small">ลากไฟล์ภาพมาวาง หรือคลิกเพื่อเลือกไฟล์ (JPG, PNG ไม่เกิน 5MB)</div>
-            <input type="file" class="hidden" accept="image/*">
+        <!-- ภาพติดบัตรขนาดเล็กแบบใบสมัครงาน วางคู่กับชื่อ/เบอร์โทร -->
+        <div class="photo-form-row mb-3">
+          <div class="form-group mb-0">
+            <label class="form-label">รูปภาพ</label>
+            <div class="photo-slot" id="instr-photo-slot" tabindex="0" role="button" aria-label="เลือกรูปภาพวิทยากร">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>เพิ่มรูป</span>
+              <input type="file" class="hidden" accept="image/*" id="instr-photo">
+            </div>
           </div>
-          <div id="instr-upload-list" class="upload-file-list"></div>
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="instr-name">ชื่อวิทยากร<span class="form-required">*</span></label>
+              <input class="input" id="instr-name" data-validate required>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label" for="instr-phone">เบอร์โทร<span class="form-required">*</span></label>
+              <input class="input" type="tel" id="instr-phone" data-validate required>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="instr-name">ชื่อวิทยากร<span class="form-required">*</span></label>
-          <input class="input" id="instr-name" data-validate required>
+
+        <div class="form-row mb-3">
+          <div class="form-group mb-0">
+            <label class="form-label">ความเชี่ยวชาญ</label>
+            <div class="dynamic-row-list" id="instr-expertise-list"></div>
+            <button type="button" class="dynamic-row-add" id="instr-add-expertise-btn" aria-label="เพิ่มความเชี่ยวชาญ" title="เพิ่มความเชี่ยวชาญ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">หลักสูตรที่สอน</label>
+            <div class="dynamic-row-list" id="instr-course-list"></div>
+            <button type="button" class="dynamic-row-add" id="instr-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label" for="instr-phone">เบอร์โทร<span class="form-required">*</span></label>
-          <input class="input" type="tel" id="instr-phone" data-validate required>
+          <label class="form-label" for="instr-bio">รายละเอียด</label>
+          <textarea class="textarea" id="instr-bio" rows="3"></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">ความเชี่ยวชาญ</label>
-          <div class="dynamic-row-list" id="instr-expertise-list"></div>
-          <button type="button" class="dynamic-row-add" id="instr-add-expertise-btn" aria-label="เพิ่มความเชี่ยวชาญ" title="เพิ่มความเชี่ยวชาญ">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-        <div class="form-group">
+        <div class="form-group mb-0">
           <label class="form-label" for="instr-active">สถานะ<span class="form-required">*</span></label>
           <div class="flex items-center gap-2">
             <label class="switch"><input type="checkbox" id="instr-active" checked><span class="switch-track"></span></label>
             <span class="small text-secondary" id="instr-active-label">ใช้งาน</span>
           </div>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="instr-bio">รายละเอียด</label>
-          <textarea class="textarea" id="instr-bio" rows="3"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -198,6 +213,58 @@
   var expertiseList = window.TFC.dynamicRowList('instr-expertise-list', 'instr-add-expertise-btn', expertiseRowHtml);
   expertiseList.reset([]);
 
+  /* หลักสูตรที่สอน — เก็บได้มากกว่า 1 โดยเลือกจากหลักสูตรในโปรแกรมการเรียนรู้ */
+  var allCourses = (mock.programs || []).reduce(function (list, p) {
+    return list.concat((p.courses || []).map(function (c) { return c.name; }));
+  }, []);
+
+  function courseRowHtml(value) {
+    return '<div class="dynamic-row">' +
+      '<span class="dynamic-row-order" data-row-order></span>' +
+      '<select class="select" data-smart-select data-new-item-label="หลักสูตร" data-new-item-placeholder="เช่น ปลูกผักในพื้นที่จำกัด">' +
+      '<option value="">เลือกหลักสูตร</option>' +
+      allCourses.map(function (name) {
+        return '<option value="' + window.TFC.escapeHtml(name) + '"' + (name === value ? ' selected' : '') + '>' +
+          window.TFC.escapeHtml(name) + '</option>';
+      }).join('') +
+      '</select>' +
+      '<button type="button" class="dynamic-row-remove" aria-label="ลบแถว">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button></div>';
+  }
+  var courseList = window.TFC.dynamicRowList('instr-course-list', 'instr-add-course-btn', courseRowHtml, function (row) {
+    window.TFC.initSmartSelects(row);
+  });
+  courseList.reset([]);
+
+  /* รูปภาพวิทยากร: กล่องเล็กแบบภาพติดบัตร เลือกไฟล์แล้วแสดงตัวอย่างในกล่องเดิม */
+  var photoSlot = document.getElementById('instr-photo-slot');
+  var photoInput = document.getElementById('instr-photo');
+  var photoPlaceholder = photoSlot.innerHTML;
+
+  function showPhoto(src) {
+    photoSlot.innerHTML = src
+      ? '<img src="' + src + '" alt="รูปวิทยากร">'
+      : photoPlaceholder;
+    if (!src) return;
+    /* input file ถูกแทนที่ไปพร้อม innerHTML จึงต้องผูกกลับเข้ามาใหม่ */
+    photoSlot.appendChild(photoInput);
+  }
+
+  photoSlot.addEventListener('click', function () { photoInput.click(); });
+  photoInput.addEventListener('click', function (e) { e.stopPropagation(); });
+  photoInput.addEventListener('change', function () {
+    var file = photoInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      if (window.TFC.showToast) window.TFC.showToast('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่', 'danger');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) { showPhoto(e.target.result); };
+    reader.readAsDataURL(file);
+  });
+
   window.TFC.renderPageHeader('instructor-page-header', {
     title: 'วิทยากร',
     actions: [
@@ -218,8 +285,9 @@
     document.getElementById('instr-form').reset();
     document.getElementById('instr-active').checked = true;
     document.getElementById('instr-active-label').textContent = 'ใช้งาน';
-    document.getElementById('instr-upload-list').innerHTML = '';
+    showPhoto('');
     expertiseList.reset([]);
+    courseList.reset([]);
     document.getElementById('instr-form').setAttribute('data-editing-id', '');
   }
   document.getElementById('instr-add-btn').addEventListener('click', resetForm);
@@ -236,8 +304,9 @@
     document.getElementById('instr-bio').value = instructor.bio || '';
     document.getElementById('instr-active').checked = instructor.active !== false;
     document.getElementById('instr-active-label').textContent = instructor.active !== false ? 'ใช้งาน' : 'ไม่ใช้งาน';
-    document.getElementById('instr-upload-list').innerHTML = '';
+    showPhoto(instructor.photo || '');
     expertiseList.reset(instructor.expertiseList || []);
+    courseList.reset(instructor.courseList || []);
     document.getElementById('instr-form').setAttribute('data-editing-id', instructor.id);
   });
 
@@ -311,16 +380,22 @@
     var expertiseValues = Array.from(expertiseList.container.querySelectorAll('input'))
       .map(function (input) { return input.value.trim(); })
       .filter(function (v) { return v; });
+    var courseValues = Array.from(courseList.container.querySelectorAll('select'))
+      .map(function (select) { return select.value; })
+      .filter(function (v) { return v; });
+    var photoImg = photoSlot.querySelector('img');
     var payload = {
       name: document.getElementById('instr-name').value,
       phone: document.getElementById('instr-phone').value,
       expertiseList: expertiseValues,
       expertise: expertiseValues.join(', '),
+      courseList: courseValues,
+      photo: photoImg ? photoImg.getAttribute('src') : '',
       bio: document.getElementById('instr-bio').value,
       active: document.getElementById('instr-active').checked,
       updatedBy: (mock.currentUser || {}).name || ''
     };
-    var save = editingId ? instructorSvc.update(editingId, payload) : instructorSvc.create(Object.assign({ activityCount: 0, photo: '' }, payload));
+    var save = editingId ? instructorSvc.update(editingId, payload) : instructorSvc.create(Object.assign({ activityCount: 0 }, payload));
     save.then(renderTable);
   });
 

@@ -448,8 +448,10 @@
 }
 
 .dynamic-row .input,
-.dynamic-row .select {
+.dynamic-row .select,
+.dynamic-row .smart-select {
   flex: 1;
+  min-width: 0;
 }
 
 .dynamic-row-remove {
@@ -3739,6 +3741,90 @@ a.activity-title:hover {
 .dynamic-row-add:hover {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
+}
+
+/* แถวย่อยที่ต้องเรียงให้ตรงกับ .form-row-3 ด้านบน (ฟิลด์กว้าง 2 คอลัมน์ ปุ่มอยู่คอลัมน์เดียวกับสถานะ)
+   ใช้ตารางคอลัมน์ชุดเดียวกับ .form-row-3 ความกว้างจึงตรงกันพอดี ไม่ใช่แค่ใกล้เคียง */
+.dynamic-row-list.is-cols-3 .dynamic-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  position: relative;
+}
+
+/* เลขลำดับย้ายไปซ้อนในช่องกรอก เพื่อไม่ให้กินความกว้างจนฟิลด์ไม่ตรงกับด้านบน */
+.dynamic-row-list.is-cols-3 .dynamic-row-order {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  pointer-events: none;
+}
+
+.dynamic-row-list.is-cols-3 .dynamic-row .input { padding-left: 32px; }
+
+.dynamic-row-list.is-cols-3 .dynamic-row .input,
+.dynamic-row-list.is-cols-3 .dynamic-row .select,
+.dynamic-row-list.is-cols-3 .dynamic-row .smart-select {
+  grid-column: span 2;
+}
+
+.dynamic-row-list.is-cols-3 .dynamic-row-remove {
+  justify-self: start;
+  align-self: center;
+}
+
+/* ปุ่ม + วางตรงกับปุ่มลบ คือจุดเริ่มของคอลัมน์ที่ 3 */
+.dynamic-row-add.is-cols-3 {
+  margin-left: calc((100% - var(--space-4) * 2) / 3 * 2 + var(--space-4) * 2);
+}
+
+/* ---------- ช่องแนบรูปติดบัตรขนาดเล็ก (ใช้ในฟอร์มวิทยากร) ---------- */
+.photo-form-row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.photo-slot {
+  width: 104px;
+  height: 128px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.photo-slot:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- ตารางแบบกรอกข้อมูลในแถว (รอบติดตามกลุ่มตัวอย่าง) — ฟอนต์เล็กลง ---------- */
+.data-table.is-compact th,
+.data-table.is-compact td {
+  font-size: var(--font-size-caption);
+  padding: var(--space-1) var(--space-2);
+}
+
+.data-table.is-compact .input,
+.data-table.is-compact .select {
+  height: 30px;
+  font-size: var(--font-size-caption);
+  padding: 0 var(--space-2);
 }
 
 /* ==========================================================================
