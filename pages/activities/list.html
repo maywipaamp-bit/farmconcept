@@ -91,16 +91,7 @@
 
       <div class="list-filter-bar">
         <div class="status-pills" id="activity-status-pills"></div>
-        <div class="search-input">
-          <span class="search-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
-          <input type="search" class="input" id="activity-search" placeholder="ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่">
-        </div>
-        <select class="select sort-select" id="activity-sort" aria-label="เรียงลำดับ">
-          <option value="updatedAt">แก้ไขล่าสุด</option>
-          <option value="startDate">วันที่จัดกิจกรรม</option>
-          <option value="name">ชื่อกิจกรรม</option>
-          <option value="registered">จำนวนผู้ลงทะเบียน</option>
-        </select>
+        <div class="ml-auto" id="activity-search-popover"></div>
       </div>
 
       <div class="activity-list" id="activity-list"></div>
@@ -223,20 +214,35 @@
     });
   }
 
-  var searchTimer = null;
-  document.getElementById('activity-search').addEventListener('input', function (e) {
-    clearTimeout(searchTimer);
-    var value = e.target.value;
-    searchTimer = setTimeout(function () {
-      state.search = value;
+  /* ช่องค้นหาและตัวเลือกเรียงลำดับ อยู่ในไอคอนแว่นขยาย (เปิดเป็นแผงลอย)
+     ค่าว่างของตัวเลือกเรียงลำดับ = "แก้ไขล่าสุด" จึงไม่ถูกนับเป็นตัวกรองที่ Active */
+  window.TFC.searchPopover('activity-search-popover', {
+    search: { id: 'activity-search', placeholder: 'ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่' },
+    filters: [
+      {
+        id: 'sort',
+        label: 'เรียงลำดับ',
+        placeholder: 'แก้ไขล่าสุด',
+        options: [
+          { value: 'startDate', label: 'วันที่จัดกิจกรรม' },
+          { value: 'name', label: 'ชื่อกิจกรรม' },
+          { value: 'registered', label: 'จำนวนผู้ลงทะเบียน' }
+        ]
+      }
+    ],
+    onSearch: function (values, done) {
+      state.search = values.keyword;
+      state.sort = values.filters.sort || 'updatedAt';
       state.page = 1;
       render();
-    }, 300);
-  });
-
-  document.getElementById('activity-sort').addEventListener('change', function (e) {
-    state.sort = e.target.value;
-    render();
+      done();
+    },
+    onClear: function () {
+      state.search = '';
+      state.sort = 'updatedAt';
+      state.page = 1;
+      render();
+    }
   });
 
   /* ---------- การ์ดกิจกรรม ---------- */
