@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผู้ลงทะเบียน | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">จัดการกิจกรรม</a> <span>/</span>
+          <span class="is-current">ผู้ลงทะเบียน</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- 1. หัวหน้า: ชื่อหน้า + กิจกรรมที่กำลังดู + ปุ่มการทำงาน -->
+      <div class="page-header" id="reg-page-header"></div>
+
+      <!-- 2. การ์ดตัวเลข 4 ใบ -->
+      <div class="reg-stats" id="reg-stats"></div>
+
+      <!-- 3. แท็บสถานะการเงิน + ปุ่มค้นหา -->
+      <div class="list-filter-bar">
+        <div class="status-pills" id="reg-status-pills"></div>
+        <div class="ml-auto" id="reg-search-popover"></div>
+      </div>
+
+      <!-- 4. ตารางรวมผู้เข้าร่วม + การชำระเงิน -->
+      <div class="card reg-card">
+        <div class="reg-scroll">
+          <div class="reg-head">
+            <div>#</div>
+            <div>ผู้เข้าร่วม</div>
+            <div>รหัสลงทะเบียน</div>
+            <div>วันที่สมัคร</div>
+            <div>การชำระเงิน</div>
+            <div class="text-right">ยอดชำระ</div>
+            <div>สถานะ</div>
+            <div></div>
+          </div>
+          <div id="reg-table-body"></div>
+        </div>
+        <div class="reg-foot" id="reg-foot"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reg-confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-warning mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </span>
+      <h3 class="modal-title mb-3">ยืนยันการรับเงิน</h3>
+      <p class="text-secondary" id="reg-confirm-message"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button class="btn btn-primary" id="reg-confirm-ok" data-close-modal>ยืนยันรับเงิน</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var mock = window.TFC_MOCK;
+  var esc = window.TFC.escapeHtml;
+  var PAGE_SIZES = [10, 20, 50];
+
+  /* กิจกรรมที่กำลังดู — รับผ่าน ?id= จากหน้ารายการกิจกรรม ถ้าไม่ระบุใช้กิจกรรมที่เปิดรับสมัครรายการแรก */
+  var params = new URLSearchParams(location.search);
+  var activities = mock.activities || [];
+  /* ถ้าไม่ได้ระบุ ?id= ให้เลือกกิจกรรมที่ "เปิดรับสมัคร และเก็บค่าใช้จ่าย" ก่อน
+     เพราะเป็นกรณีที่หน้านี้มีงานให้ทำจริง (ตรวจสลิป/ยืนยันรับเงิน)
+     ถ้าเลือกกิจกรรมฟรีเป็นค่าเริ่มต้น ทุกแถวจะเป็น "ยกเว้น" และการ์ดเงินเป็น 0 ทั้งหมด */
+  var activity = activities.filter(function (a) { return a.id === params.get('id'); })[0]
+    || activities.filter(function (a) { return a.status === 'เปิดรับสมัคร' && a.hasFee; })[0]
+    || activities.filter(function (a) { return a.hasFee; })[0]
+    || activities[0];
+
+  var state = { status: '', search: '', page: 1, pageSize: PAGE_SIZES[0] };
+  var confirmTargetId = null;
+
+  /* ---------- ปรับข้อมูลดิบให้มีฟิลด์ที่หน้านี้ต้องใช้ ----------
+     ชุดข้อมูลกลางเก็บ paymentStatus แค่ 4 ค่า และไม่มี "ยกเว้น"
+     กิจกรรมที่ไม่มีค่าใช้จ่าย (hasFee = false) จึงถือเป็น "ยกเว้น" ที่หน้านี้ */
+  function rowsOf(act) {
+    if (!act) return [];
+    return (mock.activityRegistrations[act.id] || []).map(function (r, i) {
+      var status = act.hasFee ? r.paymentStatus : 'ยกเว้น';
+      return {
+        id: r.id,
+        code: 'REG-' + act.id.slice(-3) + '-' + String(i + 1).padStart(3, '0'),
+        name: r.name,
+        phone: r.phone,
+        area: act.area || '-',
+        registeredAt: r.registeredAt,
+        status: status,
+        amount: status === 'ยกเว้น' ? null : (act.fee || 0)
+      };
+    });
+  }
+
+  var allRows = rowsOf(activity);
+
+  var STATUS_NOTE = {
+    'ชำระแล้ว': 'โอนผ่านแอป',
+    'รอตรวจสอบ': 'แนบสลิปแล้ว · รอตรวจสอบ',
+    'ยังไม่ชำระ': 'ยังไม่แนบหลักฐาน',
+    'ปฏิเสธ': 'หลักฐานไม่ถูกต้อง',
+    'ยกเว้น': 'ยกเว้นค่าใช้จ่าย'
+  };
+
+  var STATUS_TONE = {
+    'ชำระแล้ว': 'is-success',
+    'รอตรวจสอบ': 'is-warning',
+    'ยังไม่ชำระ': 'is-danger',
+    'ปฏิเสธ': 'is-danger',
+    'ยกเว้น': 'is-neutral'
+  };
+
+  var PILLS = ['ทั้งหมด', 'ชำระแล้ว', 'รอตรวจสอบ', 'ยังไม่ชำระ', 'ยกเว้น'];
+
+  function countOf(status) {
+    return status ? allRows.filter(function (r) { return r.status === status; }).length : allRows.length;
+  }
+
+  function shortDate(iso) {
+    return iso ? window.TFC.formatThaiDate(iso).replace(/\d{2}(\d{2})$/, '$1') : '-';
+  }
+
+  function baht(n) {
+    return n == null ? '—' : Number(n).toLocaleString('th-TH') + ' ฿';
+  }
+
+  /* ---------- 1. หัวหน้า ---------- */
+  window.TFC.renderPageHeader('reg-page-header', {
+    title: 'ผู้ลงทะเบียน',
+    actions: [
+      { label: 'ส่งออก Excel', variant: 'outline',
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>',
+        attrs: { id: 'reg-export' } },
+      { label: 'เพิ่มผู้ลงทะเบียน', variant: 'primary',
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+        attrs: { id: 'reg-add-btn' } }
+    ]
+  });
+
+  /* ---------- แถวกิจกรรมที่กำลังดู + ปุ่มเปลี่ยนกิจกรรม ----------
+     ใช้ปุ่ม + popover ตามแบบ แทนที่จะเป็น <select> ธรรมดา เพราะแต่ละตัวเลือก
+     ต้องแสดงสองบรรทัด (ชื่อกิจกรรม + วันที่/จำนวนรับ/ค่าใช้จ่าย) ซึ่ง <option> ทำไม่ได้
+     เปลี่ยนแล้วอัปเดต ?id= ใน URL ด้วย เพื่อให้ refresh หรือแชร์ลิงก์แล้วยังอยู่กิจกรรมเดิม */
+  function activityMeta(a) {
+    var fee = a.hasFee ? Number(a.fee || 0).toLocaleString('th-TH') + ' ฿' : 'ไม่มีค่าใช้จ่าย';
+    return window.TFC.formatThaiDate(a.startDate) + ' · รับ ' + (a.capacity || 0) + ' คน · ' + fee;
+  }
+
+  function renderPicker() {
+    var text = document.querySelector('#reg-page-header .page-header-text');
+    if (!text || !activity) return;
+
+    var old = text.querySelector('.reg-activity-bar');
+    if (old) old.remove();
+
+    var bar = document.createElement('div');
+    bar.className = 'reg-activity-bar';
+    bar.innerHTML =
+      '<span class="reg-activity-name">' + esc(activity.name) + '</span>' +
+      '<span class="reg-activity-code">' + esc(activity.id) + '</span>' +
+      '<div class="reg-picker">' +
+      '<button type="button" class="reg-picker-btn" id="reg-picker-btn" aria-expanded="false" aria-haspopup="listbox">' +
+      '<span>เปลี่ยนกิจกรรม</span>' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 10l4 4 4-4"/></svg>' +
+      '</button>' +
+      '<div class="reg-picker-panel" id="reg-picker-panel" role="listbox" hidden>' +
+      '<span class="reg-picker-title">เลือกกิจกรรม</span>' +
+      activities.map(function (a) {
+        return '<button type="button" class="reg-picker-item' + (a.id === activity.id ? ' is-active' : '') +
+          '" role="option" aria-selected="' + (a.id === activity.id) + '" data-activity="' + esc(a.id) + '">' +
+          '<span class="reg-picker-item-name">' + esc(a.name) + '</span>' +
+          '<span class="reg-picker-item-meta">' + esc(activityMeta(a)) + '</span>' +
+          '</button>';
+      }).join('') +
+      '</div></div>';
+    text.appendChild(bar);
+  }
+
+  function closePicker() {
+    var panel = document.getElementById('reg-picker-panel');
+    var btn = document.getElementById('reg-picker-btn');
+    if (panel) panel.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('#reg-picker-btn');
+    if (toggle) {
+      var panel = document.getElementById('reg-picker-panel');
+      var open = panel.hidden;
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      return;
+    }
+
+    var item = e.target.closest('[data-activity]');
+    if (item) {
+      var next = activities.filter(function (a) { return a.id === item.getAttribute('data-activity'); })[0];
+      closePicker();
+      if (!next || next.id === activity.id) return;
+      activity = next;
+      allRows = rowsOf(activity);
+      state.status = '';
+      state.search = '';
+      state.page = 1;
+      history.replaceState(null, '', location.pathname + '?id=' + encodeURIComponent(activity.id));
+      renderPicker();
+      renderStats();
+      renderPills();
+      render();
+      return;
+    }
+
+    if (!e.target.closest('.reg-picker')) closePicker();
+  });
+
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePicker(); });
+
+  /* ---------- 2. การ์ดตัวเลข ---------- */
+  function renderStats() {
+    var paid = allRows.filter(function (r) { return r.status === 'ชำระแล้ว'; });
+    var waiting = countOf('รอตรวจสอบ');
+    var unpaidRows = allRows.filter(function (r) { return r.status === 'ยังไม่ชำระ' || r.status === 'ปฏิเสธ'; });
+    var unpaidSum = unpaidRows.reduce(function (s, r) { return s + (r.amount || 0); }, 0);
+    var cap = activity ? (activity.capacity || 0) : 0;
+    var left = Math.max(0, cap - allRows.length);
+
+    var paidSum = paid.reduce(function (s, r) { return s + (r.amount || 0); }, 0);
+
+    var cards = [
+      { label: 'ผู้ลงทะเบียนทั้งหมด', value: allRows.length + ' / ' + cap, note: 'เหลือรับได้อีก ' + left + ' คน', tone: '' },
+      { label: 'ชำระแล้ว', value: paid.length + ' คน', note: 'จาก ' + allRows.length + ' คน', tone: 'is-success' },
+      { label: 'รอตรวจสอบสลิป', value: waiting + ' คน', note: 'ต้องยืนยันภายในวันนี้', tone: 'is-warning' },
+      /* เดิมเป็น "ค้างชำระ" — เปลี่ยนเป็นยอดที่เก็บได้จริง เพราะเป็นตัวเลขที่ผู้ดูแลต้องรู้ก่อน
+         ส่วนยอดค้างย้ายไปเป็นบรรทัดหมายเหตุใต้ตัวเลขแทน */
+      { label: 'ยอดเงินที่ได้รับแล้ว', value: baht(paidSum),
+        note: unpaidSum > 0 ? 'ค้างอีก ' + baht(unpaidSum) + ' · ' + unpaidRows.length + ' คน' : 'เก็บครบทุกรายการแล้ว',
+        tone: 'is-success' }
+    ];
+
+    document.getElementById('reg-stats').innerHTML = cards.map(function (c) {
+      return '<div class="reg-stat">' +
+        '<span class="reg-stat-label">' + esc(c.label) + '</span>' +
+        '<span class="reg-stat-value ' + c.tone + '">' + esc(c.value) + '</span>' +
+        '<span class="reg-stat-note">' + esc(c.note) + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* ---------- 3. แท็บสถานะ ---------- */
+  function renderPills() {
+    document.getElementById('reg-status-pills').innerHTML = PILLS.map(function (label) {
+      var value = label === 'ทั้งหมด' ? '' : label;
+      var active = state.status === value;
+      return '<button type="button" class="status-pill' + (active ? ' is-active' : '') + '" data-status="' + esc(value) + '">' +
+        '<span>' + esc(label) + '</span><span class="status-pill-count">' + countOf(value) + '</span></button>';
+    }).join('');
+  }
+
+  document.getElementById('reg-status-pills').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-status]');
+    if (!btn) return;
+    state.status = btn.getAttribute('data-status');
+    state.page = 1;
+    renderPills();
+    render();
+  });
+
+  /* ---------- 4. ตาราง ---------- */
+  function filtered() {
+    var kw = state.search.trim().toLowerCase();
+    return allRows.filter(function (r) {
+      if (state.status && r.status !== state.status) return false;
+      if (!kw) return true;
+      return (r.name + ' ' + r.phone + ' ' + r.code).toLowerCase().indexOf(kw) !== -1;
+    });
+  }
+
+  function rowHtml(r, index) {
+    /* ปุ่ม "ยืนยันรับเงิน" ขึ้นเฉพาะรายการที่ยังต้องเก็บเงินจริง
+       รายการที่ชำระแล้วหรือได้รับยกเว้น แสดงเป็นข้อความจางแทน ไม่ให้กดซ้ำได้ */
+    var needAction = r.status === 'รอตรวจสอบ' || r.status === 'ยังไม่ชำระ' || r.status === 'ปฏิเสธ';
+    var actionHtml = needAction
+      ? '<button type="button" class="btn btn-primary btn-sm" data-confirm-pay="' + esc(r.id) + '">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>ยืนยันรับเงิน</button>'
+      : '<span class="reg-done">' + (r.status === 'ยกเว้น' ? 'ไม่ต้องชำระ' : 'รับเงินแล้ว') + '</span>';
+
+    return '<div class="reg-row" data-id="' + esc(r.id) + '">' +
+      '<div class="reg-no">' + index + '</div>' +
+      '<div class="reg-person">' +
+      '<span class="cell-avatar">' + esc(r.name.charAt(0)) + '</span>' +
+      '<div class="reg-person-text">' +
+      '<span class="reg-name">' + esc(r.name) + '</span>' +
+      '<span class="reg-sub">' + esc(r.phone) + ' · ' + esc(r.area) + '</span>' +
+      '</div></div>' +
+      '<div class="reg-code">' + esc(r.code) + '</div>' +
+      '<div class="reg-date">' + esc(shortDate(r.registeredAt)) + '</div>' +
+      '<div class="reg-pay">' +
+      '<span class="reg-badge ' + STATUS_TONE[r.status] + '">' + esc(r.status) + '</span>' +
+      '<span class="reg-note">' + esc(STATUS_NOTE[r.status] || '') + '</span>' +
+      '</div>' +
+      '<div class="reg-amount">' + esc(baht(r.amount)) + '</div>' +
+      '<div class="reg-action">' + actionHtml + '</div>' +
+      '<div class="reg-menu">' + window.TFC.actionMenuTrigger([
+        { key: 'reg-view-' + r.id, label: 'ดูรายละเอียด', icon: 'view', perm: 'activities' },
+        { key: 'reg-remove-' + r.id, label: 'ลบผู้ลงทะเบียน', icon: 'delete', perm: 'activities', danger: true }
+      ]) + '</div>' +
+      '</div>';
+  }
+
+  var EMPTY_HTML = '<div class="state-placeholder">' +
+    '<span class="state-placeholder-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>' +
+    '<div class="state-placeholder-title">ไม่พบผู้ลงทะเบียนในเงื่อนไขนี้</div>' +
+    '<div class="state-placeholder-desc">ลองเปลี่ยนสถานะที่เลือกไว้ หรือล้างคำค้นหาแล้วดูรายการทั้งหมดอีกครั้ง</div></div>';
+
+  function render() {
+    var rows = filtered();
+    var pageCount = Math.max(1, Math.ceil(rows.length / state.pageSize));
+    if (state.page > pageCount) state.page = pageCount;
+    var start = (state.page - 1) * state.pageSize;
+    var pageRows = rows.slice(start, start + state.pageSize);
+
+    /* ลำดับนับต่อเนื่องข้ามหน้า ไม่ใช่เริ่ม 1 ใหม่ทุกหน้า */
+    document.getElementById('reg-table-body').innerHTML = rows.length
+      ? pageRows.map(function (r, i) { return rowHtml(r, start + i + 1); }).join('')
+      : EMPTY_HTML;
+
+    document.getElementById('reg-foot').innerHTML =
+      '<span class="reg-foot-text">แสดง ' + (rows.length ? start + 1 : 0) + '–' + (start + pageRows.length) +
+      ' จาก ' + rows.length + ' คน</span>' +
+      '<div id="reg-pagination"></div>';
+
+    window.TFC.renderPagination('reg-pagination', {
+      page: state.page,
+      pageSize: state.pageSize,
+      total: rows.length,
+      pageSizeOptions: PAGE_SIZES,
+      onChange: function (p) { state.page = p; render(); },
+      onPageSizeChange: function (size) { state.pageSize = size; state.page = 1; render(); }
+    });
+  }
+
+  /* ยืนยันรับเงิน */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-confirm-pay]');
+    if (!btn) return;
+    confirmTargetId = btn.getAttribute('data-confirm-pay');
+    var row = allRows.filter(function (r) { return r.id === confirmTargetId; })[0];
+    if (!row) return;
+    document.getElementById('reg-confirm-message').textContent =
+      'ยืนยันว่าได้รับเงิน ' + baht(row.amount) + ' จาก ' + row.name + ' แล้วใช่หรือไม่';
+    document.getElementById('reg-confirm-modal').classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  document.getElementById('reg-confirm-ok').addEventListener('click', function () {
+    var row = allRows.filter(function (r) { return r.id === confirmTargetId; })[0];
+    if (!row) return;
+    row.status = 'ชำระแล้ว';
+    confirmTargetId = null;
+    renderStats();
+    renderPills();
+    render();
+    if (window.TFC.showToast) window.TFC.showToast('บันทึกการรับเงินเรียบร้อยแล้ว', 'success');
+  });
+
+  /* แผงค้นหา — ใช้ component กลางเดียวกับหน้ารายการอื่น */
+  window.TFC.attachListToolbar({
+    popoverId: 'reg-search-popover',
+    search: { id: 'reg-search', placeholder: 'ชื่อ เบอร์โทร หรือรหัสลงทะเบียน' },
+    filters: [],
+    onApply: function (values, done) {
+      var input = document.getElementById('reg-search');
+      state.search = input ? input.value : '';
+      state.page = 1;
+      render();
+      done();
+    }
+  });
+
+  /* ส่งออก Excel — สร้างแถวจากข้อมูลที่กรองอยู่โดยตรง ไม่ใช้ exportTableCsv
+     เพราะตัวนั้นอ่านจาก thead/tbody ของ <table> จริง แต่ตารางหน้านี้เป็น CSS grid */
+  document.getElementById('reg-export').addEventListener('click', function () {
+    var rows = filtered().map(function (r, i) {
+      return [i + 1, r.code, r.name, r.phone, window.TFC.formatThaiDate(r.registeredAt),
+        r.status, r.amount == null ? '' : r.amount];
+    });
+    window.TFC.exportCsv('ผู้ลงทะเบียน-' + activity.id + '.csv',
+      ['#', 'รหัสลงทะเบียน', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'วันที่สมัคร', 'สถานะการชำระ', 'ยอดชำระ'], rows);
+  });
+
+  renderPicker();
+  renderStats();
+  renderPills();
+  render();
+})();
+</script>
+</body>
+</html>

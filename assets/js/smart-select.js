@@ -18,6 +18,9 @@ window.TFC = window.TFC || {};
   function closePanel() {
     if (activePanel) {
       activePanel.classList.remove('is-open');
+      /* คืนแผงกลับเข้า widget เดิม (ดูหมายเหตุ portal ที่ openPanel) */
+      if (activeWidget && activePanel.parentNode === document.body) activeWidget.appendChild(activePanel);
+      activePanel.style.left = activePanel.style.top = activePanel.style.width = '';
       if (activeWidget) activeWidget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'false');
     }
     activePanel = null;
@@ -53,8 +56,18 @@ window.TFC = window.TFC || {};
   function rebuildOptionsList(widget, select) {
     var panel = widget.querySelector('.smart-select-panel');
     var list = panel.querySelector('.smart-select-options');
+    /* รองรับ <optgroup> — แสดงชื่อกลุ่มเป็นหัวข้อตัวหนา แล้วตัวเลือกใต้กลุ่มเป็นตัวบาง
+       ทำให้เห็นลำดับชั้นว่าตัวเลือกนั้นอยู่ใต้กลุ่มใด (เช่น หลักสูตรอยู่ใต้โปรแกรมใด) */
+    var lastGroup = null;
     list.innerHTML = Array.from(select.options).map(function (opt) {
-      return '<button type="button" class="dropdown-item smart-select-option" role="option" data-value="' +
+      var html = '';
+      var group = opt.parentElement && opt.parentElement.tagName === 'OPTGROUP'
+        ? opt.parentElement.getAttribute('label') : null;
+      if (group && group !== lastGroup) {
+        html += '<div class="smart-select-group">' + window.TFC.escapeHtml(group) + '</div>';
+      }
+      lastGroup = group;
+      return html + '<button type="button" class="dropdown-item smart-select-option" role="option" data-value="' +
         window.TFC.escapeHtml(opt.value) + '">' + window.TFC.escapeHtml(opt.textContent) + '</button>';
     }).join('');
   }
@@ -83,19 +96,49 @@ window.TFC = window.TFC || {};
     filterOptions(panel, '');
     panel.classList.add('is-open');
 
-    /* ที่ว่างด้านล่างไม่พอ -> กางขึ้นด้านบนแทน จะได้ไม่ดันให้กรอบเลื่อนยาวออกไป */
-    panel.classList.remove('is-above');
-    var rect = trigger0(widget).getBoundingClientRect();
-    var needed = panel.scrollHeight + 16;
-    if (window.innerHeight - rect.bottom < needed && rect.top > window.innerHeight - rect.bottom) {
-      panel.classList.add('is-above');
-    }
+    /* ย้ายแผงไปแขวนไว้ที่ <body> ชั่วคราว (portal)
+       เหตุผล: .modal มี transform จาก animation ตอนเปิด ซึ่งทำให้ตัวมันกลายเป็น containing block
+       ของลูกที่เป็น position: fixed — แผงจึงยังติดอยู่ในกรอบ popup และยังดันพื้นที่เลื่อนเหมือนเดิม
+       การย้ายออกมาที่ body ทำให้ fixed อิงกับ viewport จริง ๆ
+       event listener ทั้งหมดผูกไว้กับตัว element โดยตรง จึงย้ายตามไปด้วยและยังทำงานปกติ */
+    document.body.appendChild(panel);
+    positionPanel(widget, panel);
     widget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'true');
     activePanel = panel;
     activeWidget = widget;
     highlightIndex = -1;
     setTimeout(function () { search.focus(); }, 0);
   }
+
+  /* วางแผงตัวเลือกแบบ fixed อิงพิกัดจริงของปุ่มบนหน้าจอ
+     แผงจึงลอยอยู่เหนือทุกอย่าง ไม่ถูกนับเป็นพื้นที่เลื่อนของ .modal-body
+     (เดิมเป็น absolute ทำให้ฟอร์มใน popup มีที่ว่างท้ายกรอบทุกครั้งที่กางเมนู) */
+  function positionPanel(widget, panel) {
+    var rect = trigger0(widget).getBoundingClientRect();
+    var gap = 8;
+    var height = panel.offsetHeight;
+    var below = window.innerHeight - rect.bottom;
+
+    panel.style.width = rect.width + 'px';
+    panel.style.left = rect.left + 'px';
+
+    /* ที่ว่างด้านล่างไม่พอ และด้านบนมีมากกว่า -> กางขึ้นด้านบนแทน */
+    if (below < height + gap && rect.top > below) {
+      panel.style.top = Math.max(gap, rect.top - height - gap) + 'px';
+    } else {
+      panel.style.top = (rect.bottom + gap) + 'px';
+    }
+  }
+
+  /* ปุ่มเลื่อนไปตามการ scroll ของฟอร์ม แผงที่เป็น fixed จะไม่เลื่อนตามเอง
+     จึงต้องคำนวณตำแหน่งใหม่ (true = ดักตอน capture เพื่อให้ได้ scroll ของ .modal-body ด้วย) */
+  window.addEventListener('scroll', function () {
+    if (activePanel && activeWidget) positionPanel(activeWidget, activePanel);
+  }, true);
+
+  window.addEventListener('resize', function () {
+    if (activePanel && activeWidget) positionPanel(activeWidget, activePanel);
+  });
 
   function filterOptions(panel, keyword) {
     var kw = keyword.trim().toLowerCase();
@@ -321,7 +364,9 @@ window.TFC = window.TFC || {};
   window.TFC.initSmartSelects(document);
 
   document.addEventListener('click', function (e) {
-    if (activePanel && !activeWidget.contains(e.target)) closePanel();
+    /* ต้องเช็ค activePanel ด้วย เพราะตอนกางออกแผงถูกย้ายไปอยู่ที่ <body>
+       activeWidget จึงไม่ได้ครอบมันแล้ว ถ้าเช็คแค่ widget การคลิกในแผงจะถูกนับเป็นคลิกข้างนอก */
+    if (activePanel && !activeWidget.contains(e.target) && !activePanel.contains(e.target)) closePanel();
   });
 
   document.addEventListener('keydown', function (e) {

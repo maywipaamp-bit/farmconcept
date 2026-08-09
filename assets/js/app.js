@@ -32,6 +32,47 @@ window.TFC = window.TFC || {};
 
   /* window.TFC.escapeHtml now lives in mock-data.js (loads first on every page, before this file) */
 
+  /* อ่านไฟล์รูปเป็น data URL พร้อมตรวจชนิดไฟล์และขนาด — ใช้ร่วมกันทุกหน้าที่ให้อัปโหลดรูป
+     (โปรไฟล์ / วิทยากร / ผู้ใช้งาน) จะได้ไม่ต้องเขียน FileReader + validation ซ้ำ */
+  window.TFC.readImageFile = function (file, opts, onLoad) {
+    opts = opts || {};
+    var maxMB = opts.maxMB || 2;
+    if (!file) return;
+
+    function fail(message) {
+      if (window.TFC.showToast) window.TFC.showToast(message, 'danger');
+    }
+    if (file.type && file.type.indexOf('image/') !== 0) return fail('รองรับเฉพาะไฟล์รูปภาพเท่านั้น');
+    if (file.size > maxMB * 1024 * 1024) return fail('ไฟล์ใหญ่เกิน ' + maxMB + ' MB กรุณาเลือกไฟล์ใหม่');
+
+    var reader = new FileReader();
+    reader.onload = function (e) { onLoad(e.target.result); };
+    reader.readAsDataURL(file);
+  };
+
+  /* ผูกช่องเลือกไฟล์เข้ากับกรอบพรีวิวรูปวงกลม (.profile-avatar / .cell-avatar ใช้โครงเดียวกัน:
+     ตัวย่อชื่อเป็นข้อความ + <img> ทับด้านบนเมื่อมีรูป) คืน { set, get } ให้ฟอร์มสั่งงานได้
+     TFC.attachAvatarPicker(previewEl, inputEl, { maxMB }) */
+  window.TFC.attachAvatarPicker = function (preview, input, opts) {
+    function set(src) {
+      var img = preview.querySelector('img');
+      if (!src) {
+        if (img) img.remove();
+        return;
+      }
+      if (!img) { img = document.createElement('img'); img.alt = ''; preview.appendChild(img); }
+      img.src = src;
+    }
+
+    if (input) {
+      input.addEventListener('change', function () {
+        window.TFC.readImageFile(input.files && input.files[0], opts, set);
+      });
+    }
+
+    return { set: set, get: function () { var img = preview.querySelector('img'); return img ? img.getAttribute('src') : ''; } };
+  };
+
   /* Simulate a short async load, then swap loading -> content (used by [data-loading-target]) */
   window.TFC.simulateLoad = function (loadingEl, contentEl, delay) {
     setTimeout(function () {

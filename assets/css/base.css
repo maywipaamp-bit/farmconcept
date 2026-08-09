@@ -34,7 +34,9 @@ body {
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-base);
-  color: var(--color-text-primary);
+  /* เนื้อหาทั่วไปใช้ระดับ body (#374151) ไม่ใช่ primary (#1F2937)
+     เพื่อให้หัวข้อและคอลัมน์หลักเด่นขึ้นมาด้วย "สี" แทนการใช้ตัวหนา */
+  color: var(--color-text-body);
   background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
 }
@@ -43,7 +45,7 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 0 var(--space-3);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
-  color: var(--color-text-primary);
+  color: var(--color-text-strong);
 }
 
 h1 { font-size: var(--font-size-page-title); }
@@ -52,6 +54,14 @@ h3 { font-size: var(--font-size-card-title); }
 
 p {
   margin: 0 0 var(--space-3);
+}
+
+/* ค่า default ของเบราว์เซอร์สำหรับ strong/b คือ bolder (700) ซึ่ง CLAUDE.md กฎข้อ 1 ห้ามใช้
+   ปรับลงเป็น 500 พร้อมเข้มสีขึ้นหนึ่งระดับ — เน้นด้วย "สี" ก่อน แล้วจึงเป็นน้ำหนัก
+   แก้ที่นี่จุดเดียวแทนการไล่เปลี่ยน <strong> ทุกจุดในมาร์กอัป */
+strong, b {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 a {

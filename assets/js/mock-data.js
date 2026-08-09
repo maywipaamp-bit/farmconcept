@@ -2,11 +2,16 @@
 window.TFC_MOCK = {
   /* ผู้ใช้เดโม: ใช้บทบาท "ผู้ดูแลโครงการ" เพื่อให้เห็นและใช้งานเมนูพื้นฐาน (master_data) ได้ครบ
      ถ้าเปลี่ยนกลับเป็น staff เมนูจัดการในหน้าข้อมูลพื้นฐานจะขึ้นว่า "ไม่มีสิทธิ์ดำเนินการ" ตามระบบสิทธิ์ */
+  /* ใช้กับ topbar และ Popup "โปรไฟล์ของฉัน" (assets/js/profile-modal.js)
+     แก้ไขได้เฉพาะ avatar / name / phone / password — username กับ role อ่านอย่างเดียว */
   currentUser: {
     name: 'วีระ ศรีสมบัติ',
+    phone: '082-222-3333',
+    username: 'weera.s',
     role: 'ผู้ดูแลโครงการ',
     roleCode: 'project_admin',
-    initials: 'วร'
+    initials: 'วร',
+    avatar: ''
   },
 
   notifications: [
@@ -282,7 +287,7 @@ window.TFC_MOCK = {
       coordinator: 'วีระ ศรีสมบัติ', coordinatorPhone: '082-222-3333', coordinatorPosition: 'หัวหน้าพื้นที่ต้นแบบ',
       mapUrl: 'https://maps.google.com/?q=The+Farm+Concept+บางนา', status: 'ดำเนินการอยู่',
       activityCount: 6, totalParticipants: 172, avgSatisfaction: 4.6,
-      updatedAt: '2026-08-01', updatedBy: 'สุนิสา แก้วมณี'
+      updatedAt: '2026-08-01', updatedBy: 'แอมมี่'
     },
     {
       id: 'AREA-002', name: 'ชุมชนพูนทรัพย์', province: 'กรุงเทพมหานคร', district: 'เขตสายไหม',
@@ -291,7 +296,7 @@ window.TFC_MOCK = {
       coordinator: 'อรุณี ทองสุข', coordinatorPhone: '081-111-2222', coordinatorPosition: 'ผู้ประสานงานชุมชน',
       mapUrl: 'https://maps.google.com/?q=ชุมชนพูนทรัพย์+เขตสายไหม', status: 'ดำเนินการอยู่',
       activityCount: 4, totalParticipants: 98, avgSatisfaction: 4.7,
-      updatedAt: '2026-07-28', updatedBy: 'สุนิสา แก้วมณี'
+      updatedAt: '2026-07-28', updatedBy: 'แอมมี่'
     },
     {
       id: 'AREA-003', name: 'ชุมชนตึกร้าง', province: 'กรุงเทพมหานคร', district: 'เขตบางพลัด',
@@ -358,11 +363,11 @@ window.TFC_MOCK = {
   ],
 
   users: [
-    { id: 'USR-001', name: 'สุนิสา แก้วมณี', username: 'sunisa01', email: 'sunisa@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนพูนทรัพย์', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' },
-    { id: 'USR-002', name: 'วีระ ศรีสมบัติ', username: 'weera02', email: 'weera@thefarmconcept.org', role: 'ผู้ดูแลโครงการ', roles: ['ผู้ดูแลโครงการ', 'เจ้าหน้าที่โครงการ'], area: 'The Farm Concept', status: 'ใช้งานอยู่', lastLogin: '2026-08-02' },
-    { id: 'USR-003', name: 'ปิยะดา รุ่งเรือง', username: 'piyada03', email: 'piyada@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ระงับการใช้งาน', lastLogin: '2026-07-20' },
-    { id: 'USR-004', name: 'ธนากร ใจดี', username: 'thanakorn04', email: 'thanakorn@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ใช้งานอยู่', lastLogin: '2026-08-01' },
-    { id: 'USR-005', name: 'อรุณี ทองสุข', username: 'arunee05', email: 'arunee@thefarmconcept.org', role: 'ผู้ดูแลระบบสูงสุด', roles: ['ผู้ดูแลระบบสูงสุด'], area: 'ส่วนกลาง', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' }
+    { id: 'USR-001', name: 'สุนิสา แก้วมณี', username: 'sunisa01', avatar: '', email: 'sunisa@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนพูนทรัพย์', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' },
+    { id: 'USR-002', name: 'วีระ ศรีสมบัติ', username: 'weera02', avatar: '', email: 'weera@thefarmconcept.org', role: 'ผู้ดูแลโครงการ', roles: ['ผู้ดูแลโครงการ', 'เจ้าหน้าที่โครงการ'], area: 'The Farm Concept', status: 'ใช้งานอยู่', lastLogin: '2026-08-02' },
+    { id: 'USR-003', name: 'ปิยะดา รุ่งเรือง', username: 'piyada03', avatar: '', email: 'piyada@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ระงับการใช้งาน', lastLogin: '2026-07-20' },
+    { id: 'USR-004', name: 'ธนากร ใจดี', username: 'thanakorn04', avatar: '', email: 'thanakorn@thefarmconcept.org', role: 'เจ้าหน้าที่โครงการ', roles: ['เจ้าหน้าที่โครงการ'], area: 'ชุมชนตึกร้าง', status: 'ใช้งานอยู่', lastLogin: '2026-08-01' },
+    { id: 'USR-005', name: 'อรุณี ทองสุข', username: 'arunee05', avatar: '', email: 'arunee@thefarmconcept.org', role: 'ผู้ดูแลระบบสูงสุด', roles: ['ผู้ดูแลระบบสูงสุด'], area: 'ส่วนกลาง', status: 'ใช้งานอยู่', lastLogin: '2026-08-03' }
   ],
 
   roles: [
@@ -376,12 +381,9 @@ window.TFC_MOCK = {
          it does NOT replace `permissions` above, which is what TFC.hasPermission() still checks for
          gating existing row actions (edit/delete buttons etc.) across the whole app. */
       menuPermissions: {
-        'dashboard': true, 'all-participants': true,
-        'activities': true, 'activities-list': true, 'activities-registrations': true, 'activities-payments': true, 'activities-checkin': true, 'activities-satisfaction': true,
-        'health-change': true, 'health-change-followup': true, 'health-change-reminders': true,
-        'evaluation-forms': true, 'evaluation-forms-manage': true,
-        'reports': true, 'reports-activities': true, 'reports-areas': true, 'reports-participants': true, 'reports-target-groups': true, 'reports-samples': true, 'reports-individual': true,
-        'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true, 'master-data-sample-rounds': true,
+        'dashboard': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
         'users': true, 'users-list': true, 'users-roles': true
       }
     },
@@ -389,15 +391,14 @@ window.TFC_MOCK = {
       id: 'ROLE-002', name: 'ผู้ดูแลโครงการ', code: 'project_admin',
       description: 'จัดการพื้นที่ กิจกรรม และรายงานภายในโครงการที่รับผิดชอบ',
       userCount: 2, active: true,
-      permissions: { project: false, users: false, areas: true, master_data: true, activities: true, payments: true, evaluations: true, reports: true },
+      permissions: { project: false, users: true, areas: true, master_data: true, activities: true, payments: true, evaluations: true, reports: true },
+      /* เมนู "ผู้ใช้งาน" แสดงให้บทบาทนี้อยู่แล้วในแถบเมนูซ้าย จึงต้องเปิดสิทธิ์ให้ตรงกัน
+         ไม่งั้นเข้าหน้าได้แต่เมนู ⋮ ในตารางขึ้น "ไม่มีสิทธิ์ดำเนินการ" */
       menuPermissions: {
-        'dashboard': true, 'all-participants': true,
-        'activities': true, 'activities-list': true, 'activities-registrations': true, 'activities-payments': true, 'activities-checkin': true, 'activities-satisfaction': true,
-        'health-change': true, 'health-change-followup': true, 'health-change-reminders': true,
-        'evaluation-forms': true, 'evaluation-forms-manage': true,
-        'reports': true, 'reports-activities': true, 'reports-areas': true, 'reports-participants': true, 'reports-target-groups': true, 'reports-samples': true, 'reports-individual': true,
-        'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true, 'master-data-sample-rounds': true,
-        'users': false, 'users-list': false, 'users-roles': false
+        'dashboard': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
+        'users': true, 'users-list': true, 'users-roles': true
       }
     },
     {
@@ -406,12 +407,9 @@ window.TFC_MOCK = {
       userCount: 3, active: true,
       permissions: { project: false, users: false, areas: false, master_data: false, activities: true, payments: true, evaluations: true, reports: false },
       menuPermissions: {
-        'dashboard': true, 'all-participants': true,
-        'activities': true, 'activities-list': true, 'activities-registrations': true, 'activities-payments': true, 'activities-checkin': true, 'activities-satisfaction': true,
-        'health-change': true, 'health-change-followup': true, 'health-change-reminders': true,
-        'evaluation-forms': true, 'evaluation-forms-manage': true,
-        'reports': false, 'reports-activities': false, 'reports-areas': false, 'reports-participants': false, 'reports-target-groups': false, 'reports-samples': false, 'reports-individual': false,
-        'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false, 'master-data-sample-rounds': false,
+        'dashboard': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
     },
@@ -421,12 +419,9 @@ window.TFC_MOCK = {
       userCount: 337, active: true,
       permissions: { project: false, users: false, areas: false, master_data: false, activities: false, payments: false, evaluations: false, reports: false },
       menuPermissions: {
-        'dashboard': false, 'all-participants': false,
-        'activities': false, 'activities-list': false, 'activities-registrations': false, 'activities-payments': false, 'activities-checkin': false, 'activities-satisfaction': false,
-        'health-change': false, 'health-change-followup': false, 'health-change-reminders': false,
-        'evaluation-forms': false, 'evaluation-forms-manage': false,
-        'reports': false, 'reports-activities': false, 'reports-areas': false, 'reports-participants': false, 'reports-target-groups': false, 'reports-samples': false, 'reports-individual': false,
-        'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false, 'master-data-sample-rounds': false,
+        'dashboard': false,
+        'activities': false, 'activities-list': false, 'activities-registrants': false,
+        'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
     }
@@ -440,7 +435,9 @@ window.TFC_MOCK = {
     { key: 'activities', label: 'จัดการกิจกรรม' },
     { key: 'payments', label: 'ตรวจสอบการชำระเงิน' },
     { key: 'evaluations', label: 'จัดการแบบประเมิน' },
-    { key: 'reports', label: 'ดูรายงาน' }
+    /* เมนู "รายงาน" ถูกลบออกจากระบบแล้ว สิทธิ์นี้จึงเหลือหน้าที่คุมปุ่ม Export
+       และปุ่ม "รายงานผล" ของโมดูลแบบฟอร์มเท่านั้น */
+    { key: 'reports', label: 'ดูรายงานผลและส่งออกข้อมูล' }
   ],
 
   programs: [
@@ -530,19 +527,31 @@ window.TFC_MOCK = {
   ],
 
   activityFormats: [
-    { id: 'FMT-001', name: 'CRAFT', active: true, badgeColor: 'primary', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'FMT-002', name: 'MIND', active: true, badgeColor: 'info', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'FMT-003', name: 'FOOD', active: true, badgeColor: 'warning', updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ' },
-    { id: 'FMT-004', name: 'WORKSHOP', active: true, badgeColor: 'primary', updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี' },
-    { id: 'FMT-005', name: 'COMMUNITY', active: true, badgeColor: 'neutral', updatedAt: '2026-07-22', updatedBy: 'วีระ ศรีสมบัติ' }
+    { id: 'FMT-001', name: 'CRAFT', active: true, icon: 'craft', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-002', name: 'MIND', active: true, icon: 'heart', updatedAt: '2026-07-15', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-003', name: 'FOOD', active: true, icon: 'food', updatedAt: '2026-07-10', updatedBy: 'วีระ ศรีสมบัติ' },
+    { id: 'FMT-004', name: 'WORKSHOP', active: true, icon: 'tool', updatedAt: '2026-07-20', updatedBy: 'สุนิสา แก้วมณี' },
+    { id: 'FMT-005', name: 'COMMUNITY', active: true, icon: 'users', updatedAt: '2026-07-22', updatedBy: 'วีระ ศรีสมบัติ' }
   ],
 
-  activityFormatBadgeColors: [
-    { value: 'primary', label: 'เขียว (Primary)' },
-    { value: 'info', label: 'ฟ้า (Info)' },
-    { value: 'warning', label: 'เหลือง (Warning)' },
-    { value: 'danger', label: 'แดง (Danger)' },
-    { value: 'neutral', label: 'เทา (Neutral)' }
+  /* ไอคอนหมวดหมู่กิจกรรม — เก็บเฉพาะเนื้อใน <svg> วาดด้วยเส้น (stroke) เหมือนไอคอนอื่นในระบบ */
+  activityCategoryIcons: [
+    { value: 'leaf', label: 'ใบไม้', path: '<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>' },
+    { value: 'sprout', label: 'ต้นกล้า', path: '<path d="M7 20h10"/><path d="M12 20V9"/><path d="M12 9C12 6 9.5 3.5 5 3.5c0 4.5 2.5 7 7 7z"/><path d="M12 12c0-2.5 2-5 6-5 0 3.5-2.5 5.5-6 5.5z"/>' },
+    { value: 'food', label: 'อาหาร', path: '<path d="M3 2v7a2 2 0 002 2h1a2 2 0 002-2V2"/><path d="M5.5 2v20"/><path d="M21 14V2a5 5 0 00-4 4.9V12a2 2 0 002 2h2zm0 0v8"/>' },
+    { value: 'coffee', label: 'เครื่องดื่ม', path: '<path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/>' },
+    { value: 'craft', label: 'งานฝีมือ', path: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>' },
+    { value: 'tool', label: 'เวิร์กช็อป', path: '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>' },
+    { value: 'heart', label: 'หัวใจ / สุขภาพใจ', path: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0016.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 002 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/>' },
+    { value: 'users', label: 'ชุมชน', path: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>' },
+    { value: 'book', label: 'เรียนรู้', path: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>' },
+    { value: 'flask', label: 'ทดลอง', path: '<path d="M9 3h6M10 3v6.5L4.6 18.3A2 2 0 006.3 21h11.4a2 2 0 001.7-2.7L14 9.5V3"/><path d="M7 15h10"/>' },
+    { value: 'sun', label: 'กลางแจ้ง', path: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>' },
+    { value: 'droplet', label: 'น้ำ', path: '<path d="M12 2.7l5.66 5.65a8 8 0 11-11.31 0z"/>' },
+    { value: 'home', label: 'ในร่ม', path: '<path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21v-7h6v7"/>' },
+    { value: 'camera', label: 'ถ่ายภาพ', path: '<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>' },
+    { value: 'music', label: 'ดนตรี', path: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
+    { value: 'star', label: 'พิเศษ', path: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01z"/>' }
   ],
 
   sampleFollowUpRounds: [
@@ -908,7 +917,30 @@ window.TFC.satisfactionLevelOf = function (score) {
       }
       var name = pick(rand, firstNames) + ' ' + pick(rand, lastNames);
 
+      /* เวลาที่ลงทะเบียนจริง (registeredAtISO) และเวลาที่เช็คอินจริง (checkedInAt)
+         ฟิลด์ registeredAt เดิมเป็นวันที่เดียวกันทุกแถว ใช้ทำกราฟรายวัน/รายชั่วโมงไม่ได้
+         จึงเพิ่มสองฟิลด์นี้แทน โดยไม่แตะของเดิม เพื่อไม่ให้หน้าที่ใช้ registeredAt อยู่แล้วเปลี่ยนไป
+         - ลงทะเบียนกระจายใน 12 วันก่อนวันจัด และเกาะกลุ่มช่วงเย็น ตามพฤติกรรมจริงของผู้ใช้
+         - เช็คอินกระจายรอบเวลาเริ่มกิจกรรม โดยส่วนใหญ่มาช่วง 15 นาทีแรก */
+      var daysBefore = 12 - Math.floor(Math.pow(rand(), 0.7) * 12);
+      var regDate = new Date(activity.startDate);
+      regDate.setDate(regDate.getDate() - daysBefore);
+      var regHour = pick(rand, [7, 9, 10, 11, 12, 13, 14, 16, 18, 19, 19, 20, 20, 21, 22]);
+      var regMin = Math.floor(rand() * 60);
+
+      var startMin = 540;
+      var timeMatch = /(\d{1,2})[:.](\d{2})/.exec(activity.time || '');
+      if (timeMatch) startMin = Number(timeMatch[1]) * 60 + Number(timeMatch[2]);
+      /* -15 ถึง +75 นาทีจากเวลาเริ่ม ถ่วงน้ำหนักให้กระจุกช่วงต้น */
+      var checkOffset = Math.round(-15 + Math.pow(rand(), 1.8) * 90);
+      var checkAbs = Math.max(0, startMin + checkOffset);
+
       rows.push({
+        registeredAtISO: regDate.toISOString().slice(0, 10) + 'T' +
+          String(regHour).padStart(2, '0') + ':' + String(regMin).padStart(2, '0'),
+        checkedInAt: checkin === 'เข้าร่วมแล้ว'
+          ? String(Math.floor(checkAbs / 60) % 24).padStart(2, '0') + ':' + String(checkAbs % 60).padStart(2, '0')
+          : '',
         id: activity.id + '-R' + String(i + 1).padStart(3, '0'),
         activityId: activity.id,
         name: name,

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โปรแกรมการเรียนรู้ | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">โปรแกรมการเรียนรู้</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-header" id="program-page-header"></div>
+
+      <div class="list-toolbar">
+        <button type="button" class="filter-chip" id="program-filter-chip">
+          <span id="program-filter-chip-label">แสดงทั้งหมด</span>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" class="icon-btn-sm" id="program-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <div class="ml-auto" id="program-search-popover"></div>
+      </div>
+
+      <div class="table-wrapper mb-4">
+        <div class="table-scroll">
+          <table class="data-table is-header-filled">
+          <thead>
+            <tr><th class="col-no">#</th><th>ชื่อโปรแกรมการเรียนรู้</th><th>หลักสูตร</th><th>สถานะ</th><th class="col-updated">ปรับปรุงล่าสุด</th><th class="col-actions">จัดการ</th></tr>
+          </thead>
+          <tbody id="program-table-body"></tbody>
+        </table>
+      </div>
+      <div id="program-pagination"></div>
+    </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="program-create-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 class="modal-title" id="program-form-title">เพิ่มโปรแกรมการเรียนรู้</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form data-mock-submit="บันทึกโปรแกรมการเรียนรู้สำเร็จ (ตัวอย่าง)" id="program-form">
+      <div class="modal-body">
+        <div class="form-row-3 mb-3">
+          <div class="form-group form-col-span-2 mb-0">
+            <label class="form-label" for="program-name">ชื่อโปรแกรมการเรียนรู้<span class="form-required">*</span></label>
+            <input class="input" id="program-name" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="program-active">สถานะ<span class="form-required">*</span></label>
+            <div class="flex items-center gap-2" style="height:38px;">
+              <label class="switch"><input type="checkbox" id="program-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="program-active-label">ใช้งาน</span>
+            </div>
+          </div>
+        </div>
+        <!-- is-cols-3: ช่องหลักสูตรกว้างเท่าชื่อโปรแกรมด้านบน ปุ่มลบ/เพิ่มอยู่ตรงคอลัมน์เดียวกับสถานะ -->
+        <div class="form-group mb-0">
+          <label class="form-label">หลักสูตร</label>
+          <div class="dynamic-row-list is-cols-3" id="program-courses-list"></div>
+          <button type="button" class="dynamic-row-add is-cols-3" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="program-delete-modal">
+  <div class="modal modal-sm">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-danger mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      </span>
+      <h3 class="modal-title mb-3">ยืนยันการลบโปรแกรม</h3>
+      <p class="text-secondary">กิจกรรมที่ผูกกับโปรแกรมนี้จะไม่ถูกลบ แต่จะไม่มีโปรแกรมอ้างอิงอีกต่อไป</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button class="btn btn-danger" id="program-delete-confirm" data-close-modal>ลบโปรแกรม</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/dynamic-row.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/field-widgets.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var programSvc = window.TFC.dataService('programs');
+  var mock = window.TFC_MOCK || {};
+  var statusBadge = { true: 'badge-success', false: 'badge-neutral' };
+  var pageState = { page: 1, pageSize: 10 };
+
+  function courseRowHtml(value) {
+    return '<div class="dynamic-row">' +
+      '<span class="dynamic-row-order" data-row-order></span>' +
+      '<input class="input" placeholder="ชื่อหลักสูตร" value="' + window.TFC.escapeHtml(value) + '">' +
+      '<button type="button" class="dynamic-row-remove" aria-label="ลบแถว">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+      '</button></div>';
+  }
+
+  var coursesList = window.TFC.dynamicRowList('program-courses-list', 'program-add-course-btn', courseRowHtml);
+  coursesList.reset([]);
+
+    /* ยอดรวมย้ายจากแถวท้ายตารางมาไว้ใต้ชื่อหน้า คำนวณจากข้อมูลจริง */
+  var programAll = mock.programs || [];
+  var courseTotal = programAll.reduce(function (s, p) { return s + ((p.courses || []).length); }, 0);
+window.TFC.renderPageHeader('program-page-header', {
+    title: 'โปรแกรมการเรียนรู้',
+    description: 'ทั้งหมด ' + programAll.length + ' โปรแกรม · ' + courseTotal + ' หลักสูตร',
+    actions: [
+      {
+        label: 'เพิ่มโปรแกรมใหม่',
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+        attrs: { id: 'program-add-btn', 'data-open-modal': 'program-create-modal' }
+      }
+    ]
+  });
+
+  document.getElementById('program-active').addEventListener('change', function () {
+    document.getElementById('program-active-label').textContent = this.checked ? 'ใช้งาน' : 'ไม่ใช้งาน';
+  });
+
+  function resetForm() {
+    document.getElementById('program-form-title').textContent = 'เพิ่มโปรแกรมการเรียนรู้';
+    document.getElementById('program-form').reset();
+    document.getElementById('program-active').checked = true;
+    document.getElementById('program-active-label').textContent = 'ใช้งาน';
+    coursesList.reset([]);
+    document.getElementById('program-form').setAttribute('data-editing-id', '');
+  }
+  document.getElementById('program-add-btn').addEventListener('click', resetForm);
+
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-action-key^="program-edit-"]');
+    if (!trigger) return;
+    var id = trigger.getAttribute('data-action-key').replace('program-edit-', '');
+    var program = (mock.programs || []).filter(function (p) { return p.id === id; })[0];
+    if (!program) return;
+    document.getElementById('program-form-title').textContent = 'แก้ไขโปรแกรมการเรียนรู้';
+    document.getElementById('program-name').value = program.name || '';
+    document.getElementById('program-active').checked = program.active !== false;
+    document.getElementById('program-active-label').textContent = program.active !== false ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    coursesList.reset((program.courses || []).map(function (c) { return c.name; }));
+    document.getElementById('program-form').setAttribute('data-editing-id', program.id);
+  });
+
+  function renderTable() {
+    programSvc.list().then(function (programs) {
+      var keyword = (document.getElementById('program-search') || {}).value || '';
+      keyword = keyword.trim().toLowerCase();
+
+      var filtered = programs.filter(function (p) {
+        var matchesKeyword = !keyword || p.name.toLowerCase().indexOf(keyword) !== -1;
+        return matchesKeyword;
+      });
+
+      var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
+      if (pageState.page > pageCount) pageState.page = pageCount;
+      var start = (pageState.page - 1) * pageState.pageSize;
+      var pageRows = filtered.slice(start, start + pageState.pageSize);
+
+      document.getElementById('program-table-body').innerHTML = pageRows.map(function (p, i) {
+        /* แสดงหลักสูตรครบทุกรายการเป็นบุลเล็ต อ่านง่ายกว่าการต่อกันด้วยจุดคั่น
+           แถวจะสูงตามจำนวนหลักสูตร ซึ่งยอมรับได้เพราะข้อมูลต้องครบตามที่ออกแบบ */
+        var courseList = p.courses || [];
+        var coursesHtml = courseList.length
+          ? '<ul class="cell-bullets">' +
+            courseList.map(function (c) { return '<li>' + window.TFC.escapeHtml(c.name) + '</li>'; }).join('') +
+            '</ul>'
+          : '<span class="text-secondary">-</span>';
+        return '<tr>' +
+          '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
+          '<td>' + window.TFC.escapeHtml(p.name) + '</td>' +
+          '<td>' + coursesHtml + '</td>' +
+          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          '<td><div class="cell-updated-by">' + window.TFC.escapeHtml(p.updatedBy || '-') + '</div>' +
+          '<div class="cell-updated-at">' + (p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : '-') + '</div></td>' +
+          '<td class="table-row-actions">' +
+          window.TFC.actionMenuTrigger([
+            { key: 'program-edit-' + p.id, label: 'แก้ไข', icon: 'edit', modal: 'program-create-modal', perm: 'master_data' },
+            { key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', icon: 'delete', modal: 'program-delete-modal', perm: 'master_data', danger: true }
+          ]) +
+          '</td></tr>';
+      }).join('');
+      /* แถวสรุปท้ายตารางถูกตัดออก — ยอดรวมย้ายไปอยู่บรรทัดใต้ชื่อหน้าแทน */
+
+      window.TFC.renderPagination('program-pagination', {
+        page: pageState.page,
+        pageSize: pageState.pageSize,
+        total: filtered.length,
+        pageSizeOptions: [10, 20, 50],
+        footer: true,
+        onChange: function (page) { pageState.page = page; renderTable(); },
+        onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
+      });
+    });
+  }
+
+
+  /* แถบค้นหา/ตัวกรองย้ายเข้า Search Panel Popover (โครงเดียวกับหน้าจัดการกิจกรรม)
+     ยังใช้ id เดิม program-search / program-filter-category เพื่อให้ renderTable() อ่านค่าได้เหมือนเดิม */
+  window.TFC.attachListToolbar({
+    chipId: 'program-filter-chip',
+    chipLabelId: 'program-filter-chip-label',
+    popoverId: 'program-search-popover',
+    search: { id: 'program-search', placeholder: 'ค้นหาชื่อโปรแกรม' },
+    onApply: function (values, done) {
+      pageState.page = 1;
+      renderTable();
+      done();
+    }
+  });
+
+  /* ปุ่มดาวน์โหลดถูกตัดออกจากแถวชื่อหน้าแล้ว จึงผูก event เฉพาะเมื่อยังมีปุ่มอยู่
+     ฟังก์ชัน exportTableCsv ยังอยู่ครบ ถ้าจะเอาปุ่มกลับมาก็เพิ่ม element id เดิมได้ทันที */
+  var exportBtn = document.getElementById('program-export');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function () {
+    programSvc.list().then(function (programs) {
+      window.TFC.exportCsv('โปรแกรมการเรียนรู้.csv',
+        ['ลำดับ', 'ชื่อโปรแกรมการเรียนรู้', 'หมวดหมู่', 'หลักสูตร', 'สถานะ', 'ผู้บันทึกล่าสุด', 'วันที่บันทึก'],
+        programs.map(function (p, i) {
+          return [i + 1, p.name, p.category || '',
+            (p.courses || []).map(function (c) { return c.name; }).join(' / '),
+            p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน',
+            p.updatedBy || '', p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : ''];
+        }));
+    });
+    });
+  }
+
+  document.getElementById('program-form').addEventListener('submit', function () {
+    var editingId = this.getAttribute('data-editing-id');
+    var courseNames = Array.from(coursesList.container.querySelectorAll('input'))
+      .map(function (input) { return input.value.trim(); })
+      .filter(function (v) { return v; });
+    var payload = {
+      name: document.getElementById('program-name').value,
+      active: document.getElementById('program-active').checked,
+      courses: courseNames.map(function (name, i) { return { order: i + 1, name: name }; }),
+      updatedBy: (mock.currentUser || {}).name || ''
+    };
+    var save = editingId ? programSvc.update(editingId, payload) : programSvc.create(Object.assign({ activityCount: 0, status: payload.active ? 'ดำเนินการอยู่' : 'ฉบับร่าง' }, payload));
+    save.then(renderTable);
+  });
+
+  renderTable();
+
+  /* ลบรายการ: จำ id จากเมนู ⋮ แล้วลบจริงเมื่อกดยืนยันในโมดัล */
+  var pendingDeleteId = null;
+  document.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-action-key^="program-delete-"]');
+    if (item) pendingDeleteId = item.getAttribute('data-action-key').replace('program-delete-', '');
+  });
+
+  document.getElementById('program-delete-confirm').addEventListener('click', function () {
+    if (!pendingDeleteId) return;
+    programSvc.remove(pendingDeleteId).then(function () {
+      pendingDeleteId = null;
+      renderTable();
+      if (window.TFC.showToast) window.TFC.showToast('ลบโปรแกรมเรียบร้อย', 'success');
+    });
+  });
+})();
+</script>
+</body>
+</html>

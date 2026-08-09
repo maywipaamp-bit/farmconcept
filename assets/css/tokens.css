@@ -6,50 +6,86 @@
 
 :root {
   /* ---------- Colors : Brand ---------- */
-  --color-primary: #81C060;
-  --color-primary-hover: #6FB24E;
-  --color-primary-dark: #2F6D45;
-  --color-primary-soft: #EEF7E9;
+  --color-primary: #16A34A;
+  --color-primary-hover: #15803D;
+  --color-primary-dark: #15803D;
+  --color-primary-soft: #F0FDF4;
 
   /* ---------- Colors : Surface ---------- */
-  --color-background: #F8FAF8;
+  --color-background: #F6F8F6;
   --color-surface: #FFFFFF;
   --color-border: #E5E7EB;
-  --color-surface-muted: #F3F4F6;   /* พื้นเทาอ่อนสำหรับหัวตาราง/แถบรอง */
+  /* ขอบจางกว่า --color-border ใช้กับเส้นคั่นภายในการ์ดและกรอบที่ไม่ต้องการให้เด่น */
+  --color-border-soft: #EEF1EE;
+  --color-surface-muted: #FAFBFA;
 
-  /* ---------- Colors : Text ---------- */
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #6B7280;
+  /* ---------- Colors : Text ----------
+     ไล่ 6 ระดับตาม CLAUDE.md — ความสำคัญของข้อความสื่อด้วย "สี" ก่อน แล้วจึงเป็นน้ำหนัก
+     ห้ามใช้สีเข้มกว่า --color-text-strong (#111827) กับข้อความ และห้ามใช้ #000 */
+  --color-text-strong: #111827;     /* ชื่อหน้า, หัวข้อ */
+  --color-text-primary: #1F2937;    /* คอลัมน์หลักของตาราง, label ฟอร์ม */
+  --color-text-body: #374151;       /* เนื้อหาทั่วไป, ค่าในตาราง */
+  --color-text-secondary: #6B7280;  /* หัวตาราง, คำอธิบาย */
+  --color-text-muted: #9CA3AF;      /* ลำดับที่, placeholder */
+  --color-text-faint: #C7CDD4;      /* ตัวเลขแถวในตาราง */
   --color-text-inverse: #FFFFFF;
+  /* ชื่อเดิม คงไว้เพื่อไม่ให้ 5 จุดที่ใช้อยู่พัง — ค่าเท่ากับ --color-text-muted
+     ของใหม่ให้ใช้ --color-text-muted แทน เพราะสื่อความหมายตรงกว่า */
   --color-text-disabled: #9CA3AF;
 
-  /* ---------- Colors : Status ---------- */
+  /* ---------- Colors : Status ----------
+     แต่ละสถานะเป็นชุดสามค่า: -text (ตัวอักษร) / -soft (พื้น) / -border (ขอบ)
+     ป้ายสถานะใช้พื้นอ่อน + ขอบ ไม่ใช้สีทึบ ตาม CLAUDE.md
+     ค่าของ success/warning/danger ยึดตาม docs/design-standard/STANDARD.md
+     ส่วน info เป็นสถานะเฉพาะของ repo นี้ (มาตรฐานไม่ได้กำหนดไว้) จึงคงค่าเดิม */
   --color-success: #22C55E;
-  --color-success-soft: #EAFBF0;
+  --color-success-text: #15803D;
+  --color-success-soft: #F0FDF4;
+  --color-success-border: #BBF7D0;
+
   --color-warning: #F59E0B;
-  --color-warning-soft: #FEF6E7;
+  --color-warning-text: #B45309;
+  --color-warning-soft: #FFFBEB;
+  --color-warning-border: #FDE68A;
+
   --color-danger: #EF4444;
-  --color-danger-soft: #FDECEC;
+  --color-danger-hover: #DC2626;
+  --color-danger-text: #B91C1C;
+  --color-danger-soft: #FEF2F2;
+  --color-danger-border: #FECACA;
+
   --color-info: #3B82F6;
+  --color-info-text: #1D4ED8;
   --color-info-soft: #EAF2FE;
+  --color-info-border: #BFDAFB;
+
+  /* ชุดสีอ่อนของแบรนด์ ใช้กับปุ่มรองและป้ายสถานะสีเขียว */
+  --color-primary-soft-hover: #DCFCE7;
+  --color-primary-soft-border: #BBF7D0;
+  --color-primary-soft-deep: #BBF7D0;
+
+  /* แถบแสงที่วิ่งบน skeleton ตอนโหลด */
+  --color-skeleton-sheen: #FAFBFA;
 
   /* ---------- Font ---------- */
-  --font-family-base: 'Kanit', sans-serif;
+  --font-family-base: 'IBM Plex Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
 
-  --font-size-page-title: 22px;
-  --font-size-section-title: 18px;
-  --font-size-card-title: 15px;
+  /* Type scale ตาม CLAUDE.md — เล็กสุดที่อนุญาตคือ 12px และใช้เฉพาะ badge/caption */
+  --font-size-page-title: 28px;
+  --font-size-section-title: 20px;
+  --font-size-card-title: 16px;
   --font-size-body: 14px;
   --font-size-small: 13px;
-  --font-size-caption: 11px;
+  --font-size-caption: 12px;
 
+  /* 400 เป็นค่าเริ่มต้น · 500 เฉพาะที่ต้องเน้น · 600 เฉพาะหัวข้อ
+     ไม่มี --font-weight-bold (700) เพราะมาตรฐานห้ามใช้ */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --font-weight-bold: 700;
 
-  --line-height-base: 1.5;
-  --line-height-tight: 1.3;
+  --line-height-base: 1.6;    /* เนื้อหาไทยห้ามต่ำกว่า 1.6 */
+  --line-height-tight: 1.4;   /* หัวข้อ อยู่ในช่วง 1.35–1.5 */
 
   /* ---------- Spacing Scale ---------- */
   --space-1: 4px;
@@ -62,21 +98,21 @@
 
   /* ---------- Radius ---------- */
   --radius-sm: 8px;
-  --radius-input: 12px;
-  --radius-button: 12px;
-  --radius-card: 16px;
-  --radius-modal: 20px;
+  --radius-input: 10px;
+  --radius-button: 10px;
+  --radius-card: 14px;
+  --radius-modal: 16px;
   --radius-full: 999px;
 
   /* ---------- Shadow (Soft only) ---------- */
-  --shadow-sm: 0 1px 2px rgba(31, 41, 55, 0.06);
-  --shadow-md: 0 4px 12px rgba(31, 41, 55, 0.08);
-  --shadow-lg: 0 8px 24px rgba(31, 41, 55, 0.10);
+  --shadow-sm: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.03);
+  --shadow-md: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.03);
+  --shadow-lg: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.05);
 
   /* ---------- Transition ---------- */
-  --transition-fast: 120ms ease;
-  --transition-base: 180ms ease;
-  --transition-slow: 240ms ease;
+  --transition-fast: 120ms cubic-bezier(0.2, 0, 0.2, 1);
+  --transition-base: 150ms cubic-bezier(0.2, 0, 0.2, 1);
+  --transition-slow: 220ms cubic-bezier(0.2, 0, 0.2, 1);
 
   /* ---------- Z-index ---------- */
   --z-dropdown: 100;
@@ -88,7 +124,7 @@
 
   /* ---------- Layout ---------- */
   --layout-max-width: 1280px;
-  --sidebar-width: 260px;
+  --sidebar-width: 244px;
   --sidebar-width-collapsed: 76px;
   --topbar-height: 56px;
 
@@ -97,28 +133,13 @@
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1024px;
 
-  /* ---------- Public registration prototype palette (pages/public/activities.html) ----------
-     This SPA prototype (based on the farmconcept.netlify.app reference) ships with its own
-     embedded <style> block using these variable names. Values are very close to — but NOT
-     byte-identical to — the --color-* tokens above (e.g. --primary-hover, --border,
-     --text-secondary, --radius-md differ slightly). Kept separate and literal here for
-     system-wide reference/reuse; do not silently alias to --color-* without confirming the
-     small differences with design first. */
-  --primary: #81C060;
-  --primary-hover: #6FAF50;
-  --primary-soft: #EEF7E9;
-  --dark-green: #2F6D45;
-  --bg: #F7F9F6;
-  --page-bg: #FFFFFF;
-  --surface: #FFFFFF;
-  --border: #E4E8E2;
-  --text-primary: #1F2937;
-  --text-secondary: #667085;
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* ---------- ชุดสีของ prototype หน้าลงทะเบียนสาธารณะ — ถูกถอดออกแล้ว ----------
+     เดิมประกาศตัวแปรชื่อสั้น (--primary, --border, --text-primary, --text-secondary,
+     --radius-sm/md/lg) ไว้ที่นี่เพื่อ "อ้างอิง" แต่ pages/public/activities.html มี :root
+     ของตัวเองครบอยู่แล้ว ชุดนี้จึงซ้ำซ้อน และที่สำคัญคือ **ชนกับตัวแปรของมาตรฐานใหม่**
+     ใน assets/css/standard/tokens.css ซึ่งใช้ชื่อเดียวกัน (--text-primary, --text-secondary,
+     --border) เมื่อไฟล์นี้โหลดทีหลัง ค่าที่นี่จะทับค่ามาตรฐานทั้งระบบ
+     ตัวอย่างที่เกิดจริง: --text-secondary กลายเป็น #667085 แทนที่จะเป็น #6B7280
+     ทำให้ข้อมูลในตารางผิดสีจากที่ออกแบบไว้
+     ตรวจแล้วว่าไม่มีไฟล์ใดใน assets/css/ หรือ pages/ ใช้ชื่อสั้นเหล่านี้เลย จึงถอดออกได้ปลอดภัย */
 }

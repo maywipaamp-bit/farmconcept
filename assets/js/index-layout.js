@@ -69,7 +69,70 @@ window.TFC = window.TFC || {};
       (opts.description ? '<p class="page-description">' + window.TFC.escapeHtml(opts.description) + '</p>' : '') +
       '</div>' +
       (actionsHtml ? '<div class="page-header-actions">' + actionsHtml + '</div>' : '');
+
+    if (!standardLayoutOff()) {
+      /* .is-tight บังคับชื่อหน้าให้เป็นขนาดหัวข้อรอง (20px) — มาตรฐานกำหนด 28px */
+      el.classList.remove('is-tight');
+      mergeToolbarIntoHeader(el);
+    }
   };
+
+  /* หน้าที่ไม่ต้องการเลย์เอาต์มาตรฐาน ใส่ data-standard-layout="off" ที่แท็ก <html> */
+  function standardLayoutOff() {
+    return document.documentElement.getAttribute('data-standard-layout') === 'off';
+  }
+
+  /* ยุบแถบเครื่องมือ (.list-toolbar) เข้าไปอยู่แถวเดียวกับชื่อหน้า ตามแบบมาตรฐาน
+     ย้ายตัว DOM เดิมทั้งก้อน ไม่ได้สร้างใหม่ id และ event handler จึงยังทำงานเหมือนเดิม
+     ปุ่มหลัก (สีเขียว) ถูกดันไปอยู่ขวาสุดเสมอ */
+  function mergeToolbarIntoHeader(headerEl) {
+    var toolbar = document.querySelector('.list-toolbar');
+    var actions = headerEl.querySelector('.page-header-actions');
+    if (!toolbar || !actions) return;
+
+    var primary = actions.querySelector('.btn-primary');
+    Array.prototype.slice.call(toolbar.children).forEach(function (child) {
+      /* ตามแบบมาตรฐาน แถวชื่อหน้าเหลือแค่ ค้นหา + ปุ่มหลัก
+         - เส้นคั่น: ไม่มีความหมายเมื่อย้ายมาอยู่แถวชื่อหน้าแล้ว
+         - ชิป "แสดงทั้งหมด": สถานะตัวกรองไปแสดงในแผงค้นหาแทน
+         - ปุ่มดาวน์โหลด: ตัดออกทั้งระบบ (ฟังก์ชัน exportTableCsv ยังอยู่ เรียกกลับมาได้) */
+      if (child.classList.contains('toolbar-divider') ||
+          child.classList.contains('filter-chip') ||
+          /export/i.test(child.id || '')) { child.remove(); return; }
+      child.classList.remove('ml-auto');
+      if (primary) actions.insertBefore(child, primary);
+      else actions.appendChild(child);
+    });
+    toolbar.remove();
+  }
+
+  /* มาตรฐานฟอร์มข้อ 2: ทุกฟอร์มที่มีช่องบังคับกรอก ต้องมีบรรทัดอธิบายดอกจันที่หัวฟอร์มหนึ่งครั้ง
+     ทำที่นี่ครั้งเดียวแทนการไล่เพิ่ม markup ทีละหน้า */
+  function addRequiredHintToModals() {
+    if (standardLayoutOff()) return;
+    document.querySelectorAll('.modal-overlay .modal').forEach(function (modal) {
+      if (!modal.querySelector('.form-required')) return;
+      var head = modal.querySelector('.modal-header');
+      var title = head && head.querySelector('.modal-title');
+      if (!head || !title || head.querySelector('.modal-subtitle')) return;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'modal-heading';
+      title.parentNode.insertBefore(wrap, title);
+      wrap.appendChild(title);
+
+      var hint = document.createElement('p');
+      hint.className = 'modal-subtitle';
+      hint.innerHTML = 'ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก';
+      wrap.appendChild(hint);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addRequiredHintToModals);
+  } else {
+    addRequiredHintToModals();
+  }
 
   /* B. Summary Stat Card Group — optional per screen, any number of cards */
   window.TFC.renderStatCards = function (target, cards) {

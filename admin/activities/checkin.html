@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">จัดการกิจกรรม</a> <span>/</span>
+          <span class="is-current">Check-in</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- 1. ชื่อหน้า + ปุ่มการทำงาน -->
+      <div class="page-header" id="ci-page-header"></div>
+
+      <!-- 2. การ์ดกิจกรรมที่กำลังเช็คอิน + ตัวเลขสรุป -->
+      <section class="card ci-activity" id="ci-activity"></section>
+
+      <!-- 3. สองคอลัมน์: รายชื่อ (ซ้าย) + เครื่องมือหน้างาน (ขวา) -->
+      <div class="ci-columns">
+        <div class="ci-main">
+          <!-- แถบตัวกรอง: ใช้ปุ่มค้นหาแบบเดียวกับหน้ารายการอื่นในระบบ -->
+          <div class="list-filter-bar">
+            <div class="status-pills" id="ci-pills"></div>
+            <span class="ci-count ml-auto" id="ci-count"></span>
+            <div id="ci-search-popover"></div>
+          </div>
+
+          <div class="card ci-list-card">
+            <div id="ci-list"></div>
+          </div>
+        </div>
+
+        <aside class="ci-side">
+          <div class="card ci-panel">
+            <div class="ci-panel-head">
+              <span class="ci-panel-title">QR สำหรับผู้เข้าร่วมสแกน</span>
+              <span class="ci-panel-desc">แสดงจอนี้ที่หน้างาน ผู้เข้าร่วมสแกนด้วยมือถือแล้วเช็คอินเข้าระบบเอง</span>
+            </div>
+            <div class="ci-qr" id="ci-qr">
+              <span class="ci-qr-note">รหัสจะเปลี่ยนทุก 5 นาที</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-block" id="ci-fullscreen">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg>
+              แสดงเต็มจอ
+            </button>
+          </div>
+
+          <!-- แผง "ผู้เข้าร่วมหน้างาน" ถูกตัดออก เพราะทำหน้าที่เดียวกับปุ่ม "เพิ่ม Walk-in" บนหัวหน้า -->
+          <div class="card ci-panel">
+            <span class="ci-panel-title">เช็คอินล่าสุด</span>
+            <div class="ci-recent" id="ci-recent"></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Popup เพิ่มผู้เข้าร่วมหน้างาน -->
+<div class="modal-overlay" id="ci-walkin-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title">เพิ่ม Walk-in</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="ci-walkin-form">
+      <div class="modal-body">
+        <p class="text-secondary mb-4">ผู้เข้าร่วมที่ไม่ได้ลงทะเบียนล่วงหน้า ระบบจะบันทึกเป็น Walk-in และเช็คอินให้ทันที</p>
+        <div class="form-group">
+          <label class="form-label" for="ci-walkin-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
+          <input type="text" class="input" id="ci-walkin-name" placeholder="เช่น สมชาย ใจดี" data-validate required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ci-walkin-phone">เบอร์โทร</label>
+          <input type="tel" class="input" id="ci-walkin-phone" placeholder="เช่น 081-234-5678" inputmode="tel">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">เพิ่มและเช็คอิน</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Popup แสดง QR เต็มจอที่หน้างาน -->
+<div class="modal-overlay" id="ci-qr-modal">
+  <div class="modal ci-qr-modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="ci-qr-modal-title">สแกนเพื่อเช็คอิน</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body text-center">
+      <div class="ci-qr is-large" id="ci-qr-large"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/search-popover.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var mock = window.TFC_MOCK;
+  var esc = window.TFC.escapeHtml;
+
+  /* กิจกรรมที่กำลังเช็คอิน — รับผ่าน ?id= จากหน้ารายการกิจกรรม
+     ถ้าไม่ระบุ ให้เลือกกิจกรรมที่ "กำลังดำเนินการ" ก่อน เพราะเป็นกรณีที่หน้านี้มีงานจริง
+     ถ้าไม่มี ค่อยไล่ไปกิจกรรมที่เปิดรับสมัคร แล้วจึงรายการแรก */
+  var params = new URLSearchParams(location.search);
+  var activities = mock.activities || [];
+  var activity = activities.filter(function (a) { return a.id === params.get('id'); })[0]
+    || activities.filter(function (a) { return a.status === 'กำลังดำเนินการ'; })[0]
+    || activities.filter(function (a) { return a.status === 'เปิดรับสมัคร'; })[0]
+    || activities[0];
+
+  var state = { tab: 'all', search: '' };
+  var rows = [];
+
+  /* ---------- ปรับข้อมูลดิบให้มีฟิลด์ที่หน้านี้ต้องใช้ ----------
+     ชุดข้อมูลกลางมี checkinStatus (เข้าร่วมแล้ว / ยังไม่เข้าร่วม / ไม่ได้เข้าร่วม)
+     และ manualEntry (เจ้าหน้าที่บันทึกเอง) อยู่แล้ว จึงใช้สองฟิลด์นี้แทนการเพิ่มข้อมูลใหม่
+     - manualEntry = true  -> ผู้เข้าร่วมหน้างาน (Walk-in) เจ้าหน้าที่เป็นคนกดเช็คอินให้
+     - manualEntry = false -> ผู้ลงทะเบียนล่วงหน้าที่สแกน QR เช็คอินเอง
+     เวลาเช็คอินคำนวณจากลำดับแถว ไม่ได้สุ่ม เพื่อให้รีเฟรชแล้วได้ค่าเดิมทุกครั้ง */
+  function buildRows(act) {
+    if (!act) return [];
+    var startMin = timeToMinutes((act.time || '09:00').split('-')[0].trim()) || 540;
+    return (mock.activityRegistrations[act.id] || []).map(function (r, i) {
+      var checkedIn = r.checkinStatus === 'เข้าร่วมแล้ว';
+      /* Walk-in ต้องเช็คอินแล้วเสมอ — คนที่เดินมาหน้างานแต่ "ยังไม่มา" เป็นสถานะที่ขัดกันเอง */
+      var walkIn = !!r.manualEntry && checkedIn;
+      return {
+        id: r.id,
+        code: (walkIn ? 'WLK-' : 'REG-') + act.id.slice(-3) + '-' + String(i + 1).padStart(3, '0'),
+        name: r.name,
+        phone: r.phone,
+        walkIn: walkIn,
+        checkedIn: checkedIn,
+        /* เช็คอินทยอยเข้ามาห่างกัน 3 นาที เริ่มก่อนเวลากิจกรรม 5 นาที */
+        time: checkedIn ? minutesToTime(startMin - 5 + i * 3) : '',
+        by: walkIn ? 'เจ้าหน้าที่บันทึก' : 'สแกนเอง'
+      };
+    });
+  }
+
+  function timeToMinutes(text) {
+    var m = /(\d{1,2})[:.](\d{2})/.exec(text || '');
+    return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+  }
+
+  function minutesToTime(total) {
+    total = Math.max(0, total);
+    return String(Math.floor(total / 60) % 24).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+  }
+
+  /* ลำดับการเช็คอินจริง — เรียงตามเวลาจากน้อยไปมาก คนที่เช็คอินก่อนได้เลข 1
+     คิดจากรายชื่อทั้งหมด ไม่ใช่เฉพาะที่กรองอยู่ เลขจึงไม่เปลี่ยนตามแท็บหรือคำค้น */
+  function checkinOrder() {
+    var order = {};
+    rows.filter(function (r) { return r.checkedIn; })
+      .slice()
+      .sort(function (a, b) { return a.time.localeCompare(b.time); })
+      .forEach(function (r, i) { order[r.id] = i + 1; });
+    return order;
+  }
+
+  /* ---------- 1. ชื่อหน้า ---------- */
+  window.TFC.renderPageHeader('ci-page-header', {
+    title: 'Check-in',
+    actions: [
+      { label: 'ส่งออก Excel', variant: 'outline',
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>',
+        attrs: { id: 'ci-export' } },
+      { label: 'เพิ่ม Walk-in', variant: 'primary',
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+        attrs: { 'data-open-modal': 'ci-walkin-modal' } }
+    ]
+  });
+
+  /* ---------- 2. การ์ดกิจกรรม + ตัวเลขสรุป ---------- */
+  function activityMeta(a) {
+    return window.TFC.formatThaiDate(a.startDate) + ' · ' + (a.time || '-') +
+      ' น. · ลงทะเบียน ' + (mock.activityRegistrations[a.id] || []).length + ' คน';
+  }
+
+  function renderActivity() {
+    var checkedIn = rows.filter(function (r) { return r.checkedIn; }).length;
+    var total = rows.length;
+    var percent = total ? Math.round((checkedIn / total) * 100) : 0;
+
+    document.getElementById('ci-activity').innerHTML =
+      '<div class="ci-activity-info">' +
+        '<div class="ci-activity-title">' +
+          '<span class="ci-dot"></span>' +
+          '<span class="ci-activity-name">' + esc(activity.name) + '</span>' +
+          '<span class="ci-activity-code">' + esc(activity.id) + '</span>' +
+          '<div class="ci-picker">' +
+            '<button type="button" class="ci-picker-btn" id="ci-picker-btn" aria-expanded="false" aria-haspopup="listbox">' +
+              '<span>เปลี่ยนกิจกรรม</span>' +
+              '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 10l4 4 4-4"/></svg>' +
+            '</button>' +
+            '<div class="ci-picker-panel" id="ci-picker-panel" role="listbox" hidden>' +
+              '<span class="ci-picker-title">เลือกกิจกรรมที่จะเช็คอิน</span>' +
+              activities.map(function (a) {
+                return '<button type="button" class="ci-picker-item' + (a.id === activity.id ? ' is-active' : '') +
+                  '" role="option" aria-selected="' + (a.id === activity.id) + '" data-activity="' + esc(a.id) + '">' +
+                  '<span class="ci-picker-item-name">' + esc(a.name) + '</span>' +
+                  '<span class="ci-picker-item-meta">' + esc(activityMeta(a)) + '</span>' +
+                  '</button>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ci-activity-meta">' +
+          metaItem('<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/>', window.TFC.formatThaiDate(activity.startDate)) +
+          metaItem('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/>', (activity.time || '-') + ' น.') +
+          metaItem('<path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21Z"/><circle cx="12" cy="10.4" r="2.2"/>', activity.area || '-') +
+        '</div>' +
+      '</div>' +
+      '<div class="ci-figures">' +
+        '<div class="ci-figure">' +
+          '<span class="ci-figure-label">เช็คอินแล้ว</span>' +
+          '<div class="ci-figure-value"><strong class="is-success">' + checkedIn + '</strong><span class="ci-figure-total">/ ' + total + '</span></div>' +
+          '<div class="ci-progress"><span style="width: ' + percent + '%"></span></div>' +
+        '</div>' +
+        '<div class="ci-figure has-divider">' +
+          '<span class="ci-figure-label">ยังไม่มา</span>' +
+          '<div class="ci-figure-value"><strong>' + rows.filter(function (r) { return !r.checkedIn; }).length + '</strong></div>' +
+        '</div>' +
+        '<div class="ci-figure has-divider">' +
+          '<span class="ci-figure-label">Walk-in</span>' +
+          '<div class="ci-figure-value"><strong>' + rows.filter(function (r) { return r.walkIn; }).length + '</strong></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function metaItem(path, text) {
+    return '<span class="ci-meta-item">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>' +
+      esc(text) + '</span>';
+  }
+
+  /* ---------- 3. แท็บสถานะ ---------- */
+  var TABS = [
+    { key: 'all', label: 'ทั้งหมด', match: function () { return true; } },
+    { key: 'waiting', label: 'ยังไม่เช็คอิน', match: function (r) { return !r.checkedIn; } },
+    { key: 'done', label: 'เช็คอินแล้ว', match: function (r) { return r.checkedIn; } },
+    { key: 'walkin', label: 'Walk-in', match: function (r) { return r.walkIn; } }
+  ];
+
+  function tabOf(key) {
+    return TABS.filter(function (t) { return t.key === key; })[0] || TABS[0];
+  }
+
+  function renderPills() {
+    document.getElementById('ci-pills').innerHTML = TABS.map(function (t) {
+      return '<button type="button" class="status-pill' + (state.tab === t.key ? ' is-active' : '') +
+        '" data-tab="' + t.key + '">' + esc(t.label) +
+        '<span class="status-pill-count">' + rows.filter(t.match).length + '</span></button>';
+    }).join('');
+  }
+
+  /* ---------- 4. รายชื่อ ---------- */
+  /* เรียงลำดับเช็คอินจากมากไปน้อย คนที่เพิ่งเช็คอินล่าสุดจึงอยู่บนสุด
+     ส่วนคนที่ยังไม่มาต่อท้าย โดยคงลำดับการลงทะเบียนเดิมไว้ */
+  function filtered() {
+    var q = state.search.trim().toLowerCase();
+    var order = checkinOrder();
+    return rows.filter(tabOf(state.tab).match).filter(function (r) {
+      if (!q) return true;
+      return (r.name + ' ' + r.phone + ' ' + r.code).toLowerCase().indexOf(q) > -1;
+    }).sort(function (a, b) {
+      return (order[b.id] || 0) - (order[a.id] || 0);
+    });
+  }
+
+  var EMPTY_HTML =
+    '<div class="ci-empty">' +
+      '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>' +
+      '<span class="ci-empty-title">ไม่พบผู้เข้าร่วมที่ค้นหา</span>' +
+      '<span class="ci-empty-text">ถ้าผู้เข้าร่วมยังไม่ได้ลงทะเบียนล่วงหน้า ให้เพิ่มเป็น Walk-in จากแผงด้านขวา</span>' +
+      '<button type="button" class="btn btn-outline btn-sm" id="ci-clear-search">ล้างการค้นหา</button>' +
+    '</div>';
+
+  function rowHtml(r, order) {
+    /* วิธีเช็คอินแยกเป็น span ของตัวเอง เพื่อให้ซ่อนได้ตอนจอแคบโดยไม่ต้องตัดคำกลางประโยค */
+    var statusText = r.checkedIn
+      ? '<span class="ci-row-time is-done">' + esc(r.time) + ' น.<span class="ci-row-by"> · ' + esc(r.by) + '</span></span>'
+      : '<span class="ci-row-time">ยังไม่มา</span>';
+
+    var action = r.checkedIn
+      ? '<button type="button" class="btn btn-outline btn-sm ci-row-btn" data-toggle-checkin="' + esc(r.id) + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>ยกเลิก</button>'
+      : '<button type="button" class="btn btn-primary btn-sm ci-row-btn" data-toggle-checkin="' + esc(r.id) + '">เช็คอินแทน</button>';
+
+    /* คนที่ยังไม่เช็คอินยังไม่มีลำดับ ใช้ขีดแทนเพื่อให้คอลัมน์ยังอ่านเป็นแนวเดียวกัน */
+    var no = order[r.id];
+
+    return '<div class="ci-row">' +
+      '<span class="ci-no' + (no ? ' is-done' : '') + '">' + (no || '—') + '</span>' +
+      '<div class="ci-row-person">' +
+        '<span class="ci-row-name-line">' +
+          '<span class="ci-row-name">' + esc(r.name) + '</span>' +
+          (r.walkIn ? '<span class="badge badge-warning ci-walkin-badge">Walk-in</span>' : '') +
+        '</span>' +
+        '<span class="ci-row-sub">' + esc(r.code) + ' · ' + esc(r.phone) + '</span>' +
+      '</div>' +
+      statusText +
+      '<div class="ci-row-action">' + action + '</div>' +
+      '</div>';
+  }
+
+  function render() {
+    var list = filtered();
+    var order = checkinOrder();
+    document.getElementById('ci-list').innerHTML = list.length
+      ? list.map(function (r) { return rowHtml(r, order); }).join('')
+      : EMPTY_HTML;
+    document.getElementById('ci-count').textContent = 'แสดง ' + list.length + ' จาก ' + rows.length + ' คน';
+    renderRecent();
+  }
+
+  /* เช็คอินล่าสุด — เรียงเวลาจากมากไปน้อย แสดง 5 รายการ */
+  function renderRecent() {
+    var recent = rows.filter(function (r) { return r.checkedIn; })
+      .slice()
+      .sort(function (a, b) { return b.time.localeCompare(a.time); })
+      .slice(0, 5);
+
+    document.getElementById('ci-recent').innerHTML = recent.length
+      ? recent.map(function (r) {
+          return '<div class="ci-recent-row">' +
+            '<span class="ci-recent-name">' + esc(r.name) + '</span>' +
+            '<span class="ci-recent-time">' + esc(r.time) + ' น.</span>' +
+            '</div>';
+        }).join('')
+      : '<span class="ci-recent-empty">ยังไม่มีผู้เช็คอิน</span>';
+  }
+
+  /* ---------- 5. QR ----------
+     ต้นแบบยังไม่มี backend ออก token ให้ จึงสร้าง QR เป็น SVG จากรหัสกิจกรรม
+     เมื่อต่อ backend จริง ให้แทนที่ทั้งฟังก์ชันนี้ด้วย <img src="{{qrUrl}}"> ที่ผูก token หมดอายุ */
+  function qrSvg(seed) {
+    /* ลายจำลอง 25x25 ช่อง แบบกำหนดค่าคงที่จาก seed ไม่ใช่ QR ที่สแกนได้จริง */
+    var n = 25, cells = '', h = 0, i;
+    for (i = 0; i < seed.length; i++) h = (h * 131 + seed.charCodeAt(i)) >>> 0;
+    for (i = 0; i < n * n; i++) {
+      h = (h * 1103515245 + 12345) >>> 0;
+      if ((h >>> 16) % 100 < 46) cells += '<rect x="' + (i % n) + '" y="' + Math.floor(i / n) + '" width="1" height="1"/>';
+    }
+    /* ตำแหน่งมุมสามจุดของ QR จริง ใส่ไว้ให้ดูออกว่าเป็น QR */
+    [[0, 0], [n - 7, 0], [0, n - 7]].forEach(function (p) {
+      cells += '<rect x="' + p[0] + '" y="' + p[1] + '" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/>' +
+        '<rect x="' + (p[0] + 2) + '" y="' + (p[1] + 2) + '" width="3" height="3"/>';
+    });
+    return '<svg class="ci-qr-img" viewBox="0 0 ' + n + ' ' + n + '" fill="currentColor" role="img" aria-label="QR เช็คอิน">' + cells + '</svg>';
+  }
+
+  function renderQr() {
+    var svg = qrSvg(activity.id);
+    document.getElementById('ci-qr').innerHTML =
+      svg + '<span class="ci-qr-note">รหัสจะเปลี่ยนทุก 5 นาที</span>';
+    document.getElementById('ci-qr-large').innerHTML = svg;
+    document.getElementById('ci-qr-modal-title').textContent = activity.name;
+  }
+
+  /* ---------- 6. เหตุการณ์ ---------- */
+  function closePicker() {
+    var panel = document.getElementById('ci-picker-panel');
+    var btn = document.getElementById('ci-picker-btn');
+    if (panel) panel.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function switchActivity(id) {
+    var next = activities.filter(function (a) { return a.id === id; })[0];
+    if (!next || next.id === activity.id) return;
+    activity = next;
+    rows = buildRows(activity);
+    state.tab = 'all';
+    state.search = '';
+    var search = document.getElementById('ci-search');
+    if (search) search.value = '';
+    history.replaceState(null, '', location.pathname + '?id=' + encodeURIComponent(activity.id));
+    renderActivity();
+    renderPills();
+    renderQr();
+    render();
+  }
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('#ci-picker-btn');
+    if (toggle) {
+      var panel = document.getElementById('ci-picker-panel');
+      var open = panel.hidden;
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      return;
+    }
+
+    var pick = e.target.closest('[data-activity]');
+    if (pick) {
+      closePicker();
+      switchActivity(pick.getAttribute('data-activity'));
+      return;
+    }
+
+    var tab = e.target.closest('[data-tab]');
+    if (tab) {
+      state.tab = tab.getAttribute('data-tab');
+      renderPills();
+      render();
+      return;
+    }
+
+    var mark = e.target.closest('[data-toggle-checkin]');
+    if (mark) {
+      var row = rows.filter(function (r) { return r.id === mark.getAttribute('data-toggle-checkin'); })[0];
+      if (!row) return;
+      row.checkedIn = !row.checkedIn;
+      if (row.checkedIn) {
+        var now = new Date();
+        row.time = minutesToTime(now.getHours() * 60 + now.getMinutes());
+        row.by = 'เจ้าหน้าที่บันทึก';
+      } else {
+        row.time = '';
+      }
+      renderActivity();
+      renderPills();
+      render();
+      if (window.TFC.showToast) {
+        window.TFC.showToast(row.checkedIn ? 'เช็คอิน ' + row.name + ' แล้ว' : 'ยกเลิกเช็คอิน ' + row.name + ' แล้ว',
+          row.checkedIn ? 'success' : 'info');
+      }
+      return;
+    }
+
+    if (e.target.closest('#ci-clear-search')) {
+      state.search = '';
+      var input = document.getElementById('ci-search');
+      if (input) input.value = '';
+      render();
+      return;
+    }
+
+    if (!e.target.closest('.ci-picker')) closePicker();
+  });
+
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePicker(); });
+
+  /* แผงค้นหา — component กลางเดียวกับหน้ารายการอื่น */
+  window.TFC.attachListToolbar({
+    popoverId: 'ci-search-popover',
+    search: { id: 'ci-search', placeholder: 'ชื่อ เบอร์โทร หรือรหัสผู้ลงทะเบียน' },
+    filters: [],
+    onApply: function (values, done) {
+      state.search = values.keyword || '';
+      render();
+      done();
+    }
+  });
+
+  document.getElementById('ci-fullscreen').addEventListener('click', function () {
+    window.TFC.openModal('ci-qr-modal');
+  });
+
+  /* เพิ่ม Walk-in แล้วเช็คอินให้ทันที ตามที่อธิบายไว้ในแผงด้านขวา */
+  document.getElementById('ci-walkin-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('ci-walkin-name').value.trim();
+    if (!name) return;
+    var phone = document.getElementById('ci-walkin-phone').value.trim();
+    var now = new Date();
+    var walkInCount = rows.filter(function (r) { return r.walkIn; }).length + 1;
+
+    rows.unshift({
+      id: activity.id + '-W' + String(walkInCount).padStart(3, '0'),
+      code: 'WLK-' + activity.id.slice(-3) + '-' + String(walkInCount).padStart(3, '0'),
+      name: name,
+      phone: phone || '-',
+      walkIn: true,
+      checkedIn: true,
+      time: minutesToTime(now.getHours() * 60 + now.getMinutes()),
+      by: 'เจ้าหน้าที่บันทึก'
+    });
+
+    this.reset();
+    window.TFC.closeModal('ci-walkin-modal');
+    renderActivity();
+    renderPills();
+    render();
+    if (window.TFC.showToast) window.TFC.showToast('เพิ่ม ' + name + ' และเช็คอินแล้ว', 'success');
+  });
+
+  /* ส่งออก Excel — สร้างแถวจากข้อมูลที่กรองอยู่โดยตรง ไม่ใช้ exportTableCsv
+     เพราะตัวนั้นอ่านจาก thead/tbody ของ <table> จริง แต่รายชื่อหน้านี้เป็น CSS grid */
+  document.getElementById('ci-export').addEventListener('click', function () {
+    var list = filtered().map(function (r, i) {
+      return [i + 1, r.code, r.name, r.phone, r.walkIn ? 'Walk-in' : 'ลงทะเบียนล่วงหน้า',
+        r.checkedIn ? 'เช็คอินแล้ว' : 'ยังไม่มา', r.time ? r.time + ' น.' : '', r.checkedIn ? r.by : ''];
+    });
+    window.TFC.exportCsv('เช็คอิน-' + activity.id + '.csv',
+      ['#', 'รหัส', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'ประเภท', 'สถานะ', 'เวลาเช็คอิน', 'วิธีเช็คอิน'], list);
+  });
+
+  rows = buildRows(activity);
+  renderActivity();
+  renderPills();
+  renderQr();
+  render();
+})();
+</script>
+</body>
+</html>
