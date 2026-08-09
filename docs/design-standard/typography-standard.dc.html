@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@200;300;400;500;600;700&family=Anuphan:wght@200;300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #F6F8F6; }
+  a { color: #16A34A; text-decoration: none; }
+  a:hover { color: #15803D; text-decoration: underline; }
+</style>
+</helmet>
+<div style="font-family: 'IBM Plex Sans Thai', 'Anuphan', system-ui, sans-serif; color: #374151; padding: 56px 64px 96px; max-width: 1360px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px;">
+
+  <header style="display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E5E7EB; padding-bottom: 32px;">
+    <div style="font-size: 13px; font-weight: 500; line-height: 1.5; letter-spacing: 0.04em; color: #16A34A;">DESIGN STANDARD · TYPOGRAPHY</div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 600; line-height: 1.35; color: #111827;">มาตรฐานตัวอักษรของระบบ</h1>
+    <p style="margin: 0; max-width: 720px; font-size: 15px; font-weight: 400; line-height: 1.65; color: #6B7280; text-wrap: pretty;">หน้าจอดูเข้มและหนักเพราะข้อความเกือบทั้งหน้าใช้น้ำหนัก 600 บวกกับสีตัวอักษรที่เกือบดำ เอกสารนี้กำหนดฟอนต์ น้ำหนัก ขนาด ระยะบรรทัด และสีตัวอักษรที่ใช้ร่วมกันทั้งระบบ เพื่อให้หน้าจอเบาลงโดยยังอ่านง่ายและลำดับความสำคัญชัดเจน</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 28px 32px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9CA3AF;">ฟอนต์หลัก</div>
+      <div style="font-size: 26px; font-weight: 500; line-height: 1.4; color: #111827;">IBM Plex Sans Thai</div>
+      <div style="font-size: 14px; font-weight: 400; line-height: 1.65; color: #6B7280;">ใช้ทั้งข้อความไทยและอังกฤษ/ตัวเลข ตัวอักษรไม่มีหัวกลม เส้นสม่ำเสมอ อ่านชัดที่ขนาดเล็ก และมีน้ำหนักครบตั้งแต่ 300–600 ทำให้ไล่ลำดับได้โดยไม่ต้องพึ่งตัวหนา</div>
+      <div style="font-size: 13px; font-weight: 400; line-height: 1.7; color: #9CA3AF;">Fallback: Anuphan → system-ui → sans-serif</div>
+      <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #F3F4F6; padding-top: 18px;">
+        <div style="display: flex; align-items: baseline; gap: 16px;"><span style="width: 116px; font-size: 12px; color: #9CA3AF;">300 Light</span><span style="font-size: 19px; font-weight: 300; color: #1F2937;">พื้นที่ดำเนินงาน 0123456789</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px;"><span style="width: 116px; font-size: 12px; color: #9CA3AF;">400 Regular</span><span style="font-size: 19px; font-weight: 400; color: #1F2937;">พื้นที่ดำเนินงาน 0123456789</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px;"><span style="width: 116px; font-size: 12px; color: #9CA3AF;">500 Medium</span><span style="font-size: 19px; font-weight: 500; color: #1F2937;">พื้นที่ดำเนินงาน 0123456789</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px;"><span style="width: 116px; font-size: 12px; color: #9CA3AF;">600 Semibold</span><span style="font-size: 19px; font-weight: 600; color: #1F2937;">พื้นที่ดำเนินงาน 0123456789</span></div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+      <div style="font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: #9CA3AF;">กฎ 4 ข้อที่ทำให้หน้าจอเบาลง</div>
+      <ol style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; font-size: 14px; font-weight: 400; line-height: 1.7; color: #4B5563;">
+        <li><span style="font-weight: 500; color: #1F2937;">น้ำหนักปกติคือ 400</span> — ใช้ 500 เฉพาะสิ่งที่ต้องเน้น และ 600 เฉพาะหัวข้อหน้า/หัวข้อหลักเท่านั้น ห้ามใช้ 700</li>
+        <li><span style="font-weight: 500; color: #1F2937;">ไม่ใช้สีดำ</span> — ข้อความเข้มสุดคือ #111827 ใช้กับหัวข้อ ส่วนเนื้อหาใช้ #374151 และข้อความรองใช้ #6B7280</li>
+        <li><span style="font-weight: 500; color: #1F2937;">ระยะบรรทัด 1.6–1.7 สำหรับเนื้อหา</span> — ภาษาไทยมีสระบนล่าง ถ้าบรรทัดชิดจะดูทึบทันที หัวข้อใช้ 1.35–1.5</li>
+        <li><span style="font-weight: 500; color: #1F2937;">หนึ่งหน้าจอ เน้นได้จุดเดียว</span> — ถ้าทุกคอลัมน์เข้มเท่ากัน สายตาจะไม่รู้ว่าต้องอ่านอะไรก่อน</li>
+      </ol>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-size: 22px; font-weight: 600; line-height: 1.45; color: #111827;">Type scale</h2>
+    <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 170px 128px 92px 118px 1fr; gap: 20px; padding: 14px 32px; background: #FAFBFA; border-bottom: 1px solid #EEF1EE; font-size: 12px; font-weight: 500; letter-spacing: 0.03em; color: #6B7280;">
+        <div>Token</div><div>ขนาด / บรรทัด</div><div>น้ำหนัก</div><div>สี</div><div>ตัวอย่าง &amp; การใช้งาน</div>
+      </div>
+      <sc-for list="{{ scale }}" as="row" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 170px 128px 92px 118px 1fr; gap: 20px; padding: 18px 32px; border-bottom: 1px solid #F4F6F4; align-items: center;">
+          <div style="font-size: 13px; font-weight: 500; color: #1F2937;">{{ row.token }}</div>
+          <div style="font-size: 13px; font-weight: 400; color: #6B7280; font-variant-numeric: tabular-nums;">{{ row.size }}</div>
+          <div style="font-size: 13px; font-weight: 400; color: #6B7280;">{{ row.weight }}</div>
+          <div style="font-size: 12px; font-weight: 400; color: #6B7280; display: flex; align-items: center; gap: 8px;"><span style="width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.08); background: {{ row.color }};"></span>{{ row.color }}</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: {{ row.px }}; line-height: {{ row.lh }}; font-weight: {{ row.w }}; color: {{ row.color }}; letter-spacing: {{ row.ls }};">{{ row.sample }}</div>
+            <div style="font-size: 12px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">{{ row.use }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="padding: 16px 32px; font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ขนาดเล็กสุดที่อนุญาตคือ 12px และใช้ได้เฉพาะป้ายสถานะหรือคำอธิบายสั้น ๆ · ตัวเลขทุกจุดตั้ง <span style="color: #6B7280;">font-variant-numeric: tabular-nums</span> เพื่อให้คอลัมน์ตรงกัน</div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; line-height: 1.45; color: #111827;">ก่อน / หลัง — ตารางพื้นที่ดำเนินงาน</h2>
+      <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.65; color: #6B7280;">โครงสร้างและสีของแบรนด์เหมือนเดิมทั้งหมด เปลี่ยนเฉพาะน้ำหนักฟอนต์ สีตัวอักษร และระยะบรรทัด</p>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #B91C1C; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 999px; padding: 4px 12px;">ก่อน — ทุกอย่างน้ำหนัก 600</span>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="font-size: 22px; font-weight: 700; color: #0B0B0B;">พื้นที่ดำเนินงาน</div>
+          <div style="display: grid; grid-template-columns: 28px 1.5fr 1fr 0.9fr 1fr; gap: 12px; font-size: 14px; font-weight: 600; color: #111111; border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;">
+            <div>#</div><div>ชื่อพื้นที่</div><div>ประเภทพื้นที่</div><div>ผู้ประสานงาน</div><div>สถานะ</div>
+          </div>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 28px 1.5fr 1fr 0.9fr 1fr; gap: 12px; align-items: center; border-bottom: 1px solid #F1F1F1; padding-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: 600; color: #111111;">{{ r.n }}</div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 14px; font-weight: 700; line-height: 1.3; color: #0B0B0B;">{{ r.name }}</div>
+                <div style="font-size: 13px; font-weight: 600; line-height: 1.3; color: #4B5563;">{{ r.area }}</div>
+              </div>
+              <div style="font-size: 14px; font-weight: 600; color: #111111;">{{ r.type }}</div>
+              <div style="font-size: 14px; font-weight: 600; color: #111111;">{{ r.owner }}</div>
+              <div><span style="font-size: 13px; font-weight: 700; color: #15803D; background: #DCFCE7; border-radius: 999px; padding: 4px 12px;">ดำเนินการอยู่</span></div>
+            </div>
+          </sc-for>
+          <div style="font-size: 14px; font-weight: 700; color: #0B0B0B;">รวม 3 พื้นที่</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px;">หลัง — ตามมาตรฐาน</span>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="font-size: 22px; font-weight: 600; line-height: 1.4; color: #111827;">พื้นที่ดำเนินงาน</div>
+          <div style="display: grid; grid-template-columns: 28px 1.5fr 1fr 0.9fr 1fr; gap: 12px; font-size: 13px; font-weight: 500; line-height: 1.5; color: #6B7280; border-bottom: 1px solid #EEF1EE; padding-bottom: 12px;">
+            <div>#</div><div>ชื่อพื้นที่</div><div>ประเภทพื้นที่</div><div>ผู้ประสานงาน</div><div>สถานะ</div>
+          </div>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 28px 1.5fr 1fr 0.9fr 1fr; gap: 12px; align-items: center; border-bottom: 1px solid #F4F6F4; padding-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: 400; color: #9CA3AF; font-variant-numeric: tabular-nums;">{{ r.n }}</div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #1F2937;">{{ r.name }}</div>
+                <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">{{ r.area }}</div>
+              </div>
+              <div style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563;">{{ r.type }}</div>
+              <div style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563;">{{ r.owner }}</div>
+              <div><span style="font-size: 12px; font-weight: 500; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px;">ดำเนินการอยู่</span></div>
+            </div>
+          </sc-for>
+          <div style="font-size: 14px; font-weight: 500; line-height: 1.6; color: #1F2937;">รวม 3 พื้นที่</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600; line-height: 1.45; color: #111827;">สีตัวอักษร</h2>
+      <sc-for list="{{ colors }}" as="c" hint-placeholder-count="5">
+        <div style="display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #F4F6F4; padding-bottom: 14px;">
+          <span style="width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.06); background: {{ c.hex }}; flex: none;"></span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #1F2937;">{{ c.name }}</div>
+            <div style="font-size: 12px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">{{ c.use }}</div>
+          </div>
+          <div style="font-size: 12px; font-weight: 400; color: #6B7280; font-variant-numeric: tabular-nums;">{{ c.hex }}</div>
+        </div>
+      </sc-for>
+      <div style="font-size: 13px; font-weight: 400; line-height: 1.7; color: #9CA3AF;">พื้นหลังของหน้าใช้ #F6F8F6 และการ์ดใช้ #FFFFFF เพื่อให้คอนทราสต์ไม่แข็งเท่าดำบนขาวสนิท</div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E9EDE9; border-radius: 14px; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600; line-height: 1.45; color: #111827;">ควรทำ / ไม่ควรทำ</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #15803D;">ควรทำ</div>
+          <sc-for list="{{ dos }}" as="d" hint-placeholder-count="4">
+            <div style="font-size: 13px; font-weight: 400; line-height: 1.7; color: #4B5563;">{{ d }}</div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #B91C1C;">ไม่ควรทำ</div>
+          <sc-for list="{{ donts }}" as="d" hint-placeholder-count="4">
+            <div style="font-size: 13px; font-weight: 400; line-height: 1.7; color: #9CA3AF;">{{ d }}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background: #FAFBFA; border: 1px solid #EEF1EE; border-radius: 10px; padding: 18px 20px; font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.9; color: #4B5563; white-space: pre;">{{ css }}</div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 24px; border-top: 1px solid #E5E7EB; padding-top: 48px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #16A34A;">RECOMMENDATIONS</div>
+      <h2 style="margin: 0; font-size: 26px; font-weight: 600; line-height: 1.4; color: #111827;">6 ข้อที่ทำให้ระบบดูพรีเมียมขึ้น</h2>
+      <p style="margin: 0; max-width: 760px; font-size: 15px; font-weight: 400; line-height: 1.65; color: #6B7280; text-wrap: pretty;">นอกจากตัวอักษร ความรู้สึก “พรีเมียม” มาจากที่ว่าง เส้นที่น้อยลง และการใช้สีเน้นอย่างประหยัด ทั้งหกข้อนี้ปรับได้โดยไม่ต้องเปลี่ยนโครงสร้างหน้าจอเดิม</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+      <sc-for list="{{ recs }}" as="rec" hint-placeholder-count="6">
+        <div style="background: #FFFFFF; border: 1px solid #EEF1EE; border-radius: 16px; padding: 26px 28px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.03);">
+          <div style="font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: #16A34A; font-variant-numeric: tabular-nums;">{{ rec.no }}</div>
+          <div style="font-size: 16px; font-weight: 500; line-height: 1.5; color: #1F2937;">{{ rec.title }}</div>
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.75; color: #6B7280; text-wrap: pretty;">{{ rec.detail }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; line-height: 1.45; color: #111827;">ตัวอย่างหน้าจอเมื่อใช้ทั้งหมดร่วมกัน</h2>
+      <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.65; color: #6B7280;">เนื้อหา คอลัมน์ และสีแบรนด์เดิมทั้งหมด — ต่างกันที่น้ำหนักฟอนต์ ที่ว่าง เส้น และการใช้เขียวน้อยลง</p>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #EEF1EE; border-radius: 18px; display: grid; grid-template-columns: 244px 1fr; box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.05); isolation: isolate;">
+
+      <aside style="background: #FFFFFF; border-right: 1px solid #F1F4F1; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="padding: 0 12px; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 28px; height: 28px; border-radius: 8px; background: #16A34A; display: block;"></span>
+          <span style="font-size: 15px; font-weight: 500; color: #1F2937;">The Farm Concept</span>
+        </div>
+        <nav style="display: flex; flex-direction: column; gap: 2px;">
+          <sc-for list="{{ nav }}" as="item" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="{{ item.d }}"></path></svg>
+              <span style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563; flex: 1;">{{ item.label }}</span>
+              <sc-if value="{{ item.caret }}" hint-placeholder-val="{{ true }}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="M8 10l4 4 4-4"></path></svg>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="display: flex; flex-direction: column; gap: 2px; padding-left: 12px; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #F0FDF4; box-shadow: inset 2px 0 0 #16A34A;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21Z"></path><circle cx="12" cy="10.4" r="2.2"></circle></svg>
+              <span style="font-size: 14px; font-weight: 500; line-height: 1.6; color: #15803D;">พื้นที่ดำเนินงาน</span>
+            </div>
+            <sc-for list="{{ navChildrenRest }}" as="c" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="{{ c.d }}"></path></svg>
+                <span style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #6B7280;">{{ c.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </nav>
+      </aside>
+
+      <div style="background: #FCFDFC; display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid #F1F4F1; background: #FFFFFF;">
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">แดชบอร์ด <span style="color: #D1D5DB;">/</span> <span style="color: #4B5563; font-weight: 500;">พื้นที่ดำเนินงาน</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px;">
+              <span style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">สุนิสา แก้วมณี</span>
+              <span style="font-size: 12px; font-weight: 400; line-height: 1.5; color: #9CA3AF;">เจ้าหน้าที่โครงการ</span>
+            </div>
+            <span style="width: 34px; height: 34px; border-radius: 999px; background: #F0FDF4; border: 1px solid #E5E7EB; display: block;"></span>
+          </div>
+        </div>
+
+        <div style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <h3 style="margin: 0; font-size: 26px; font-weight: 600; line-height: 1.4; color: #111827;">พื้นที่ดำเนินงาน</h3>
+              <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ทั้งหมด 3 พื้นที่ · จัดกิจกรรมแล้ว 13 ครั้ง</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="position: relative;">
+                <button type="button" onClick="{{ toggleSearch }}" title="ค้นหาและกรองข้อมูล" style="{{ searchBtnStyle }}">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>
+                </button>
+                <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ true }}">
+                  <div style="position: absolute; top: 48px; right: -8px; width: 320px; max-width: calc(100vw - 48px); z-index: 30; background: #FFFFFF; border: 1px solid #EEF1EE; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.10); text-align: left;">
+                    <div style="position: absolute; top: -6px; right: 22px; width: 11px; height: 11px; background: #FFFFFF; border-left: 1px solid #EEF1EE; border-top: 1px solid #EEF1EE; transform: rotate(45deg);"></div>
+
+                    <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #1F2937;">ค้นหาและกรองข้อมูล</div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                      <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">คำค้นหา</label>
+                      <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #E5E7EB; border-radius: 10px; padding: 0 12px; background: #FFFFFF;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.7" stroke-linecap="round" style="flex: none;"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>
+                        <input type="text" value="{{ q }}" onChange="{{ onQuery }}" placeholder="ชื่อพื้นที่ เขต หรือผู้ประสานงาน" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; border: none; outline: none; background: transparent; padding: 10px 0; flex: 1; min-width: 0;" />
+                      </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                      <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">เรียงลำดับ</label>
+                      <select value="{{ sort }}" onChange="{{ onSort }}" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; width: 100%;">
+                        <sc-for list="{{ sortOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px; border-top: 1px solid #F4F6F4; padding-top: 16px;">
+                      <button type="button" onClick="{{ clearAll }}" style="font-family: inherit; font-size: 13px; font-weight: 400; color: #6B7280; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 9px 14px; cursor: pointer; transition: background 150ms;" style-hover="background: #FAFBFA; color: #1F2937;">ล้างค่า</button>
+                      <button type="button" onClick="{{ applySearch }}" style="font-family: inherit; font-size: 13px; font-weight: 500; color: #FFFFFF; background: #16A34A; border: 1px solid #16A34A; border-radius: 10px; padding: 9px 18px; cursor: pointer; flex: 1; box-shadow: 0 1px 2px rgba(22,163,74,0.24); transition: background 150ms;" style-hover="background: #15803D; border-color: #15803D;">ค้นหา</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+              <button style="font-family: inherit; font-size: 13px; font-weight: 400; color: #4B5563; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 16px; cursor: pointer;" style-hover="background: #FAFBFA; color: #1F2937;">ดาวน์โหลด</button>
+              <button style="font-family: inherit; font-size: 13px; font-weight: 500; color: #FFFFFF; background: #16A34A; border: 1px solid #16A34A; border-radius: 10px; padding: 10px 18px; cursor: pointer; box-shadow: 0 1px 2px rgba(22,163,74,0.24);" style-hover="background: #15803D; border-color: #15803D;">เพิ่มพื้นที่ดำเนินงาน</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasApplied }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ผลการค้นหา:</span>
+              <span style="font-size: 12px; font-weight: 500; line-height: 1.5; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px;">{{ applied }}</span>
+              <button type="button" onClick="{{ clearAll }}" style="font-family: inherit; font-size: 13px; font-weight: 400; color: #6B7280; background: transparent; border: none; padding: 0; cursor: pointer; text-decoration: underline;" style-hover="color: #1F2937;">ล้างค่า</button>
+            </div>
+          </sc-if>
+
+          <div style="background: #FFFFFF; border: 1px solid #F1F4F1; border-radius: 14px; overflow: hidden;">
+            <div style="display: grid; grid-template-columns: 40px 2fr 1.1fr 1.2fr 1.1fr 0.8fr 1.1fr; gap: 16px; padding: 14px 24px; border-bottom: 1px solid #F1F4F1; font-size: 13px; font-weight: 500; line-height: 1.5; color: #9CA3AF;">
+              <div>#</div><div>ชื่อพื้นที่</div><div>ประเภทพื้นที่</div><div>กลุ่มพื้นที่</div><div>ผู้ประสานงาน</div><div style="text-align: right;">กิจกรรม</div><div>สถานะ</div>
+            </div>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 40px 2fr 1.1fr 1.2fr 1.1fr 0.8fr 1.1fr; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #F6F8F6; align-items: center;" style-hover="background: #FAFBFA;">
+                <div style="font-size: 14px; font-weight: 400; color: #C7CDD4; font-variant-numeric: tabular-nums;">{{ r.n }}</div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #1F2937;">{{ r.name }}</div>
+                  <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">{{ r.area }}</div>
+                </div>
+                <div style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563;">{{ r.type }}</div>
+                <div style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563;">{{ r.group }}</div>
+                <div style="font-size: 14px; font-weight: 400; line-height: 1.6; color: #4B5563;">{{ r.owner }}</div>
+                <div style="font-size: 14px; font-weight: 400; color: #4B5563; text-align: right; font-variant-numeric: tabular-nums;">{{ r.count }}</div>
+                <div><span style="font-size: 12px; font-weight: 500; line-height: 1.5; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px; display: inline-block;">ดำเนินการอยู่</span></div>
+              </div>
+            </sc-for>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px;">
+              <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">แสดง 1–3 จาก 3 รายการ</div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 13px; font-weight: 500; color: #FFFFFF; background: #16A34A; border-radius: 8px; padding: 6px 12px;">1</span>
+                <span style="font-size: 13px; font-weight: 400; color: #9CA3AF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 6px 12px;">ถัดไป</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 24px; border-top: 1px solid #E5E7EB; padding-top: 48px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #16A34A;">FORM STANDARD</div>
+      <h2 style="margin: 0; font-size: 26px; font-weight: 600; line-height: 1.4; color: #111827;">มาตรฐานหน้าฟอร์ม</h2>
+      <p style="margin: 0; max-width: 780px; font-size: 15px; font-weight: 400; line-height: 1.65; color: #6B7280; text-wrap: pretty;">ระบบใช้ฟอร์มสองแบบเท่านั้น — <span style="color: #1F2937; font-weight: 500;">Popup</span> สำหรับงานสั้นที่ทำจบในที่เดียว และ <span style="color: #1F2937; font-weight: 500;">หน้าจอเต็ม</span> สำหรับข้อมูลยาวหรือหลายกลุ่ม ทั้งสองแบบใช้ label ฟิลด์ ปุ่ม และ error เหมือนกันทั้งหมด ต่างกันแค่ภาชนะ</p>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #EEF1EE; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.03);">
+      <sc-for list="{{ formRules }}" as="r" hint-placeholder-count="9">
+        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 24px; padding: 16px 28px; border-bottom: 1px solid #F4F6F4;">
+          <div style="font-size: 13px; font-weight: 500; line-height: 1.6; color: #1F2937;">{{ r.k }}</div>
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.75; color: #6B7280; text-wrap: pretty;">{{ r.v }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px;">แบบที่ 1 — Popup</span>
+        <span style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">กว้างสูงสุด 960px · สูงไม่เกิน 80% ของจอ · เนื้อหาเลื่อนได้ แถบปุ่มติดล่าง</span>
+      </div>
+      <div style="position: relative; background: #F1F3F1; border: 1px solid #EEF1EE; border-radius: 18px; padding: 40px 32px; display: flex; justify-content: center;">
+        <div style="width: 100%; max-width: 880px; background: #FFFFFF; border-radius: 16px; box-shadow: 0 8px 12px rgba(16,24,40,0.06), 0 24px 60px rgba(16,24,40,0.14); overflow: hidden;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 24px 28px 20px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 20px; font-weight: 600; line-height: 1.45; color: #111827;">เพิ่มพื้นที่ดำเนินงาน</div>
+              <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ช่องที่มี <span style="color: #DC2626;">*</span> จำเป็นต้องกรอก</div>
+            </div>
+            <button type="button" style="font-family: inherit; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E5E7EB; background: #FFFFFF; color: #9CA3AF; cursor: pointer; flex: none; transition: background 150ms;" style-hover="background: #FAFBFA; color: #4B5563;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
+            </button>
+          </div>
+
+          <div style="padding: 4px 28px 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px;">
+            <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ชื่อพื้นที่ดำเนินงาน <span style="color: #DC2626;">*</span></label>
+              <input type="text" placeholder="เช่น ชุมชนพูนทรัพย์" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none; transition: border-color 150ms, box-shadow 150ms;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ประเภทพื้นที่</label>
+              <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>เอกชน</option><option>ชุมชน/หมู่บ้าน</option><option>หน่วยงานรัฐ</option></select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">กลุ่มพื้นที่ <span style="color: #DC2626;">*</span></label>
+              <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>พื้นที่ต้นแบบ</option><option>พื้นที่ต้นแบบส่วนขยาย</option></select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">จังหวัด</label>
+              <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>กรุงเทพมหานคร</option><option>นนทบุรี</option></select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">เขต/อำเภอ</label>
+              <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>เขตบางนา</option><option>เขตสายไหม</option></select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">วันที่เริ่มดำเนินการ</label>
+              <div style="position: relative; display: flex;">
+                <input type="text" placeholder="วว/ดด/ปปปป" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 40px 10px 12px; outline: none; width: 100%;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; pointer-events: none;"><rect x="4" y="6" width="16" height="14" rx="2"></rect><path d="M8 3v4M16 3v4M4 11h16"></path></svg>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">สิ้นสุด</label>
+              <div style="position: relative; display: flex;">
+                <input type="text" placeholder="วว/ดด/ปปปป" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 40px 10px 12px; outline: none; width: 100%;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; pointer-events: none;"><rect x="4" y="6" width="16" height="14" rx="2"></rect><path d="M8 3v4M16 3v4M4 11h16"></path></svg>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ร่วมกับหน่วยงาน</label>
+              <input type="text" placeholder="พิมพ์ชื่อหน่วยงานแล้วกด Enter" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ผู้ประสานงาน <span style="color: #DC2626;">*</span></label>
+              <input type="text" placeholder="ชื่อ–นามสกุล" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">เบอร์โทร <span style="color: #DC2626;">*</span></label>
+              <input type="text" value="08x-xxx" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #FECACA; border-radius: 10px; padding: 10px 12px; outline: none;" />
+              <span style="font-size: 12px; font-weight: 400; line-height: 1.5; color: #B91C1C;">กรอกเบอร์โทร 10 หลัก เช่น 081-234-5678</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ตำแหน่ง</label>
+              <input type="text" placeholder="เช่น เจ้าหน้าที่ประสานงาน" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+            </div>
+
+            <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ลิงก์ Google Map</label>
+              <input type="text" placeholder="https://maps.app.goo.gl/…" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">สถานะ <span style="color: #DC2626;">*</span></label>
+              <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>ดำเนินการอยู่</option><option>รอเริ่มดำเนินการ</option><option>สิ้นสุดโครงการ</option></select>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 18px 28px; border-top: 1px solid #F1F4F1; background: #FCFDFC;">
+            <button type="button" style="font-family: inherit; font-size: 13px; font-weight: 400; color: #4B5563; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 18px; cursor: pointer; transition: background 150ms;" style-hover="background: #FAFBFA; color: #1F2937;">ยกเลิก</button>
+            <button type="button" style="font-family: inherit; font-size: 13px; font-weight: 500; color: #FFFFFF; background: #16A34A; border: 1px solid #16A34A; border-radius: 10px; padding: 10px 22px; cursor: pointer; box-shadow: 0 1px 2px rgba(22,163,74,0.24); transition: background 150ms;" style-hover="background: #15803D; border-color: #15803D;">บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: #15803D; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 999px; padding: 4px 12px;">แบบที่ 2 — หน้าจอเต็ม</span>
+        <span style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">แบ่งเป็นกลุ่มการ์ด มีหัวข้อกลุ่ม · แถบปุ่มติดขอบล่างของหน้า · เนื้อหากว้างสูงสุด 1040px</span>
+      </div>
+      <div style="background: #FCFDFC; border: 1px solid #EEF1EE; border-radius: 18px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.05);">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid #F1F4F1; background: #FFFFFF;">
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">แดชบอร์ด <span style="color: #D1D5DB;">/</span> พื้นที่ดำเนินงาน <span style="color: #D1D5DB;">/</span> <span style="color: #4B5563; font-weight: 500;">เพิ่มพื้นที่</span></div>
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">บันทึกร่างอัตโนมัติ 2 นาทีที่แล้ว</div>
+        </div>
+
+        <div style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <button type="button" title="ย้อนกลับ" style="font-family: inherit; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid #E5E7EB; background: #FFFFFF; color: #6B7280; cursor: pointer; flex: none; transition: background 150ms;" style-hover="background: #FAFBFA; color: #1F2937;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"></path></svg>
+            </button>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <h3 style="margin: 0; font-size: 26px; font-weight: 600; line-height: 1.4; color: #111827;">เพิ่มพื้นที่ดำเนินงาน</h3>
+              <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">กรอก 3 กลุ่มข้อมูล · ช่องที่มี <span style="color: #DC2626;">*</span> จำเป็นต้องกรอก</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 1040px;">
+            <div style="background: #FFFFFF; border: 1px solid #F1F4F1; border-radius: 14px; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 16px; font-weight: 500; line-height: 1.5; color: #1F2937;">ข้อมูลพื้นที่</div>
+                <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ชื่อและประเภทที่ใช้แสดงในรายการ</div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px;">
+                <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ชื่อพื้นที่ดำเนินงาน <span style="color: #DC2626;">*</span></label>
+                  <input type="text" placeholder="เช่น ชุมชนพูนทรัพย์" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ประเภทพื้นที่</label>
+                  <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>เอกชน</option><option>ชุมชน/หมู่บ้าน</option></select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">กลุ่มพื้นที่ <span style="color: #DC2626;">*</span></label>
+                  <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>พื้นที่ต้นแบบ</option><option>พื้นที่ต้นแบบส่วนขยาย</option></select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">สถานะ <span style="color: #DC2626;">*</span></label>
+                  <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>ดำเนินการอยู่</option><option>รอเริ่มดำเนินการ</option></select>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #F1F4F1; border-radius: 14px; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 16px; font-weight: 500; line-height: 1.5; color: #1F2937;">ที่ตั้งและระยะเวลา</div>
+                <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ใช้สำหรับรายงานเชิงพื้นที่และช่วงเวลา</div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">จังหวัด</label>
+                  <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>กรุงเทพมหานคร</option></select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">เขต/อำเภอ</label>
+                  <select style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; cursor: pointer; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);"><option>เขตบางนา</option></select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ลิงก์ Google Map</label>
+                  <input type="text" placeholder="https://maps.app.goo.gl/…" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">วันที่เริ่มดำเนินการ</label>
+                  <div style="position: relative; display: flex;">
+                    <input type="text" placeholder="วว/ดด/ปปปป" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 40px 10px 12px; outline: none; width: 100%;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; pointer-events: none;"><rect x="4" y="6" width="16" height="14" rx="2"></rect><path d="M8 3v4M16 3v4M4 11h16"></path></svg>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">สิ้นสุด</label>
+                  <div style="position: relative; display: flex;">
+                    <input type="text" placeholder="วว/ดด/ปปปป" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 40px 10px 12px; outline: none; width: 100%;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; pointer-events: none;"><rect x="4" y="6" width="16" height="14" rx="2"></rect><path d="M8 3v4M16 3v4M4 11h16"></path></svg>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ร่วมกับหน่วยงาน</label>
+                  <input type="text" placeholder="พิมพ์ชื่อหน่วยงานแล้วกด Enter" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #F1F4F1; border-radius: 14px; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 16px; font-weight: 500; line-height: 1.5; color: #1F2937;">ผู้ประสานงาน</div>
+                <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">ผู้รับผิดชอบหลักของพื้นที่นี้</div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ชื่อ–นามสกุล <span style="color: #DC2626;">*</span></label>
+                  <input type="text" placeholder="เช่น สุนิสา แก้วมณี" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">เบอร์โทร <span style="color: #DC2626;">*</span></label>
+                  <input type="text" placeholder="08x-xxx-xxxx" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 13px; font-weight: 500; line-height: 1.5; color: #1F2937;">ตำแหน่ง</label>
+                  <input type="text" placeholder="เช่น เจ้าหน้าที่ประสานงาน" style="font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.6; color: #374151; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; outline: none;" style-focus="border-color: #22C55E; box-shadow: 0 0 0 3px rgba(22,163,74,0.20);" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 32px; border-top: 1px solid #F1F4F1; background: #FFFFFF;">
+          <div style="font-size: 13px; font-weight: 400; line-height: 1.6; color: #9CA3AF;">กรอกครบ 6 จาก 9 ช่องที่จำเป็น</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" style="font-family: inherit; font-size: 13px; font-weight: 400; color: #4B5563; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 18px; cursor: pointer; transition: background 150ms;" style-hover="background: #FAFBFA; color: #1F2937;">ยกเลิก</button>
+            <button type="button" style="font-family: inherit; font-size: 13px; font-weight: 500; color: #FFFFFF; background: #16A34A; border: 1px solid #16A34A; border-radius: 10px; padding: 10px 22px; cursor: pointer; box-shadow: 0 1px 2px rgba(22,163,74,0.24); transition: background 150ms;" style-hover="background: #15803D; border-color: #15803D;">บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { searchOpen: false, q: "", sort: "ปรับปรุงล่าสุด — ใหม่ไปเก่า", applied: "" };
+
+  renderVals() {
+    const st = this.state;
+    const sortOpts = [
+      "ปรับปรุงล่าสุด — ใหม่ไปเก่า",
+      "ปรับปรุงล่าสุด — เก่าไปใหม่",
+      "ชื่อพื้นที่ — ก–ฮ",
+      "ชื่อพื้นที่ — ฮ–ก",
+      "จำนวนกิจกรรม — มากไปน้อย",
+      "จำนวนกิจกรรม — น้อยไปมาก"
+    ];
+    const filterVals = {
+      searchOpen: st.searchOpen,
+      q: st.q,
+      sort: st.sort,
+      sortOpts,
+      applied: st.applied,
+      hasApplied: !!st.applied,
+      toggleSearch: () => this.setState(s => ({ searchOpen: !s.searchOpen })),
+      closeSearch: () => this.setState({ searchOpen: false }),
+      onQuery: (e) => this.setState({ q: e.target.value }),
+      onSort: (e) => this.setState({ sort: e.target.value }),
+      clearAll: () => this.setState({ q: "", sort: sortOpts[0], applied: "" }),
+      applySearch: () => this.setState(s => ({
+        searchOpen: false,
+        applied: s.q ? "คำค้น “" + s.q + "” · เรียงตาม " + s.sort : "เรียงตาม " + s.sort
+      })),
+      searchBtnStyle: "font-family: inherit; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; transition: background 150ms cubic-bezier(0.2,0,0.2,1), border-color 150ms, color 150ms; background: " + (st.searchOpen ? "#F0FDF4" : "#FFFFFF") + "; border: 1px solid " + (st.searchOpen ? "#BBF7D0" : "#E5E7EB") + "; color: " + (st.searchOpen ? "#15803D" : "#6B7280") + ";"
+    };
+    return Object.assign(filterVals, this.baseVals());
+  }
+
+  baseVals() {
+    const scale = [
+      { token: "page-title", size: "28 / 1.4", weight: "600", color: "#111827", px: "28px", lh: "1.4", w: 600, ls: "0", sample: "พื้นที่ดำเนินงาน", use: "ชื่อหน้า — หนึ่งจุดต่อหนึ่งหน้าจอ" },
+      { token: "section-title", size: "20 / 1.45", weight: "600", color: "#111827", px: "20px", lh: "1.45", w: 600, ls: "0", sample: "ข้อมูลพื้นฐานของพื้นที่", use: "หัวข้อกลุ่ม, หัวข้อ modal" },
+      { token: "card-title", size: "16 / 1.5", weight: "500", color: "#1F2937", px: "16px", lh: "1.5", w: 500, ls: "0", sample: "ชุมชนพูนทรัพย์", use: "หัวการ์ด, ชื่อรายการที่คลิกได้" },
+      { token: "body-strong", size: "14 / 1.6", weight: "500", color: "#1F2937", px: "14px", lh: "1.6", w: 500, ls: "0", sample: "The Farm Concept", use: "คอลัมน์หลักของตาราง, label ของฟอร์ม" },
+      { token: "body", size: "14 / 1.6", weight: "400", color: "#374151", px: "14px", lh: "1.6", w: 400, ls: "0", sample: "ชุมชน/หมู่บ้าน · พื้นที่ต้นแบบส่วนขยาย", use: "เนื้อหาทั่วไป, ค่าในตาราง, ค่าในฟอร์ม" },
+      { token: "table-header", size: "13 / 1.5", weight: "500", color: "#6B7280", px: "13px", lh: "1.5", w: 500, ls: "0.01em", sample: "ผู้ประสานงาน", use: "หัวตาราง, หัวคอลัมน์ — ไม่ใช้ตัวหนา" },
+      { token: "secondary", size: "13 / 1.6", weight: "400", color: "#6B7280", px: "13px", lh: "1.6", w: 400, ls: "0", sample: "เขตบางนา กรุงเทพมหานคร", use: "คำอธิบายใต้ชื่อ, helper text, วันที่" },
+      { token: "caption", size: "12 / 1.5", weight: "500", color: "#15803D", px: "12px", lh: "1.5", w: 500, ls: "0.01em", sample: "ดำเนินการอยู่", use: "ป้ายสถานะ, tag, ตัวเลขนับ" }
+    ];
+    const rows = [
+      { n: "1", name: "The Farm Concept", area: "เขตบางนา กรุงเทพมหานคร", type: "เอกชน", group: "พื้นที่ต้นแบบ", owner: "วีระ ศรีสมบัติ", count: "6" },
+      { n: "2", name: "ชุมชนพูนทรัพย์", area: "เขตสายไหม กรุงเทพมหานคร", type: "ชุมชน/หมู่บ้าน", group: "พื้นที่ต้นแบบส่วนขยาย", owner: "อรุณี ทองสุข", count: "4" },
+      { n: "3", name: "ชุมชนตึกร้าง", area: "เขตบางพลัด กรุงเทพมหานคร", type: "ชุมชน/หมู่บ้าน", group: "พื้นที่ต้นแบบส่วนขยาย", owner: "ปิยะดา รุ่งเรือง", count: "3" }
+    ];
+    const colors = [
+      { name: "Text / Strong", hex: "#111827", use: "ชื่อหน้าและหัวข้อเท่านั้น" },
+      { name: "Text / Primary", hex: "#1F2937", use: "ข้อความที่ต้องเน้นในตารางและฟอร์ม" },
+      { name: "Text / Body", hex: "#374151", use: "เนื้อหาทั่วไป" },
+      { name: "Text / Secondary", hex: "#6B7280", use: "หัวตาราง, คำอธิบาย, วันที่" },
+      { name: "Text / Muted", hex: "#9CA3AF", use: "ลำดับที่, placeholder, ข้อความประกอบ" },
+      { name: "Text / Brand", hex: "#16A34A", use: "ลิงก์และข้อความบนปุ่มสีเขียว" }
+    ];
+    const dos = [
+      "ใช้สีอ่อนลงเพื่อลดลำดับความสำคัญ ก่อนคิดถึงการลดขนาด",
+      "หัวตารางใช้ 13/500 สีเทา ไม่ใช้ตัวหนา",
+      "ตัวเลขและวันที่ใช้ tabular-nums",
+      "เว้นบรรทัด 1.6 ขึ้นไปสำหรับข้อความไทยหลายบรรทัด"
+    ];
+    const donts = [
+      "ไม่ใช้ font-weight 700 ในหน้าจอระบบ",
+      "ไม่ใช้ #000 หรือสีดำสนิทกับข้อความ",
+      "ไม่เน้นทั้งแถวของตาราง เน้นได้คอลัมน์เดียว",
+      "ไม่ใช้ตัวอักษรเล็กกว่า 12px และไม่ใช้ตัวพิมพ์ใหญ่ทั้งคำกับข้อความไทย"
+    ];
+    const css = [
+      ":root {",
+      "  --font-sans: 'IBM Plex Sans Thai', 'Anuphan', sans-serif;",
+      "  --text-strong: #111827;",
+      "  --text-primary: #1F2937;",
+      "  --text-body: #374151;",
+      "  --text-secondary: #6B7280;",
+      "  --text-muted: #9CA3AF;",
+      "}",
+      "body { font: 400 14px/1.6 var(--font-sans);",
+      "       color: var(--text-body); }"
+    ].join("\n");
+    const recs = [
+      { no: "01", title: "ลดจำนวนเส้นขอบ ใช้ระยะห่างแทน", detail: "ตารางเดิมมีเส้นล้อมทุกด้าน ทำให้หน้าจอดูเป็นตะแกรง เปลี่ยนเป็นเส้นคั่นแนวนอนบาง #F1F4F1 เส้นเดียว แล้วเพิ่มความสูงแถวเป็น 56–64px ความหรูมาจากที่ว่าง ไม่ใช่จากเส้น" },
+      { no: "02", title: "ใช้เงาแทนขอบสำหรับการ์ด", detail: "การ์ดใช้ border 1px #EEF1EE + shadow 0 1px 2px rgba(16,24,40,.04) และ 0 8px 24px rgba(16,24,40,.04) มุมโค้ง 14–16px จะดูลอยเบา ๆ แทนที่จะดูเป็นกรอบ" },
+      { no: "03", title: "เขียวเป็นสีเน้น ไม่ใช่สีพื้น", detail: "ใช้เขียวเข้ม #16A34A เฉพาะปุ่มหลักหนึ่งปุ่มต่อหน้า, สถานะ active และไอคอนเมนูที่เลือก ส่วนที่เหลือเป็นกลาง เขียวที่ใช้น้อยลงจะดูแพงขึ้นทันที" },
+      { no: "04", title: "เมนูซ้ายเป็นพื้นขาว ไม่มีกล่องเน้น", detail: "รายการที่เลือกใช้พื้น #F0FDF4 อ่อน + แถบซ้าย 2px สีเขียว แทนกล่องเขียวทึบเต็มความกว้าง และไอคอนใช้เส้น 1.5px สีเทาเมื่อไม่ได้เลือก" },
+      { no: "05", title: "ระยะห่างเป็นสเกล 4px", detail: "4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 เท่านั้น เนื้อหาหลักเว้นขอบ 32px ขึ้นไป และเว้นระหว่างกลุ่ม 32–48px หน้าที่อึดอัดเกือบทั้งหมดคือหน้าที่ padding น้อยกว่า 24px" },
+      { no: "06", title: "สถานะและรายละเอียดเล็ก ๆ", detail: "hover ของแถวใช้ #FAFBFA, focus ring เขียวโปร่ง 3px, ปุ่มเปลี่ยนสีแบบ transition 150ms, ป้ายสถานะเป็น pill โปร่งมีขอบ ไม่ใช่สีทึบ รายละเอียดเหล่านี้คือสิ่งที่ทำให้รู้สึกว่าระบบ 'ทำมาดี'" }
+    ];
+    const nav = [
+      { label: "แดชบอร์ด", d: "M4 11.5 12 4l8 7.5M6.5 10v10h11V10", caret: false },
+      { label: "ผู้เข้าร่วมทั้งหมด", d: "M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11ZM3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2M16 5.2a3 3 0 0 1 0 5.9M17.5 14.9c2 .6 3.3 2.4 3.3 4.6", caret: false },
+      { label: "กิจกรรม", d: "M4.5 6.5h15v13h-15zM8 3.5v4M16 3.5v4M4.5 11h15", caret: false },
+      { label: "การเปลี่ยนแปลงสุขภาพ", d: "M3.5 12.5h4L10 7l3.5 10L16 12.5h4.5", caret: true },
+      { label: "แบบประเมิน", d: "M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5", caret: true },
+      { label: "รายงาน", d: "M3.5 19.5 9 13l3.5 3L20.5 6M20.5 6h-4.5M20.5 6v4.5", caret: true },
+      { label: "พื้นฐาน", d: "M5 4.5h9a2.5 2.5 0 0 1 2.5 2.5v12.5H7.5A2.5 2.5 0 0 1 5 17V4.5ZM16.5 7H19v12.5H7.5", caret: true }
+    ];
+    const navChildrenRest = [
+      { label: "กลุ่มเป้าหมาย", d: "M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17ZM12 16.3a4.3 4.3 0 1 0 0-8.6 4.3 4.3 0 0 0 0 8.6ZM12 13.6a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z", active: false },
+      { label: "โปรแกรม/หลักสูตร", d: "M5 4.5h9a2.5 2.5 0 0 1 2.5 2.5v12.5H7.5A2.5 2.5 0 0 1 5 17V4.5ZM9 9h5M9 12.5h3.5", active: false }
+    ];
+    const formRules = [
+      { k: "เลือกแบบไหน", v: "ฟิลด์ไม่เกิน 12 ช่อง และไม่ต้องดูข้อมูลอื่นประกอบ → Popup · มากกว่านั้น มีหลายกลุ่ม แนบไฟล์ หรือมีตารางย่อย → หน้าจอเต็ม" },
+      { k: "Label", v: "13px / 500 / #1F2937 · อยู่เหนือฟิลด์เสมอ ห้ามวางซ้าย · ระยะ label→field 8px" },
+      { k: "ดอกจันบังคับกรอก", v: "สี #DC2626 ขนาดเท่า label ตามหลังข้อความ 2px และมีบรรทัดบอก “* จำเป็นต้องกรอก” ที่หัวฟอร์ม" },
+      { k: "ฟิลด์", v: "สูง 42px · padding 10/12 · radius 10px · border #E5E7EB · ข้อความ 14px/400/#374151 · placeholder #9CA3AF" },
+      { k: "Focus", v: "border #22C55E + ring 3px rgba(22,163,74,.20) — ห้ามใช้ outline ดำของเบราว์เซอร์" },
+      { k: "Error", v: "border #FECACA · ข้อความ 12px #B91C1C ใต้ฟิลด์ 6px · ฟิลด์แรกที่ผิดต้องถูก focus อัตโนมัติ" },
+      { k: "Grid", v: "3 คอลัมน์ gap 20/16px · ฟิลด์ที่ยาว (ชื่อ, ลิงก์, ที่อยู่) กิน 2 คอลัมน์ · หน้าจอเต็มแบ่งเป็นกลุ่มมีหัวข้อ" },
+      { k: "ปุ่ม", v: "ชิดขวาล่างเสมอ · “ยกเลิก” เป็น .btn · “บันทึก” เป็น .btn--primary หนึ่งปุ่ม · popup มีเส้นคั่นบนแถบปุ่ม" },
+      { k: "ปิด/ออก", v: "popup ปิดด้วย ✕ · Esc · คลิกฉากหลัง — ถ้าแก้ไขค้างต้องถามยืนยันก่อนปิด" }
+    ];
+    return { scale, rows, colors, dos, donts, css, recs, nav, navChildrenRest, formRules };
+  }
+}
+
+</script>
+</body>
+</html>

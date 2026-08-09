@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ความพึงพอใจ | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">กิจกรรม</a> <span>/</span> <span class="is-current">ความพึงพอใจ</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- 1. หัวหน้า: ชื่อหน้า + กิจกรรมที่กำลังดู + ปุ่มเปลี่ยนกิจกรรม + ปุ่มดำเนินการ -->
+      <div class="sat-head">
+        <div class="sat-head-text">
+          <h1 class="sat-title">ความพึงพอใจ</h1>
+          <div class="sat-subline">
+            <span class="sat-act-name" id="sat-act-name"></span>
+            <span class="sat-act-code" id="sat-act-code"></span>
+            <div class="act-picker">
+              <button type="button" class="act-picker-btn" id="sat-picker-btn" aria-expanded="false" aria-haspopup="listbox">
+                <span>เปลี่ยนกิจกรรม</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4 4 4-4"/></svg>
+              </button>
+              <div class="act-picker-panel" id="sat-picker-panel" role="listbox" aria-label="เลือกกิจกรรม" hidden></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ปุ่มเขียวได้หนึ่งปุ่มต่อหน้าจอ — หน้านี้ยกให้ "เปิด QR ให้ตอบ" ซึ่งเป็นงานหลักหน้างาน -->
+        <div class="sat-head-actions">
+          <button type="button" class="btn" id="sat-export">ส่งออกรายงาน</button>
+          <button type="button" class="btn btn--primary" id="sat-qr">เปิด QR ให้ตอบ</button>
+        </div>
+      </div>
+
+      <!-- 2. การ์ดสรุป 4 ใบ -->
+      <div class="sat-cards" id="sat-cards"></div>
+
+      <!-- 3. การ์ดคู่: คะแนนรายหัวข้อ | การกระจายคะแนน -->
+      <div class="sat-columns">
+        <section class="card sat-panel" aria-labelledby="sat-topics-title">
+          <div class="sat-panel-head">
+            <span class="sat-panel-title" id="sat-topics-title">คะแนนรายหัวข้อ</span>
+            <span class="sat-panel-hint">ข้อที่ต่ำกว่า 4.0 คือจุดที่ต้องปรับปรุง</span>
+          </div>
+          <div class="sat-topics" id="sat-topics"></div>
+        </section>
+
+        <section class="card sat-panel" aria-labelledby="sat-dist-title">
+          <div class="sat-panel-head">
+            <span class="sat-panel-title" id="sat-dist-title">การกระจายคะแนน</span>
+          </div>
+          <div class="sat-dist-figure">
+            <span class="sat-dist-value" id="sat-dist-value">0.00</span>
+            <span class="sat-dist-unit">จาก 5 คะแนน</span>
+            <span class="badge sat-dist-grade" id="sat-dist-grade"></span>
+          </div>
+          <div class="sat-dist-rows" id="sat-dist-rows"></div>
+        </section>
+      </div>
+
+      <!-- 4. ตารางคำตอบรายคน -->
+      <section class="card sat-table-card" aria-labelledby="sat-table-title">
+        <div class="sat-panel-head">
+          <span class="sat-panel-title" id="sat-table-title">รายการคำตอบรายคน</span>
+          <span class="sat-panel-hint">ไม่ระบุตัวตน · คะแนนรายหัวข้อของผู้ตอบแต่ละคน</span>
+        </div>
+
+        <div class="sat-table-scroll">
+          <div class="sat-row sat-row-head" id="sat-table-head" role="row"></div>
+          <div class="sat-row-body" id="sat-table-body"></div>
+        </div>
+
+        <div class="sat-pager">
+          <span class="sat-pager-info" id="sat-pager-info">แสดง 0 จาก 0 คน</span>
+          <div class="sat-pager-side">
+            <label class="sat-pager-size">แสดงต่อหน้า
+              <select id="sat-page-size" aria-label="จำนวนรายการต่อหน้า">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+            <div class="sat-pager-btns" id="sat-pager-btns"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. ความเห็นจากผู้เข้าร่วม -->
+      <section class="card sat-comments-card" aria-labelledby="sat-comments-title">
+        <div class="sat-panel-head">
+          <span class="sat-panel-title" id="sat-comments-title">ความเห็นจากผู้เข้าร่วม</span>
+          <span class="sat-panel-hint">แบบไม่ระบุตัวตน · เรียงจากล่าสุด</span>
+        </div>
+
+        <div class="sat-seg" id="sat-seg" role="tablist" aria-label="กรองความเห็น"></div>
+        <div class="sat-comment-list" id="sat-comment-list"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/satisfaction-service.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var svc = window.TFC.satisfactionService;
+  var esc = window.TFC.escapeHtml;
+  var byId = function (id) { return document.getElementById(id); };
+
+  /* หน้านี้อ่านข้อมูลผ่าน satisfaction-service เท่านั้น ไม่แตะ TFC_MOCK ตรง ๆ
+     ทุกตัวเลขบนหน้าจอ derive จากคำตอบรายคนชุดเดียวกันที่ service คำนวณให้ */
+  var state = {
+    activityId: window.TFC.activity.currentId(),
+    activities: [],
+    summary: null,
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    commentFilter: 'all'
+  };
+
+  var THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+  /* '2026-08-10T12:45' -> '10 ส.ค. · 12:45 น.' — อ่านสตริงตรง ๆ ไม่ผ่าน Date
+     เพราะเวลาที่แสดงคือเวลาของเหตุการณ์ ไม่ใช่เวลาโซนของเครื่องผู้ใช้ */
+  function whenLabel(iso) {
+    if (!iso) return '-';
+    var parts = String(iso).split('T');
+    var d = parts[0].split('-');
+    if (d.length < 3) return iso;
+    var day = String(Number(d[2]));
+    var month = THAI_MONTHS[Number(d[1]) - 1] || '';
+    return day + ' ' + month + (parts[1] ? ' · ' + parts[1] + ' น.' : '');
+  }
+
+  function dateRangeLabel(a) {
+    if (!a || !a.startDate) return '';
+    var start = whenLabel(a.startDate);
+    if (a.endDate && a.endDate !== a.startDate) return start + ' – ' + whenLabel(a.endDate);
+    return start + (a.time ? ' · ' + a.time : '');
+  }
+
+  /* ระดับสีของตัวเลขคะแนน: 4–5 ปกติ · 3 เตือน · 1–2 อันตราย */
+  function toneClass(value) {
+    if (value >= 4) return '';
+    if (value >= 3) return ' is-mid';
+    return ' is-low';
+  }
+
+  /* ---------- 1. หัวหน้า + popover เปลี่ยนกิจกรรม ---------- */
+  function renderHead() {
+    var current = state.activities.filter(function (a) { return a.id === state.activityId; })[0];
+    byId('sat-act-name').textContent = current ? current.name : '';
+    byId('sat-act-code').textContent = current ? current.id : '';
+  }
+
+  function renderPicker() {
+    byId('sat-picker-panel').innerHTML =
+      '<span class="act-picker-title">เลือกกิจกรรม</span>' +
+      state.activities.map(function (a) {
+        var meta = dateRangeLabel(a) + ' · ผู้ตอบ ' + a.responseCount + ' คน';
+        return '<button type="button" class="act-picker-item' + (a.id === state.activityId ? ' is-active' : '') +
+          '" role="option" aria-selected="' + (a.id === state.activityId) + '" data-activity="' + esc(a.id) + '">' +
+          '<span class="act-picker-item-name">' + esc(a.name) + '</span>' +
+          '<span class="act-picker-item-meta">' + esc(meta) + '</span>' +
+          '</button>';
+      }).join('');
+  }
+
+  function closePicker() {
+    byId('sat-picker-panel').hidden = true;
+    byId('sat-picker-btn').setAttribute('aria-expanded', 'false');
+  }
+
+  byId('sat-picker-btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var panel = byId('sat-picker-panel');
+    panel.hidden = !panel.hidden;
+    this.setAttribute('aria-expanded', String(!panel.hidden));
+  });
+
+  byId('sat-picker-panel').addEventListener('click', function (e) {
+    var item = e.target.closest('[data-activity]');
+    if (!item) return;
+    closePicker();
+    selectActivity(item.getAttribute('data-activity'));
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.act-picker')) closePicker();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closePicker();
+  });
+
+  /* ---------- 2. การ์ดสรุป 4 ใบ ---------- */
+  function cardHtml(opts) {
+    return '<section class="card sat-card' + (opts.warning ? ' is-warning' : '') + '">' +
+      '<span class="sat-card-label">' + esc(opts.label) + '</span>' +
+      '<span class="sat-card-figure">' +
+      '<span class="sat-card-value">' + esc(opts.value) + '</span>' +
+      '<span class="sat-card-unit">' + esc(opts.unit) + '</span>' +
+      '</span>' +
+      '<span class="sat-card-note">' + esc(opts.note) + '</span>' +
+      '</section>';
+  }
+
+  function renderCards() {
+    var s = state.summary;
+    byId('sat-cards').innerHTML =
+      cardHtml({ label: 'คะแนนเฉลี่ย', value: s.average.toFixed(2), unit: 'จาก 5', note: 'เกณฑ์: ' + s.grade.label }) +
+      cardHtml({ label: 'ผู้ตอบแบบประเมิน', value: String(s.responseCount), unit: 'คน', note: 'จากผู้เข้าร่วมจริง ' + s.attendedCount + ' คน' }) +
+      cardHtml({
+        label: 'อัตราการตอบ',
+        value: String(s.responseRate),
+        unit: '%',
+        note: s.isRepresentative ? 'ข้อมูลเป็นตัวแทนได้' : 'ผู้ตอบน้อยกว่า 70% ยังเป็นตัวแทนไม่ได้',
+        warning: !s.isRepresentative
+      }) +
+      cardHtml({ label: 'ให้ 4–5 ดาว', value: String(s.highRatioPercent), unit: '%', note: 'สัดส่วนผู้ที่พึงพอใจมาก' });
+  }
+
+  /* ---------- 3. คะแนนรายหัวข้อ + การกระจายคะแนน ---------- */
+  function renderTopics() {
+    /* ไม่มีผู้ตอบ = ไม่มีคะแนนให้แสดง ต้องขึ้นข้อความแทนแถบ 0.0 ทั้งห้าข้อ
+       ซึ่งอ่านผิดเป็น "ได้คะแนนศูนย์" */
+    if (!state.summary.responseCount) {
+      byId('sat-topics').innerHTML = '<div class="sat-empty">ยังไม่มีผู้ตอบแบบประเมินของกิจกรรมนี้</div>';
+      return;
+    }
+    var rows = state.summary.topics;
+    byId('sat-topics').innerHTML = rows.map(function (t) {
+      var pct = Math.max(0, Math.min(100, (t.average / 5) * 100));
+      return '<div class="sat-topic' + (t.needsWork ? ' is-low' : '') + '">' +
+        '<span class="sat-topic-label" title="' + esc(t.label) + '">' + esc(t.label) + '</span>' +
+        '<span class="sat-topic-value">' + t.average.toFixed(1) + '</span>' +
+        '<span class="sat-topic-track"><span class="sat-topic-fill" style="width:' + pct + '%"></span></span>' +
+        '</div>';
+    }).join('') || '<div class="sat-empty">ยังไม่มีผู้ตอบแบบประเมินของกิจกรรมนี้</div>';
+  }
+
+  function renderDistribution() {
+    var s = state.summary;
+    byId('sat-dist-value').textContent = s.average.toFixed(2);
+
+    var grade = byId('sat-dist-grade');
+    grade.textContent = s.grade.label;
+    grade.className = 'badge sat-dist-grade badge--' + s.grade.tone;
+
+    byId('sat-dist-rows').innerHTML = s.distribution.map(function (d) {
+      return '<div class="sat-dist-row">' +
+        '<span class="sat-dist-star">' + d.star + ' ดาว</span>' +
+        '<span class="sat-dist-track"><span class="sat-dist-fill" style="width:' + d.percent + '%"></span></span>' +
+        '<span class="sat-dist-count">' + d.count + ' คน</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* ---------- 4. ตารางคำตอบรายคน ---------- */
+  function renderTableHead() {
+    /* หัวคอลัมน์ใช้ชื่อสั้น กันคอลัมน์บีบจนตัดคำ ส่วนชื่อเต็มอยู่ใน title */
+    byId('sat-table-head').innerHTML =
+      '<span>ผู้ตอบ</span>' +
+      state.summary.topics.map(function (t) {
+        return '<span title="' + esc(t.label) + '">' + esc(t.short) + '</span>';
+      }).join('') +
+      '<span>เฉลี่ย</span><span>ตอบเมื่อ</span>';
+  }
+
+  function rowHtml(row) {
+    return '<div class="sat-row" role="row">' +
+      '<span class="sat-cell-who">ผู้ตอบ #' + row.seq + '</span>' +
+      row.scores.map(function (v) {
+        return '<span class="sat-cell-score' + toneClass(v) + '">' + v + '</span>';
+      }).join('') +
+      '<span class="sat-cell-avg' + toneClass(row.average) + '">' + row.average.toFixed(1) + '</span>' +
+      '<span class="sat-cell-when">' + esc(whenLabel(row.submittedAt)) + '</span>' +
+      '</div>';
+  }
+
+  function renderPager() {
+    var pageCount = Math.max(1, Math.ceil(state.total / state.pageSize));
+    var from = state.total ? (state.page - 1) * state.pageSize + 1 : 0;
+    var to = Math.min(state.page * state.pageSize, state.total);
+
+    byId('sat-pager-info').textContent = state.total
+      ? 'แสดง ' + from + '–' + to + ' จาก ' + state.total + ' คน'
+      : 'ยังไม่มีผู้ตอบ';
+
+    var html = '<button type="button" class="sat-page-btn" data-page="' + (state.page - 1) + '"' +
+      (state.page <= 1 ? ' disabled' : '') + '>ก่อนหน้า</button>';
+    for (var i = 1; i <= pageCount; i++) {
+      html += '<button type="button" class="sat-page-btn' + (i === state.page ? ' is-active' : '') +
+        '" data-page="' + i + '"' + (i === state.page ? ' aria-current="page"' : '') + '>' + i + '</button>';
+    }
+    html += '<button type="button" class="sat-page-btn" data-page="' + (state.page + 1) + '"' +
+      (state.page >= pageCount ? ' disabled' : '') + '>ถัดไป</button>';
+
+    byId('sat-pager-btns').innerHTML = html;
+  }
+
+  /* แบ่งหน้าที่ฝั่ง service (LIMIT/OFFSET) — หน้าจอขอเฉพาะแถวของหน้าที่กำลังดู */
+  function loadPage() {
+    var body = byId('sat-table-body');
+    body.classList.add('is-refreshing');
+    return svc.responses(state.activityId, {
+      limit: state.pageSize,
+      offset: (state.page - 1) * state.pageSize
+    }).then(function (res) {
+      state.total = res.total;
+      body.innerHTML = res.rows.length
+        ? res.rows.map(rowHtml).join('')
+        : '<div class="sat-empty">ยังไม่มีผู้ตอบแบบประเมินของกิจกรรมนี้</div>';
+      body.classList.remove('is-refreshing');
+      renderPager();
+    });
+  }
+
+  byId('sat-pager-btns').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-page]');
+    if (!btn || btn.disabled) return;
+    state.page = Number(btn.getAttribute('data-page'));
+    loadPage();
+  });
+
+  byId('sat-page-size').addEventListener('change', function () {
+    state.pageSize = Number(this.value);
+    state.page = 1;   /* เปลี่ยนจำนวนต่อหน้าแล้วต้องกลับหน้า 1 เสมอ */
+    loadPage();
+  });
+
+  /* ---------- 5. ความเห็น ---------- */
+  var SEGMENTS = [
+    { key: 'all', label: 'ทั้งหมด' },
+    { key: 'praise', label: 'ชื่นชม' },
+    { key: 'improve', label: 'ต้องปรับปรุง' }
+  ];
+
+  function renderSegments(counts) {
+    byId('sat-seg').innerHTML = SEGMENTS.map(function (s) {
+      return '<button type="button" role="tab" class="sat-seg-btn' + (s.key === state.commentFilter ? ' is-active' : '') +
+        '" aria-selected="' + (s.key === state.commentFilter) + '" data-filter="' + s.key + '">' +
+        esc(s.label) + ' ' + (counts[s.key] || 0) + '</button>';
+    }).join('');
+  }
+
+  function loadComments() {
+    var list = byId('sat-comment-list');
+    list.classList.add('is-refreshing');
+    return svc.comments(state.activityId, { filter: state.commentFilter }).then(function (res) {
+      renderSegments(res.counts);
+      list.innerHTML = res.rows.length
+        ? res.rows.map(function (c) {
+            var tone = c.average >= 4 ? '' : (c.average >= 3 ? ' is-mid' : ' is-low');
+            return '<article class="sat-comment' + tone + '">' +
+              '<span class="sat-comment-score">' + c.average.toFixed(1) + '</span>' +
+              '<div>' +
+              '<p class="sat-comment-text">' + esc(c.comment) + '</p>' +
+              '<span class="sat-comment-meta">ผู้ตอบ #' + c.seq + ' · ' + esc(whenLabel(c.submittedAt)) + '</span>' +
+              '</div>' +
+              '</article>';
+          }).join('')
+        : '<div class="sat-empty">ยังไม่มีความเห็นในกลุ่มนี้</div>';
+      list.classList.remove('is-refreshing');
+    });
+  }
+
+  byId('sat-seg').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-filter]');
+    if (!btn) return;
+    state.commentFilter = btn.getAttribute('data-filter');
+    loadComments();
+  });
+
+  /* ---------- ปุ่มดำเนินการ ---------- */
+  byId('sat-export').addEventListener('click', function () {
+    var s = state.summary;
+    if (!s) return;
+    /* ส่งออกจากคำตอบรายคนทั้งหมดของกิจกรรมนี้ (ไม่ใช่เฉพาะหน้าที่เห็นอยู่)
+       จึงขอ limit เท่ากับ total อีกครั้งแทนการอ่านจาก DOM */
+    svc.responses(state.activityId, { limit: s.responseCount || 1, offset: 0 }).then(function (res) {
+      var headers = ['ผู้ตอบ'].concat(s.topics.map(function (t) { return t.label; })).concat(['เฉลี่ย', 'ตอบเมื่อ']);
+      var rows = res.rows.map(function (r) {
+        return ['ผู้ตอบ #' + r.seq].concat(r.scores).concat([r.average.toFixed(1), whenLabel(r.submittedAt)]);
+      });
+      window.TFC.exportCsv('ความพึงพอใจ-' + state.activityId + '.csv', headers, rows);
+    });
+  });
+
+  byId('sat-qr').addEventListener('click', function () {
+    if (window.TFC.showToast) {
+      window.TFC.showToast('เปิด QR ให้ผู้เข้าร่วมสแกนตอบแบบประเมิน (ฟีเจอร์นี้จะเชื่อมต่อจริงในระยะพัฒนา Backend)', 'info');
+    }
+  });
+
+  /* ---------- โหลดข้อมูล ---------- */
+  function selectActivity(activityId) {
+    state.activityId = activityId;
+    state.page = 1;             /* เปลี่ยนกิจกรรมแล้วต้องกลับหน้า 1 เสมอ */
+    state.commentFilter = 'all';
+    renderHead();
+    renderPicker();
+    return loadActivityData();
+  }
+
+  function loadActivityData() {
+    return svc.summary(state.activityId).then(function (s) {
+      state.summary = s;
+      renderCards();
+      renderTopics();
+      renderDistribution();
+      renderTableHead();
+      return Promise.all([loadPage(), loadComments()]);
+    });
+  }
+
+  svc.activities().then(function (list) {
+    state.activities = list;
+    if (!list.filter(function (a) { return a.id === state.activityId; }).length && list.length) {
+      state.activityId = list[0].id;
+    }
+    renderHead();
+    renderPicker();
+    return loadActivityData();
+  });
+})();
+</script>
+</body>
+</html>

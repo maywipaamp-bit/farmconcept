@@ -1,7 +1,12 @@
 /* TheFarmConcept — Smart Dropdown: searchable select with an inline "+ เพิ่มรายการใหม่" modal.
-   Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนบางบัว">...options...</select>
+   Usage: <select data-smart-select data-new-item-label="พื้นที่ดำเนินงาน" data-new-item-placeholder="เช่น ชุมชนตึกร้าง">...options...</select>
    Progressive enhancement — the original <select> stays in the DOM (hidden) and keeps receiving
-   value updates + a "change" event, so existing form logic that reads select.value keeps working. */
+   value updates + a "change" event, so existing form logic that reads select.value keeps working.
+
+   หมายเหตุ: บางหน้า (เช่น login.html) ไม่ได้โหลด mock-data.js ซึ่งเป็นที่สร้าง window.TFC
+   จึงต้องประกาศไว้ที่นี่ด้วย ไม่อย่างนั้นสคริปต์จะพังทั้งไฟล์ */
+window.TFC = window.TFC || {};
+
 (function () {
   var activePanel = null;
   var activeWidget = null;
@@ -13,6 +18,9 @@
   function closePanel() {
     if (activePanel) {
       activePanel.classList.remove('is-open');
+      /* คืนแผงกลับเข้า widget เดิม (ดูหมายเหตุ portal ที่ openPanel) */
+      if (activeWidget && activePanel.parentNode === document.body) activeWidget.appendChild(activePanel);
+      activePanel.style.left = activePanel.style.top = activePanel.style.width = '';
       if (activeWidget) activeWidget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'false');
     }
     activePanel = null;
@@ -48,25 +56,89 @@
   function rebuildOptionsList(widget, select) {
     var panel = widget.querySelector('.smart-select-panel');
     var list = panel.querySelector('.smart-select-options');
+    /* รองรับ <optgroup> — แสดงชื่อกลุ่มเป็นหัวข้อตัวหนา แล้วตัวเลือกใต้กลุ่มเป็นตัวบาง
+       ทำให้เห็นลำดับชั้นว่าตัวเลือกนั้นอยู่ใต้กลุ่มใด (เช่น หลักสูตรอยู่ใต้โปรแกรมใด) */
+    var lastGroup = null;
     list.innerHTML = Array.from(select.options).map(function (opt) {
-      return '<button type="button" class="dropdown-item smart-select-option" role="option" data-value="' +
+      var html = '';
+      var group = opt.parentElement && opt.parentElement.tagName === 'OPTGROUP'
+        ? opt.parentElement.getAttribute('label') : null;
+      if (group && group !== lastGroup) {
+        html += '<div class="smart-select-group">' + window.TFC.escapeHtml(group) + '</div>';
+      }
+      lastGroup = group;
+      return html + '<button type="button" class="dropdown-item smart-select-option" role="option" data-value="' +
         window.TFC.escapeHtml(opt.value) + '">' + window.TFC.escapeHtml(opt.textContent) + '</button>';
     }).join('');
   }
 
+  /* รายการไม่เกิน 6 ตัวเลือก ซ่อนช่องค้นหา และซ่อนปุ่มเพิ่มรายการใหม่ถ้าไม่ได้ตั้งค่าไว้ */
+  function syncCompact(widget, select) {
+    var searchBox = widget.querySelector('.smart-select-search');
+    var addBtn = widget.querySelector('.smart-select-add-btn');
+    var divider = widget.querySelector('.smart-select-panel .dropdown-divider');
+    var isShort = select.options.length <= 6;
+    searchBox.classList.toggle('hidden', isShort);
+    var allowAdd = select.hasAttribute('data-new-item-label');
+    addBtn.classList.toggle('hidden', !allowAdd);
+    if (divider) divider.classList.toggle('hidden', !allowAdd);
+  }
+
+  function trigger0(widget) { return widget.querySelector('.smart-select-trigger'); }
+
   function openPanel(widget, select) {
     closePanel();
     var panel = widget.querySelector('.smart-select-panel');
+    rebuildOptionsList(widget, select);
+    syncCompact(widget, select);
     var search = panel.querySelector('.smart-select-search-input');
     search.value = '';
     filterOptions(panel, '');
     panel.classList.add('is-open');
+
+    /* ย้ายแผงไปแขวนไว้ที่ <body> ชั่วคราว (portal)
+       เหตุผล: .modal มี transform จาก animation ตอนเปิด ซึ่งทำให้ตัวมันกลายเป็น containing block
+       ของลูกที่เป็น position: fixed — แผงจึงยังติดอยู่ในกรอบ popup และยังดันพื้นที่เลื่อนเหมือนเดิม
+       การย้ายออกมาที่ body ทำให้ fixed อิงกับ viewport จริง ๆ
+       event listener ทั้งหมดผูกไว้กับตัว element โดยตรง จึงย้ายตามไปด้วยและยังทำงานปกติ */
+    document.body.appendChild(panel);
+    positionPanel(widget, panel);
     widget.querySelector('.smart-select-trigger').setAttribute('aria-expanded', 'true');
     activePanel = panel;
     activeWidget = widget;
     highlightIndex = -1;
     setTimeout(function () { search.focus(); }, 0);
   }
+
+  /* วางแผงตัวเลือกแบบ fixed อิงพิกัดจริงของปุ่มบนหน้าจอ
+     แผงจึงลอยอยู่เหนือทุกอย่าง ไม่ถูกนับเป็นพื้นที่เลื่อนของ .modal-body
+     (เดิมเป็น absolute ทำให้ฟอร์มใน popup มีที่ว่างท้ายกรอบทุกครั้งที่กางเมนู) */
+  function positionPanel(widget, panel) {
+    var rect = trigger0(widget).getBoundingClientRect();
+    var gap = 8;
+    var height = panel.offsetHeight;
+    var below = window.innerHeight - rect.bottom;
+
+    panel.style.width = rect.width + 'px';
+    panel.style.left = rect.left + 'px';
+
+    /* ที่ว่างด้านล่างไม่พอ และด้านบนมีมากกว่า -> กางขึ้นด้านบนแทน */
+    if (below < height + gap && rect.top > below) {
+      panel.style.top = Math.max(gap, rect.top - height - gap) + 'px';
+    } else {
+      panel.style.top = (rect.bottom + gap) + 'px';
+    }
+  }
+
+  /* ปุ่มเลื่อนไปตามการ scroll ของฟอร์ม แผงที่เป็น fixed จะไม่เลื่อนตามเอง
+     จึงต้องคำนวณตำแหน่งใหม่ (true = ดักตอน capture เพื่อให้ได้ scroll ของ .modal-body ด้วย) */
+  window.addEventListener('scroll', function () {
+    if (activePanel && activeWidget) positionPanel(activeWidget, activePanel);
+  }, true);
+
+  window.addEventListener('resize', function () {
+    if (activePanel && activeWidget) positionPanel(activeWidget, activePanel);
+  });
 
   function filterOptions(panel, keyword) {
     var kw = keyword.trim().toLowerCase();
@@ -192,6 +264,20 @@
   }
 
   /* ---------- Build one widget per [data-smart-select] element ---------- */
+  function syncValueLabel(widget, select) {
+    var opt = select.options[select.selectedIndex];
+    var label = widget.querySelector('.smart-select-value');
+    if (label) label.textContent = opt ? opt.textContent : 'เลือกรายการ';
+  }
+
+  /* หน้าจอที่เติม options / set value ให้ select เองภายหลัง (เช่น ฟอร์มใน popup) เรียกใช้เพื่อให้ป้ายตรงกับค่าจริง */
+  window.TFC.refreshSmartSelects = function (root) {
+    (root || document).querySelectorAll('select[data-smart-select]').forEach(function (select) {
+      var widget = select.nextElementSibling;
+      if (widget && widget.classList.contains('smart-select')) syncValueLabel(widget, select);
+    });
+  };
+
   function buildWidget(select) {
     select.classList.add('hidden');
 
@@ -223,6 +309,8 @@
     var trigger = widget.querySelector('.smart-select-trigger');
     var panel = widget.querySelector('.smart-select-panel');
     var search = widget.querySelector('.smart-select-search-input');
+
+    select.addEventListener('change', function () { syncValueLabel(widget, select); });
 
     trigger.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -261,19 +349,38 @@
     });
   }
 
-  document.querySelectorAll('[data-smart-select]').forEach(function (select) {
-    try {
-      buildWidget(select);
-    } catch (err) {
-      console.error('smart-select: failed to build widget for #' + select.id, err);
-    }
-  });
+  /* แถวที่สร้างทีหลัง (เช่น แถวหลักสูตรในฟอร์มวิทยากร) เรียกใช้เพื่อแปลง select ที่เพิ่งเพิ่มเข้ามา
+     ข้าม select ที่แปลงไปแล้วเพื่อไม่ให้สร้าง widget ซ้ำ */
+  window.TFC.initSmartSelects = function (root) {
+    (root || document).querySelectorAll('select[data-smart-select]:not(.hidden)').forEach(function (select) {
+      try {
+        buildWidget(select);
+      } catch (err) {
+        console.error('smart-select: failed to build widget for #' + select.id, err);
+      }
+    });
+  };
+
+  window.TFC.initSmartSelects(document);
 
   document.addEventListener('click', function (e) {
-    if (activePanel && !activeWidget.contains(e.target)) closePanel();
+    /* ต้องเช็ค activePanel ด้วย เพราะตอนกางออกแผงถูกย้ายไปอยู่ที่ <body>
+       activeWidget จึงไม่ได้ครอบมันแล้ว ถ้าเช็คแค่ widget การคลิกในแผงจะถูกนับเป็นคลิกข้างนอก */
+    if (activePanel && !activeWidget.contains(e.target) && !activePanel.contains(e.target)) closePanel();
   });
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && activePanel) closePanel();
   });
+
+  /* ทุกครั้งที่ popup เปิด ให้ซิงก์ป้ายของ Smart Dropdown ข้างในอีกครั้ง
+     เพราะหน้าจอมักเติม options แล้ว set value หลังจากสร้าง widget ไปแล้ว (และ set value ตรง ๆ ไม่ยิง change) */
+  new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      var el = record.target;
+      if (!el.classList || !el.classList.contains('is-open')) return;
+      if (!el.classList.contains('modal-overlay') && !el.classList.contains('drawer-overlay')) return;
+      setTimeout(function () { window.TFC.refreshSmartSelects(el); }, 0);
+    });
+  }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 })();

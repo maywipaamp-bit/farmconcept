@@ -1,6 +1,6 @@
 /* TheFarmConcept — Action Menu: shared "..." row-action dropdown for data tables.
    Usage: <button type="button" class="btn btn-icon btn-sm" data-action-menu='[{"key":"view","icon":"eye","label":"ดูรายละเอียด","href":"detail.html"}]' aria-label="เมนือื่นๆ" aria-haspopup="true" aria-expanded="false">...three-dot icon...</button>
-   Item fields: key (string), label (string), icon (see ICONS below), href (navigate) OR modal (open existing .modal-overlay by id), target (optional, e.g. "_blank" — only applies with href), perm (permission key from roles.permissions; omit to always show), danger (true = red/destructive style). */
+   Item fields: key (string), label (string), icon (see ICONS below), href (navigate) OR modal (open existing .modal-overlay by id), perm (permission key from roles.permissions; omit to always show), danger (true = red/destructive style). */
 (function () {
   var ICONS = {
     view: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
@@ -82,7 +82,6 @@
     menu.innerHTML = visibleItems.map(function (item) {
       var tag = item.href ? 'a' : 'button';
       var attrs = item.href ? ' href="' + item.href + '"' : ' type="button"';
-      if (item.href && item.target) attrs += ' target="' + item.target + '"';
       return '<' + tag + attrs +
         ' class="dropdown-item' + (item.danger ? ' is-danger' : '') + '"' +
         ' role="menuitem"' +

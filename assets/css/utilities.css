@@ -42,6 +42,8 @@
   white-space: nowrap;
 }
 
+/* ค่า 1px / -1px ที่นี่เป็นสูตรมาตรฐานของการซ่อนเนื้อหาไว้ให้เฉพาะโปรแกรมอ่านหน้าจอ
+   ไม่ใช่ระยะห่างของเลย์เอาต์ จึงไม่อยู่ในสเกล 4px โดยตั้งใจ — แก้แล้วจะทำให้ accessibility พัง */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -53,3 +55,5 @@
   white-space: nowrap;
   border: 0;
 }
+
+.ml-auto { margin-left: auto; }

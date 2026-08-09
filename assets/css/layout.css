@@ -49,7 +49,8 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-inverse);
-  font-weight: var(--font-weight-bold);
+  /* เดิมเป็น --font-weight-bold (700) ซึ่งมาตรฐานห้ามใช้ — token นั้นถูกถอดออกแล้ว */
+  font-weight: var(--font-weight-semibold);
 }
 
 .sidebar-title {
@@ -124,12 +125,77 @@
   justify-content: center;
 }
 
+/* Long Thai menu labels wrap rather than overflow the sidebar */
+.nav-label {
+  min-width: 0;
+}
+
 .nav-submenu {
   padding-left: var(--space-6);
 }
 
 .nav-submenu .nav-item {
   font-size: var(--font-size-small);
+}
+
+/* 2-level accordion sidebar (TFC.renderSidebarNav in navigation.js) */
+.nav-group {
+  margin-bottom: 2px;
+}
+
+.nav-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.nav-item-row .nav-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.nav-item-parent-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+}
+
+.nav-submenu-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.nav-submenu-toggle:hover {
+  background: var(--color-primary-soft);
+}
+
+.nav-chevron {
+  transition: transform var(--transition-fast);
+}
+
+.nav-submenu-toggle[aria-expanded="true"] .nav-chevron,
+.nav-item-parent-toggle[aria-expanded="true"] .nav-chevron {
+  transform: rotate(180deg);
+}
+
+.nav-item-parent-toggle .nav-chevron {
+  margin-left: auto;
+}
+
+.app-shell.is-sidebar-collapsed .nav-submenu,
+.app-shell.is-sidebar-collapsed .nav-submenu-toggle {
+  display: none;
 }
 
 .sidebar-toggle {
@@ -335,6 +401,18 @@
   min-width: 200px;
 }
 
+.page-toolbar-count {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.page-toolbar-count strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
 .page-toolbar-field-wide {
   min-width: 260px;
 }
@@ -464,4 +542,36 @@
 .auth-brand-title {
   font-size: var(--font-size-card-title);
   margin-bottom: 4px;
+}
+
+/* ---------- Branding: โลโก้จริงของ The Farm Concept ---------- */
+img.sidebar-logo {
+  width: auto;
+  height: 30px;
+  max-width: 100%;
+  border-radius: 0;
+  background: none;
+  object-fit: contain;
+}
+
+/* ย่อเมนู: โลโก้ยังอยู่แต่ย่อให้พอดีความกว้างที่เหลือ */
+.app-shell.is-sidebar-collapsed img.sidebar-logo {
+  height: 22px;
+}
+
+.auth-logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ปุ่มโปรไฟล์มุมขวาบน: เป็น <button> จึงติดกรอบมาตรฐานของเบราว์เซอร์ -> เอาออก */
+.topbar-profile {
+  border: none;
+  background: none;
+}
+
+.topbar-profile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

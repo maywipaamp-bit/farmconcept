@@ -2,6 +2,16 @@
 window.TFC = window.TFC || {};
 
 (function () {
+  /* Re-enable transitions once the page has settled (the .is-preload guard is set in the <html> tag).
+     Uses both rAF and a timeout: rAF gives the earliest correct moment on a visible page, but it never
+     fires while the tab is hidden/not compositing, which would otherwise leave transitions dead for a
+     page opened in a background tab. */
+  var enableTransitions = function () {
+    document.documentElement.classList.remove('is-preload');
+  };
+  requestAnimationFrame(function () { requestAnimationFrame(enableTransitions); });
+  setTimeout(enableTransitions, 120);
+
   /* Generic row-action navigation: <button data-nav-link="target.html"> */
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('[data-nav-link]');
@@ -10,12 +20,8 @@ window.TFC = window.TFC || {};
     if (e.target.closest('[data-go-back]')) history.back();
   });
 
-  /* Highlight sidebar nav item matching current page (compare resolved pathname, not just filename, since module folders reuse names like list.html) */
-  document.querySelectorAll('.nav-item[href]').forEach(function (link) {
-    if (link.pathname === window.location.pathname) {
-      link.classList.add('is-active');
-    }
-  });
+  /* Sidebar active-item highlight is now computed in navigation.js's TFC.renderSidebarNav()
+     (needs pathname + query string, e.g. to tell apart multiple placeholder.html?title=... links). */
 
   /* Thai date formatter: 2026-08-10 -> 10 ส.ค. 2569 */
   var thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -25,6 +31,47 @@ window.TFC = window.TFC || {};
   };
 
   /* window.TFC.escapeHtml now lives in mock-data.js (loads first on every page, before this file) */
+
+  /* อ่านไฟล์รูปเป็น data URL พร้อมตรวจชนิดไฟล์และขนาด — ใช้ร่วมกันทุกหน้าที่ให้อัปโหลดรูป
+     (โปรไฟล์ / วิทยากร / ผู้ใช้งาน) จะได้ไม่ต้องเขียน FileReader + validation ซ้ำ */
+  window.TFC.readImageFile = function (file, opts, onLoad) {
+    opts = opts || {};
+    var maxMB = opts.maxMB || 2;
+    if (!file) return;
+
+    function fail(message) {
+      if (window.TFC.showToast) window.TFC.showToast(message, 'danger');
+    }
+    if (file.type && file.type.indexOf('image/') !== 0) return fail('รองรับเฉพาะไฟล์รูปภาพเท่านั้น');
+    if (file.size > maxMB * 1024 * 1024) return fail('ไฟล์ใหญ่เกิน ' + maxMB + ' MB กรุณาเลือกไฟล์ใหม่');
+
+    var reader = new FileReader();
+    reader.onload = function (e) { onLoad(e.target.result); };
+    reader.readAsDataURL(file);
+  };
+
+  /* ผูกช่องเลือกไฟล์เข้ากับกรอบพรีวิวรูปวงกลม (.profile-avatar / .cell-avatar ใช้โครงเดียวกัน:
+     ตัวย่อชื่อเป็นข้อความ + <img> ทับด้านบนเมื่อมีรูป) คืน { set, get } ให้ฟอร์มสั่งงานได้
+     TFC.attachAvatarPicker(previewEl, inputEl, { maxMB }) */
+  window.TFC.attachAvatarPicker = function (preview, input, opts) {
+    function set(src) {
+      var img = preview.querySelector('img');
+      if (!src) {
+        if (img) img.remove();
+        return;
+      }
+      if (!img) { img = document.createElement('img'); img.alt = ''; preview.appendChild(img); }
+      img.src = src;
+    }
+
+    if (input) {
+      input.addEventListener('change', function () {
+        window.TFC.readImageFile(input.files && input.files[0], opts, set);
+      });
+    }
+
+    return { set: set, get: function () { var img = preview.querySelector('img'); return img ? img.getAttribute('src') : ''; } };
+  };
 
   /* Simulate a short async load, then swap loading -> content (used by [data-loading-target]) */
   window.TFC.simulateLoad = function (loadingEl, contentEl, delay) {

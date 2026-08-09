@@ -42,6 +42,9 @@
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
     transition: transform var(--transition-base);
+    /* Must sit ABOVE .sidebar-overlay (--z-drawer). The sidebar's default --z-sticky is lower, which
+       put the dimming overlay on top of the open drawer and made every menu item unclickable. */
+    z-index: calc(var(--z-drawer) + 1);
   }
 
   .app-shell.is-sidebar-open .sidebar {
@@ -87,13 +90,18 @@
   }
 
   .form-row,
-  .summary-cards,
+  .form-row-3,
   .stat-list,
   .description-list,
   .dashboard-grid,
   .report-link-grid,
   .activity-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Stat card group collapses to a 2-column grid (not 1) on small screens, per Standard Index Page Layout spec */
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .register-summary {
@@ -192,4 +200,93 @@
   .hidden-mobile {
     display: none !important;
   }
+}
+
+/* ---------- Activity Module (Split Form / Chart Grid) ---------- */
+@media (max-width: 1199px) {
+  /* จอแคบกว่านี้ mobile preview จะบีบฟอร์มจนกรอกยาก -> วางเรียงลงมาแทน */
+  .form-split {
+    grid-template-columns: 1fr;
+  }
+
+  .form-split-side {
+    position: static;
+  }
+}
+
+@media (max-width: 1023px) {
+  .chart-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .chart-grid-2,
+  .chart-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* หัวตารางรอบกิจกรรมใช้ไม่ได้บนจอเล็ก -> ซ่อนแล้วอาศัย placeholder ในช่องกรอกแทน */
+  .schedule-row-head {
+    display: none;
+  }
+}
+
+/* ---------- Search Panel Popover ---------- */
+@media (max-width: 767px) {
+  /* จอเล็ก: แผงกว้างเท่าที่เหลือในจอ (ยังชิดขวาใต้ไอคอนเหมือนเดิม แต่ไม่หลุดขอบ) */
+  .search-popover-panel {
+    width: calc(100vw - var(--space-6));
+    padding: var(--space-3);
+  }
+}
+
+/* แถบสรุปแบบแถวเดียวบนจอเล็ก: 2 ช่องต่อแถว และมีเส้นคั่นแนวนอน */
+@media (max-width: 767px) {
+  .summary-cards.is-strip .summary-card {
+    flex: 1 1 50%;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .summary-cards.is-strip .summary-card:nth-child(-n+2) {
+    border-top: none;
+  }
+
+  .summary-cards.is-strip .summary-card:nth-child(odd) {
+    border-left: none;
+  }
+}
+
+/* ---------- การ์ดกิจกรรมบนจอเล็ก ---------- */
+@media (max-width: 767px) {
+  .activity-item {
+    flex-direction: column;
+  }
+
+  .activity-thumb {
+    width: 100%;
+    min-height: 92px;
+  }
+
+  .activity-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .activity-updated {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+/* ---------- ฟอร์มกิจกรรม v2 ---------- */
+@media (max-width: 767px) {
+  .round-fields { grid-template-columns: 1fr 1fr; }
+  .form-actions { flex-wrap: wrap; }
+  .form-actions .btn { flex: 1; }
 }

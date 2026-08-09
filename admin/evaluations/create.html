@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สร้างแบบประเมิน | TheFarmConcept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">จัดการแบบประเมิน</a> <span>/</span>
+          <span class="is-current">สร้างแบบประเมิน</span>
+        </nav>
+      </div>
+
+      <span class="ec-autosave" id="ec-autosave" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        <span id="ec-autosave-text">บันทึกร่างอัตโนมัติแล้ว</span>
+      </span>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content ec-content">
+      <div class="ec-header">
+        <a class="ec-back" href="list.html" aria-label="ย้อนกลับไปรายการแบบประเมิน">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+        </a>
+        <div class="ec-header-text">
+          <h1 class="ec-title">สร้างแบบประเมิน</h1>
+          <p class="ec-subtitle">ตั้งชื่อและเลือกว่าใช้ตอนไหน แล้วเพิ่มคำถามทีละข้อ · ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก</p>
+        </div>
+      </div>
+
+      <div class="ec-layout">
+        <div class="ec-main">
+
+          <!-- ---------- 1. แบบประเมินชุดนี้คืออะไร ---------- -->
+          <section class="card ec-section">
+            <div class="ec-section-head">
+              <span class="ec-section-no">1</span>
+              <h2 class="ec-section-title">แบบประเมินชุดนี้คืออะไร</h2>
+            </div>
+
+            <div class="ec-field">
+              <label class="form-label" for="ec-name">ชื่อชุดแบบประเมิน<span class="form-required">*</span></label>
+              <input type="text" class="input" id="ec-name" placeholder="เช่น แบบประเมินความพึงพอใจ" autocomplete="off">
+            </div>
+
+            <div class="ec-field">
+              <label class="form-label" for="ec-desc">คำอธิบายสั้น ๆ</label>
+              <input type="text" class="input" id="ec-desc" placeholder="ใช้เมื่อไหร่ ถามอะไร เพื่อให้เจ้าหน้าที่คนอื่นเลือกถูกชุด" autocomplete="off">
+            </div>
+
+            <div class="ec-field">
+              <label class="form-label">ใช้ตอนไหน<span class="form-required">*</span></label>
+              <div class="ec-picks" id="ec-stages"></div>
+            </div>
+
+            <div class="ec-audience-line" id="ec-audience-field">
+              <span class="ec-audience-title">การระบุตัวตนผู้ตอบ</span>
+              <span class="ec-audience" id="ec-audience"></span>
+            </div>
+
+            <div class="ec-field ec-field-divided" id="ec-rounds-field" hidden>
+              <div class="ec-label-stack">
+                <label class="form-label">รอบการส่ง</label>
+                <span class="ec-note">เลือกรอบที่จะส่งให้กลุ่มตัวอย่าง</span>
+              </div>
+              <div class="ec-chips" id="ec-rounds"></div>
+            </div>
+          </section>
+
+          <!-- ---------- 2. คำถาม ---------- -->
+          <section class="card ec-section">
+            <div class="ec-section-head ec-section-head-split">
+              <div class="ec-section-head">
+                <span class="ec-section-no">2</span>
+                <h2 class="ec-section-title">คำถาม</h2>
+              </div>
+              <span class="ec-summary" id="ec-summary"></span>
+            </div>
+
+            <div class="ec-items" id="ec-items"></div>
+
+            <div class="ec-add-bar">
+              <button type="button" class="ec-add-section" id="ec-add-section">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>
+                เพิ่มส่วน
+              </button>
+              <div class="ec-add-wrap">
+                <button type="button" class="ec-add-toggle" id="ec-add-toggle" aria-expanded="false" aria-haspopup="menu">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>
+                  <span>เพิ่มคำถามย่อย</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4 4 4-4"/></svg>
+                </button>
+                <div class="ec-add-menu" id="ec-add-menu" role="menu" hidden></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ---------- แผงขวา ---------- -->
+        <aside class="ec-side">
+          <div class="card ec-preview-card">
+            <div class="ec-preview-head">
+              <span class="ec-panel-title">ตัวอย่างที่ผู้ตอบเห็น</span>
+              <span class="ec-live">อัปเดตสด</span>
+            </div>
+            <div class="ec-preview-body">
+              <div class="ec-preview-intro">
+                <span class="ec-preview-name" id="ec-preview-name">ชื่อชุดแบบประเมิน</span>
+                <span class="ec-preview-desc" id="ec-preview-desc">คำอธิบายจะแสดงตรงนี้</span>
+              </div>
+              <div class="ec-preview-list" id="ec-preview-list"></div>
+              <button type="button" class="btn btn-primary btn-block btn-sm ec-preview-submit" disabled>ส่งแบบประเมิน</button>
+            </div>
+          </div>
+
+          <div class="card ec-panel">
+            <div class="ec-preview-head">
+              <span class="ec-panel-title">ก่อนบันทึก</span>
+              <span class="ec-done-badge" id="ec-done-badge">0/5</span>
+            </div>
+            <div class="ec-checklist" id="ec-checklist"></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <div class="ec-bottombar">
+      <div class="ec-bottombar-inner">
+        <span class="ec-progress-text" id="ec-progress-text"></span>
+        <div class="ec-bottombar-actions">
+          <a class="btn btn-ghost" href="list.html" id="ec-cancel">ยกเลิก</a>
+          <button type="button" class="btn btn-outline" id="ec-save-draft">บันทึกร่าง</button>
+          <button type="button" class="btn btn-primary" id="ec-save" disabled>บันทึกและเปิดใช้งาน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/evaluation-create.js"></script>
+</body>
+</html>
