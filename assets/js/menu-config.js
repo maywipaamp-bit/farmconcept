@@ -32,19 +32,21 @@ window.TFC_MENU = [
     children: [
       { key: 'activities-list', label: 'รายการกิจกรรม', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', href: 'admin/activities/list.html' },
       { key: 'activities-registrants', label: 'ผู้ลงทะเบียน', icon: '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>', href: 'admin/activities/registrants.html' },
-      { key: 'activities-checkin', label: 'Check-in', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>', href: 'admin/activities/checkin.html' }
+      { key: 'activities-checkin', label: 'Check-in', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>', href: 'admin/activities/checkin.html' },
+      { key: 'activities-satisfaction', label: 'ความพึงพอใจ', icon: '<path d="M12 3l2.6 5.6 6.1.8-4.4 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.3 9.4l6.1-.8z"/>', href: 'admin/activities/satisfaction.html' }
     ]
   },
   /* เมนู 'รายงาน' และหน้าจอ pages/reports/* ถูกลบออกจากระบบแล้ว
      สิทธิ์ `reports` ยังคงอยู่ใน roles[].permissions เพราะยังใช้คุมปุ่ม Export และปุ่ม
      "รายงานผล" ของโมดูลแบบฟอร์ม — ดูหมายเหตุที่ TFC_PERMISSION_MAP ด้านล่าง */
+  /* เมนูเดียวไปที่หน้ารายการ ส่วนหน้าสร้าง/แก้ไขเข้าจากปุ่มในหน้ารายการ
+     alsoMatch ทำให้เมนูยังไฮไลต์อยู่ตอนที่เปิดหน้าสร้าง ซึ่งไม่มีเมนูของตัวเอง */
   {
     key: 'evaluations',
     label: 'จัดการแบบประเมิน',
-    icon: '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 12h8M8 16h5"/>',
-    children: [
-      { key: 'evaluations-create', label: 'สร้างแบบประเมิน', icon: '<path d="M12 5v14M5 12h14"/>', href: 'admin/evaluations/create.html' }
-    ]
+    icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    href: 'admin/evaluations/list.html',
+    alsoMatch: ['admin/evaluations/create.html']
   },
   {
     key: 'master-data',
@@ -90,8 +92,8 @@ window.TFC_PERMISSION_MAP = {
     'master-data-target-groups', 'master-data-programs', 'master-data-instructors',
     'master-data-activity-formats'
   ],
-  activities: ['activities-list', 'activities-registrants', 'activities-checkin'],
+  activities: ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-satisfaction'],
   /* `evaluations` เคยเป็น fallback ไปที่ permissions.evaluations ตอนที่ไม่มีเมนู
      พอมีหน้าจอกลับมาแล้ว จึงผูกกับเมนูตามปกติเหมือนโมดูลอื่น */
-  evaluations: ['evaluations-create']
+  evaluations: ['evaluations']
 };

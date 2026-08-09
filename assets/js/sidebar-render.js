@@ -33,8 +33,15 @@
     return (linkPath + a.search) === currentHref;
   }
 
+  /* เมนูจะไฮไลต์เมื่ออยู่ที่ href ของตัวเอง หรืออยู่ที่หน้าใน alsoMatch
+     ใช้กับโมดูลที่มีเมนูเดียวแต่มีหลายหน้า เช่น หน้าสร้าง/แก้ไข ที่ไม่มีเมนูของตัวเอง */
+  function isActiveItem(item) {
+    if (isCurrentHref(item.href)) return true;
+    return (item.alsoMatch || []).some(isCurrentHref);
+  }
+
   function leafLinkHtml(item) {
-    var active = isCurrentHref(item.href) ? ' is-active' : '';
+    var active = isActiveItem(item) ? ' is-active' : '';
     return '<a href="' + resolvedHref(item.href) + '" class="nav-item' + active + '" data-nav-key="' + item.key + '">' +
       '<span class="nav-item-icon">' + iconSvg(item.icon) + '</span>' +
       '<span class="nav-label">' + window.TFC.escapeHtml(item.label) + '</span>' +
@@ -49,8 +56,8 @@
     }
 
     var submenuId = 'nav-submenu-' + item.key;
-    var childrenActive = item.children.some(function (c) { return isCurrentHref(c.href); });
-    var selfActive = isCurrentHref(item.href);
+    var childrenActive = item.children.some(isActiveItem);
+    var selfActive = isActiveItem(item);
     var expanded = childrenActive; // auto-expand only the group containing the current page
 
     var headerHtml = item.href

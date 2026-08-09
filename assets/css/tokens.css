@@ -29,6 +29,10 @@
   --color-text-muted: #9CA3AF;      /* ลำดับที่, placeholder */
   --color-text-faint: #C7CDD4;      /* ตัวเลขแถวในตาราง */
   --color-text-inverse: #FFFFFF;
+  /* ข้อความบนปุ่มรองและปุ่มไอคอน — เข้มกว่า --color-text-secondary หนึ่งขั้น
+     เพราะ #6B7280 บนพื้นขาวขนาด 13px อ่านยากบนแท็บเล็ตหน้างานที่มีแสงจ้า
+     ห้ามใช้ --color-text-muted (#9CA3AF) กับข้อความบนปุ่ม */
+  --color-text-action: #4B5563;
   /* ชื่อเดิม คงไว้เพื่อไม่ให้ 5 จุดที่ใช้อยู่พัง — ค่าเท่ากับ --color-text-muted
      ของใหม่ให้ใช้ --color-text-muted แทน เพราะสื่อความหมายตรงกว่า */
   --color-text-disabled: #9CA3AF;
@@ -53,6 +57,9 @@
   --color-danger-text: #B91C1C;
   --color-danger-soft: #FEF2F2;
   --color-danger-border: #FECACA;
+  /* hover ของปุ่มที่ใช้ --color-danger-text เป็นสีพื้น (ปุ่มยืนยันการยกเลิก/ลบข้อมูล)
+     ต้องเข้มลง ไม่ใช่สว่างขึ้น — --color-danger-hover สว่างกว่า จึงใช้แทนกันไม่ได้ */
+  --color-danger-text-hover: #991B1B;
 
   --color-info: #3B82F6;
   --color-info-text: #1D4ED8;
@@ -63,6 +70,10 @@
   --color-primary-soft-hover: #DCFCE7;
   --color-primary-soft-border: #BBF7D0;
   --color-primary-soft-deep: #BBF7D0;
+
+  /* ปุ่มหลักที่ยังกดไม่ได้ — ใช้เขียวจางแทน opacity เพื่อให้ยังอ่านออกว่าเป็นปุ่มหลัก
+     และผู้ใช้เห็นว่าปุ่มจะกลับมากดได้เมื่อกรอกครบ */
+  --color-primary-disabled: #A7E3BC;
 
   /* แถบแสงที่วิ่งบน skeleton ตอนโหลด */
   --color-skeleton-sheen: #FAFBFA;
@@ -77,6 +88,10 @@
   --font-size-body: 14px;
   --font-size-small: 13px;
   --font-size-caption: 12px;
+  /* ตัวเลขตัวชี้วัดเดียวของหน้าจอ (เช่น "เช็คอินแล้ว 12 จาก 32 คน" บนหน้า Check-in)
+     เท่าชื่อหน้าเป็นเพดาน — ไม่ใหญ่กว่านั้น ความเด่นมาจากสีเขียวและน้ำหนัก 600 แทนขนาด
+     ใช้ได้หน้าละหนึ่งจุดเท่านั้น — ตัวเลขอื่นใช้ --font-size-section-title */
+  --font-size-metric: 28px;
 
   /* 400 เป็นค่าเริ่มต้น · 500 เฉพาะที่ต้องเน้น · 600 เฉพาะหัวข้อ
      ไม่มี --font-weight-bold (700) เพราะมาตรฐานห้ามใช้ */

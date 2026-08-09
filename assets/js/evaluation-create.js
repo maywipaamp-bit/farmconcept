@@ -11,9 +11,10 @@
     rating: 'ให้คะแนน 1–5',
     single: 'เลือก 1 ข้อ',
     multi: 'เลือกหลายข้อ',
+    dropdown: 'เลือกจากรายการ',
     text: 'ข้อความ'
   };
-  var KIND_ORDER = ['rating', 'single', 'multi', 'text'];
+  var KIND_ORDER = ['rating', 'single', 'multi', 'dropdown', 'text'];
 
   var STAGES = [
     { label: 'ตอนลงทะเบียน', hint: 'ผู้เข้าร่วมกรอกตอนจองที่นั่ง' },
@@ -33,16 +34,26 @@
     nextId: 4,
     addOpen: false,
     dirty: false,
+    /* ตั้งต้นด้วยหัวข้อส่วน 1 ส่วนพร้อมคำถาม 2 ข้อในนั้น
+       ให้เห็นตั้งแต่แรกว่าจัดคำถามเป็นตอนได้ และเลขข้อจะเป็น 1.1 / 1.2
+       ตั้งชื่อส่วนไว้ให้ด้วย ไม่งั้นเช็กลิสต์ข้อ "ทุกคำถามและหัวข้อส่วนมีข้อความ" จะไม่ผ่านตั้งแต่เปิดหน้า */
     items: [
-      { id: 1, title: 'ความพึงพอใจโดยรวมต่อกิจกรรมนี้', kind: 'rating', required: true, choices: [] },
-      { id: 2, title: 'จะแนะนำกิจกรรมนี้ให้คนอื่นหรือไม่', kind: 'single', required: true, choices: ['แนะนำ', 'ไม่แน่ใจ', 'ไม่แนะนำ'] },
-      { id: 3, title: 'สิ่งที่อยากให้ปรับปรุง', kind: 'text', required: false, choices: [] }
+      { id: 1, title: 'ความคิดเห็นต่อกิจกรรม', kind: 'section', required: false, choices: [] },
+      { id: 2, title: 'ความพึงพอใจโดยรวมต่อกิจกรรมนี้', kind: 'rating', required: true, choices: [] },
+      { id: 3, title: 'จะแนะนำกิจกรรมนี้ให้คนอื่นหรือไม่', kind: 'single', required: true, choices: ['แนะนำ', 'ไม่แน่ใจ', 'ไม่แนะนำ'] }
     ]
   };
 
   function isStandalone() { return state.stage === STANDALONE; }
   function itemById(id) { return state.items.filter(function (i) { return String(i.id) === String(id); })[0]; }
-  function hasChoices(kind) { return kind === 'single' || kind === 'multi'; }
+  /* เลือกจากรายการใช้ชุดตัวเลือกเหมือนแบบเลือก 1 ข้อ ต่างแค่วิธีแสดงให้ผู้ตอบ */
+  function hasChoices(kind) { return kind === 'single' || kind === 'multi' || kind === 'dropdown'; }
+
+  /* วงกลม = เลือก 1 ข้อ · สี่เหลี่ยม = เลือกหลายข้อ · สี่เหลี่ยมเทา = เลือกจากรายการ */
+  function markHtml(kind) {
+    var cls = kind === 'multi' ? ' is-box' : (kind === 'dropdown' ? ' is-box is-muted' : '');
+    return '<span class="ec-mark' + cls + '"></span>';
+  }
 
   /* เลขข้อ: ส่วนได้ "ตอนที่ N" · คำถามในส่วนได้ "N.M" · คำถามนอกส่วนได้ "M" */
   function numbering() {
@@ -105,17 +116,18 @@
     ];
   }
 
+  /* ยุบเหลือบรรทัดเดียว — เดิมเป็นกล่องมีกรอบ 2 ช่อง + บรรทัดกฎ กินพื้นที่ 6 บรรทัด
+     ทั้งสามค่าเป็นผลจากช่วงที่เลือก ผู้ใช้แก้ไม่ได้ จึงไม่ต้องให้พื้นที่มากขนาดนั้น */
   function renderAudience() {
-    $('ec-audience-title').textContent = isStandalone() ? 'กลุ่มตัวอย่างที่ทำแบบประเมิน' : 'การระบุตัวตนผู้ตอบ';
-    $('ec-audience').innerHTML = audienceRows().map(function (a) {
-      return '<div class="ec-audience-item">' +
-        '<span class="ec-audience-label">' + esc(a.label) + '</span>' +
-        '<span class="ec-audience-value">' + esc(a.value) + '</span>' +
-        '</div>';
-    }).join('');
-    $('ec-answer-rule').textContent = isStandalone()
+    var rows = audienceRows().map(function (a) { return a.value; });
+    /* ชุดที่ระบุตัวตนต้องตอบครบทุกข้อที่บังคับ ส่วนชุดไม่ระบุตัวตนข้ามได้ */
+    rows.push(isStandalone()
       ? 'ข้อที่ตั้งบังคับตอบ ต้องตอบครบจึงส่งได้'
-      : 'ข้ามข้อที่ไม่บังคับได้ ตอบไม่ครบก็ส่งได้';
+      : 'ข้ามข้อที่ไม่บังคับได้ ตอบไม่ครบก็ส่งได้');
+
+    $('ec-audience').innerHTML = rows.map(function (v) {
+      return '<span class="ec-audience-item">' + esc(v) + '</span>';
+    }).join('');
   }
 
   /* รอบการส่งมีเฉพาะชุดที่ไม่ผูกกับกิจกรรม เพราะชุดที่ผูกกิจกรรมส่งตามกำหนดของกิจกรรมอยู่แล้ว */
@@ -141,18 +153,20 @@
       state.items.filter(function (i2) { return i2.required && i2.kind !== 'section'; }).length + ' ข้อ';
   }
 
-  function moveButtons(id) {
-    return '<div class="ec-move">' +
-      '<button type="button" class="ec-move-btn" data-move="up:' + id + '" aria-label="เลื่อนขึ้น">' +
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14l4-4 4 4"/></svg></button>' +
-      '<button type="button" class="ec-move-btn" data-move="down:' + id + '" aria-label="เลื่อนลง">' +
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4 4 4-4"/></svg></button>' +
-      '</div>';
+  /* ที่จับลาก — แทนปุ่มลูกศรสองปุ่มเดิม ทำให้แถวเตี้ยลงและใช้ลากสลับลำดับได้
+     ยังกดลูกศรขึ้น/ลงบนคีย์บอร์ดได้เมื่อโฟกัสอยู่ที่ตัวจับ สำหรับคนที่ลากไม่ได้ */
+  function gripHtml(id) {
+    return '<button type="button" class="ec-grip" data-grip="' + id + '"' +
+      ' aria-label="ลากเพื่อสลับลำดับ หรือกดลูกศรขึ้น/ลง">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>' +
+      '<circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>' +
+      '<circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>';
   }
 
   function sectionHtml(q, n) {
-    return '<div class="ec-row ec-row-section">' +
-      '<div class="ec-row-lead">' + moveButtons(q.id) + '</div>' +
+    return '<div class="ec-row ec-row-section" data-row="' + q.id + '">' +
+      '<div class="ec-row-lead">' + gripHtml(q.id) + '</div>' +
       '<div class="ec-row-body">' +
         '<div class="ec-section-line">' +
           '<span class="ec-section-badge">' + esc(n.sectionNo) + '</span>' +
@@ -166,8 +180,8 @@
   }
 
   function questionHtml(q, n) {
-    return '<div class="ec-row' + (n.inSection ? ' is-nested' : '') + '">' +
-      '<div class="ec-row-lead">' + moveButtons(q.id) + '<span class="ec-row-no">' + esc(n.no) + '</span></div>' +
+    return '<div class="ec-row' + (n.inSection ? ' is-nested' : '') + '" data-row="' + q.id + '">' +
+      '<div class="ec-row-lead">' + gripHtml(q.id) + '<span class="ec-row-no">' + esc(n.no) + '</span></div>' +
       '<div class="ec-row-body">' +
         '<input type="text" class="input" value="' + esc(q.title) + '" placeholder="พิมพ์คำถาม" data-title="' + q.id + '">' +
 
@@ -196,7 +210,7 @@
     return '<div class="ec-choices">' +
       q.choices.map(function (c, ci) {
         return '<div class="ec-choice">' +
-          '<span class="ec-mark' + (q.kind === 'multi' ? ' is-box' : '') + '"></span>' +
+          markHtml(q.kind) +
           '<input type="text" class="input ec-choice-input" value="' + esc(c) + '" placeholder="ตัวเลือก"' +
             ' data-choice="' + q.id + ':' + ci + '">' +
           '<button type="button" class="ec-choice-remove" data-remove-choice="' + q.id + ':' + ci + '" aria-label="ลบตัวเลือก">' +
@@ -239,11 +253,15 @@
         (q.kind === 'rating'
           ? '<div class="ec-scale">' + [1, 2, 3, 4, 5].map(function (s) { return '<span class="ec-scale-box">' + s + '</span>'; }).join('') + '</div>'
           : '') +
-        (hasChoices(q.kind)
+        (q.kind === 'dropdown'
+          ? '<div class="ec-pv-select">' +
+              '<span>' + esc((q.choices[0] || '').trim() || 'เลือกคำตอบ') + '</span>' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>' +
+            '</div>'
+          : '') +
+        (hasChoices(q.kind) && q.kind !== 'dropdown'
           ? '<div class="ec-pv-choices">' + q.choices.map(function (c) {
-              return '<span class="ec-pv-choice">' +
-                '<span class="ec-mark' + (q.kind === 'multi' ? ' is-box' : '') + '"></span>' +
-                esc(c) + '</span>';
+              return '<span class="ec-pv-choice">' + markHtml(q.kind) + esc(c) + '</span>';
             }).join('') + '</div>'
           : '') +
         (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') +
@@ -324,14 +342,98 @@
     touch(true);
   }
 
+  function indexOfId(id) {
+    return state.items.map(function (i) { return String(i.id); }).indexOf(String(id));
+  }
+
   function move(id, dir) {
-    var idx = state.items.map(function (i) { return String(i.id); }).indexOf(String(id));
+    var idx = indexOfId(id);
     var to = idx + dir;
     if (idx < 0 || to < 0 || to >= state.items.length) return;
     var tmp = state.items[idx];
     state.items[idx] = state.items[to];
     state.items[to] = tmp;
     touch(true);
+    /* คืนโฟกัสให้ตัวจับของแถวเดิม จะได้กดลูกศรรัวๆ เลื่อนต่อได้ */
+    var grip = document.querySelector('[data-grip="' + id + '"]');
+    if (grip) grip.focus();
+  }
+
+  /* ---------- ลากสลับลำดับ ----------
+     ตั้ง draggable ตอนกดที่ตัวจับเท่านั้น ไม่งั้นการลากเลือกข้อความในช่องกรอก
+     จะกลายเป็นการลากทั้งแถวไปด้วย */
+  var dragId = null;
+
+  document.addEventListener('mousedown', function (e) {
+    var grip = e.target.closest('[data-grip]');
+    var row = grip && grip.closest('[data-row]');
+    if (row) row.setAttribute('draggable', 'true');
+  });
+
+  document.addEventListener('mouseup', clearDraggable);
+
+  function clearDraggable() {
+    var rows = document.querySelectorAll('[data-row][draggable]');
+    Array.prototype.forEach.call(rows, function (r) { r.removeAttribute('draggable'); });
+  }
+
+  document.addEventListener('dragstart', function (e) {
+    var row = e.target.closest && e.target.closest('[data-row]');
+    if (!row || !row.getAttribute('draggable')) return;
+    dragId = row.getAttribute('data-row');
+    row.classList.add('is-dragging');
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      /* Firefox ไม่เริ่มลากถ้าไม่ได้ตั้งข้อมูลไว้ */
+      e.dataTransfer.setData('text/plain', dragId);
+    }
+  });
+
+  document.addEventListener('dragover', function (e) {
+    if (dragId === null) return;
+    var row = e.target.closest && e.target.closest('[data-row]');
+    if (!row) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    clearDropMarks();
+    if (row.getAttribute('data-row') === dragId) return;
+    var box = row.getBoundingClientRect();
+    row.classList.add(e.clientY < box.top + box.height / 2 ? 'is-drop-before' : 'is-drop-after');
+  });
+
+  document.addEventListener('drop', function (e) {
+    if (dragId === null) return;
+    var row = e.target.closest && e.target.closest('[data-row]');
+    if (!row) return;
+    e.preventDefault();
+
+    var targetId = row.getAttribute('data-row');
+    var before = row.classList.contains('is-drop-before');
+    endDrag();
+    if (targetId === dragId) return;
+
+    var from = indexOfId(dragId);
+    var moved = state.items.splice(from, 1)[0];
+    var to = indexOfId(targetId);
+    state.items.splice(before ? to : to + 1, 0, moved);
+    touch(true);
+  });
+
+  document.addEventListener('dragend', endDrag);
+
+  function endDrag() {
+    var dragging = document.querySelector('.is-dragging');
+    if (dragging) dragging.classList.remove('is-dragging');
+    clearDropMarks();
+    clearDraggable();
+    dragId = null;
+  }
+
+  function clearDropMarks() {
+    var marked = document.querySelectorAll('.is-drop-before, .is-drop-after');
+    Array.prototype.forEach.call(marked, function (r) {
+      r.classList.remove('is-drop-before', 'is-drop-after');
+    });
   }
 
   /* ================= เหตุการณ์ ================= */
@@ -399,12 +501,6 @@
       return touch(true);
     }
 
-    var mv = t.closest('[data-move]');
-    if (mv) {
-      var mp = mv.getAttribute('data-move').split(':');
-      return move(mp[1], mp[0] === 'up' ? -1 : 1);
-    }
-
     var rm = t.closest('[data-remove]');
     if (rm) {
       var id = rm.getAttribute('data-remove');
@@ -455,7 +551,17 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && state.addOpen) { state.addOpen = false; syncAddMenu(); }
+    if (e.key === 'Escape') {
+      if (dragId !== null) endDrag();
+      if (state.addOpen) { state.addOpen = false; syncAddMenu(); }
+      return;
+    }
+    /* คนที่ใช้คีย์บอร์ดหรือ screen reader ลากไม่ได้ จึงต้องมีทางเลื่อนลำดับด้วยลูกศร */
+    var grip = e.target.closest && e.target.closest('[data-grip]');
+    if (grip && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      move(grip.getAttribute('data-grip'), e.key === 'ArrowUp' ? -1 : 1);
+    }
   });
 
   /* ---------- บันทึกร่าง ---------- */

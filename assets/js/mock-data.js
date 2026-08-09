@@ -382,7 +382,7 @@ window.TFC_MOCK = {
          gating existing row actions (edit/delete buttons etc.) across the whole app. */
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
         'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
         'users': true, 'users-list': true, 'users-roles': true
       }
@@ -396,7 +396,7 @@ window.TFC_MOCK = {
          ไม่งั้นเข้าหน้าได้แต่เมนู ⋮ ในตารางขึ้น "ไม่มีสิทธิ์ดำเนินการ" */
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
         'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
         'users': true, 'users-list': true, 'users-roles': true
       }
@@ -408,7 +408,7 @@ window.TFC_MOCK = {
       permissions: { project: false, users: false, areas: false, master_data: false, activities: true, payments: true, evaluations: true, reports: false },
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
         'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
@@ -420,7 +420,7 @@ window.TFC_MOCK = {
       permissions: { project: false, users: false, areas: false, master_data: false, activities: false, payments: false, evaluations: false, reports: false },
       menuPermissions: {
         'dashboard': false,
-        'activities': false, 'activities-list': false, 'activities-registrants': false,
+        'activities': false, 'activities-list': false, 'activities-registrants': false, 'activities-checkin': false, 'activities-satisfaction': false,
         'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
@@ -552,6 +552,79 @@ window.TFC_MOCK = {
     { value: 'camera', label: 'ถ่ายภาพ', path: '<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>' },
     { value: 'music', label: 'ดนตรี', path: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
     { value: 'star', label: 'พิเศษ', path: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01z"/>' }
+  ],
+
+  /* ==========================================================================
+     ความพึงพอใจ — หัวข้อประเมิน + คำตอบรายคน
+     คำตอบรายคนคือ "แหล่งข้อมูลเดียว" ของหน้าความพึงพอใจ ทุกตัวเลขบนหน้าจอ
+     (คะแนนเฉลี่ย · คะแนนรายหัวข้อ · การกระจายดาว · จำนวนผู้ตอบ · ความเห็น)
+     คำนวณจากชุดนี้ทั้งหมด — ห้ามเก็บค่าเฉลี่ยหรือ distribution ไว้ซ้ำที่อื่น
+     เพราะจะทำให้ตัวเลขในการ์ดกับตารางขัดกันเองเมื่อข้อมูลเปลี่ยน
+
+     แบบประเมินไม่เก็บ user_id / ชื่อ / เบอร์โทร โดยเจตนา — ระบุตัวตนผู้ตอบไม่ได้
+     เลขที่แสดงในตาราง ("ผู้ตอบ #N") เป็นลำดับที่คำนวณตอนแสดงผลเท่านั้น
+     ========================================================================== */
+  satisfactionTopics: [
+    { key: 'overall', label: 'ความพึงพอใจโดยรวม', short: 'ภาพรวม' },
+    { key: 'content', label: 'เนื้อหาตรงกับที่คาดหวัง', short: 'เนื้อหา' },
+    { key: 'speaker', label: 'วิทยากรอธิบายเข้าใจง่าย', short: 'วิทยากร' },
+    { key: 'duration', label: 'ระยะเวลาที่ใช้เหมาะสม', short: 'เวลา' },
+    { key: 'venue', label: 'สถานที่และการต้อนรับ', short: 'สถานที่' }
+  ],
+
+  /* scores เรียงตามลำดับเดียวกับ satisfactionTopics · comment เว้นว่างได้ (ไม่บังคับตอบ) */
+  satisfactionResponses: [
+    /* ACT-2026-014 — เข้าร่วมจริง 10 คน ตอบ 6 คน = 60% (ต่ำกว่าเกณฑ์ 70% การ์ดจะเป็นสีเหลือง) */
+    { id: 'SAT-014-01', activityId: 'ACT-2026-014', scores: [5, 4, 5, 4, 4], comment: 'ได้ลงมือทำจริงทุกขั้นตอน กลับบ้านแล้วทำต่อได้เลย ชอบที่มีชุดเพาะกล้าให้ด้วย', submittedAt: '2026-08-10T12:45' },
+    { id: 'SAT-014-02', activityId: 'ACT-2026-014', scores: [5, 5, 5, 4, 5], comment: 'วิทยากรอธิบายเข้าใจง่าย ถามอะไรก็ตอบได้หมด', submittedAt: '2026-08-10T12:41' },
+    { id: 'SAT-014-03', activityId: 'ACT-2026-014', scores: [4, 4, 4, 3, 4], comment: 'สถานที่ร่มรื่นดี แต่ที่จอดรถน้อย มาสายเลยหาที่จอดยาก', submittedAt: '2026-08-10T12:37' },
+    { id: 'SAT-014-04', activityId: 'ACT-2026-014', scores: [5, 5, 5, 3, 5], comment: 'เนื้อหาดีมาก แต่ช่วงลงแปลงจริงเวลาน้อยไปหน่อย อยากให้เพิ่มเป็นครึ่งวัน', submittedAt: '2026-08-10T12:33' },
+    { id: 'SAT-014-05', activityId: 'ACT-2026-014', scores: [3, 3, 4, 2, 3], comment: 'อยากให้มีเอกสารสรุปส่งทางไลน์หลังจบกิจกรรมด้วย', submittedAt: '2026-08-10T12:29' },
+    { id: 'SAT-014-06', activityId: 'ACT-2026-014', scores: [5, 4, 5, 4, 4], comment: '', submittedAt: '2026-08-10T12:25' },
+
+    /* ACT-2026-015 — เข้าร่วมจริง 8 คน ตอบ 7 คน = 88% */
+    { id: 'SAT-015-01', activityId: 'ACT-2026-015', scores: [5, 5, 5, 5, 4], comment: 'เมนูที่สอนทำตามได้จริง วัตถุดิบหาซื้อง่าย', submittedAt: '2026-08-17T15:20' },
+    { id: 'SAT-015-02', activityId: 'ACT-2026-015', scores: [4, 4, 5, 4, 4], comment: '', submittedAt: '2026-08-17T15:16' },
+    { id: 'SAT-015-03', activityId: 'ACT-2026-015', scores: [5, 4, 5, 3, 5], comment: 'ครึ่งวันแรกแน่นไปนิด อยากให้พักนานกว่านี้', submittedAt: '2026-08-17T15:12' },
+    { id: 'SAT-015-04', activityId: 'ACT-2026-015', scores: [4, 5, 4, 4, 4], comment: 'ชอบที่ได้ชิมทุกเมนูที่ทำ', submittedAt: '2026-08-17T15:08' },
+    { id: 'SAT-015-05', activityId: 'ACT-2026-015', scores: [5, 5, 5, 4, 5], comment: '', submittedAt: '2026-08-17T15:04' },
+    { id: 'SAT-015-06', activityId: 'ACT-2026-015', scores: [3, 3, 4, 3, 3], comment: 'ห้องครัวคนเยอะ แย่งอุปกรณ์กันนิดหน่อย', submittedAt: '2026-08-17T15:00' },
+    { id: 'SAT-015-07', activityId: 'ACT-2026-015', scores: [4, 4, 4, 4, 5], comment: '', submittedAt: '2026-08-17T14:56' },
+
+    /* ACT-2026-016 — เข้าร่วมจริง 6 คน ตอบ 3 คน = 50% (ต่ำกว่าเกณฑ์) */
+    { id: 'SAT-016-01', activityId: 'ACT-2026-016', scores: [4, 4, 4, 4, 3], comment: 'ได้ความรู้เรื่องอัตราส่วนเศษอาหารกับใบไม้แห้ง เอาไปทำที่บ้านได้', submittedAt: '2026-08-24T12:10' },
+    { id: 'SAT-016-02', activityId: 'ACT-2026-016', scores: [3, 3, 3, 2, 3], comment: 'กลิ่นแรงกว่าที่คิด อยากให้เตือนล่วงหน้าและเตรียมถุงมือให้', submittedAt: '2026-08-24T12:06' },
+    { id: 'SAT-016-03', activityId: 'ACT-2026-016', scores: [5, 4, 5, 4, 4], comment: '', submittedAt: '2026-08-24T12:02' },
+
+    /* ACT-2026-017 — เข้าร่วมจริง 35 คน ตอบ 26 คน = 74% (ชุดใหญ่ ใช้ทดสอบการแบ่งหน้า 3 หน้า) */
+    { id: 'SAT-017-01', activityId: 'ACT-2026-017', scores: [5, 5, 5, 4, 5], comment: 'จัดได้ดีมาก อยากให้มีทุกไตรมาส', submittedAt: '2026-07-20T16:30' },
+    { id: 'SAT-017-02', activityId: 'ACT-2026-017', scores: [4, 4, 5, 4, 4], comment: '', submittedAt: '2026-07-20T16:27' },
+    { id: 'SAT-017-03', activityId: 'ACT-2026-017', scores: [5, 4, 5, 3, 4], comment: 'ช่วงบ่ายยาวไปหน่อย คนสูงอายุเริ่มล้า', submittedAt: '2026-07-20T16:24' },
+    { id: 'SAT-017-04', activityId: 'ACT-2026-017', scores: [5, 5, 5, 5, 5], comment: 'ทีมงานดูแลดีมากตั้งแต่ลงทะเบียนจนจบงาน', submittedAt: '2026-07-20T16:21' },
+    { id: 'SAT-017-05', activityId: 'ACT-2026-017', scores: [4, 4, 4, 3, 4], comment: '', submittedAt: '2026-07-20T16:18' },
+    { id: 'SAT-017-06', activityId: 'ACT-2026-017', scores: [3, 3, 4, 2, 3], comment: 'เสียงไมค์ไม่ค่อยชัดตอนอยู่หลังห้อง', submittedAt: '2026-07-20T16:15' },
+    { id: 'SAT-017-07', activityId: 'ACT-2026-017', scores: [5, 5, 5, 4, 5], comment: '', submittedAt: '2026-07-20T16:12' },
+    { id: 'SAT-017-08', activityId: 'ACT-2026-017', scores: [4, 5, 4, 4, 4], comment: 'ได้เจอเพื่อนบ้านที่ไม่เคยคุยกันมาก่อน ชอบบรรยากาศ', submittedAt: '2026-07-20T16:09' },
+    { id: 'SAT-017-09', activityId: 'ACT-2026-017', scores: [5, 4, 5, 4, 5], comment: '', submittedAt: '2026-07-20T16:06' },
+    { id: 'SAT-017-10', activityId: 'ACT-2026-017', scores: [4, 4, 5, 3, 4], comment: 'อยากให้มีน้ำดื่มวางไว้หลายจุดกว่านี้', submittedAt: '2026-07-20T16:03' },
+    { id: 'SAT-017-11', activityId: 'ACT-2026-017', scores: [5, 5, 5, 5, 4], comment: '', submittedAt: '2026-07-20T16:00' },
+    { id: 'SAT-017-12', activityId: 'ACT-2026-017', scores: [4, 3, 4, 3, 4], comment: 'กิจกรรมกลุ่มสนุก แต่เวลาน้อยไปนิด', submittedAt: '2026-07-20T15:57' },
+    { id: 'SAT-017-13', activityId: 'ACT-2026-017', scores: [5, 5, 5, 4, 5], comment: '', submittedAt: '2026-07-20T15:54' },
+    { id: 'SAT-017-14', activityId: 'ACT-2026-017', scores: [4, 4, 4, 4, 3], comment: 'ห้องน้ำอยู่ไกลจากจุดจัดงาน', submittedAt: '2026-07-20T15:51' },
+    { id: 'SAT-017-15', activityId: 'ACT-2026-017', scores: [5, 4, 5, 3, 5], comment: '', submittedAt: '2026-07-20T15:48' },
+    { id: 'SAT-017-16', activityId: 'ACT-2026-017', scores: [3, 4, 4, 3, 3], comment: 'อาหารกลางวันมาช้า รอนานพอสมควร', submittedAt: '2026-07-20T15:45' },
+    { id: 'SAT-017-17', activityId: 'ACT-2026-017', scores: [5, 5, 5, 4, 5], comment: 'ประทับใจช่วงแบ่งปันประสบการณ์ของผู้สูงอายุในชุมชน', submittedAt: '2026-07-20T15:42' },
+    { id: 'SAT-017-18', activityId: 'ACT-2026-017', scores: [4, 4, 5, 4, 4], comment: '', submittedAt: '2026-07-20T15:39' },
+    { id: 'SAT-017-19', activityId: 'ACT-2026-017', scores: [5, 5, 4, 4, 5], comment: '', submittedAt: '2026-07-20T15:36' },
+    { id: 'SAT-017-20', activityId: 'ACT-2026-017', scores: [2, 3, 3, 2, 3], comment: 'ลงทะเบียนหน้างานช้ามาก ต่อคิวเกือบครึ่งชั่วโมง', submittedAt: '2026-07-20T15:33' },
+    { id: 'SAT-017-21', activityId: 'ACT-2026-017', scores: [5, 4, 5, 4, 4], comment: '', submittedAt: '2026-07-20T15:30' },
+    { id: 'SAT-017-22', activityId: 'ACT-2026-017', scores: [4, 5, 5, 3, 4], comment: 'อยากได้สรุปผลตรวจสุขภาพเป็นไฟล์ด้วย', submittedAt: '2026-07-20T15:27' },
+    { id: 'SAT-017-23', activityId: 'ACT-2026-017', scores: [5, 5, 5, 5, 5], comment: '', submittedAt: '2026-07-20T15:24' },
+    { id: 'SAT-017-24', activityId: 'ACT-2026-017', scores: [4, 4, 4, 3, 4], comment: '', submittedAt: '2026-07-20T15:21' },
+    { id: 'SAT-017-25', activityId: 'ACT-2026-017', scores: [5, 4, 5, 4, 5], comment: 'เจ้าหน้าที่ยิ้มแย้ม ตอบคำถามดี', submittedAt: '2026-07-20T15:18' },
+    { id: 'SAT-017-26', activityId: 'ACT-2026-017', scores: [4, 4, 4, 4, 4], comment: '', submittedAt: '2026-07-20T15:15' }
+
+    /* ACT-2026-018 ยังเป็นฉบับร่าง ยังไม่มีผู้ตอบ — ใช้ทดสอบ Empty State */
   ],
 
   sampleFollowUpRounds: [
@@ -955,7 +1028,9 @@ window.TFC.satisfactionLevelOf = function (score) {
         checkinStatus: checkin,
         session: sessions.length ? sessions[Math.floor(rand() * sessions.length)].date : activity.startDate,
         registeredAt: activity.startDate,
-        manualEntry: rand() < 0.15
+        manualEntry: rand() < 0.15,
+        /* ข้อจำกัดด้านอาหาร — ฟิลด์ในแบบลงทะเบียน ส่วนใหญ่ไม่ได้กรอก */
+        dietaryNote: pick(rand, ['', '', '', '', 'แพ้อาหารทะเล', 'มังสวิรัติ', 'ไม่กินเนื้อวัว', 'แพ้ถั่ว'])
       });
     }
     return rows;
