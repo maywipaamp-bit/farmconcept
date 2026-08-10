@@ -6216,7 +6216,9 @@ button.multiselect:focus-visible {
 
 .ac-field-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
 .ac-field-half { flex: 1 1 260px; }
-.ac-field-kind { flex: none; }
+/* ประเภทเป็น dropdown แล้ว ไม่ใช่ชิปที่กว้างตามข้อความ จึงต้องกำหนดความกว้างเอง
+   160px พอสำหรับ "กิจกรรม" และ "อีเว้นท์" รวมลูกศรของ select โดยไม่เบียดช่องหมวดหมู่ */
+.ac-field-kind { flex: none; width: 160px; }
 /* หมวดหมู่เยื้องขวาจากประเภทตามแบบ และยืดเต็มพื้นที่ที่เหลือ */
 /* 20px เป็นค่าเฉพาะของแบบนี้ ไม่มีโทเคนระยะห่างค่านี้ (สเกลคือ 4/8/12/16/24/32/48) */
 .ac-field-cats { flex: 1 1 320px; margin-left: 20px; }

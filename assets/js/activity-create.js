@@ -130,9 +130,12 @@
   /* ================= เรนเดอร์แต่ละส่วน ================= */
 
   function renderChips() {
+    /* ประเภทเป็น dropdown ไม่ใช่ชิป เพราะเลือกได้อย่างเดียวและอยู่ติดกับ "หมวดหมู่"
+       ที่เลือกได้หลายอัน — ใช้คนละรูปแบบกันช่วยให้แยกออกทันทีว่าอันไหนเลือกได้กี่ค่า */
     $('ac-kind').innerHTML = KINDS.map(function (k) {
-      return chipHtml(k, state.kind === k, true, 'data-kind');
+      return '<option value="' + esc(k) + '">' + esc(k) + '</option>';
     }).join('');
+    $('ac-kind').value = state.kind;
 
     $('ac-cats').innerHTML = CATS.map(function (c) {
       return chipHtml(c, state.cats.indexOf(c) > -1, false, 'data-cat');
@@ -461,6 +464,7 @@
   $('ac-place').innerHTML = PLACES.map(function (p) {
     return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
   }).join('');
+  $('ac-kind').addEventListener('change', function () { state.kind = this.value; touch(); });
   $('ac-place').addEventListener('change', function () { state.place = this.value; touch(); });
 
   $('ac-audience').addEventListener('change', touch);
@@ -487,9 +491,6 @@
     var t = e.target;
 
     /* ---- chip ---- */
-    var kind = t.closest('[data-kind]');
-    if (kind) { state.kind = kind.getAttribute('data-kind'); return touch(); }
-
     var cat = t.closest('[data-cat]');
     if (cat) { toggleIn('cats', cat.getAttribute('data-cat')); return touch(); }
 
