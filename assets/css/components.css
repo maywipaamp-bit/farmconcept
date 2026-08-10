@@ -9671,3 +9671,327 @@ button.multiselect:focus-visible {
   .sat-head { flex-direction: column; align-items: stretch; }
   .sat-head-actions { flex-wrap: wrap; }
 }
+/* ==========================================================================
+   หน้าตั้งค่ารอบติดตาม (admin/evaluations/rounds.html)
+   ยึด docs/design-standard/STANDARD.md — ทุกค่าสี ขนาด ระยะห่างมาจาก tokens.css
+   หน้านี้เป็นหน้าตั้งค่า ไม่ใช่หน้ารายการ จึงแบ่งเป็นการ์ดตามลำดับขั้น 1-2-3
+   แล้วปิดท้ายด้วยแถบบันทึกที่ค้างอยู่ล่างจอ
+   ========================================================================== */
+
+.fr-card { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* หัวการ์ด: เลขลำดับขั้น + ชื่อขั้น + ที่ว่างท้ายบรรทัดสำหรับสวิตช์หรือคำอธิบาย */
+.fr-card-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+
+.fr-step {
+  flex: none;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-success-text);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft-border);
+  white-space: nowrap;
+}
+
+.fr-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+.fr-card-note {
+  flex: none;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- ตารางรอบ ----------
+   ตารางนี้แก้ค่าได้ในแถว (ช่องกรอก/ตัวเลือก/สวิตช์) จึงกว้างกว่าจอแคบแน่นอน
+   ให้เลื่อนแนวนอนได้ในกรอบของตัวเอง ไม่ใช่ปล่อยให้ทั้งหน้าเลื่อน */
+.fr-scroll { overflow-x: auto; }
+.fr-rows { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* คอลัมน์: ลำดับ · ชื่อรอบ · เปิด · ปิด · แบบประเมิน · สถานะ · ลบ */
+.fr-row {
+  min-width: 940px;
+  display: grid;
+  grid-template-columns: 32px minmax(170px, 1.5fr) 150px 150px minmax(170px, 1.4fr) 92px 36px;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.fr-head {
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.fr-item {
+  padding: var(--space-3);
+  border-radius: var(--radius-input);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-soft);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+/* รอบที่กำลังเปิดให้ทำแบบประเมินอยู่ ต้องหาเจอทันทีโดยไม่ต้องอ่านคอลัมน์สถานะ */
+.fr-item.is-open { background: var(--color-surface); border-color: var(--color-primary-soft-border); }
+
+.fr-no {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-action);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.fr-item.is-open .fr-no {
+  color: var(--color-success-text);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-soft-border);
+}
+
+/* ช่องกรอกในแถวเตี้ยกว่าฟอร์มปกติหนึ่งขั้น เพราะมีหลายช่องเรียงกันในแถวเดียว
+   ถ้าใช้ 42px เต็มจะสูงจนตารางอ่านเป็นรายการไม่ออก */
+.fr-row .input,
+.fr-row .select {
+  height: 38px;
+  min-height: 38px;
+  min-width: 0;
+  font-size: var(--font-size-small);
+}
+
+.fr-row .input[type="date"] { font-variant-numeric: tabular-nums; }
+.fr-name.input { font-weight: var(--font-weight-medium); color: var(--color-text-primary); }
+
+/* ช่องสถานะ: สวิตช์ + ข้อความบอกสถานะจริง วางซ้อนกันเพราะคอลัมน์แคบ */
+.fr-state { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+
+.fr-state-text {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fr-item.is-open .fr-state-text { color: var(--color-success-text); }
+.fr-state-text.is-warn { color: var(--color-warning-text); }
+
+.fr-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  color: var(--color-text-action);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.fr-remove:hover:not(:disabled) {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+}
+
+/* เหลือรอบเดียวแล้วลบไม่ได้ — การตั้งค่ารอบติดตามที่ไม่มีรอบเลยไม่มีความหมาย */
+.fr-remove:disabled { color: var(--color-text-faint); cursor: not-allowed; }
+
+/* ---------- แจ้งเตือน LINE ---------- */
+.fr-notify { display: flex; gap: var(--space-5); flex-wrap: wrap; align-items: flex-start; }
+.fr-notify-col { display: flex; flex-direction: column; gap: var(--space-2); flex: 1 1 240px; min-width: 0; }
+
+.fr-notify-divider { border-top: 1px solid var(--color-border-soft); padding-top: var(--space-4); }
+
+.fr-chips { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+.fr-chip {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  white-space: nowrap;
+  color: var(--color-text-action);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.fr-chip:hover { background: var(--color-surface-muted); color: var(--color-text-primary); }
+
+.fr-chip.is-active {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-soft-border);
+}
+
+.fr-label-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+
+/* ตัวแปรที่พิมพ์ลงข้อความได้ — เป็นสัญลักษณ์แทนค่า ไม่ใช่ประโยค จึงจางกว่าเนื้อหา */
+.fr-tokens {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.fr-msg { min-height: 116px; line-height: 1.75; }
+
+/* กล่องข้อความแบบที่ผู้รับเห็นใน LINE — มุมบนซ้ายตัดเหลี่ยมให้อ่านออกว่าเป็นบับเบิลแชท */
+.fr-bubble {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  border-top-left-radius: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.fr-bubble-text {
+  font-size: var(--font-size-body);
+  line-height: 1.8;
+  color: var(--color-text-body);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+}
+
+/* ปุ่มจำลองในบับเบิล — ไม่ใช่ปุ่มจริง จึงเป็น span และไม่มี cursor pointer */
+.fr-bubble-btn {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  padding: 11px var(--space-5);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- ตัวอย่างกำหนดการ ---------- */
+/* 620px = คอลัมน์ 28+160+184+180 + gap 12x3 + padding 12x2 เผื่อไว้เล็กน้อย
+   ถ้าตั้งน้อยกว่านี้ ตารางจะล้นกล่องของตัวเองแล้วคอลัมน์สุดท้ายถูกตัด */
+.fr-timeline-row {
+  min-width: 620px;
+  display: grid;
+  grid-template-columns: 28px minmax(160px, 1.3fr) 184px 180px;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.fr-tl-name {
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fr-tl-range {
+  font-size: var(--font-size-small);
+  color: var(--color-text-action);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-tl-send { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.fr-tl-when {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-tl-when.is-on { font-weight: var(--font-weight-medium); color: var(--color-success-text); }
+
+.fr-tl-note {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.fr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.fr-empty-title { font-size: var(--font-size-body); color: var(--color-text-primary); }
+.fr-empty-text { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+
+/* ---------- แถบบันทึกล่างจอ ----------
+   ใช้โครงเดียวกับ .ec-bottombar ของหน้าสร้างแบบประเมิน เพื่อให้สองหน้าตั้งค่าทำงานเหมือนกัน */
+.fr-bottombar {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.fr-bottombar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5);
+}
+
+.fr-save-note {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-bottombar-actions { display: flex; align-items: center; gap: var(--space-3); flex: none; flex-wrap: wrap; }
+.fr-bottombar-actions .btn { white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .fr-card { padding: var(--space-4); }
+  .fr-bottombar-inner { padding: var(--space-3) var(--space-4); }
+  .fr-bottombar-actions { width: 100%; }
+  .fr-bottombar-actions .btn { flex: 1; }
+}
