@@ -382,7 +382,7 @@ window.TFC_MOCK = {
          gating existing row actions (edit/delete buttons etc.) across the whole app. */
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true,
         'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
         'users': true, 'users-list': true, 'users-roles': true
       }
@@ -396,7 +396,7 @@ window.TFC_MOCK = {
          ไม่งั้นเข้าหน้าได้แต่เมนู ⋮ ในตารางขึ้น "ไม่มีสิทธิ์ดำเนินการ" */
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true,
         'master-data': true, 'master-data-areas': true, 'master-data-target-groups': true, 'master-data-programs': true, 'master-data-instructors': true, 'master-data-activity-formats': true,
         'users': true, 'users-list': true, 'users-roles': true
       }
@@ -408,7 +408,7 @@ window.TFC_MOCK = {
       permissions: { project: false, users: false, areas: false, master_data: false, activities: true, payments: true, evaluations: true, reports: false },
       menuPermissions: {
         'dashboard': true,
-        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true, 'activities-satisfaction': true,
+        'activities': true, 'activities-list': true, 'activities-registrants': true, 'activities-checkin': true,
         'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
@@ -420,7 +420,7 @@ window.TFC_MOCK = {
       permissions: { project: false, users: false, areas: false, master_data: false, activities: false, payments: false, evaluations: false, reports: false },
       menuPermissions: {
         'dashboard': false,
-        'activities': false, 'activities-list': false, 'activities-registrants': false, 'activities-checkin': false, 'activities-satisfaction': false,
+        'activities': false, 'activities-list': false, 'activities-registrants': false, 'activities-checkin': false,
         'master-data': false, 'master-data-areas': false, 'master-data-target-groups': false, 'master-data-programs': false, 'master-data-instructors': false, 'master-data-activity-formats': false,
         'users': false, 'users-list': false, 'users-roles': false
       }
