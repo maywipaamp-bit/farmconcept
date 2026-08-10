@@ -196,7 +196,11 @@ window.TFC = window.TFC || {};
      paginate จริงเรียกใช้ได้โดยไม่ต้องเขียน logic ซ้ำ (หน้าที่ยังใช้ markup เดิมไม่ได้รับผลกระทบ)
      TFC.renderPagination(mountId, { page, pageSize, total, onChange, pageSizeOptions, onPageSizeChange, footer })
      - pageSizeOptions (เช่น [10, 20, 50]) -> แสดงตัวเลือก "รายการต่อหน้า" (ไม่ใส่ = ไม่แสดง, พฤติกรรมเดิม)
-     - footer: true -> วางกลุ่มปุ่มหน้าไว้ซ้าย และข้อความสรุปไว้ขวา ตามโครงหน้ารายการมาตรฐาน */
+     - footer: true -> วางกลุ่มปุ่มหน้าไว้ซ้าย และข้อความสรุปไว้ขวา ตามโครงหน้ารายการมาตรฐาน
+     ตัวเลือกด้านหน้าตา — ทุกตัวมีค่าเริ่มต้นเท่าพฤติกรรมเดิม หน้าที่ใช้อยู่แล้วจึงไม่กระทบ:
+     - unit: คำนับท้ายข้อความสรุป (ค่าเริ่มต้น 'รายการ' เช่น 'ชุด' สำหรับชุดคำตอบ)
+     - edges: false -> ซ่อนปุ่มหน้าแรก/หน้าสุดท้าย (« ») เหลือแค่ ก่อนหน้า/เลขหน้า/ถัดไป
+     - sizeWithInfo: true -> ย้ายตัวเลือก "รายการต่อหน้า" ไปอยู่ข้างข้อความสรุปทางซ้าย */
   window.TFC.renderPagination = function (target, opts) {
     var el = mountEl(target);
     if (!el) return;
@@ -225,15 +229,21 @@ window.TFC = window.TFC || {};
         '</select></label>';
     }
 
+    var edgesHtml = opts.edges === false ? { first: '', last: '' } : {
+      first: '<button type="button" class="pagination-btn" data-page="1"' + (page === 1 ? ' disabled' : '') + ' aria-label="หน้าแรก">«</button>',
+      last: '<button type="button" class="pagination-btn" data-page="' + pageCount + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="หน้าสุดท้าย">»</button>'
+    };
+
     el.innerHTML = '<div class="pagination' + (opts.footer ? ' is-footer' : '') + '">' +
-      '<div class="pagination-info">แสดง ' + from + '-' + to + ' จาก ' + total + ' รายการ</div>' +
+      '<div class="pagination-info">แสดง ' + from + '-' + to + ' จาก ' + total + ' ' + (opts.unit || 'รายการ') +
+      (opts.sizeWithInfo ? sizeHtml : '') + '</div>' +
       '<div class="pagination-controls">' +
-      '<button type="button" class="pagination-btn" data-page="1"' + (page === 1 ? ' disabled' : '') + ' aria-label="หน้าแรก">«</button>' +
+      edgesHtml.first +
       '<button type="button" class="pagination-btn" data-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + ' aria-label="ก่อนหน้า">‹</button>' +
       numbersHtml +
       '<button type="button" class="pagination-btn" data-page="' + (page + 1) + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="ถัดไป">›</button>' +
-      '<button type="button" class="pagination-btn" data-page="' + pageCount + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="หน้าสุดท้าย">»</button>' +
-      sizeHtml +
+      edgesHtml.last +
+      (opts.sizeWithInfo ? '' : sizeHtml) +
       '</div></div>';
 
     if (typeof opts.onChange === 'function') {

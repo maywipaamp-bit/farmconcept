@@ -33,11 +33,20 @@
     return (linkPath + a.search) === currentHref;
   }
 
+  /* alsoMatch เทียบเฉพาะ path ไม่รวม query string เพราะหน้ารายละเอียดมักมี ?id=
+     ต่างจาก href ของเมนูเองที่ต้องเทียบทั้ง query ด้วย (placeholder.html?title=… ใช้แยกเมนูกัน) */
+  function isCurrentPath(rootRelativeHref) {
+    if (!rootRelativeHref) return false;
+    var a = document.createElement('a');
+    a.href = resolvedHref(rootRelativeHref);
+    return a.pathname.replace(/\/+$/, '') === currentPath;
+  }
+
   /* เมนูจะไฮไลต์เมื่ออยู่ที่ href ของตัวเอง หรืออยู่ที่หน้าใน alsoMatch
      ใช้กับโมดูลที่มีเมนูเดียวแต่มีหลายหน้า เช่น หน้าสร้าง/แก้ไข ที่ไม่มีเมนูของตัวเอง */
   function isActiveItem(item) {
     if (isCurrentHref(item.href)) return true;
-    return (item.alsoMatch || []).some(isCurrentHref);
+    return (item.alsoMatch || []).some(isCurrentPath);
   }
 
   function leafLinkHtml(item) {

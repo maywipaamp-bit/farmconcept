@@ -1,6 +1,12 @@
-/* TheFarmConcept — ตัวเลือกวันที่/เวลาแบบวงล้อ (แนวเดียวกับ LINE)
+/* TheFarmConcept — ช่องวันที่และเวลา
    ใช้แทน <input type="date"> และ <input type="time"> ของเบราว์เซอร์ ซึ่งหน้าตาต่างกันทุกเครื่อง
-   คุมสไตล์ไม่ได้ และบนเดสก์ท็อปเป็นปฏิทิน/สปินเนอร์ที่ไม่เข้ากับส่วนอื่นของระบบ
+   คุมสไตล์ไม่ได้ และแสดงเป็น ค.ศ. กับรูปแบบสากลที่ไม่ตรงกับส่วนอื่นของระบบ
+
+   สองแบบ ใช้คนละวิธีตามธรรมชาติของข้อมูล
+   - วันที่ = เลือกจากปฏิทิน (ตารางเดือน เดือน/ปี พ.ศ.) เพราะพิมพ์วันที่ไทยมีหลายรูปแบบ
+     และคนมักไม่รู้ว่าเดือนนั้นมีกี่วันหรือวันนั้นตรงกับวันอะไร ปฏิทินตอบได้ในตัว
+   - เวลา = พิมพ์เอง เพราะเวลาที่ต้องการมักเจาะจงเป็นนาที (09:45, 13:20)
+     วงล้อที่ขยับทีละ 5 นาทีทำให้กรอกค่าที่ต้องการจริงไม่ได้
 
    วิธีใช้ — ใส่ data-picker ให้ input แล้วจบ ไม่ต้องเรียกอะไรเพิ่ม
      <input type="text" class="input" data-picker="date" data-iso="2026-08-11">
@@ -8,9 +14,10 @@
 
    สัญญาที่หน้าจออื่นต้องรู้
    - ค่าจริงอยู่ที่ data-iso เสมอ (date = YYYY-MM-DD, time = HH:MM)
-     ส่วน .value เป็นข้อความไทยไว้ให้คนอ่าน เช่น "11 ส.ค. 2569"
-   - เลือกเสร็จแล้วยิง event 'input' และ 'change' ให้ ทั้งคู่ bubble
+     ส่วน .value เป็นข้อความไทยไว้ให้คนอ่าน เช่น "11 ส.ค. 2569" · "09:30 น."
+   - ค่าเปลี่ยนเมื่อไร ยิง event 'input' และ 'change' ให้ ทั้งคู่ bubble
      โค้ดเดิมที่ดักสองอีเวนต์นี้จึงทำงานต่อได้ แค่เปลี่ยนไปอ่าน data-iso แทน .value
+   - ช่องเวลาที่พิมพ์ค้างไว้ยังไม่ครบ data-iso จะเป็นค่าว่าง จนกว่าจะอ่านออกเป็นเวลาจริง
 */
 window.TFC = window.TFC || {};
 
@@ -18,8 +25,7 @@ window.TFC.datetimePicker = (function () {
   var MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   var MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
                      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-  var MINUTE_STEP = 5;
-  var ROW_H = 36;          /* ต้องตรงกับ --dtp-row ใน components.css */
+  var WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   var YEAR_BACK = 1;
   var YEAR_FWD = 3;
 
@@ -34,32 +40,30 @@ window.TFC.datetimePicker = (function () {
 
   function daysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
 
-  /* วันที่อ้างอิงตอนยังไม่มีค่า — ใช้ของเซิร์ฟเวอร์ถ้ามี ไม่งั้นค่อยใช้นาฬิกาเครื่อง */
+  /* วันที่อ้างอิงตอนยังไม่มีค่า — ใช้ของเซิร์ฟเวอร์ถ้ามี ไม่งั้นค่อยใช้นาฬิกาเครื่อง
+     หน้าที่ไม่ได้โหลด service ไว้จะตกมาที่นาฬิกาเครื่องเอง จึงไม่ต้องบังคับให้ทุกหน้าโหลด */
   function today() {
-    var svc = window.TFC.followUpService;
+    var svc = window.TFC.followUpTemplateService;
     var iso = svc && svc.serverToday ? svc.serverToday() : new Date().toISOString().slice(0, 10);
     var p = iso.split('-');
     return { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) };
   }
 
-  /* ---------- วงล้อหนึ่งคอลัมน์ ---------- */
-  function wheel(name, items, selectedValue) {
-    var rows = items.map(function (it) {
-      return '<div class="dtp-item" data-value="' + it.value + '">' + it.label + '</div>';
+  function optionsHtml(items, selected) {
+    return items.map(function (it) {
+      return '<option value="' + it.value + '"' + (it.value === selected ? ' selected' : '') + '>' +
+        it.label + '</option>';
     }).join('');
-    return '<div class="dtp-wheel" data-wheel="' + name + '" data-selected="' + selectedValue + '">' +
-      '<div class="dtp-wheel-pad"></div>' + rows + '<div class="dtp-wheel-pad"></div>' +
-      '</div>';
   }
 
-  function range(from, to, fmt, pick) {
+  function range(from, to, fmt) {
     var out = [];
-    for (var i = from; i <= to; i += (pick || 1)) out.push({ value: i, label: fmt(i) });
+    for (var i = from; i <= to; i++) out.push({ value: i, label: fmt(i) });
     return out;
   }
 
   /* ---------- ตัวแผง ---------- */
-  var open = null;   /* { input, root, mode, sel } */
+  var open = null;   /* { input, root, sel } */
 
   function close(commit) {
     if (!open) return;
@@ -72,171 +76,238 @@ window.TFC.datetimePicker = (function () {
   }
 
   function writeBack(o) {
-    var iso = o.mode === 'date'
-      ? o.sel.y + '-' + pad(o.sel.m) + '-' + pad(o.sel.d)
-      : pad(o.sel.h) + ':' + pad(o.sel.mi);
+    var iso = o.sel.y + '-' + pad(o.sel.m) + '-' + pad(o.sel.d);
     o.input.setAttribute('data-iso', iso);
-    o.input.value = o.mode === 'date' ? thaiDate(iso) : iso + ' น.';
-    o.input.dispatchEvent(new Event('input', { bubbles: true }));
-    o.input.dispatchEvent(new Event('change', { bubbles: true }));
+    o.input.value = thaiDate(iso);
+    fire(o.input);
   }
 
+  /* Esc ปิดโดยไม่บันทึก · Enter ปล่อยผ่านไปให้ปุ่มวันที่โฟกัสอยู่จัดการเอง
+     ถ้าดัก Enter ตรงนี้ จะบันทึกวันเดิมแล้วปิด ทั้งที่ผู้ใช้ Tab ไปวันอื่นแล้ว */
   function onKey(e) {
     if (e.key === 'Escape') { e.stopPropagation(); close(false); }
-    else if (e.key === 'Enter') { e.preventDefault(); close(true); }
+  }
+
+  /* ---------- ปฏิทิน ----------
+     แถบบนเป็น dropdown เดือน/ปี คู่กับลูกศรเดือนก่อน–ถัดไป
+     ถ้ามีแต่ลูกศร การไปเดือนที่ห่างหลายเดือนต้องกดสิบกว่าครั้ง */
+  function buildNav(sel) {
+    var t = today();
+    /* ทั้ง value และป้ายเป็น พ.ศ. ให้ตรงกัน — ถ้า value เป็น ค.ศ. แต่ป้ายเป็น พ.ศ.
+       ตัวที่ selected จะหาไม่เจอ แล้ว select เด้งไปที่ตัวเลือกแรกแทน */
+    var years = range(t.y - YEAR_BACK + 543, t.y + YEAR_FWD + 543, function (y) { return y; });
+    var months = range(1, 12, function (m) { return MONTHS_FULL[m - 1]; });
+    return '<span class="dtp-nav">' +
+      '<button type="button" class="dtp-arrow" data-dtp-step="-1" aria-label="เดือนก่อนหน้า">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+      '<select class="select dtp-select" data-dtp-m aria-label="เดือน">' + optionsHtml(months, sel.m) + '</select>' +
+      '<select class="select dtp-select is-year" data-dtp-y aria-label="ปี พ.ศ.">' + optionsHtml(years, sel.y + 543) + '</select>' +
+      '<button type="button" class="dtp-arrow" data-dtp-step="1" aria-label="เดือนถัดไป">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>' +
+      '</span>';
+  }
+
+  /* ตารางวัน — ช่องว่างต้นเดือนเป็น <span> ที่กดไม่ได้ ส่วนวันจริงเป็น <button>
+     จะได้ Tab เข้าไปเลือกด้วยคีย์บอร์ดได้โดยไม่ต้องเขียน keydown เพิ่ม */
+  function buildGrid(sel) {
+    var t = today();
+    var first = new Date(sel.y, sel.m - 1, 1).getDay();
+    var total = daysInMonth(sel.y, sel.m);
+
+    var cells = '';
+    for (var i = 0; i < first; i++) cells += '<span class="dtp-day is-blank" aria-hidden="true"></span>';
+    for (var d = 1; d <= total; d++) {
+      var isSel = d === sel.d;
+      var isToday = sel.y === t.y && sel.m === t.m && d === t.d;
+      cells += '<button type="button" class="dtp-day' + (isSel ? ' is-on' : '') + (isToday ? ' is-today' : '') + '"' +
+        ' data-dtp-day="' + d + '" aria-pressed="' + isSel + '"' +
+        ' aria-label="' + d + ' ' + MONTHS_FULL[sel.m - 1] + ' ' + (sel.y + 543) + '">' + d + '</button>';
+    }
+
+    return '<div class="dtp-week" aria-hidden="true">' +
+        WEEKDAYS.map(function (w) { return '<span>' + w + '</span>'; }).join('') +
+      '</div>' +
+      '<div class="dtp-grid" role="grid">' + cells + '</div>';
   }
 
   function buildDate(sel) {
-    var t = today();
-    var years = range(t.y - YEAR_BACK, t.y + YEAR_FWD, function (y) { return y + 543; });
-    var months = range(1, 12, function (m) { return MONTHS_FULL[m - 1]; });
-    var days = range(1, daysInMonth(sel.y, sel.m), function (d) { return d; });
-    return '<div class="dtp-wheels">' +
-      wheel('d', days, sel.d) + wheel('m', months, sel.m) + wheel('y', years, sel.y) +
-      '<div class="dtp-marker" aria-hidden="true"></div></div>';
+    return '<div class="dtp-cal" data-dtp-cal>' + buildGrid(sel) + '</div>';
   }
 
-  function buildTime(sel) {
-    var hours = range(0, 23, pad);
-    var mins = range(0, 59, pad, MINUTE_STEP);
-    return '<div class="dtp-wheels">' +
-      wheel('h', hours, sel.h) + wheel('mi', mins, sel.mi) +
-      '<div class="dtp-marker" aria-hidden="true"></div></div>';
+  /* วาดเฉพาะตารางวันใหม่ ไม่แตะแถบ dropdown ที่ผู้ใช้เพิ่งเลือกอยู่ */
+  function redrawGrid() {
+    if (!open) return;
+    open.root.querySelector('[data-dtp-cal]').innerHTML = buildGrid(open.sel);
+  }
+
+  /* เปลี่ยนเดือน/ปีแล้ววันที่เลือกไว้อาจไม่มีอยู่จริง (เช่น 31 ก.พ.) ต้องหดลงมาที่วันสุดท้าย */
+  function clampDay() {
+    var max = daysInMonth(open.sel.y, open.sel.m);
+    if (open.sel.d > max) open.sel.d = max;
+  }
+
+  function stepMonth(delta) {
+    var m = open.sel.m + delta, y = open.sel.y;
+    if (m < 1) { m = 12; y -= 1; }
+    if (m > 12) { m = 1; y += 1; }
+    open.sel.m = m; open.sel.y = y;
+    clampDay();
+    syncNav();
+    redrawGrid();
+  }
+
+  function syncNav() {
+    var root = open.root;
+    root.querySelector('[data-dtp-m]').value = String(open.sel.m);
+    var ySel = root.querySelector('[data-dtp-y]');
+    /* ปีที่เลื่อนไปจนพ้นช่วงใน dropdown — เพิ่มตัวเลือกให้ ไม่งั้น select จะเด้งกลับค่าเดิม */
+    var be = String(open.sel.y + 543);
+    if (!ySel.querySelector('option[value="' + be + '"]')) {
+      var opt = document.createElement('option');
+      opt.value = be; opt.textContent = be;
+      ySel.appendChild(opt);
+      [].slice.call(ySel.options).sort(function (a, b) { return Number(a.value) - Number(b.value); })
+        .forEach(function (o) { ySel.appendChild(o); });
+    }
+    ySel.value = be;
+  }
+
+  /* ---------- ช่องเวลาแบบพิมพ์ ----------
+     รับได้หลายรูปแบบเพราะคนกรอกเวลาไม่เหมือนกัน และคีย์บอร์ดไทยพิมพ์ ":" ลำบาก
+       9 · 930 · 9:5 · 09.30 · 0930 · ๐๙:๓๐ · "9:30 น."  ->  09:30
+     อ่านไม่ออกคืนค่าว่าง เพื่อให้ปลายทางรู้ว่ายังไม่มีค่าจริง ไม่ใช่เดาให้ผิด ๆ */
+  function parseTime(raw) {
+    var s = String(raw || '')
+      .replace(/[๐-๙]/g, function (d) { return String(d.charCodeAt(0) - 0x0E50); })
+      .replace(/น\./g, '')
+      .trim();
+
+    var h, mi;
+    var sep = s.match(/^(\d{1,2})\s*[:.：]\s*(\d{1,2})$/);
+    if (sep) {
+      h = Number(sep[1]); mi = Number(sep[2]);
+    } else {
+      var d = s.replace(/\D/g, '');
+      if (!d) return '';
+      if (d.length <= 2) { h = Number(d); mi = 0; }
+      else if (d.length === 3) { h = Number(d.slice(0, 1)); mi = Number(d.slice(1)); }
+      else if (d.length === 4) { h = Number(d.slice(0, 2)); mi = Number(d.slice(2)); }
+      else return '';
+    }
+    if (!(h >= 0 && h <= 23) || !(mi >= 0 && mi <= 59)) return '';
+    return pad(h) + ':' + pad(mi);
+  }
+
+  function isTimeInput(el) {
+    return el && el.getAttribute && el.getAttribute('data-picker') === 'time';
+  }
+
+  function fire(el) {
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   function openFor(input) {
     if (open && open.input === input) return;
     close(false);
 
-    var mode = input.getAttribute('data-picker');
     var iso = input.getAttribute('data-iso') || '';
-    var sel;
-
-    if (mode === 'date') {
-      var p = iso.split('-');
-      var t = today();
-      sel = p.length === 3
-        ? { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) }
-        : { y: t.y, m: t.m, d: t.d };
-    } else {
-      var q = iso.split(':');
-      sel = q.length === 2
-        ? { h: Number(q[0]), mi: Math.round(Number(q[1]) / MINUTE_STEP) * MINUTE_STEP }
-        : { h: 9, mi: 0 };
-      if (sel.mi > 59) sel.mi = 0;
-    }
+    var p = iso.split('-');
+    var t = today();
+    var sel = p.length === 3
+      ? { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) }
+      : { y: t.y, m: t.m, d: t.d };
 
     var root = document.createElement('div');
     root.className = 'dtp';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
-    root.setAttribute('aria-label', mode === 'date' ? 'เลือกวันที่' : 'เลือกเวลา');
+    root.setAttribute('aria-label', 'เลือกวันที่');
     root.innerHTML =
       '<div class="dtp-backdrop" data-dtp-cancel></div>' +
       '<div class="dtp-sheet">' +
         '<div class="dtp-head">' +
           '<button type="button" class="dtp-btn" data-dtp-cancel>ยกเลิก</button>' +
-          '<span class="dtp-title" data-dtp-title></span>' +
-          '<button type="button" class="dtp-btn is-primary" data-dtp-ok>ตกลง</button>' +
+          buildNav(sel) +
         '</div>' +
-        (mode === 'date' ? buildDate(sel) : buildTime(sel)) +
+        buildDate(sel) +
       '</div>';
     document.body.appendChild(root);
 
-    open = { input: input, root: root, mode: mode, sel: sel };
-    root.querySelectorAll('.dtp-wheel').forEach(initWheel);
-    syncTitle();
+    open = { input: input, root: root, sel: sel };
     document.addEventListener('keydown', onKey, true);
-    root.querySelector('[data-dtp-ok]').focus();
-  }
-
-  function syncTitle() {
-    if (!open) return;
-    var s = open.sel;
-    open.root.querySelector('[data-dtp-title]').textContent = open.mode === 'date'
-      ? thaiDate(s.y + '-' + pad(s.m) + '-' + pad(s.d))
-      : pad(s.h) + ':' + pad(s.mi) + ' น.';
-  }
-
-  /* เลื่อนวงล้อไปที่ค่าที่เลือก แล้วผูก scroll ให้จับค่าที่หยุดตรงกลาง */
-  function initWheel(el) {
-    var items = [].slice.call(el.querySelectorAll('.dtp-item'));
-    var idx = items.findIndex(function (n) { return Number(n.getAttribute('data-value')) === Number(el.getAttribute('data-selected')); });
-    if (idx < 0) idx = 0;
-
-    el.scrollTop = idx * ROW_H;
-    mark(el, items, idx);
-
-    var timer = null;
-    el.addEventListener('scroll', function () {
-      clearTimeout(timer);
-      /* รอให้หยุดนิ่งก่อนค่อยสรุปค่า ไม่งั้นจะยิงอัปเดตรัวระหว่างสไลด์ */
-      timer = setTimeout(function () {
-        var i = Math.round(el.scrollTop / ROW_H);
-        i = Math.max(0, Math.min(items.length - 1, i));
-        mark(el, items, i);
-        commitWheel(el, Number(items[i].getAttribute('data-value')));
-      }, 90);
-    });
-
-    /* กดที่แถวไหนก็เลื่อนไปแถวนั้น เร็วกว่าสไลด์ทีละขั้น */
-    el.addEventListener('click', function (e) {
-      var row = e.target.closest('.dtp-item');
-      if (!row) return;
-      el.scrollTo({ top: items.indexOf(row) * ROW_H, behavior: 'smooth' });
-    });
-  }
-
-  function mark(el, items, idx) {
-    items.forEach(function (n, i) { n.classList.toggle('is-on', i === idx); });
-  }
-
-  function commitWheel(el, value) {
-    if (!open) return;
-    var name = el.getAttribute('data-wheel');
-    open.sel[name] = value;
-
-    /* เปลี่ยนเดือน/ปีแล้วจำนวนวันอาจไม่พอ (เช่น 31 ก.พ.) ต้องสร้างวงล้อวันใหม่ */
-    if (open.mode === 'date' && (name === 'm' || name === 'y')) rebuildDays();
-    syncTitle();
-  }
-
-  function rebuildDays() {
-    var wrap = open.root.querySelector('.dtp-wheels');
-    var dayEl = wrap.querySelector('[data-wheel="d"]');
-    var max = daysInMonth(open.sel.y, open.sel.m);
-    if (open.sel.d > max) open.sel.d = max;
-    if (dayEl.querySelectorAll('.dtp-item').length === max) return;
-
-    var fresh = document.createElement('div');
-    fresh.innerHTML = wheel('d', range(1, max, function (d) { return d; }), open.sel.d);
-    var next = fresh.firstChild;
-    dayEl.replaceWith(next);
-    initWheel(next);
+    /* โฟกัสวันที่เลือกอยู่ ผู้ใช้คีย์บอร์ดจะได้เริ่มจากตำแหน่งที่มีความหมาย */
+    var cur = root.querySelector('.dtp-day.is-on') || root.querySelector('.dtp-day:not(.is-blank)');
+    if (cur) cur.focus();
   }
 
   /* ---------- ผูกกับหน้าเว็บ ---------- */
   document.addEventListener('click', function (e) {
     if (e.target.closest('[data-dtp-cancel]')) return close(false);
-    if (e.target.closest('[data-dtp-ok]')) return close(true);
+
+    /* กดวันในปฏิทิน = เลือกและปิดเลย ไม่ต้องกดยืนยันซ้ำ
+       ปฏิทินเห็นทั้งเดือนอยู่แล้ว โอกาสกดผิดต่ำกว่าวงล้อที่ต้องเลื่อนทีละช่อง */
+    var day = open && e.target.closest('[data-dtp-day]');
+    if (day) {
+      open.sel.d = Number(day.getAttribute('data-dtp-day'));
+      return close(true);
+    }
+
+    var step = open && e.target.closest('[data-dtp-step]');
+    if (step) return stepMonth(Number(step.getAttribute('data-dtp-step')));
+
     var input = e.target.closest('input[data-picker]');
-    if (input && !input.disabled) { e.preventDefault(); openFor(input); }
+    /* ช่องเวลาพิมพ์เอง ไม่เปิดวงล้อ — ปล่อยให้คลิกวางเคอร์เซอร์ได้ตามปกติ */
+    if (input && !input.disabled && !isTimeInput(input)) { e.preventDefault(); openFor(input); }
   });
 
   /* เปิดด้วยคีย์บอร์ดได้ด้วย ไม่ใช่เฉพาะเมาส์ */
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     var input = e.target.closest && e.target.closest('input[data-picker]');
-    if (input) { e.preventDefault(); openFor(input); }
+    if (input && !isTimeInput(input)) { e.preventDefault(); openFor(input); }
   });
+
+  /* เปลี่ยนเดือน/ปีจาก dropdown */
+  document.addEventListener('change', function (e) {
+    if (!open) return;
+    if (e.target.hasAttribute('data-dtp-m')) open.sel.m = Number(e.target.value);
+    else if (e.target.hasAttribute('data-dtp-y')) open.sel.y = Number(e.target.value) - 543;
+    else return;
+    clampDay();
+    redrawGrid();
+  });
+
+  /* พิมพ์ในช่องเวลา — อัปเดต data-iso ทุกตัวอักษร ปลายทางจะได้เห็นค่าล่าสุดทันที
+     แต่ยังไม่จัดรูปแบบข้อความระหว่างพิมพ์ ไม่งั้นเคอร์เซอร์จะกระโดดกลางคัน */
+  document.addEventListener('input', function (e) {
+    if (!isTimeInput(e.target)) return;
+    e.target.setAttribute('data-iso', parseTime(e.target.value));
+  });
+
+  /* ออกจากช่องแล้วค่อยจัดให้เป็น "09:30 น." — อ่านไม่ออกให้ล้างทิ้ง
+     ปล่อยข้อความที่อ่านไม่ออกค้างไว้ อันตรายกว่า เพราะดูเหมือนกรอกแล้วทั้งที่ระบบไม่มีค่า */
+  document.addEventListener('blur', function (e) {
+    if (!isTimeInput(e.target)) return;
+    var el = e.target;
+    var iso = parseTime(el.value);
+    var shown = iso ? iso + ' น.' : '';
+    if (el.value === shown && el.getAttribute('data-iso') === iso) return;
+    el.setAttribute('data-iso', iso);
+    el.value = shown;
+    fire(el);
+  }, true);
 
   /* input ที่ถูกเรนเดอร์ใหม่ต้องได้ข้อความอ่านง่ายทันที ไม่ต้องรอผู้ใช้กด */
   function decorate(scope) {
     (scope || document).querySelectorAll('input[data-picker]:not([data-dtp-ready])').forEach(function (el) {
       var iso = el.getAttribute('data-iso') || '';
-      el.readOnly = true;
+      var time = isTimeInput(el);
+      /* วันที่เลือกอย่างเดียวจึงล็อกไม่ให้พิมพ์ ส่วนเวลาต้องพิมพ์ได้ */
+      el.readOnly = !time;
       el.autocomplete = 'off';
-      el.value = !iso ? '' : (el.getAttribute('data-picker') === 'date' ? thaiDate(iso) : iso + ' น.');
+      if (time) el.inputMode = 'numeric';
+      el.value = !iso ? '' : (time ? iso + ' น.' : thaiDate(iso));
       /* ทำเครื่องหมายไว้ ไม่งั้น MutationObserver ด้านล่างจะไล่เขียนทับซ้ำทุกครั้งที่หน้าวาดใหม่
          ซึ่งหน้าฟอร์มวาดใหม่ทุกครั้งที่พิมพ์ */
       el.setAttribute('data-dtp-ready', '');

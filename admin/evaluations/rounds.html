@@ -48,7 +48,6 @@
       <div class="topbar-breadcrumb">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
-          <span>ประเมินสุขภาพ</span> <span>/</span>
           <span class="is-current">รอบติดตาม</span>
         </nav>
       </div>
@@ -73,451 +72,124 @@
     </header>
 
     <main class="content">
-      <!-- ชื่อหน้า + สรุปการตั้งค่าปัจจุบัน + ปุ่มเพิ่มรอบ -->
-      <div class="page-header" id="fr-page-header"></div>
+      <div class="fb-header">
+        <h1 class="fb-title">รอบติดตาม</h1>
+        <a class="btn btn-primary" href="round-create.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          สร้างรอบติดตาม
+        </a>
+      </div>
 
-      <!-- ขั้นที่ 1: รอบการติดตาม -->
-      <section class="card fr-card mb-4" aria-labelledby="fr-title-rounds">
-        <div class="fr-card-head">
-          <span class="fr-step">1</span>
-          <span class="fr-card-title" id="fr-title-rounds">รอบการติดตาม</span>
-          <span class="fr-card-note" id="fr-rounds-note"></span>
+      <!-- QR ถาวรของระบบติดตามสุขภาพ — สร้างครั้งเดียว ใช้ตลอดโครงการ
+           URL ไม่มีรหัสคน รหัสรอบ หรือรหัสแบบประเมินอยู่ข้างใน จึงไม่ต้องพิมพ์ใหม่เมื่อเพิ่มรอบหรือเพิ่มคน
+           แบบประเมินที่ผู้ตอบได้เห็น มาจากรอบของเขา (batch.form) ไม่ได้มาจาก QR -->
+      <section class="card fb-qr-card" aria-labelledby="fb-qr-title">
+        <div class="fb-qr" id="fb-qr" aria-hidden="true"></div>
+
+        <div class="fb-qr-text">
+          <h2 class="fb-qr-title" id="fb-qr-title">QR ทำแบบประเมินติดตามสุขภาพ</h2>
+          <p class="fb-qr-desc">ใช้อันเดียวตลอดโครงการ เพิ่มรอบหรือเพิ่มคนไม่ต้องสร้างใหม่ — ผู้ตอบสแกนแล้วยืนยันตัวตนก่อน ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของเขา</p>
+          <div class="copy-link fb-qr-link">
+            <code class="copy-link-url">farmconcept.th/h</code>
+            <button type="button" class="copy-link-btn" id="fb-qr-copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+              <span id="fb-qr-copy-text">คัดลอกลิงก์</span>
+            </button>
+          </div>
         </div>
 
-        <div class="fr-scroll">
-          <div class="fr-rows">
-            <div class="fr-row fr-head" aria-hidden="true">
-              <div></div>
-              <div>ชื่อรอบ</div>
-              <div>เปิดให้ทำวันที่</div>
-              <div>ปิดรับวันที่</div>
-              <div>แบบประเมินที่ใช้</div>
+        <div class="fb-qr-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="fb-qr-open">ขยาย</button>
+          <button type="button" class="btn btn-outline btn-sm" id="fb-qr-download">ดาวน์โหลด</button>
+        </div>
+      </section>
+
+      <div class="fb-filter-bar">
+        <div class="fb-tabs" id="fb-tabs" role="tablist"></div>
+        <div class="fb-filter-right">
+          <span class="fb-count" id="fb-count"></span>
+          <div class="fb-search" id="fb-search">
+            <button type="button" class="fb-search-btn" id="fb-search-btn" aria-expanded="false" aria-label="ค้นหาและกรอง">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+            </button>
+            <div class="fb-search-panel" id="fb-search-panel" hidden>
+              <span class="fb-search-arrow"></span>
+              <label class="co-field">
+                <span class="co-field-label">คำค้นหา</span>
+                <input type="text" class="input" id="fb-q" placeholder="ชื่อรอบติดตาม" autocomplete="off">
+              </label>
+              <label class="co-field">
+                <span class="co-field-label">แบบประเมิน</span>
+                <select class="select" id="fb-form"></select>
+              </label>
+              <div class="fb-search-foot">
+                <button type="button" class="co-link" id="fb-clear">ล้างค่า</button>
+                <button type="button" class="btn btn-primary btn-sm" id="fb-apply">ดูผลลัพธ์</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card fb-table-card">
+        <div class="fb-table-scroll">
+          <div class="fb-table">
+            <div class="fb-tr fb-th">
+              <div>#</div>
+              <div>ชื่อรอบติดตาม</div>
+              <div>ช่วงวันครบกำหนด</div>
+              <div>แบบประเมิน</div>
+              <div class="text-center">จำนวนติดตาม</div>
+              <div>ตอบแล้ว</div>
+              <div class="text-center">แจ้งเตือนได้</div>
+              <div class="text-center">แจ้งเตือนไม่ได้</div>
               <div>สถานะ</div>
               <div></div>
             </div>
-            <div id="fr-rounds"></div>
+            <div id="fb-rows"></div>
           </div>
         </div>
-      </section>
-
-      <!-- ขั้นที่ 2: แจ้งเตือนผ่าน LINE -->
-      <section class="card fr-card mb-4" aria-labelledby="fr-title-line">
-        <div class="fr-card-head">
-          <span class="fr-step">2</span>
-          <span class="fr-card-title" id="fr-title-line">แจ้งเตือนผ่าน LINE</span>
-          <label class="switch" title="เปิด/ปิดการแจ้งเตือน">
-            <input type="checkbox" id="fr-line-on" aria-labelledby="fr-title-line">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-
-        <div id="fr-line-body">
-          <div class="fr-notify">
-            <div class="fr-notify-col">
-              <span class="form-label" id="fr-lead-label">แจ้งเตือนล่วงหน้าก่อนครบกำหนด</span>
-              <div class="fr-chips" id="fr-lead" role="group" aria-labelledby="fr-lead-label"></div>
-            </div>
-            <div class="fr-notify-col">
-              <label class="form-label" for="fr-send-time">เวลาที่ส่ง</label>
-              <select class="select" id="fr-send-time"></select>
-            </div>
-          </div>
-
-          <div class="fr-notify fr-notify-divider mt-4">
-            <div class="fr-notify-col">
-              <div class="fr-label-row">
-                <label class="form-label" for="fr-msg">ข้อความแจ้งเตือน</label>
-                <span class="fr-tokens">{ชื่อ} {รอบ} {วันครบกำหนด}</span>
-              </div>
-              <textarea class="textarea fr-msg" id="fr-msg" rows="4"></textarea>
-            </div>
-            <div class="fr-notify-col">
-              <span class="form-label">ตัวอย่างที่ผู้รับเห็นใน LINE</span>
-              <div class="fr-bubble">
-                <span class="fr-bubble-text" id="fr-preview"></span>
-                <span class="fr-bubble-btn">ตอบแบบประเมิน</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ขั้นที่ 3: ตัวอย่างกำหนดการที่ระบบจะส่งจริง -->
-      <section class="card fr-card" aria-labelledby="fr-title-preview">
-        <div class="fr-card-head">
-          <span class="fr-step">3</span>
-          <span class="fr-card-title" id="fr-title-preview">แสดงตัวอย่าง</span>
-          <span class="fr-card-note" id="fr-timeline-note"></span>
-        </div>
-
-        <div class="fr-scroll">
-          <div class="fr-rows">
-            <div class="fr-timeline-row fr-head" aria-hidden="true">
-              <div></div>
-              <div>รอบ</div>
-              <div>ช่วงเปิดให้ทำแบบประเมิน</div>
-              <div>วันเวลาที่ส่งแจ้งเตือน</div>
-            </div>
-            <div id="fr-timeline"></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- แถบบันทึกค้างล่างจอ -->
-    <div class="fr-bottombar">
-      <div class="fr-bottombar-inner">
-        <span class="fr-save-note" id="fr-save-note"></span>
-        <div class="fr-bottombar-actions">
-          <button type="button" class="btn btn-outline" id="fr-reset">คืนค่าเริ่มต้น</button>
-          <button type="button" class="btn btn-primary" id="fr-save">บันทึกการตั้งค่า</button>
-        </div>
+        <div class="fb-foot" id="fb-foot"></div>
       </div>
+    </main>
+  </div>
+</div>
+
+<!-- Popup ขยาย QR สำหรับพิมพ์ติดที่ศูนย์ชุมชนหรือแนบใบยินยอม -->
+<div class="modal-overlay" id="fb-qr-modal">
+  <div class="modal fb-qr-modal" role="dialog" aria-modal="true" aria-labelledby="fb-qr-modal-title">
+    <div class="modal-header">
+      <h3 class="modal-title" id="fb-qr-modal-title">QR ทำแบบประเมินติดตามสุขภาพ</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="fb-qr-sheet" id="fb-qr-sheet">
+        <span class="fb-qr-sheet-title">แบบประเมินติดตามสุขภาพ</span>
+        <div class="fb-qr is-large" id="fb-qr-large" aria-hidden="true"></div>
+        <span class="fb-qr-sheet-url">farmconcept.th/h</span>
+        <span class="fb-qr-sheet-note">สแกนแล้วยืนยันตัวตนด้วย LINE หรือเบอร์โทร + รหัสบนใบยินยอม</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ปิด</button>
+      <button type="button" class="btn btn-outline" id="fb-qr-print">พิมพ์</button>
     </div>
   </div>
 </div>
 
 <script src="../../assets/js/data-service.js"></script>
-<script src="../../assets/js/followup-service.js"></script>
 <script src="../../assets/js/navigation.js"></script>
 <script src="../../assets/js/modal.js"></script>
 <script src="../../assets/js/profile-modal.js"></script>
-<script src="../../assets/js/action-menu.js"></script>
 <script src="../../assets/js/index-layout.js"></script>
 <script src="../../assets/js/toast.js"></script>
-<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/app.js"></script>
-<script>
-(function () {
-  var esc = window.TFC.escapeHtml;
-  /* อ่าน/เขียนการตั้งค่าผ่าน service ตัวเดียว หน้านี้ไม่แตะ TFC_MOCK ตรง ๆ
-     ตรรกะวันที่ก็อยู่ใน service ด้วย เพื่อให้ตัวอย่างบนจอตรงกับที่เซิร์ฟเวอร์จะส่งจริง */
-  var svc = window.TFC.followUpService;
-
-  var LEAD_OPTIONS = [1, 3, 5, 7, 14];
-  var TIME_OPTIONS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-  var THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-  var state = { settings: null, saved: null, seq: 0 };
-
-  function byId(id) { return document.getElementById(id); }
-  function clone(v) { return JSON.parse(JSON.stringify(v)); }
-  function toast(msg, tone) { if (window.TFC.showToast) window.TFC.showToast(msg, tone || 'success'); }
-
-  /* 8 ส.ค. 2569 — ใช้ฟอร์แมตเดียวกับหน้าอื่นในระบบ แต่รับ ISO ว่างได้ด้วย */
-  function thaiDate(iso) {
-    if (!iso) return '—';
-    var p = iso.split('-');
-    if (p.length !== 3) return '—';
-    return Number(p[2]) + ' ' + THAI_MONTHS[Number(p[1]) - 1] + ' ' + (Number(p[0]) + 543);
-  }
-
-  function formName(id) {
-    var hit = svc.formOptions().filter(function (f) { return f.id === id; })[0];
-    return hit ? hit.name : '';
-  }
-
-  function dirty() {
-    return JSON.stringify(state.settings) !== JSON.stringify(state.saved);
-  }
-
-  /* ---------- 1. หัวหน้า ---------- */
-  window.TFC.renderPageHeader('fr-page-header', {
-    title: 'รอบติดตาม',
-    description: 'กำหนดว่าจะให้ผู้เข้าร่วมตอบแบบติดตามผลกี่รอบ ช่วงไหน และให้ระบบส่งแจ้งเตือนเมื่อไร',
-    actions: [
-      { label: 'เพิ่มรอบติดตาม', variant: 'primary',
-        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
-        attrs: { id: 'fr-add' } }
-    ]
-  });
-
-  /* ---------- 2. ตารางรอบ ---------- */
-  function roundHtml(round, index, canRemove) {
-    var status = svc.roundStatus(round);
-    var isOpen = status === 'เปิดอยู่';
-    var isWarn = status === 'ช่วงวันที่ไม่ถูกต้อง' || status === 'ยังไม่กำหนดวันที่';
-
-    var options = svc.formOptions().map(function (f) {
-      return '<option value="' + esc(f.id) + '"' + (f.id === round.formId ? ' selected' : '') + '>' + esc(f.name) + '</option>';
-    }).join('');
-
-    return '<div class="fr-row fr-item' + (isOpen ? ' is-open' : '') + '" data-id="' + esc(round.id) + '">' +
-      '<span class="fr-no">' + (index + 1) + '</span>' +
-      '<input type="text" class="input fr-name" data-field="name" value="' + esc(round.name) + '" placeholder="ชื่อรอบ" aria-label="ชื่อรอบที่ ' + (index + 1) + '">' +
-      '<input type="date" class="input" data-field="from" value="' + esc(round.from) + '" aria-label="วันเปิดให้ทำของรอบที่ ' + (index + 1) + '">' +
-      '<input type="date" class="input" data-field="to" value="' + esc(round.to) + '" aria-label="วันปิดรับของรอบที่ ' + (index + 1) + '">' +
-      '<select class="select" data-field="formId" aria-label="แบบประเมินของรอบที่ ' + (index + 1) + '">' + options + '</select>' +
-      '<div class="fr-state">' +
-        '<label class="switch" title="เปิด/ปิดรอบนี้">' +
-          '<input type="checkbox" data-field="enabled"' + (round.enabled ? ' checked' : '') + ' aria-label="เปิดใช้งานรอบที่ ' + (index + 1) + '">' +
-          '<span class="switch-track"></span>' +
-        '</label>' +
-        '<span class="fr-state-text' + (isWarn ? ' is-warn' : '') + '">' + esc(status) + '</span>' +
-      '</div>' +
-      '<button type="button" class="fr-remove" data-remove="' + esc(round.id) + '"' + (canRemove ? '' : ' disabled') +
-        ' title="ลบรอบนี้" aria-label="ลบรอบที่ ' + (index + 1) + '">' +
-        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5.5h5V7M7 7l.8 12h8.4L17 7"/></svg>' +
-      '</button>' +
-      '</div>';
-  }
-
-  function roundsNote() {
-    var rounds = state.settings.rounds;
-    var openCount = rounds.filter(function (r) { return svc.roundStatus(r) === 'เปิดอยู่'; }).length;
-    return 'ทั้งหมด ' + rounds.length + ' รอบ · เปิดอยู่ตอนนี้ ' + openCount + ' รอบ';
-  }
-
-  /* วาดตารางใหม่ทั้งชุด — เรียกเฉพาะตอนจำนวนแถวเปลี่ยน (เพิ่ม/ลบ/โหลด/คืนค่า) เท่านั้น
-     ระหว่างที่ผู้ใช้แก้ค่าในแถวให้ใช้ updateRowState() แทน */
-  function renderRounds() {
-    var rounds = state.settings.rounds;
-    var canRemove = rounds.length > 1;
-    byId('fr-rounds').innerHTML = rounds.map(function (r, i) { return roundHtml(r, i, canRemove); }).join('');
-    byId('fr-rounds-note').textContent = roundsNote();
-  }
-
-  /* ---------- 3. แจ้งเตือน LINE ---------- */
-  function renderLead() {
-    byId('fr-lead').innerHTML = LEAD_OPTIONS.map(function (d) {
-      var on = state.settings.line.leadDays === d;
-      return '<button type="button" class="fr-chip' + (on ? ' is-active' : '') + '" data-lead="' + d + '" aria-pressed="' + on + '">' +
-        d + ' วัน</button>';
-    }).join('');
-  }
-
-  function renderPreview() {
-    /* แทนค่าตัวแปรด้วยข้อมูลตัวอย่างจากรอบที่เปิดอยู่จริง ผู้ใช้จะได้เห็นของที่ใกล้เคียงของจริง */
-    var line = state.settings.line;
-    var sample = state.settings.rounds.filter(function (r) { return r.enabled; })[0] || state.settings.rounds[0] || {};
-    var due = sample.to ? thaiDate(svc.notifyDate(sample, 0)) : '—';
-
-    byId('fr-preview').textContent = (line.message || '')
-      .split('{ชื่อ}').join('สมชาย ใจดี')
-      .split('{รอบ}').join(sample.name || 'ติดตามผล')
-      .split('{วันครบกำหนด}').join(due)
-      .trim();
-  }
-
-  function renderLineState() {
-    var on = state.settings.line.enabled;
-    byId('fr-line-on').checked = on;
-    /* ปิดแจ้งเตือนแล้วยังเห็นค่าที่ตั้งไว้ แต่แก้ไม่ได้ — ดีกว่าซ่อนทิ้งจนไม่รู้ว่าเคยตั้งอะไรไว้ */
-    byId('fr-line-body').classList.toggle('is-refreshing', !on);
-    byId('fr-line-body').setAttribute('aria-hidden', String(!on));
-  }
-
-  /* ---------- 4. ตัวอย่างกำหนดการ ---------- */
-  function renderTimeline() {
-    var line = state.settings.line;
-    var active = state.settings.rounds.filter(function (r) { return r.enabled; });
-
-    byId('fr-timeline-note').textContent = line.enabled
-      ? 'ส่งเวลา ' + line.sendTime + ' น. · ล่วงหน้า ' + line.leadDays + ' วัน'
-      : 'ปิดการแจ้งเตือนผ่าน LINE';
-
-    if (!active.length) {
-      byId('fr-timeline').innerHTML =
-        '<div class="fr-empty">' +
-          '<span class="fr-empty-title">ยังไม่มีรอบที่เปิดใช้งาน</span>' +
-          '<span class="fr-empty-text">เปิดสวิตช์รอบในขั้นที่ 1 เพื่อดูตัวอย่างการส่ง</span>' +
-        '</div>';
-      return;
-    }
-
-    byId('fr-timeline').innerHTML = active.map(function (r, i) {
-      var sendAt = svc.notifyDate(r, line.leadDays);
-      var willSend = line.enabled && !!sendAt;
-      var when = willSend ? thaiDate(sendAt) + ' · ' + line.sendTime + ' น.'
-        : (line.enabled ? 'ยังไม่กำหนดวันที่' : 'ปิดแจ้งเตือน LINE');
-      var range = (r.from && r.to) ? thaiDate(r.from) + ' – ' + thaiDate(r.to) : 'ยังไม่กำหนดวันที่';
-
-      return '<div class="fr-timeline-row fr-item">' +
-        '<span class="fr-no">' + (i + 1) + '</span>' +
-        '<span class="fr-tl-name">' + esc(r.name || 'รอบที่ ' + (i + 1)) + '</span>' +
-        '<span class="fr-tl-range">' + esc(range) + '</span>' +
-        '<div class="fr-tl-send">' +
-          '<span class="fr-tl-when' + (willSend ? ' is-on' : '') + '">' + esc(when) + '</span>' +
-          '<span class="fr-tl-note">' + (willSend ? 'ก่อนปิดรอบ ' + line.leadDays + ' วัน' : '—') + '</span>' +
-        '</div>' +
-        '</div>';
-    }).join('');
-  }
-
-  /* ---------- 5. แถบล่าง ---------- */
-  function renderSaveNote() {
-    var s = state.settings;
-    var invalid = s.rounds.filter(function (r) { return r.from && r.to && r.to < r.from; }).length;
-
-    if (invalid) {
-      byId('fr-save-note').textContent = 'มี ' + invalid + ' รอบที่วันปิดรับมาก่อนวันเปิด — แก้ก่อนบันทึก';
-    } else if (dirty()) {
-      byId('fr-save-note').textContent = 'มีการแก้ไขที่ยังไม่ได้บันทึก';
-    } else {
-      byId('fr-save-note').textContent = s.line.enabled
-        ? s.rounds.length + ' รอบ · แจ้งเตือนล่วงหน้า ' + s.line.leadDays + ' วัน · ส่งเวลา ' + s.line.sendTime + ' น.'
-        : s.rounds.length + ' รอบ · ไม่ส่งแจ้งเตือนผ่าน LINE';
-    }
-    /* ห้ามบันทึกทั้งที่ช่วงวันที่ผิด เพราะเซิร์ฟเวอร์จะคำนวณวันส่งแจ้งเตือนไม่ได้ */
-    byId('fr-save').disabled = invalid > 0;
-  }
-
-  function renderAll() {
-    renderRounds();
-    renderLead();
-    renderLineState();
-    renderPreview();
-    renderTimeline();
-    renderSaveNote();
-  }
-
-  /* เปลี่ยนเฉพาะส่วนที่ขึ้นกับค่าที่แก้ ไม่ re-render ตารางรอบ
-     เพราะจะทำให้ช่องที่กำลังพิมพ์อยู่เสีย focus กลางคัน */
-  function renderDownstream() {
-    renderPreview();
-    renderTimeline();
-    renderSaveNote();
-  }
-
-  /* ---------- 6. เหตุการณ์ ---------- */
-  byId('fr-rounds').addEventListener('input', onRoundEdit);
-  byId('fr-rounds').addEventListener('change', onRoundEdit);
-
-  /* อัปเดตสถานะของแถวเดียวแบบไม่วาดใหม่
-     ห้ามเรียก renderRounds() ตอนผู้ใช้กำลังแก้ค่าในแถว เพราะการแทน innerHTML จะทิ้ง element
-     ที่กำลังโฟกัสอยู่ ผลคือช่องที่กรอกต่อจากนั้นเขียนลง element ที่หลุดจากหน้าไปแล้ว
-     (เจอจริงตอนทดสอบ: ตั้งวันเปิดแล้ววันปิดที่กรอกต่อหายไปเฉย ๆ) */
-  function updateRowState(row, round) {
-    var status = svc.roundStatus(round);
-    var isOpen = status === 'เปิดอยู่';
-    var isWarn = status === 'ช่วงวันที่ไม่ถูกต้อง' || status === 'ยังไม่กำหนดวันที่';
-
-    row.classList.toggle('is-open', isOpen);
-    var text = row.querySelector('.fr-state-text');
-    if (text) {
-      text.textContent = status;
-      text.classList.toggle('is-warn', isWarn);
-    }
-  }
-
-  function onRoundEdit(e) {
-    var field = e.target.getAttribute('data-field');
-    if (!field) return;
-    var row = e.target.closest('[data-id]');
-    if (!row) return;
-
-    var round = state.settings.rounds.filter(function (r) { return r.id === row.getAttribute('data-id'); })[0];
-    if (!round) return;
-
-    round[field] = field === 'enabled' ? e.target.checked : e.target.value;
-
-    updateRowState(row, round);
-    byId('fr-rounds-note').textContent = roundsNote();
-    renderDownstream();
-  }
-
-  byId('fr-rounds').addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-remove]');
-    if (!btn || btn.disabled) return;
-    var id = btn.getAttribute('data-remove');
-    var round = state.settings.rounds.filter(function (r) { return r.id === id; })[0];
-    state.settings.rounds = state.settings.rounds.filter(function (r) { return r.id !== id; });
-    renderRounds();
-    renderDownstream();
-    toast('ลบรอบ ' + (round ? round.name : '') + ' แล้ว · ยังไม่บันทึกจนกว่าจะกดบันทึกการตั้งค่า', 'info');
-  });
-
-  document.addEventListener('click', function (e) {
-    if (!e.target.closest('#fr-add')) return;
-    state.seq += 1;
-    var forms = svc.formOptions();
-    state.settings.rounds.push({
-      id: 'FR-NEW-' + state.seq,
-      name: 'รอบใหม่',
-      from: '',
-      to: '',
-      formId: (forms[0] || {}).id || '',
-      enabled: true
-    });
-    renderRounds();
-    renderDownstream();
-    /* โฟกัสช่องชื่อของรอบที่เพิ่งเพิ่ม เพื่อให้พิมพ์ต่อได้ทันที */
-    var rows = byId('fr-rounds').querySelectorAll('.fr-name');
-    if (rows.length) rows[rows.length - 1].focus();
-  });
-
-  byId('fr-lead').addEventListener('click', function (e) {
-    var chip = e.target.closest('[data-lead]');
-    if (!chip) return;
-    state.settings.line.leadDays = Number(chip.getAttribute('data-lead'));
-    renderLead();
-    renderDownstream();
-  });
-
-  byId('fr-line-on').addEventListener('change', function () {
-    state.settings.line.enabled = this.checked;
-    renderLineState();
-    renderDownstream();
-  });
-
-  byId('fr-send-time').addEventListener('change', function () {
-    state.settings.line.sendTime = this.value;
-    renderDownstream();
-  });
-
-  byId('fr-msg').addEventListener('input', function () {
-    state.settings.line.message = this.value;
-    renderPreview();
-    renderSaveNote();
-  });
-
-  /* ---------- 7. บันทึก / คืนค่าเริ่มต้น ---------- */
-  byId('fr-save').addEventListener('click', function () {
-    var btn = this;
-    btn.disabled = true;
-    btn.textContent = 'กำลังบันทึก…';
-    svc.save(state.settings).then(function (saved) {
-      state.saved = clone(saved);
-      toast('บันทึกการตั้งค่ารอบติดตามแล้ว', 'success');
-      renderSaveNote();
-    })['catch'](function () {
-      toast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'danger');
-    }).then(function () {
-      btn.textContent = 'บันทึกการตั้งค่า';
-      renderSaveNote();
-    });
-  });
-
-  byId('fr-reset').addEventListener('click', function () {
-    state.settings = svc.defaults();
-    byId('fr-msg').value = state.settings.line.message;
-    byId('fr-send-time').value = state.settings.line.sendTime;
-    renderAll();
-    toast('คืนค่าเริ่มต้นแล้ว · กดบันทึกการตั้งค่าเพื่อยืนยัน', 'info');
-  });
-
-  /* เตือนก่อนออกจากหน้าถ้ายังมีการแก้ที่ไม่ได้บันทึก */
-  window.addEventListener('beforeunload', function (e) {
-    if (!dirty()) return;
-    e.preventDefault();
-    e.returnValue = '';
-  });
-
-  /* ---------- เริ่มทำงาน ---------- */
-  byId('fr-send-time').innerHTML = TIME_OPTIONS.map(function (t) {
-    return '<option value="' + t + '">' + t + ' น.</option>';
-  }).join('');
-
-  svc.load().then(function (settings) {
-    state.settings = settings;
-    state.saved = clone(settings);
-    byId('fr-msg').value = settings.line.message;
-    byId('fr-send-time').value = settings.line.sendTime;
-    renderAll();
-  })['catch'](function () {
-    toast('โหลดการตั้งค่าไม่สำเร็จ', 'danger');
-  });
-})();
-</script>
+<script src="../../assets/js/followup-template-service.js"></script>
+<script src="../../assets/js/cohort-data.js"></script>
+<script src="../../assets/js/round-data.js"></script>
+<script src="../../assets/js/round-list.js"></script>
 </body>
 </html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายละเอียดกลุ่มตัวอย่าง | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="list.html">กลุ่มตัวอย่าง</a> <span>/</span>
+          <span class="is-current" id="cd-crumb">รายละเอียด</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="cd-header" id="cd-header"></div>
+
+      <div class="cd-grid2">
+        <section class="card cd-panel">
+          <span class="cd-panel-title">ข้อมูลทั่วไป</span>
+          <dl class="field-view-grid" id="cd-info"></dl>
+        </section>
+
+        <section class="card cd-panel">
+          <span class="cd-panel-title">ไทม์ไลน์การติดตาม</span>
+          <div class="cd-timeline" id="cd-timeline"></div>
+        </section>
+      </div>
+
+      <div class="cd-tabs" id="cd-tabs" role="tablist"></div>
+      <div id="cd-panel"></div>
+    </main>
+  </div>
+</div>
+
+<!-- แจ้งเตือน LINE -->
+<div class="modal-overlay" id="cd-line-modal">
+  <div class="modal cd-line">
+    <div class="modal-header">
+      <h3 class="modal-title">แจ้งเตือนผ่าน LINE</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="cd-line-warn" id="cd-line-warn" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 8.5V13M12 16.5h.01"/><circle cx="12" cy="12" r="8.5"/></svg>
+        <div class="cd-line-warn-body">
+          <span>ยังไม่ผูก LINE — ส่งจากระบบไม่ได้ แต่คัดลอกข้อความไปส่งช่องทางอื่นได้ · ชวนให้ผูก LINE ด้วยลิงก์นี้จะได้ไม่ต้องตามเองทุกรอบ</span>
+          <div class="copy-link">
+            <code class="copy-link-url" id="cd-bind-url"></code>
+            <button type="button" class="copy-link-btn" id="cd-bind-copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+              <span id="cd-bind-text">คัดลอกลิงก์ผูก LINE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cd-field">
+        <div class="cd-field-head">
+          <span class="cd-field-label">ข้อความ</span>
+          <button type="button" class="co-link" id="cd-line-reset">คืนค่าข้อความเริ่มต้น</button>
+        </div>
+        <textarea class="input cd-line-text" id="cd-line-msg" rows="4"></textarea>
+      </div>
+
+      <span class="cd-field-label">ตัวอย่างที่ผู้รับเห็น</span>
+      <div class="cd-line-preview">
+        <div class="cd-bubble">
+          <span class="cd-bubble-text" id="cd-bubble-text"></span>
+          <span class="cd-bubble-btn">ทำแบบประเมิน</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" id="cd-line-copy">คัดลอกข้อความ</button>
+      <button type="button" class="btn btn-primary" id="cd-line-send">ส่งแจ้งเตือน</button>
+    </div>
+  </div>
+</div>
+
+<!-- บันทึก/แก้ไขการซื้อสินค้า -->
+<div class="modal-overlay" id="cd-order-modal">
+  <div class="modal cd-order">
+    <div class="modal-header">
+      <h3 class="modal-title" id="cd-order-title">บันทึกการซื้อสินค้า</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="cd-order-form">
+      <div class="modal-body">
+        <div class="cd-order-grid" id="cd-order-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost cd-order-delete" id="cd-order-delete" hidden>ลบรายการ</button>
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/followup-template-service.js"></script>
+<script src="../../assets/js/cohort-data.js"></script>
+<script src="../../assets/js/cohort-detail.js"></script>
+</body>
+</html>

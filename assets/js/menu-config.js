@@ -24,8 +24,6 @@ window.TFC_MENU = [
                                   -> pages/registrations/, pages/checkin/
        - ประเมินสุขภาพ            -> pages/evaluations/follow-up.html
        - จัดการแบบประเมิน          -> pages/evaluations/
-       - กิจกรรม > ความพึงพอใจ     -> admin/activities/satisfaction.html
-                                     (satisfaction-service.js กับข้อมูลความพึงพอใจยังอยู่ ยังมีหน้าอื่นอ่านผ่านมัน)
      เมนู "กิจกรรม" เหลือลูกเดียวคือ "รายการกิจกรรม" ซึ่งยังใช้งานอยู่ */
   {
     key: 'activities',
@@ -34,7 +32,12 @@ window.TFC_MENU = [
     children: [
       { key: 'activities-list', label: 'รายการกิจกรรม', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', href: 'admin/activities/list.html' },
       { key: 'activities-registrants', label: 'ผู้ลงทะเบียน', icon: '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>', href: 'admin/activities/registrants.html' },
-      { key: 'activities-checkin', label: 'Check-in', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>', href: 'admin/activities/checkin.html' }
+      { key: 'activities-checkin', label: 'Check-in', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>', href: 'admin/activities/checkin.html' },
+      /* ตอบประเมินหลังกิจกรรม — รายการคำตอบรายชุด อ่านอย่างเดียว ไม่มีหน้ารายละเอียด
+         คำตอบเก็บแบบไม่ระบุตัวตน หน้านี้จึงแสดงได้แค่ลำดับผู้ตอบ
+         หน้า "ความพึงพอใจ" ที่เป็นภาพรวมเชิงสถิติถูกถอดออกจากระบบแล้ว
+         แต่ satisfaction-service.js กับข้อมูลความพึงพอใจยังอยู่ เพราะหน้านี้อ่านผ่านมัน */
+      { key: 'activities-responses', label: 'ตอบประเมินหลังกิจกรรม', icon: '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>', href: 'admin/activities/responses.html' }
     ]
   },
   /* เมนู 'รายงาน' และหน้าจอ pages/reports/* ถูกลบออกจากระบบแล้ว
@@ -46,12 +49,17 @@ window.TFC_MENU = [
     label: 'ประเมินสุขภาพ',
     icon: '<path d="M3.5 12.5h4L10 7l3.5 10L16 12.5h4.5"/>',
     children: [
-      { key: 'evaluations-rounds', label: 'รอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/evaluations/rounds.html' }
+      /* กลุ่มตัวอย่าง — หน้ารายละเอียดรายคนไม่มีเมนูของตัวเอง จึงให้เมนูนี้จับด้วย */
+      { key: 'cohort', label: 'กลุ่มตัวอย่าง', icon: '<path d="M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11ZM3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2M16 5.2a3 3 0 0 1 0 5.9M17.5 14.9c2 .6 3.3 2.4 3.3 4.6"/>', href: 'admin/cohort/list.html', alsoMatch: ['admin/cohort/detail.html'] },
+      { key: 'evaluations-rounds', label: 'รอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/evaluations/rounds.html' },
+      /* ตอบแบบประเมิน — รายการคำตอบที่กลุ่มตัวอย่างส่งเข้ามา อ่านอย่างเดียว
+         ไม่มีหน้ารายละเอียด เมนูนี้จึงจับแค่หน้าเดียว */
+      { key: 'evaluations-responses', label: 'ตอบแบบประเมิน', icon: '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>', href: 'admin/evaluations/responses.html' }
     ]
   },
   /* แบบประเมินเป็นเมนูเดี่ยว ไม่อยู่ในกลุ่มประเมินสุขภาพ เพราะเป็นคนละงานกัน
      ตัวนี้คือการดูแล "ตัวแบบฟอร์ม" ซึ่งเอาไปใช้ได้ทั้งกับกิจกรรมและการติดตามผล
-     ส่วนกลุ่มประเมินสุขภาพคือการเอาแบบฟอร์มไปใช้ติดตามผลตามรอบ
+     ส่วนกลุ่มประเมินสุขภาพคือการเอาแบบฟอร์มไปใช้กับกลุ่มตัวอย่างตามรอบ
      วางไว้เหนือ "พื้นฐาน" เพราะเป็นของที่ตั้งไว้ใช้ซ้ำ ใกล้กับข้อมูลตั้งต้นอื่น ๆ
      มากกว่าจะเป็นงานประจำวันอย่างกิจกรรมหรือการติดตามผล
      หน้าสร้าง/แก้ไขเข้าจากปุ่มในหน้ารายการ ไม่มีเมนูของตัวเอง alsoMatch จึงทำให้
@@ -72,7 +80,10 @@ window.TFC_MENU = [
       { key: 'master-data-target-groups', label: 'กลุ่มเป้าหมาย', icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>', href: 'admin/basic/target-groups.html' },
       { key: 'master-data-programs', label: 'โปรแกรม/หลักสูตร', icon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>', href: 'admin/basic/programs.html' },
       { key: 'master-data-instructors', label: 'วิทยากร', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', href: 'admin/basic/instructors.html' },
-      { key: 'master-data-activity-formats', label: 'หมวดหมู่กิจกรรม', icon: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>', href: 'admin/basic/activity-formats.html' }
+      { key: 'master-data-activity-formats', label: 'หมวดหมู่กิจกรรม', icon: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>', href: 'admin/basic/activity-formats.html' },
+      /* คนละหน้ากับ "รอบติดตาม" ในกลุ่มประเมินสุขภาพ — ตัวนั้นตั้งช่วงวันที่จริงร่วมกันทั้งระบบ
+         ตัวนี้เป็น master data ของระยะห่างเป็นวัน ที่ระบบกลุ่มตัวอย่างใช้คำนวณวันครบกำหนดรายคน */
+      { key: 'master-data-follow-up-rounds', label: 'ตั้งค่ารอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/basic/follow-up-rounds.html' }
     ]
   },
   {
@@ -105,13 +116,13 @@ window.TFC_PERMISSION_MAP = {
   areas: ['master-data-areas'],
   master_data: [
     'master-data-target-groups', 'master-data-programs', 'master-data-instructors',
-    'master-data-activity-formats'
+    'master-data-activity-formats', 'master-data-follow-up-rounds'
   ],
-  activities: ['activities-list', 'activities-registrants', 'activities-checkin'],
+  activities: ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
   /* `evaluations` เคยเป็น fallback ไปที่ permissions.evaluations ตอนที่ไม่มีเมนู
      พอมีหน้าจอกลับมาแล้ว จึงผูกกับเมนูตามปกติเหมือนโมดูลอื่น
      รวมเมนูที่ใช้สิทธิ์เดียวกัน: ตัวแบบฟอร์ม (evaluations ซึ่งเป็นเมนูเดี่ยว)
-     กับรอบติดตาม (evaluations-rounds) ที่อยู่ในกลุ่มประเมินสุขภาพ
+     กับกลุ่มตัวอย่างและรอบติดตามที่อยู่ในกลุ่มประเมินสุขภาพ
      ตัว 'health-assessment' เป็นแค่หัวกลุ่ม ไม่ต้องใส่ เพราะ Permission Matrix ติ๊กที่ระดับลูก */
-  evaluations: ['evaluations', 'evaluations-rounds']
+  evaluations: ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses']
 };

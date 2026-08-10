@@ -304,7 +304,7 @@
       { label: 'บัญชีปลายทาง', value: 'กสิกรไทย 012-3-45678-9 · The Farm Concept', full: true }
     ];
     $('rg-slip-facts').innerHTML = facts.map(function (f) {
-      return '<div class="rg-field' + (f.full ? ' is-full' : '') + '">' +
+      return '<div class="field-view' + (f.full ? ' is-full' : '') + '">' +
         '<dt>' + esc(f.label) + '</dt><dd>' + esc(f.value) + '</dd></div>';
     }).join('');
 
@@ -334,10 +334,10 @@
       var head = '';
       if (f.group !== lastGroup) {
         lastGroup = f.group;
-        head = '<span class="rg-group">' + esc(f.group) + '</span>';
+        head = '<span class="field-view-group">' + esc(f.group) + '</span>';
       }
       return head +
-        '<div class="rg-field' + (f.full ? ' is-full' : '') + '">' +
+        '<div class="field-view' + (f.full ? ' is-full' : '') + '">' +
         '<dt>' + esc(f.label) + '</dt>' +
         '<dd' + (v ? '' : ' class="is-empty"') + '>' + esc(v || 'ไม่ได้กรอก') + '</dd></div>';
     }).join('');

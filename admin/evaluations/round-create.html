@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สร้างรอบติดตาม | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../index.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.jpg" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+          <a href="rounds.html">รอบติดตาม</a> <span>/</span>
+          <span class="is-current" id="rc-crumb">สร้างรอบติดตาม</span>
+        </nav>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button type="button" class="topbar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">
+            <span class="avatar avatar-sm">สม<img src="../../assets/images/avatar-default.png" alt="" onerror="this.remove()"></span>
+            <span class="topbar-profile-info hidden-mobile">
+              <span class="topbar-profile-name">สุนิสา แก้วมณี</span>
+              <span class="topbar-profile-role">เจ้าหน้าที่โครงการ</span>
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="../profile.html">โปรไฟล์ของฉัน</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item is-danger" href="../../login.html">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content fb-create-content">
+      <div class="fb-detail-header">
+        <div class="fb-detail-main">
+          <a class="cd-back" href="rounds.html" aria-label="ย้อนกลับไปรายการรอบติดตาม">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+          </a>
+          <h1 class="fb-title" id="rc-title">สร้างรอบติดตาม</h1>
+        </div>
+      </div>
+
+      <section class="card fb-create-card">
+        <div class="fb-form-grid" id="rc-form"></div>
+
+        <div class="fb-target-row">
+          <span class="co-field-label">กลุ่มเป้าหมาย</span>
+          <div class="co-chips" id="rc-targets"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="rc-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+            ค้นหารายชื่อ</button>
+        </div>
+
+        <div id="rc-result"></div>
+
+        <div class="fb-msg-row">
+          <div class="fb-msg-col">
+            <div class="cd-field-head">
+              <span class="co-field-label">ข้อความแจ้งเตือน LINE</span>
+              <button type="button" class="co-link" id="rc-msg-reset">คืนค่าเริ่มต้น</button>
+            </div>
+            <textarea class="input fb-msg" id="rc-msg" rows="4"></textarea>
+            <span class="fb-msg-hint">ใช้ตัวแปร {ชื่อ} · {รอบ} · {วันครบกำหนด} ระบบจะแทนค่าให้รายคน</span>
+          </div>
+          <div class="fb-msg-col">
+            <span class="co-field-label">ตัวอย่างที่ผู้รับเห็น</span>
+            <div class="cd-line-preview">
+              <div class="cd-bubble">
+                <span class="cd-bubble-text" id="rc-bubble"></span>
+                <span class="cd-bubble-btn">ทำแบบประเมิน</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="fb-bottombar">
+      <div class="fb-bottombar-inner">
+        <span class="fb-bottom-text" id="rc-summary"></span>
+        <div class="fb-bottom-actions">
+          <a class="btn btn-ghost" href="rounds.html">ยกเลิก</a>
+          <button type="button" class="btn btn-outline" id="rc-draft">บันทึกร่าง</button>
+          <button type="button" class="btn btn-primary" id="rc-submit" disabled>สร้างรอบและส่งแจ้งเตือน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/followup-template-service.js"></script>
+<script src="../../assets/js/cohort-data.js"></script>
+<script src="../../assets/js/round-data.js"></script>
+<script src="../../assets/js/round-create.js"></script>
+</body>
+</html>

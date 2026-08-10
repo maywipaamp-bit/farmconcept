@@ -45,103 +45,44 @@
   var MODES = ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสม (Hybrid)'];
   var TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
-  /* ฟิลด์เดียวที่ตอบสองคำถามพร้อมกัน: ต้องลงทะเบียนไหม และมีแบบประเมินหลังจบไหม
-     ค่าที่เลือกที่นี่เป็นตัวกำหนดว่าจะแสดงฟิลด์ถัดไปชุดไหน จึงไม่ต้องให้ผู้ใช้
-     ตอบซ้ำอีกหลายจุดแล้วมาขัดกันเอง (เช่น เลือก Walk-in แต่ยังตั้งที่นั่งสำรองได้)
-     เรียงจากเงื่อนไขน้อยไปมาก ตัวเลือกในลิสต์บอกผลลัพธ์ต่อท้ายชื่อ ผู้ใช้จะได้ไม่ต้องเดา */
-  var JOIN_MODES = [
-    { key: 'walkin-only',   label: 'เข้าร่วมได้ทันที',          effect: 'ไม่ต้องลงทะเบียน / ไม่ทำแบบประเมิน', reg: false, survey: false },
-    { key: 'reg-only',      label: 'ลงทะเบียนอย่างเดียว',       effect: 'ต้องลงทะเบียน / ไม่ทำแบบประเมิน',    reg: true,  survey: false },
-    { key: 'survey-only',   label: 'ทำแบบประเมินอย่างเดียว',    effect: 'ไม่ต้องลงทะเบียน / ต้องทำแบบประเมิน', reg: false, survey: true },
-    { key: 'reg-survey',    label: 'ลงทะเบียนและทำแบบประเมิน',  effect: 'ต้องลงทะเบียน / ต้องทำแบบประเมิน',   reg: true,  survey: true }
+  /* สามขั้นตอนที่เป็นอิสระต่อกัน ติ๊กแยกกันได้ทั้งหมด
+     ที่ติ๊กไว้ที่นี่คือแหล่งความจริงเดียว — ฟิลด์เงื่อนไขและแถวช่วงเวลาข้างล่างอ่านจากชุดนี้
+     ไม่มีช่องติ๊กซ้ำที่อื่นอีก ผู้ใช้จะได้ไม่ต้องตอบคำถามเดียวกันสองรอบแล้วขัดกันเอง */
+  /* ป้ายสั้น ไม่ต้องมีคำว่า "ต้อง" นำหน้า เพราะชื่อฟิลด์บอกบริบทอยู่แล้ว
+     และสามช่องต้องอยู่บรรทัดเดียวในคอลัมน์กว้าง ~344px */
+  var JOIN_FLAGS = [
+    { key: 'reg',    label: 'ลงทะเบียน',    hint: 'จองที่นั่งล่วงหน้าผ่านเว็บ' },
+    { key: 'chk',    label: 'Check-in',     hint: 'สแกน QR ยืนยันตัวตนหน้างาน' },
+    { key: 'survey', label: 'ทำแบบประเมิน', hint: 'ส่งแบบประเมินให้หลังจบกิจกรรม' }
   ];
 
-  function joinMode() {
-    return JOIN_MODES.filter(function (m) { return m.key === state.join; })[0] || JOIN_MODES[0];
+  function needsReg() { return !!state.join.reg; }
+  function needsCheckin() { return !!state.join.chk; }
+  function hasSurvey() { return !!state.join.survey; }
+
+  /* ---------- แบบประเมินที่เลือกได้ ----------
+     ดึงจากระบบแบบประเมิน (mock.evaluationForms) ไม่ได้พิมพ์รายชื่อไว้ที่นี่
+     เอาเฉพาะชุดที่เปิดใช้งานแล้ว — ฉบับร่างยังแก้อยู่ ผูกกับกิจกรรมไปก่อนไม่ได้
+     แยกสองช่องด้วย type: ชุดที่เป็นแบบลงทะเบียนไปช่อง "ตอนลงทะเบียน" ที่เหลือไปช่อง "หลังจบ" */
+  var FORM_ACTIVE_STATUS = 'เผยแพร่แล้ว';
+
+  function activeForms() {
+    return (mock.evaluationForms || []).filter(function (f) { return f.status === FORM_ACTIVE_STATUS; });
   }
-  function needsReg() { return joinMode().reg; }
-  function hasSurvey() { return joinMode().survey; }
 
-  /* คำถามจริงของแต่ละชุด ใช้ทั้งแสดงจำนวนในคำอธิบายและแสดงตัวอย่างตอนกด "ดูตัวอย่าง"
-     เก็บไว้ที่เดียวกัน จำนวนที่โชว์จึงตรงกับคำถามที่มีจริงเสมอ ไม่มีทางคลาดกัน */
-  var FORM_REG = [
-    { label: 'แบบลงทะเบียนมาตรฐาน (ข้อมูลพื้นฐาน)', note: 'ชื่อ เบอร์โทร พื้นที่', questions: [
-      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
-      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'ช่วงอายุ', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'เพศ', required: false },
-      { type: 'ตัวเลือกเดียว', text: 'พื้นที่ที่อาศัยอยู่', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'ทราบข่าวกิจกรรมจากช่องทางใด', required: false }
-    ] },
-    { label: 'แบบลงทะเบียน + ประเมินสุขภาพก่อนเข้าร่วม', note: 'เพิ่มข้อมูลสุขภาพตั้งต้น', questions: [
-      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
-      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'ช่วงอายุ', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'เพศ', required: false },
-      { type: 'ตัวเลือกเดียว', text: 'พื้นที่ที่อาศัยอยู่', required: true },
-      { type: 'ตัวเลข', text: 'น้ำหนัก (กก.)', required: true },
-      { type: 'ตัวเลข', text: 'ส่วนสูง (ซม.)', required: true },
-      { type: 'ตัวเลข', text: 'รอบเอว (ซม.)', required: false },
-      { type: 'ตัวเลือกหลายข้อ', text: 'โรคประจำตัว', required: false },
-      { type: 'ข้อความสั้น', text: 'ยาที่ใช้ประจำ', required: false },
-      { type: 'ตัวเลือกเดียว', text: 'ความถี่ในการออกกำลังกาย', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'การสูบบุหรี่', required: false },
-      { type: 'ตัวเลือกเดียว', text: 'การดื่มแอลกอฮอล์', required: false },
-      { type: 'ข้อความยาว', text: 'เป้าหมายด้านสุขภาพที่อยากเห็น', required: false }
-    ] },
-    { label: 'แบบลงทะเบียนสำหรับแกนนำชุมชน', note: 'เพิ่มบทบาทและพื้นที่รับผิดชอบ', questions: [
-      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
-      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
-      { type: 'ข้อความสั้น', text: 'ชุมชน/หน่วยงานที่สังกัด', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'บทบาทในชุมชน', required: true },
-      { type: 'ตัวเลข', text: 'จำนวนปีที่ทำงานในพื้นที่', required: false },
-      { type: 'ตัวเลือกหลายข้อ', text: 'พื้นที่ที่รับผิดชอบ', required: true },
-      { type: 'ตัวเลือกหลายข้อ', text: 'ประสบการณ์จัดกิจกรรมที่ผ่านมา', required: false },
-      { type: 'ตัวเลือกเดียว', text: 'ช่วงเวลาที่สะดวกเข้าร่วม', required: false },
-      { type: 'ข้อความยาว', text: 'สิ่งที่คาดหวังจากการอบรม', required: false },
-      { type: 'ข้อความยาว', text: 'ข้อจำกัดหรือสิ่งที่ต้องการให้ช่วยเหลือ', required: false }
-    ] }
-  ];
+  function isRegForm(f) { return String(f.type || '').indexOf('ลงทะเบียน') > -1; }
 
-  var FORM_POST = [
-    { label: 'แบบประเมินความพึงพอใจ', note: 'ให้คะแนน + ความเห็นปลายเปิด', questions: [
-      { type: 'คะแนน 1-5', text: 'ความพึงพอใจโดยรวมต่อกิจกรรม', required: true },
-      { type: 'คะแนน 1-5', text: 'ความรู้ที่ได้รับนำไปใช้ได้จริง', required: true },
-      { type: 'คะแนน 1-5', text: 'ความเหมาะสมของสถานที่และเวลา', required: true },
-      { type: 'คะแนน 1-5', text: 'ความชัดเจนของการสื่อสารก่อนกิจกรรม', required: false },
-      { type: 'คะแนน 1-5', text: 'ความคุ้มค่าเมื่อเทียบกับเวลาที่ใช้', required: false },
-      { type: 'ข้อความยาว', text: 'สิ่งที่ประทับใจที่สุด', required: false },
-      { type: 'ข้อความยาว', text: 'ข้อเสนอแนะเพิ่มเติม', required: false }
-    ] },
-    { label: 'แบบประเมินความรู้หลังอบรม', note: 'คำถามถูก/ผิด วัดความเข้าใจ', questions: [
-      { type: 'ถูก/ผิด', text: 'ผักปลอดสารต้องงดใช้ปุ๋ยทุกชนิด', required: true },
-      { type: 'ถูก/ผิด', text: 'ปุ๋ยหมักใช้ได้ทันทีหลังผสมเสร็จ', required: true },
-      { type: 'ถูก/ผิด', text: 'การปลูกพืชหมุนเวียนช่วยลดโรคในดิน', required: true },
-      { type: 'ถูก/ผิด', text: 'น้ำหมักชีวภาพใช้แทนน้ำเปล่าได้ทุกวัน', required: true },
-      { type: 'ถูก/ผิด', text: 'ควรรดน้ำผักตอนแดดจัดที่สุดของวัน', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'ระยะเวลาที่เหมาะสมในการหมักปุ๋ย', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'วิธีสังเกตว่าดินขาดธาตุอาหาร', required: true },
-      { type: 'ตัวเลือกหลายข้อ', text: 'วิธีกำจัดศัตรูพืชแบบไม่ใช้สารเคมี', required: true },
-      { type: 'ตัวเลือกเดียว', text: 'ช่วงเวลาที่เหมาะกับการเก็บเกี่ยว', required: false },
-      { type: 'ข้อความยาว', text: 'สิ่งที่จะนำกลับไปทำต่อที่บ้าน', required: false }
-    ] },
-    { label: 'แบบประเมินวิทยากร', note: 'ให้คะแนนรายวิทยากร', questions: [
-      { type: 'คะแนน 1-5', text: 'ความรู้ความเชี่ยวชาญในเนื้อหา', required: true },
-      { type: 'คะแนน 1-5', text: 'การอธิบายเข้าใจง่าย', required: true },
-      { type: 'คะแนน 1-5', text: 'การเปิดโอกาสให้ซักถาม', required: true },
-      { type: 'คะแนน 1-5', text: 'การบริหารเวลา', required: false },
-      { type: 'ข้อความยาว', text: 'ข้อเสนอแนะต่อวิทยากร', required: false }
-    ] }
-  ];
+  function formsReg() { return activeForms().filter(isRegForm); }
+  function formsPost() { return activeForms().filter(function (f) { return !isRegForm(f); }); }
 
-  /* คำอธิบายใต้ชื่อชุด สร้างจากคำถามจริง ไม่ได้พิมพ์ตัวเลขไว้เอง */
+  /* คำอธิบายใต้ชื่อชุด สร้างจากข้อมูลจริงของชุดนั้น ไม่ได้พิมพ์ตัวเลขไว้เอง */
   function formHint(o) {
-    var need = o.questions.filter(function (q) { return q.required; }).length;
-    return o.note + ' · ' + o.questions.length + ' คำถาม (จำเป็น ' + need + ')';
+    var n = o.questions ? o.questions.length : (o.questionCount || 0);
+    return (o.type ? o.type + ' · ' : '') + n + ' คำถาม';
   }
 
-  function formByLabel(label) {
-    return FORM_REG.concat(FORM_POST).filter(function (o) { return o.label === label; })[0];
+  function formById(id) {
+    return activeForms().filter(function (o) { return o.id === id; })[0];
   }
 
   var QR_LINKS = [
@@ -163,12 +104,13 @@
     slots: [{ id: 1, date: '', start: '', end: '', cap: '' }],
     nextSlotId: 2,
     fee: FEES[0], feeAmount: '',
-    /* ตั้งต้นเป็นรูปแบบที่มีเงื่อนไขครบ ผู้ใช้จะเห็นฟิลด์ทั้งหมดก่อนแล้วค่อยตัดออก
-       ถ้าตั้งต้นเป็น "เข้าร่วมได้ทันที" หน้าจอตอนเปิดจะว่างจนดูเหมือนโหลดไม่ครบ */
-    join: 'reg-survey',
+    /* ตั้งต้นไม่ติ๊กอะไรเลย = เข้าร่วมได้ทันที
+       ผู้ใช้ติ๊กเพิ่มเองเมื่อกิจกรรมนั้นต้องมีขั้นตอน ไม่ใช่ต้องมาไล่ติ๊กออก */
+    join: { reg: false, chk: false, survey: false },
     targets: [],
-    formReg: FORM_REG[0].label,
-    formsPost: [FORM_POST[0].label],
+    /* เก็บเป็น id ของแบบประเมิน ไม่ใช่ชื่อ — ชื่อแก้ได้ในระบบแบบประเมิน แต่ id ไม่เปลี่ยน */
+    formReg: (formsReg()[0] || {}).id || '',
+    formsPost: formsPost().slice(0, 1).map(function (f) { return f.id; }),
     windows: { reg: {}, chk: {}, srv: {} },
     publish: false, pin: false,
     combo: null,
@@ -235,9 +177,11 @@
     $('ac-mode').innerHTML = MODES.map(optionHtml).join('');
     $('ac-place').innerHTML = PLACES.map(optionHtml).join('');
 
-    /* ชื่อรูปแบบ + ผลลัพธ์อยู่ในบรรทัดเดียวกัน เพราะ <option> ใส่คำอธิบายบรรทัดที่สองไม่ได้ */
-    $('ac-reg').innerHTML = JOIN_MODES.map(function (m) {
-      return '<option value="' + esc(m.key) + '">' + esc(m.label + ' — ' + m.effect) + '</option>';
+    /* คลาส .ac-cond ไม่ใช่ .ac-check — .ac-check เป็นของเช็กลิสต์ในแผงขวาอยู่แล้ว ชนกันไม่ได้ */
+    $('ac-reg').innerHTML = JOIN_FLAGS.map(function (f) {
+      return '<label class="ac-cond" title="' + esc(f.hint) + '">' +
+        '<input type="checkbox" data-join="' + f.key + '"' + (state.join[f.key] ? ' checked' : '') + '>' +
+        '<span>' + esc(f.label) + '</span></label>';
     }).join('');
 
     /* ค่าเข้าร่วมมีสองทางที่ตัดกันชัด ใช้ radio ให้เห็นทั้งสองตัวเลือกพร้อมกัน
@@ -255,7 +199,10 @@
     $('ac-kind').value = state.kind;
     $('ac-mode').value = state.mode;
     $('ac-place').value = state.place;
-    $('ac-reg').value = state.join;
+
+    Array.prototype.forEach.call($('ac-reg').querySelectorAll('[data-join]'), function (b) {
+      b.checked = !!state.join[b.getAttribute('data-join')];
+    });
 
     /* ไอคอนช่วยให้จำหมวดหมู่ได้จากรูปทรง ไม่ต้องอ่านชื่อภาษาอังกฤษทุกครั้ง */
     $('ac-cats').innerHTML = CATS.map(function (c) {
@@ -271,54 +218,72 @@
     });
   }
 
+  /* เหลือแค่ชื่อชุดกับไอคอนตา — รายละเอียด (จำนวนคำถาม ฯลฯ) อยู่ในตัวอย่างที่กดดูได้อยู่แล้ว
+     พิมพ์ซ้ำไว้ทุกแถวกินพื้นที่ฟรี ทั้งที่อ่านครั้งเดียวก็พอ */
+  function pickRow(o, on, attr, round) {
+    return '<div class="ac-pick-row">' +
+      '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" ' + attr + '="' + esc(o.id) + '"' +
+      ' title="' + esc(formHint(o)) + '">' +
+      markHtml(on, round) +
+      '<span class="ac-pick-title">' + esc(o.name) + '</span>' +
+      '</button>' +
+      previewBtn(o.id) +
+      '</div>';
+  }
+
+  /* ไม่มีชุดที่เปิดใช้งานให้เลือก ต้องบอกว่าไปสร้างที่ไหน ไม่ใช่ปล่อยว่างเฉย ๆ
+     จนผู้ใช้คิดว่าหน้าจอเสีย */
+  function pickEmpty(what) {
+    return '<p class="ac-field-note is-warning">ยังไม่มี' + esc(what) + 'ที่เปิดใช้งาน — ' +
+      'ไปสร้างและเปิดใช้งานที่เมนู ประเมินสุขภาพ › แบบประเมิน ก่อน</p>';
+  }
+
   function renderPicks() {
-    $('ac-form-reg').innerHTML = FORM_REG.map(function (o) {
-      var on = state.formReg === o.label;
-      return '<div class="ac-pick-row">' +
-        '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-reg="' + esc(o.label) + '">' +
-        markHtml(on, true) +
-        '<span class="ac-pick-text">' +
-          '<span class="ac-pick-title">' + esc(o.label) + '</span>' +
-          '<span class="ac-pick-hint">' + esc(formHint(o)) + '</span>' +
-        '</span></button>' +
-        previewBtn(o.label) +
-        '</div>';
-    }).join('');
+    var reg = formsReg(), post = formsPost();
 
-    $('ac-form-post').innerHTML = FORM_POST.map(function (o) {
-      var on = state.formsPost.indexOf(o.label) > -1;
-      return '<div class="ac-pick-row">' +
-        '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-post="' + esc(o.label) + '">' +
-        markHtml(on, false) +
-        '<span class="ac-pick-text">' +
-          '<span class="ac-pick-title">' + esc(o.label) + '</span>' +
-          '<span class="ac-pick-hint">' + esc(formHint(o)) + '</span>' +
-        '</span></button>' +
-        previewBtn(o.label) +
-        '</div>';
-    }).join('');
+    $('ac-form-reg').innerHTML = reg.length
+      ? reg.map(function (o) { return pickRow(o, state.formReg === o.id, 'data-form-reg', true); }).join('')
+      : pickEmpty('แบบลงทะเบียน');
 
-    $('ac-post-count').textContent = state.formsPost.length === 0
-      ? 'ยังไม่ได้เลือก — ผู้เข้าร่วมจะไม่ได้รับแบบประเมินหลังกิจกรรม'
-      : 'เลือกแล้ว ' + state.formsPost.length + ' ชุด · ส่งให้ผู้เข้าร่วมหลังเช็คอินจบกิจกรรม';
-    $('ac-post-count').classList.toggle('is-warning', state.formsPost.length === 0);
+    $('ac-form-post').innerHTML = post.length
+      ? post.map(function (o) { return pickRow(o, state.formsPost.indexOf(o.id) > -1, 'data-form-post', false); }).join('')
+      : pickEmpty('แบบประเมิน');
   }
 
   /* ---------- ดูตัวอย่างแบบประเมิน ----------
      ชื่อชุดอย่างเดียวบอกไม่ได้ว่าข้างในถามอะไร ผู้ใช้จึงเลือกผิดชุดได้ง่าย
      ปุ่มนี้เปิดรายการคำถามจริงให้ดูก่อนตัดสินใจ โดยไม่ต้องออกจากหน้านี้ */
-  function previewBtn(label) {
-    return '<button type="button" class="ac-preview-btn" data-form-preview="' + esc(label) + '"' +
-      ' title="ดูคำถามในชุดนี้" aria-label="ดูตัวอย่างคำถามของ ' + esc(label) + '">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+  function previewBtn(id) {
+    return '<button type="button" class="ac-preview-btn" data-form-preview="' + esc(id) + '"' +
+      ' title="ดูคำถามในชุดนี้" aria-label="ดูตัวอย่างคำถามของแบบประเมิน ' + esc(id) + '">' +
+      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>' +
-      '<span>ดูตัวอย่าง</span></button>';
+      '</button>';
   }
 
-  function openFormPreview(label) {
-    var o = formByLabel(label);
+  function openFormPreview(id) {
+    var o = formById(id);
     if (!o) return;
-    var need = o.questions.filter(function (q) { return q.required; }).length;
+
+    /* ระบบแบบประเมินเก็บแค่จำนวนคำถามในรายการ ยังไม่ส่งตัวคำถามมาด้วย
+       จึงแสดงเท่าที่มีจริง แล้วชี้ทางไปดูตัวเต็มที่หน้าแบบประเมิน
+       ดีกว่าแต่งคำถามปลอมขึ้นมาให้ดูเหมือนมีข้อมูล */
+    var qs = o.questions || [];
+    var need = qs.filter(function (q) { return q.required; }).length;
+    var count = qs.length || o.questionCount || 0;
+
+    var body = qs.length
+      ? '<ol class="ac-preview-list">' +
+          qs.map(function (q) {
+            return '<li class="ac-preview-q">' +
+              '<span class="ac-preview-q-text">' + esc(q.text) +
+                (q.required ? '<span class="req-mark">*</span>' : '') + '</span>' +
+              '<span class="ac-preview-q-type">' + esc(q.type) + '</span>' +
+              '</li>';
+          }).join('') +
+        '</ol>'
+      : '<p class="ac-field-note">ชุดนี้มี ' + count + ' คำถาม · ดูและแก้คำถามได้ที่ ' +
+        '<a href="../evaluations/list.html">เมนู แบบประเมิน</a></p>';
 
     var root = document.createElement('div');
     root.className = 'modal-overlay is-open ac-preview-overlay';
@@ -326,24 +291,15 @@
       '<div class="modal ac-preview-modal" role="dialog" aria-modal="true" aria-label="ตัวอย่างแบบประเมิน">' +
         '<div class="modal-header">' +
           '<div class="ac-preview-head">' +
-            '<span class="ac-preview-name">' + esc(o.label) + '</span>' +
-            '<span class="ac-preview-meta">' + o.questions.length + ' คำถาม · จำเป็นต้องตอบ ' + need + '</span>' +
+            '<span class="ac-preview-name">' + esc(o.name) + '</span>' +
+            '<span class="ac-preview-meta">' + count + ' คำถาม' +
+              (qs.length ? ' · จำเป็นต้องตอบ ' + need : '') + '</span>' +
           '</div>' +
           '<button type="button" class="modal-close" data-preview-close aria-label="ปิด">' +
             '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
           '</button>' +
         '</div>' +
-        '<div class="modal-body">' +
-          '<ol class="ac-preview-list">' +
-            o.questions.map(function (q) {
-              return '<li class="ac-preview-q">' +
-                '<span class="ac-preview-q-text">' + esc(q.text) +
-                  (q.required ? '<span class="req-mark">*</span>' : '') + '</span>' +
-                '<span class="ac-preview-q-type">' + esc(q.type) + '</span>' +
-                '</li>';
-            }).join('') +
-          '</ol>' +
-        '</div>' +
+        '<div class="modal-body">' + body + '</div>' +
         '<div class="modal-footer">' +
           '<button type="button" class="btn btn-outline" data-preview-close>ปิด</button>' +
         '</div>' +
@@ -412,80 +368,84 @@
       : '<span class="ac-combo-empty">เลือกหลักสูตรก่อน แล้วรายชื่อวิทยากรของหลักสูตรนั้นจะแสดงที่นี่</span>';
   }
 
+  /* หนึ่งรอบ = หนึ่งแถว ป้ายกำกับอยู่บนหัวตารางแถวเดียว ไม่ซ้ำทุกรอบ
+     เดิมแต่ละรอบเป็นการ์ดที่มีหัวการ์ด + ป้าย 4 ช่อง กินความสูงเกือบสามเท่า
+     ทั้งที่ข้อมูลมีแค่ 4 ค่า และผู้ใช้เทียบรอบกันได้ง่ายกว่าเมื่ออยู่เป็นคอลัมน์ */
   function renderSlots() {
     var single = state.slots.length <= 1;
-    $('ac-slots').innerHTML = state.slots.map(function (s, i) {
-      return '<div class="ac-slot" data-slot="' + s.id + '">' +
-        '<div class="ac-slot-head">' +
-          '<span class="ac-slot-name">รอบที่ ' + (i + 1) + '</span>' +
+    $('ac-slots').innerHTML =
+      '<div class="ac-slot-row is-head" aria-hidden="true">' +
+        '<span></span><span>วันที่จัด</span><span>เริ่ม</span><span>สิ้นสุด</span><span>รับได้ (คน)</span><span></span>' +
+      '</div>' +
+      state.slots.map(function (s, i) {
+        return '<div class="ac-slot-row" data-slot="' + s.id + '">' +
+          '<span class="ac-slot-no">' + (i + 1) + '</span>' +
+          slotField(s, 'date', 'วันที่จัด', 'date', i + 1) +
+          slotField(s, 'start', 'เริ่ม', 'time', i + 1) +
+          slotField(s, 'end', 'สิ้นสุด', 'time', i + 1) +
+          slotField(s, 'cap', 'รับได้ (คน)', 'number', i + 1) +
           '<button type="button" class="ac-slot-remove" data-remove-slot="' + s.id + '"' + (single ? ' disabled' : '') +
             ' aria-label="ลบรอบที่ ' + (i + 1) + '">' +
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
           '</button>' +
-        '</div>' +
-        '<div class="ac-slot-grid">' +
-          slotField(s, 'date', 'วันที่จัด', 'date') +
-          slotField(s, 'start', 'เริ่ม', 'time') +
-          slotField(s, 'end', 'สิ้นสุด', 'time') +
-          slotField(s, 'cap', 'รับได้ (คน)', 'number') +
-        '</div>' +
-        '</div>';
-    }).join('');
+          '</div>';
+      }).join('');
 
     $('ac-add-slot').disabled = state.slots.length >= MAX_SLOTS;
   }
 
-  /* วันที่กับเวลาใช้ตัวเลือกวงล้อของระบบ (datetime-picker.js) ไม่ใช้ของเบราว์เซอร์
-     ค่าจริงเก็บที่ data-iso ส่วน value เป็นข้อความไทยไว้ให้คนอ่าน */
-  function slotField(slot, key, label, type) {
+  /* วันที่กับเวลาใช้ช่องของระบบ (datetime-picker.js) ไม่ใช้ของเบราว์เซอร์
+     วันที่เลือกจากปฏิทิน · เวลาพิมพ์เอง · ค่าจริงเก็บที่ data-iso ส่วน value เป็นข้อความไทย
+     ป้ายกำกับอยู่บนหัวตาราง ในแถวจึงเหลือแต่ช่องกรอก และผูกชื่อด้วย aria-label แทน */
+  function slotField(slot, key, label, type, no) {
     var v = esc(slot[key] || '');
+    var aria = ' aria-label="' + esc(label + ' ของรอบที่ ' + no) + '"';
+    var attrs = ' data-slot-id="' + slot.id + '" data-slot-key="' + key + '"' + aria;
+
     if (type === 'date' || type === 'time') {
-      return '<label class="ac-slot-field">' +
-        '<span class="ac-slot-label">' + esc(label) + '</span>' +
-        '<input type="text" class="input" data-picker="' + type + '" data-iso="' + v + '"' +
-        ' placeholder="' + (type === 'date' ? 'เลือกวันที่' : 'เลือกเวลา') + '"' +
-        ' data-slot-id="' + slot.id + '" data-slot-key="' + key + '">' +
-        '</label>';
+      return '<input type="text" class="input" data-picker="' + type + '" data-iso="' + v + '"' +
+        ' placeholder="' + (type === 'date' ? 'เลือกวันที่' : '09:30') + '"' + attrs + '>';
     }
-    return '<label class="ac-slot-field">' +
-      '<span class="ac-slot-label">' + esc(label) + '</span>' +
-      '<input type="' + type + '" class="input" value="' + v + '" min="0" inputmode="numeric" placeholder="0"' +
-      ' data-slot-id="' + slot.id + '" data-slot-key="' + key + '">' +
-      '</label>';
+    return '<input type="' + type + '" class="input" value="' + v + '" min="0" inputmode="numeric" placeholder="0"' +
+      attrs + '>';
   }
 
-  /* แถวช่วงเวลาแสดงเฉพาะสิ่งที่เปิดใช้งานไว้จริง ไม่งั้นผู้ใช้จะตั้งเวลาให้ระบบที่ไม่ได้เปิด */
+  /* แถวช่วงเวลามาจากสิ่งที่ติ๊กไว้ใน "รูปแบบการเข้าร่วม" ที่เดียว ไม่มีช่องติ๊กซ้ำที่นี่อีก
+     ไม่งั้นผู้ใช้ต้องตอบคำถามเดียวกันสองรอบ แล้วสองที่ขัดกันเองได้
+     (เช่น ไม่ติ๊ก "ต้องลงทะเบียน" แต่ยังตั้งช่วงเวลาเปิดลงทะเบียนไว้) */
+  var WINDOWS = [
+    { key: 'reg', flag: 'reg',    label: 'ลงทะเบียน' },
+    { key: 'chk', flag: 'chk',    label: 'Check-in' },
+    { key: 'srv', flag: 'survey', label: 'แบบประเมินหลังกิจกรรม' }
+  ];
+
   function activeWindows() {
-    return [
-      needsReg() ? { key: 'reg', label: 'เปิดให้ลงทะเบียน', hint: 'ผู้เข้าร่วมจองที่นั่งได้ในช่วงนี้' } : null,
-      { key: 'chk', label: 'เปิดให้เช็คอิน', hint: 'สแกน QR หน้างานได้ในช่วงนี้' },
-      hasSurvey() ? { key: 'srv', label: 'เปิดให้ทำแบบประเมิน', hint: 'ตอบแบบประเมินหลังกิจกรรมได้ในช่วงนี้' } : null
-    ].filter(Boolean);
+    return WINDOWS.filter(function (w) { return !!state.join[w.flag]; });
   }
 
   function renderWindows() {
-    $('ac-windows').innerHTML = activeWindows().map(function (w) {
-      var v = state.windows[w.key] || {};
-      return '<div class="ac-window">' +
-        '<div class="ac-window-text">' +
-          '<span class="ac-window-label">' + esc(w.label) + '</span>' +
-          '<span class="ac-window-hint">' + esc(w.hint) + '</span>' +
-        '</div>' +
-        '<div class="ac-window-range">' +
-          '<span class="ac-window-sep">ตั้งแต่</span>' +
-          winInput(w.key, 'from', 'date', v.from) +
-          winInput(w.key, 'fromT', 'time', v.fromT) +
-          '<span class="ac-window-sep">ถึง</span>' +
-          winInput(w.key, 'to', 'date', v.to) +
-          winInput(w.key, 'toT', 'time', v.toT) +
-        '</div>' +
-        '</div>';
-    }).join('');
+    var list = activeWindows();
+    $('ac-windows').innerHTML = list.length
+      ? list.map(function (w) {
+          var v = state.windows[w.key] || {};
+          return '<div class="ac-window">' +
+            '<span class="ac-window-name">' + esc(w.label) + '</span>' +
+            /* ตัดคำว่า "ตั้งแต่/ถึง" เหลือขีดคั่น เพื่อให้ทั้งช่วงอยู่ในบรรทัดเดียวได้จริง */
+            '<div class="ac-window-range">' +
+              winInput(w.key, 'from', 'date', v.from) +
+              winInput(w.key, 'fromT', 'time', v.fromT) +
+              '<span class="ac-window-sep">–</span>' +
+              winInput(w.key, 'to', 'date', v.to) +
+              winInput(w.key, 'toT', 'time', v.toT) +
+            '</div>' +
+            '</div>';
+        }).join('')
+      : '<p class="ac-field-note">ยังไม่ได้ติ๊กขั้นตอนใดในรูปแบบการเข้าร่วม จึงไม่มีช่วงเวลาให้กำหนด</p>';
   }
 
   function winInput(group, key, type, value) {
     return '<input type="text" class="input ac-window-input" data-picker="' + type + '"' +
-      ' data-iso="' + esc(value || '') + '" placeholder="' + (type === 'date' ? 'เลือกวันที่' : 'เวลา') + '"' +
+      ' data-iso="' + esc(value || '') + '" placeholder="' + (type === 'date' ? 'เลือกวันที่' : '09:30') + '"' +
       ' data-win-group="' + group + '" data-win-key="' + key + '">';
   }
 
@@ -643,7 +603,6 @@
 
     /* ฟิลด์ที่มีความหมายเฉพาะตอนเปิดให้ลงทะเบียนล่วงหน้าเท่านั้น
        ถ้าเข้าร่วมได้เลย การถามว่าใครลงทะเบียนได้/สำรองที่นั่งกี่คน/ใช้แบบฟอร์มไหน ไม่มีความหมาย */
-    $('ac-reg-detail').hidden = !needsReg();
     $('ac-field-form-reg').hidden = !needsReg();
     $('ac-field-form-post').hidden = !hasSurvey();
     $('ac-title-count').textContent = state.title.length + '/120';
@@ -665,8 +624,13 @@
   $('ac-place').addEventListener('change', function () { state.place = this.value; touch(); });
   $('ac-mode').addEventListener('change', function () { state.mode = this.value; touch(); });
 
-  /* เปลี่ยนรูปแบบการเข้าร่วมแล้วฟิลด์เงื่อนไข (ที่นั่งสำรอง · แบบฟอร์ม · ช่วงเวลา) จะซ่อน/แสดงตาม */
-  $('ac-reg').addEventListener('change', function () { state.join = this.value; touch(); });
+  /* ติ๊กรูปแบบการเข้าร่วม — คุมทั้งแบบฟอร์มที่ต้องเลือกและแถวช่วงเวลาข้างล่าง */
+  $('ac-reg').addEventListener('change', function (e) {
+    var box = e.target.closest('[data-join]');
+    if (!box) return;
+    state.join[box.getAttribute('data-join')] = box.checked;
+    touch();
+  });
 
   /* radio ค่าเข้าร่วม — ผูกที่ container เพราะ input ถูกสร้างจาก JS */
   $('ac-fee').addEventListener('change', function (e) {
@@ -677,8 +641,6 @@
     touch();
   });
 
-  $('ac-audience').addEventListener('change', touch);
-  $('ac-waitlist').addEventListener('change', touch);
 
   /* ช่องที่ใช้ตัวเลือกวงล้อเก็บค่าจริง (ISO) ไว้ที่ data-iso ส่วน .value เป็นข้อความไทย */
   function fieldValue(el) {
@@ -701,6 +663,7 @@
       state.dirty = true;
     }
   });
+
 
   document.addEventListener('click', function (e) {
     var t = e.target;
@@ -896,12 +859,18 @@
     /* ชุดข้อมูลกลางยังไม่มีฟิลด์ "ต้องลงทะเบียนไหม / มีแบบประเมินหลังจบไหม" ตรง ๆ
        จึงอนุมานจากสิ่งที่มี: กำหนดจำนวนรับหรือมีผู้ลงทะเบียนแล้ว = เปิดให้ลงทะเบียน
        ผูกชุดแบบประเมินไว้ = มีแบบประเมินหลังจบ */
-    var wantReg = !!(a.capacity || a.registered);
-    var wantSurvey = !!(a.evaluationFormIds && a.evaluationFormIds.length);
-    /* จับคู่จากคุณสมบัติ ไม่ใช่ประกอบชื่อ key เอง เพราะชื่อ key เปลี่ยนได้
-       ถ้าประกอบเองแล้ววันหนึ่งชื่อไม่ตรง จะเงียบ ๆ กลับไปใช้ค่าตั้งต้นโดยไม่มีใครรู้ */
-    var match = JOIN_MODES.filter(function (m) { return m.reg === wantReg && m.survey === wantSurvey; })[0];
-    if (match) state.join = match.key;
+    state.join = {
+      reg: !!(a.capacity || a.registered),
+      survey: !!(a.evaluationFormIds && a.evaluationFormIds.length)
+    };
+
+    /* กิจกรรมเก็บ id ของแบบประเมินอยู่แล้ว ตอนนี้หน้านี้ก็ใช้ id เหมือนกัน จึงผูกกลับได้ตรง ๆ
+       กรองเฉพาะชุดที่ยังเปิดใช้งาน — ชุดที่ถูกปิดไปแล้วไม่ควรโผล่มาเป็นตัวเลือกที่ติ๊กค้างไว้ */
+    var linked = (a.evaluationFormIds || []).filter(function (id) { return !!formById(id); });
+    var linkedPost = linked.filter(function (id) { return !isRegForm(formById(id)); });
+    var linkedReg = linked.filter(function (id) { return isRegForm(formById(id)); });
+    if (linkedPost.length) state.formsPost = linkedPost;
+    if (linkedReg.length) state.formReg = linkedReg[0];
 
     state.dirty = false;
   }
@@ -910,8 +879,9 @@
      โหมดแก้ไขต้องดันค่าย้อนกลับลง DOM เอง ไม่งั้นฟอร์มจะว่างทั้งที่ state มีค่าแล้ว
      (chip, รอบกิจกรรม และการ์ดแบบประเมิน วาดจาก state อยู่แล้ว จึงไม่ต้องทำตรงนี้) */
   function pushStateToDom() {
+    /* ac-reg ไม่อยู่ในนี้ เพราะเป็นช่องติ๊กที่ renderChips() วาดจาก state ให้อยู่แล้ว */
     var map = { 'ac-title': state.title, 'ac-detail': state.detail, 'ac-fee-input': state.feeAmount,
-                'ac-kind': state.kind, 'ac-place': state.place, 'ac-mode': state.mode, 'ac-reg': state.join };
+                'ac-kind': state.kind, 'ac-place': state.place, 'ac-mode': state.mode };
     Object.keys(map).forEach(function (id) {
       var el = $(id);
       if (el) el.value = map[id];

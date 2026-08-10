@@ -1,5 +1,6 @@
 /* TheFarmConcept — Satisfaction Service
-   ทุกการอ่านข้อมูลของหน้า admin/activities/satisfaction.html ผ่านไฟล์นี้ที่เดียว
+   ทุกการอ่านข้อมูลความพึงพอใจผ่านไฟล์นี้ที่เดียว — ตอนนี้ผู้ใช้คือ
+   admin/activities/responses.html (หน้าภาพรวมสถิติ satisfaction.html ถูกถอดออกแล้ว)
    หน้าจอไม่แตะ TFC_MOCK ตรง ๆ เลย เมื่อต่อ backend จริงให้แก้เฉพาะฟังก์ชันใน
    "ชั้นขนส่งข้อมูล" ด้านล่าง โดยที่หน้าจอไม่ต้องแก้อะไรเลย
 
@@ -19,6 +20,8 @@
      svc.activities().then(function (list) { ... });                 // สำหรับ popover เปลี่ยนกิจกรรม
      svc.summary(activityId).then(function (s) { ... });             // การ์ดสรุป + รายหัวข้อ + การกระจาย
      svc.responses(activityId, { limit, offset }).then(function (p) { p.rows / p.total });
+     svc.responseList(activityId, { band, keyword, limit, offset })        // ตารางหน้า "ตอบประเมินหลังกิจกรรม"
+        .then(function (p) { p.rows / p.total });                          // band: all | praise | mid | improve
      svc.comments(activityId, { filter }).then(function (list) { ... });   // filter: all | praise | improve
 */
 window.TFC = window.TFC || {};
@@ -94,6 +97,76 @@ window.TFC.satisfactionService = (function () {
       average: round1(rowAverage(row)),
       submittedAt: row.submittedAt
     };
+  }
+
+  /* รอบของกิจกรรมที่คำตอบชุดนั้นผูกอยู่
+     ของจริงคือ survey_responses.activity_round_id ที่ join กับ activity_rounds
+     ต้นแบบยังไม่มีคอลัมน์นั้น จึงจับคู่จากวันที่ส่งคำตอบกับวันที่ของรอบ
+     (แบบประเมินหลังกิจกรรมถูกส่งหลังจบรอบที่เข้า จึงใช้รอบล่าสุดที่ไม่เกินวันที่ส่ง)
+     เกณฑ์ตั้งชื่อรอบเหมือน checkin-service: มีรอบเดียวไม่ต้องใส่เลขรอบให้รก */
+  function roundLabelOf(activityId, submittedAt) {
+    var sessions = (mock().activitySessions || {})[activityId] || [];
+    if (sessions.length < 2) return 'รอบเดียว';
+
+    var day = String(submittedAt || '').slice(0, 10);
+    var index = 0;
+    sessions.forEach(function (s, i) { if (s.date <= day) index = i; });
+    return 'รอบ ' + (index + 1);
+  }
+
+  /* ช่วงคะแนนที่ใช้เป็นแท็บกรอง — ตัดสินจากคะแนนรวมที่ปัดเป็นจำนวนเต็มแล้ว
+     ต้องเป็นชุดเดียวกับที่หน้าจอใช้เลือกสี pill ไม่งั้นแท็บกับสีจะไม่ตรงกัน */
+  function bandOf(score) {
+    if (score >= 4) return 'praise';
+    if (score === 3) return 'mid';
+    return 'improve';
+  }
+
+  /* GET /activities/:id/satisfaction/response-list?band=&keyword=&limit=&offset=
+     ตารางรายคำตอบของหน้า "ตอบประเมินหลังกิจกรรม"
+
+     ข้อบังคับที่ห้ามหย่อน: ไม่มี user_id ชื่อ หรือเบอร์โทรออกจากฟังก์ชันนี้
+     สิ่งเดียวที่ระบุ "คนตอบ" ได้คือ seq ซึ่งเป็นลำดับภายในกิจกรรมนั้นเท่านั้น
+     และ seq ถูกกำหนดจากรายการเต็มก่อนกรอง ตัวเลขจึงไม่ขยับตามตัวกรองหรือหน้าที่เปิดอยู่
+
+     ไม่ส่ง limit = ขอทั้งชุดที่ตรงเงื่อนไข (ใช้ตอนส่งออก Excel) */
+  function responseList(activityId, opts) {
+    opts = opts || {};
+    var band = opts.band || 'all';
+    var keyword = String(opts.keyword || '').trim().toLowerCase();
+
+    if (API_BASE) {
+      return request('/activities/' + encodeURIComponent(activityId) +
+        '/satisfaction/response-list?band=' + encodeURIComponent(band) +
+        '&keyword=' + encodeURIComponent(keyword) +
+        (opts.limit ? '&limit=' + opts.limit + '&offset=' + (opts.offset || 0) : ''));
+    }
+
+    var matched = rowsOf(activityId).map(function (row, i) {
+      var pub = toPublicRow(row, i);
+      pub.score = Math.round(pub.average);          /* แสดงเป็น N/5 */
+      pub.band = bandOf(pub.score);
+      pub.round = roundLabelOf(activityId, row.submittedAt);
+      pub.comment = row.comment || '';
+      delete pub.scores;                            /* หน้านี้ไม่ใช้คะแนนรายหัวข้อ */
+      return pub;
+    }).filter(function (row) {
+      if (band !== 'all' && row.band !== band) return false;
+      if (!keyword) return true;
+      return ('ผู้ตอบ #' + row.seq).toLowerCase().indexOf(keyword) > -1 ||
+        row.comment.toLowerCase().indexOf(keyword) > -1;
+    });
+
+    if (!opts.limit) return local({ total: matched.length, rows: matched });
+
+    var offset = opts.offset || 0;
+    return local({
+      total: matched.length,
+      limit: opts.limit,
+      offset: offset,
+      /* ของจริงคือ LIMIT/OFFSET ที่ server — ตัดหลังกรองเพื่อจำลองผลลัพธ์ชุดเดียวกัน */
+      rows: matched.slice(offset, offset + opts.limit)
+    });
   }
 
   /* ---------------------------------------------------------------
@@ -249,6 +322,7 @@ window.TFC.satisfactionService = (function () {
     activities: activities,
     summary: summary,
     responses: responses,
+    responseList: responseList,
     comments: comments,
     topics: topics
   };

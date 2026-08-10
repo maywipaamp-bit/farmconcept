@@ -82,7 +82,6 @@
       <div class="page-header">
         <div class="page-header-text">
           <h1>เพิ่มกิจกรรม</h1>
-          <p class="page-description">ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก · บันทึกเป็นฉบับร่างไว้ก่อนได้</p>
         </div>
       </div>
 
@@ -118,28 +117,31 @@
               </div>
             </div>
 
-            <div class="ac-field">
-              <div class="ac-label-row">
-                <label class="form-label" for="ac-detail">รายละเอียด<span class="form-required">*</span></label>
-                <span class="ac-counter" id="ac-detail-count">0/500</span>
+            <!-- รายละเอียดกับรูปปกเป็นข้อมูล "หน้าตาของกิจกรรม" ชุดเดียวกัน วางคู่กันให้เห็นพร้อมกัน -->
+            <div class="ac-field-row is-even">
+              <div class="ac-field ac-field-half">
+                <div class="ac-label-row">
+                  <label class="form-label" for="ac-detail">รายละเอียด<span class="form-required">*</span></label>
+                  <span class="ac-counter" id="ac-detail-count">0/500</span>
+                </div>
+                <textarea class="input ac-detail-input" id="ac-detail" rows="5" maxlength="500" placeholder="อธิบายสั้นๆ ว่าผู้เข้าร่วมจะได้เรียนรู้หรือได้ทำอะไรบ้าง"></textarea>
               </div>
-              <textarea class="input" id="ac-detail" rows="4" maxlength="500" placeholder="อธิบายสั้นๆ ว่าผู้เข้าร่วมจะได้เรียนรู้หรือได้ทำอะไรบ้าง"></textarea>
-            </div>
 
-            <div class="ac-field">
-              <label class="form-label">รูปภาพปก<span class="form-required">*</span></label>
-              <div class="ac-cover" id="ac-cover">
-                <span class="ac-cover-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 17l5-5 4 4 3-2 4 4"/></svg>
-                </span>
-                <span class="ac-cover-text">
-                  <span class="ac-cover-headline" id="ac-cover-headline">ลากไฟล์มาวาง หรือเลือกจากเครื่อง</span>
-                  <span class="ac-cover-hint">อัตราส่วน 16:9 · JPG/PNG ไม่เกิน 5MB</span>
-                </span>
-                <span class="ac-cover-actions">
-                  <button type="button" class="btn btn-ghost btn-sm" id="ac-cover-remove" hidden>ลบรูป</button>
-                  <button type="button" class="btn btn-outline btn-sm" id="ac-cover-pick">เลือกไฟล์</button>
-                </span>
+              <div class="ac-field ac-field-half">
+                <label class="form-label">รูปภาพปก<span class="form-required">*</span></label>
+                <div class="ac-cover is-stacked" id="ac-cover">
+                  <span class="ac-cover-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 17l5-5 4 4 3-2 4 4"/></svg>
+                  </span>
+                  <span class="ac-cover-text">
+                    <span class="ac-cover-headline" id="ac-cover-headline">ลากไฟล์มาวาง หรือเลือกจากเครื่อง</span>
+                    <span class="ac-cover-hint">อัตราส่วน 16:9 · JPG/PNG ไม่เกิน 5MB</span>
+                  </span>
+                  <span class="ac-cover-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="ac-cover-remove" hidden>ลบรูป</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="ac-cover-pick">เลือกไฟล์</button>
+                  </span>
+                </div>
               </div>
             </div>
           </section>
@@ -157,42 +159,45 @@
                 <select class="select" id="ac-place"></select>
               </div>
               <div class="ac-field ac-field-half">
-                <label class="form-label">รูปแบบ<span class="form-required">*</span></label>
-                <div class="ac-chips" id="ac-mode"></div>
+                <label class="form-label" for="ac-mode">รูปแบบ<span class="form-required">*</span></label>
+                <select class="select" id="ac-mode"></select>
               </div>
             </div>
 
-            <div class="ac-field">
-              <div class="ac-label-row">
-                <label class="form-label">หลักสูตรการเรียนรู้</label>
-              </div>
-              <div class="ac-combo" id="ac-course-combo">
-                <div class="ac-combo-control" id="ac-course-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
-                  <span class="ac-combo-values" id="ac-course-values"></span>
-                  <svg class="ac-combo-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            <!-- หลักสูตรกำหนดรายชื่อวิทยากรที่เลือกได้ วางคู่กันให้เห็นความสัมพันธ์โดยไม่ต้องเลื่อนจอ -->
+            <div class="ac-field-row">
+              <div class="ac-field ac-field-half">
+                <div class="ac-label-row">
+                  <label class="form-label">หลักสูตรการเรียนรู้</label>
                 </div>
-                <div class="ac-combo-panel" id="ac-course-panel" role="listbox" hidden></div>
+                <div class="ac-combo" id="ac-course-combo">
+                  <div class="ac-combo-control" id="ac-course-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
+                    <span class="ac-combo-values" id="ac-course-values"></span>
+                    <svg class="ac-combo-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                  </div>
+                  <div class="ac-combo-panel" id="ac-course-panel" role="listbox" hidden></div>
+                </div>
               </div>
-            </div>
 
-            <div class="ac-field">
-              <div class="ac-label-row">
-                <label class="form-label">วิทยากร<span class="form-required">*</span></label>
-                <span class="ac-hint">แสดงเฉพาะผู้สอนในหลักสูตรที่เลือก</span>
-              </div>
-              <div class="ac-combo" id="ac-host-combo">
-                <div class="ac-combo-control" id="ac-host-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
-                  <span class="ac-combo-values" id="ac-host-values"></span>
-                  <svg class="ac-combo-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="ac-field ac-field-half">
+                <div class="ac-label-row">
+                  <label class="form-label">วิทยากร<span class="form-required">*</span></label>
+                  <span class="ac-hint">เฉพาะผู้สอนในหลักสูตรที่เลือก</span>
                 </div>
-                <div class="ac-combo-panel" id="ac-host-panel" role="listbox" hidden></div>
+                <div class="ac-combo" id="ac-host-combo">
+                  <div class="ac-combo-control" id="ac-host-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
+                    <span class="ac-combo-values" id="ac-host-values"></span>
+                    <svg class="ac-combo-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                  </div>
+                  <div class="ac-combo-panel" id="ac-host-panel" role="listbox" hidden></div>
+                </div>
               </div>
             </div>
 
             <div class="ac-field">
               <div class="ac-label-row">
                 <label class="form-label">รอบกิจกรรม<span class="form-required">*</span></label>
-                <span class="ac-hint">กำหนดจำนวนที่รับแยกแต่ละรอบได้ สูงสุด 5 รอบ</span>
+                <span class="ac-hint">สูงสุด 5 รอบ</span>
               </div>
               <div class="ac-slots" id="ac-slots"></div>
               <button type="button" class="btn btn-outline btn-sm ac-add-slot" id="ac-add-slot">
@@ -209,48 +214,36 @@
               <h2 class="ac-section-title">ใครเข้าร่วมได้ และค่าใช้จ่าย</h2>
             </div>
 
-            <div class="ac-field">
-              <label class="form-label">ค่าเข้าร่วม<span class="form-required">*</span></label>
-              <div class="ac-fee-row">
-                <div class="ac-chips" id="ac-fee"></div>
-                <span class="ac-fee-amount" id="ac-fee-amount" hidden>
-                  <input type="number" class="input" id="ac-fee-input" min="0" step="10" placeholder="0" inputmode="numeric">
-                  <span class="ac-unit">บาท / คน</span>
-                </span>
-              </div>
-            </div>
-
-            <div class="ac-field">
-              <div class="ac-label-row">
-                <label class="form-label">รูปแบบการเข้าร่วม<span class="form-required">*</span></label>
-                <span class="ac-hint">กำหนดว่าต้องลงทะเบียนไหม และมีแบบประเมินหลังจบไหม</span>
-              </div>
-              <div class="ac-picks" id="ac-reg"></div>
-            </div>
-
-            <div class="ac-field-row" id="ac-reg-detail">
+            <!-- สองคำถามที่ตัดสินใจพร้อมกันเสมอ: จ่ายเงินไหม และเข้าร่วมยังไง -->
+            <div class="ac-field-row">
               <div class="ac-field ac-field-half">
-                <label class="form-label" for="ac-audience">ใครลงทะเบียนได้</label>
-                <select class="select" id="ac-audience">
-                  <option>ทุกคน</option>
-                  <option>เฉพาะสมาชิกในพื้นที่</option>
-                  <option>เฉพาะที่ได้รับเชิญ</option>
-                </select>
+                <label class="form-label">ค่าเข้าร่วม<span class="form-required">*</span></label>
+                <div class="ac-fee-row">
+                  <div class="ac-radios" id="ac-fee" role="radiogroup" aria-label="ค่าเข้าร่วม"></div>
+                  <span class="ac-fee-amount" id="ac-fee-amount" hidden>
+                    <input type="number" class="input" id="ac-fee-input" min="0" step="10" placeholder="0" inputmode="numeric">
+                    <span class="ac-unit">บาท / คน</span>
+                  </span>
+                </div>
               </div>
+
               <div class="ac-field ac-field-half">
-                <label class="form-label" for="ac-waitlist">จำนวนที่นั่งสำรอง (Waitlist)</label>
-                <select class="select" id="ac-waitlist">
-                  <option>ไม่เปิดสำรองที่นั่ง</option>
-                  <option>สำรองได้ 5 คน</option>
-                  <option>สำรองได้ 10 คน</option>
-                </select>
+                <div class="ac-label-row">
+                  <span class="ac-label-info">
+                    <label class="form-label">รูปแบบการเข้าร่วม<span class="form-required">*</span></label>
+                    <button type="button" class="ac-info" tabindex="0"
+                            aria-label="ติ๊กแล้วฟิลด์ที่เกี่ยวข้องด้านล่างจะแสดงขึ้นมา · ไม่ติ๊กเลย = เข้าร่วมได้ทันที"
+                            data-tip="ติ๊กแล้วฟิลด์ที่เกี่ยวข้องด้านล่างจะแสดงขึ้นมา · ไม่ติ๊กเลย = เข้าร่วมได้ทันที"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6v4.9M12 15.9v.01"/></svg></button>
+                  </span>
+                </div>
+                <div class="ac-cond-list" id="ac-reg" role="group" aria-label="รูปแบบการเข้าร่วม"></div>
               </div>
             </div>
 
             <div class="ac-field">
               <div class="ac-label-row">
                 <label class="form-label">กลุ่มเป้าหมาย<span class="form-required">*</span></label>
-                <span class="ac-hint">ใช้สำหรับรายงานผล ไม่แสดงบนหน้าเว็บ</span>
+                <span class="ac-hint">ใช้ทำรายงาน</span>
               </div>
               <div class="ac-chips" id="ac-targets"></div>
             </div>
@@ -275,7 +268,6 @@
                 <label class="form-label">หลังจบกิจกรรม</label>
               </div>
               <div class="ac-picks is-stacked" id="ac-form-post"></div>
-              <p class="ac-field-note" id="ac-post-count"></p>
             </div>
 
             <div class="ac-field">
@@ -283,8 +275,8 @@
                 <span class="ac-label-info">
                 <label class="form-label">ช่วงเวลาเปิด–ปิดระบบ</label>
                 <button type="button" class="ac-info" tabindex="0"
-                        aria-label="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ (ลงทะเบียนถึงก่อนเริ่มกิจกรรม · เช็คอินช่วงจัดกิจกรรม · ประเมินได้ 7 วันหลังจบ) · แถวจะแสดงเฉพาะสิ่งที่เปิดใช้งานไว้"
-                        data-tip="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ (ลงทะเบียนถึงก่อนเริ่มกิจกรรม · เช็คอินช่วงจัดกิจกรรม · ประเมินได้ 7 วันหลังจบ) · แถวจะแสดงเฉพาะสิ่งที่เปิดใช้งานไว้"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.2v.01M12 11.5v4.3"/></svg></button>
+                        aria-label="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ"
+                        data-tip="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.2v.01M12 11.5v4.3"/></svg></button>
                 </span>
               </div>
               <div class="ac-windows" id="ac-windows"></div>
