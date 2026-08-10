@@ -858,7 +858,93 @@
     if (!window.confirm('ยังไม่ได้บันทึกการเปลี่ยนแปลง ต้องการออกจากหน้านี้หรือไม่')) e.preventDefault();
   });
 
+  /* ---------- โหมดแก้ไข ----------
+     หน้านี้ทำหน้าที่เป็นทั้งฟอร์มสร้างและฟอร์มแก้ไข จะได้ไม่ต้องดูแลสองฟอร์ม
+     ที่ต้องคอยแก้ให้ตรงกันตลอด (ของเดิมคือ edit.html + activity-form.js ซึ่งถูกลบไปแล้ว)
+     ถ้ามี ?id= ให้ดึงกิจกรรมนั้นมาเติมลงฟอร์ม แล้วเปลี่ยนชื่อหน้ากับปุ่มให้ตรงกับงาน */
+  function editingId() {
+    return new URLSearchParams(location.search).get('id') || '';
+  }
+
+  function fillFromActivity(a) {
+    state.title = a.name || '';
+    state.detail = a.description || '';
+    state.kind = KINDS.indexOf(a.type) > -1 ? a.type : KINDS[0];
+    state.cats = (a.tags || []).filter(function (t) { return CATS.indexOf(t) > -1; });
+    if (!state.cats.length && CATS.indexOf(a.format) > -1) state.cats = [a.format];
+    state.place = PLACES.indexOf(a.area) > -1 ? a.area : PLACE_EMPTY;
+    state.cover = !!a.coverImage;
+    state.targets = (a.targetGroups || []).filter(function (t) { return TARGETS.indexOf(t) > -1; });
+    state.hosts = (a.instructorList || []).slice();
+    state.courses = a.course ? [a.course] : [];
+    state.fee = a.hasFee ? FEES[1] : FEES[0];
+    state.feeAmount = a.hasFee ? String(a.fee || '') : '';
+    state.publish = !!a.isPublished;
+    state.pin = !!a.isFeatured;
+
+    /* รอบกิจกรรมมาจาก activitySessions ถ้ามี ไม่งั้นใช้วันเริ่มกับเวลาของตัวกิจกรรมเอง */
+    var sessions = (mock.activitySessions || {})[a.id] || [];
+    var times = (a.time || '').split('-');
+    state.slots = sessions.length
+      ? sessions.map(function (s, i) {
+          var t = (s.time || '').split('-');
+          return { id: i + 1, date: s.date || '', start: (t[0] || '').trim(), end: (t[1] || '').trim(), cap: String(s.capacity || '') };
+        })
+      : [{ id: 1, date: a.startDate || '', start: (times[0] || '').trim(), end: (times[1] || '').trim(), cap: String(a.capacity || '') }];
+    state.nextSlotId = state.slots.length + 1;
+
+    /* ชุดข้อมูลกลางยังไม่มีฟิลด์ "ต้องลงทะเบียนไหม / มีแบบประเมินหลังจบไหม" ตรง ๆ
+       จึงอนุมานจากสิ่งที่มี: กำหนดจำนวนรับหรือมีผู้ลงทะเบียนแล้ว = เปิดให้ลงทะเบียน
+       ผูกชุดแบบประเมินไว้ = มีแบบประเมินหลังจบ */
+    var wantReg = !!(a.capacity || a.registered);
+    var wantSurvey = !!(a.evaluationFormIds && a.evaluationFormIds.length);
+    /* จับคู่จากคุณสมบัติ ไม่ใช่ประกอบชื่อ key เอง เพราะชื่อ key เปลี่ยนได้
+       ถ้าประกอบเองแล้ววันหนึ่งชื่อไม่ตรง จะเงียบ ๆ กลับไปใช้ค่าตั้งต้นโดยไม่มีใครรู้ */
+    var match = JOIN_MODES.filter(function (m) { return m.reg === wantReg && m.survey === wantSurvey; })[0];
+    if (match) state.join = match.key;
+
+    state.dirty = false;
+  }
+
+  /* ช่องกรอกข้อความกับ dropdown ผูกทางเดียว (DOM -> state) เพราะปกติผู้ใช้เป็นคนพิมพ์
+     โหมดแก้ไขต้องดันค่าย้อนกลับลง DOM เอง ไม่งั้นฟอร์มจะว่างทั้งที่ state มีค่าแล้ว
+     (chip, รอบกิจกรรม และการ์ดแบบประเมิน วาดจาก state อยู่แล้ว จึงไม่ต้องทำตรงนี้) */
+  function pushStateToDom() {
+    var map = { 'ac-title': state.title, 'ac-detail': state.detail, 'ac-fee-input': state.feeAmount,
+                'ac-kind': state.kind, 'ac-place': state.place, 'ac-mode': state.mode, 'ac-reg': state.join };
+    Object.keys(map).forEach(function (id) {
+      var el = $(id);
+      if (el) el.value = map[id];
+    });
+  }
+
+  function applyEditChrome(a) {
+    document.title = 'แก้ไขกิจกรรม | TheFarmConcept';
+    var h1 = document.querySelector('.page-header-text h1');
+    if (h1) h1.textContent = 'แก้ไขกิจกรรม';
+    var desc = document.querySelector('.page-header-text .page-description');
+    if (desc) desc.innerHTML = 'กำลังแก้ไข <strong>' + esc(a.name) + '</strong> · ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก';
+    var crumb = document.querySelector('.breadcrumb .is-current');
+    if (crumb) crumb.textContent = 'แก้ไขกิจกรรม';
+    var pub = $('ac-publish');
+    if (pub) pub.textContent = 'บันทึกการแก้ไข';
+  }
+
+  function initEditMode() {
+    var id = editingId();
+    if (!id) return;
+    var a = (mock.activities || []).filter(function (x) { return x.id === id; })[0];
+    if (!a) {
+      if (window.TFC.showToast) window.TFC.showToast('ไม่พบกิจกรรม ' + id + ' — เปิดเป็นฟอร์มสร้างใหม่แทน', 'danger');
+      return;
+    }
+    fillFromActivity(a);
+    pushStateToDom();
+    applyEditChrome(a);
+  }
+
   /* ---------- เริ่มต้น ---------- */
+  initEditMode();
   initOptions();
   renderSlots();
   sync();

@@ -1,5 +1,5 @@
 /* TheFarmConcept — Activity module shared helpers
-   ใช้ร่วมกันระหว่าง pages/activities/list.html, create.html, edit.html, detail.html
+   ใช้ร่วมกันระหว่าง admin/activities/list.html, create.html (ทั้งสร้างและแก้ไข), detail.html
    เพื่อไม่ให้เขียน logic ซ้ำในแต่ละหน้า (กฎ Reuse ใน AGENTS.md)
 
    โหลดหลัง mock-data.js (ต้องใช้ TFC.escapeHtml / TFC.badgeClassOf) และหลัง app.js ไม่ได้จำเป็น

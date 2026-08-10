@@ -1,7 +1,7 @@
 /* TheFarmConcept — หน้ารายละเอียดกิจกรรม (admin/activities/detail.html)
 
    หน้านี้เป็น read-only ทั้งหมด ไม่มี input field แม้แต่ช่องเดียว
-   การแก้ไขทำที่ edit.html ผ่านปุ่ม "แก้ไขกิจกรรม" เท่านั้น
+   การแก้ไขทำที่ create.html?id= ซึ่งเป็นฟอร์มเดียวกับหน้าสร้าง ผ่านปุ่ม "แก้ไขกิจกรรม" เท่านั้น
 
    ทุกตัวเลขในหน้านี้คำนวณสดจากชุดข้อมูลของระบบ ไม่มีค่าที่พิมพ์ทับไว้:
    - ผู้ลงทะเบียน   -> TFC_MOCK.activityRegistrations[id]  (เพศ/อายุ/อาชีพ/ช่องทาง/ความสนใจ/รอบ/registeredAtISO)
@@ -199,7 +199,7 @@
         '<button type="button" class="btn btn-outline" id="ad-export">' +
           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>' +
           'ส่งออกรายงาน</button>' +
-        '<a class="btn btn-primary" href="edit.html?id=' + encodeURIComponent(activity.id) + '">' +
+        '<a class="btn btn-primary" href="create.html?id=' + encodeURIComponent(activity.id) + '">' +
           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>' +
           'แก้ไขกิจกรรม</a>' +
       '</div>';

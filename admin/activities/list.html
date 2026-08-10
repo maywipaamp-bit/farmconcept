@@ -254,7 +254,7 @@
     return '<div class="grid-row" data-id="' + activity.id + '">' +
       '<div class="grid-code">' + window.TFC.escapeHtml(activity.id) + '</div>' +
 
-      '<div><a class="grid-name" href="edit.html?id=' + activity.id + '">' + window.TFC.escapeHtml(activity.name) + '</a>' +
+      '<div><a class="grid-name" href="create.html?id=' + activity.id + '">' + window.TFC.escapeHtml(activity.name) + '</a>' +
       (responsible(activity).length ? '<div class="grid-sub">' + window.TFC.escapeHtml(responsible(activity).join(' · ')) + '</div>' : '') + '</div>' +
 
       '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
@@ -269,14 +269,29 @@
       '<div class="grid-num">' + dash + '</div>' +
       '<div>' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
       /* ชุดเมนูเดียวกับมุมมองการ์ด สลับมุมมองแล้วยังทำสิ่งเดิมได้ครบ */
-      '<div class="grid-actions">' + window.TFC.actionMenuTrigger([
-        { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: 'detail.html?id=' + activity.id },
-        { key: 'act-edit-' + activity.id, label: 'แก้ไขกิจกรรม', icon: 'edit', href: 'edit.html?id=' + activity.id, perm: 'activities' },
-        { key: 'act-sessions-' + activity.id, label: 'รอบกิจกรรม', icon: 'view', href: 'sessions.html?id=' + activity.id, perm: 'activities' },
-        { key: 'act-reg-' + activity.id, label: 'ผู้ลงทะเบียน', icon: 'view', href: 'registrants.html?id=' + activity.id, perm: 'activities' },
-        { key: 'act-checkin-' + activity.id, label: 'Check-in', icon: 'view', href: 'checkin.html?id=' + activity.id, perm: 'activities' }
-      ]) + '</div>' +
+      '<div class="grid-actions">' + window.TFC.actionMenuTrigger(menuItems(activity)) + '</div>' +
       '</div>';
+  }
+
+  /* ลบได้เฉพาะกิจกรรมที่ยังไม่ถูกใช้งาน = ยังเป็นฉบับร่าง ยังไม่เผยแพร่ออกไป
+     พอเผยแพร่แล้วมีคนเห็นและลงทะเบียนได้ การลบทิ้งจะทำให้ข้อมูลผู้เข้าร่วมหายไปด้วย
+     ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน
+     เกณฑ์นี้ต้องตรงกับที่กล่องยืนยันใช้ ไม่งั้นจะมีเมนูให้กดแล้วค่อยบอกว่าลบไม่ได้ */
+  function canDelete(activity) {
+    return activity.status === 'ฉบับร่าง';
+  }
+
+  function menuItems(activity) {
+    var items = [
+      { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: 'detail.html?id=' + activity.id },
+      /* แก้ไขใช้ฟอร์มเดียวกับหน้าสร้าง ส่งต่อด้วย ?id= */
+      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: 'create.html?id=' + activity.id, perm: 'activities' }
+    ];
+    if (canDelete(activity)) {
+      items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',
+                   modal: 'activity-delete-modal', perm: 'activities', danger: true });
+    }
+    return items;
   }
 
   function tableHtml(rows) {
@@ -333,9 +348,10 @@
     var confirmBtn = document.getElementById('activity-delete-confirm');
     if (!activity) return;
 
-    if (activity.registered > 0) {
-      messageEl.innerHTML = 'กิจกรรม "' + window.TFC.escapeHtml(activity.name) + '" มีผู้ลงทะเบียนแล้ว ' +
-        activity.registered + ' คน จึงลบไม่ได้<br>หากต้องการยุติกิจกรรม ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน';
+    /* เมนูกรองมาแล้วว่าเป็นฉบับร่าง ตรงนี้กันไว้อีกชั้นเผื่อสถานะเปลี่ยนระหว่างเปิดหน้าค้างไว้ */
+    if (!canDelete(activity)) {
+      messageEl.innerHTML = 'กิจกรรม "' + window.TFC.escapeHtml(activity.name) + '" เผยแพร่ไปแล้ว จึงลบไม่ได้' +
+        '<br>หากต้องการยุติกิจกรรม ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน';
       confirmBtn.disabled = true;
     } else {
       messageEl.textContent = 'ต้องการลบกิจกรรม "' + activity.name + '" ใช่หรือไม่ การลบนี้ไม่สามารถย้อนกลับได้';
