@@ -82,7 +82,7 @@
       <div class="page-header">
         <div class="page-header-text">
           <h1>เพิ่มกิจกรรม</h1>
-          <p class="page-description">กรอก 5 กลุ่มข้อมูล · ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก · บันทึกเป็นฉบับร่างไว้ก่อนได้</p>
+          <p class="page-description">ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก · บันทึกเป็นฉบับร่างไว้ก่อนได้</p>
         </div>
       </div>
 
@@ -113,7 +113,6 @@
               <div class="ac-field ac-field-cats">
                 <div class="ac-label-row">
                   <label class="form-label">หมวดหมู่<span class="form-required">*</span></label>
-                  <span class="ac-hint">เลือกได้มากกว่า 1</span>
                 </div>
                 <div class="ac-chips" id="ac-cats"></div>
               </div>
@@ -166,7 +165,6 @@
             <div class="ac-field">
               <div class="ac-label-row">
                 <label class="form-label">หลักสูตรการเรียนรู้</label>
-                <span class="ac-hint">เลือกได้มากกว่า 1</span>
               </div>
               <div class="ac-combo" id="ac-course-combo">
                 <div class="ac-combo-control" id="ac-course-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
@@ -268,16 +266,13 @@
             <div class="ac-field" id="ac-field-form-reg">
               <div class="ac-label-row">
                 <label class="form-label">ตอนลงทะเบียน<span class="form-required">*</span></label>
-                <span class="ac-hint">เลือกได้ 1 ชุด</span>
               </div>
-              <p class="ac-field-note">ผู้เข้าร่วมกรอกตอนจองที่นั่ง ใช้เป็นข้อมูลตั้งต้นของกิจกรรมนี้</p>
               <div class="ac-picks is-stacked" id="ac-form-reg"></div>
             </div>
 
             <div class="ac-field" id="ac-field-form-post">
               <div class="ac-label-row">
                 <label class="form-label">หลังจบกิจกรรม</label>
-                <span class="ac-hint">เลือกได้มากกว่า 1</span>
               </div>
               <div class="ac-picks is-stacked" id="ac-form-post"></div>
               <p class="ac-field-note" id="ac-post-count"></p>
@@ -373,6 +368,7 @@
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/activity-module.js"></script>
 <script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/datetime-picker.js"></script>
 <script src="../../assets/js/activity-create.js"></script>
 </body>
 </html>

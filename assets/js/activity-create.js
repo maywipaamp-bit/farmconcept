@@ -6,6 +6,7 @@
    เพื่อไม่ให้ช่องที่กำลังพิมพ์อยู่เสีย focus ตอน sync */
 (function () {
   var esc = window.TFC.escapeHtml;
+  var mock = window.TFC_MOCK || {};
 
   /* ---------- ข้อมูลตั้งต้น ---------- */
   var CATALOG = [
@@ -26,18 +27,33 @@
   var PLACE_EMPTY = 'เลือกพื้นที่ดำเนินงาน';
   var PLACES = [PLACE_EMPTY, 'The Farm Concept', 'ชุมชนพูนทรัพย์', 'ชุมชนตึกร้าง'];
   var KINDS = ['กิจกรรม', 'อีเว้นท์'];
-  var CATS = ['CRAFT', 'MIND', 'FOOD', 'WORKSHOP', 'COMMUNITY'];
+
+  /* หมวดหมู่ + ไอคอน มาจากข้อมูลกลาง (หน้า "หมวดหมู่กิจกรรม" เป็นคนดูแล)
+     ไม่ hardcode รายชื่อไว้ที่นี่ ไม่งั้นเพิ่มหมวดหมู่ในระบบแล้วหน้านี้ไม่รู้เรื่อง */
+  var CAT_ICONS = mock.activityCategoryIcons || [];
+  var CATS = (mock.activityFormats || [])
+    .filter(function (f) { return f.active; })
+    .map(function (f) { return { name: f.name, icon: f.icon }; });
+  if (!CATS.length) CATS = ['CRAFT', 'MIND', 'FOOD', 'WORKSHOP', 'COMMUNITY'].map(function (n) { return { name: n, icon: '' }; });
+
+  function catIconSvg(value) {
+    var found = CAT_ICONS.filter(function (ic) { return ic.value === value; })[0];
+    if (!found) return '';
+    return '<svg class="ac-chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + found.path + '</svg>';
+  }
+
   var MODES = ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสม (Hybrid)'];
   var TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
   /* ฟิลด์เดียวที่ตอบสองคำถามพร้อมกัน: ต้องลงทะเบียนไหม และมีแบบประเมินหลังจบไหม
      ค่าที่เลือกที่นี่เป็นตัวกำหนดว่าจะแสดงฟิลด์ถัดไปชุดไหน จึงไม่ต้องให้ผู้ใช้
-     ตอบซ้ำอีกหลายจุดแล้วมาขัดกันเอง (เช่น เลือก Walk-in แต่ยังตั้งที่นั่งสำรองได้) */
+     ตอบซ้ำอีกหลายจุดแล้วมาขัดกันเอง (เช่น เลือก Walk-in แต่ยังตั้งที่นั่งสำรองได้)
+     เรียงจากเงื่อนไขน้อยไปมาก ตัวเลือกในลิสต์บอกผลลัพธ์ต่อท้ายชื่อ ผู้ใช้จะได้ไม่ต้องเดา */
   var JOIN_MODES = [
-    { key: 'reg-survey',    label: 'ลงทะเบียนล่วงหน้า + ประเมินหลังจบ', hint: 'จองที่นั่งผ่านเว็บ และส่งแบบประเมินให้หลังกิจกรรม', reg: true,  survey: true },
-    { key: 'reg-only',      label: 'ลงทะเบียนล่วงหน้า',                hint: 'จองที่นั่งผ่านเว็บ ไม่เก็บแบบประเมินหลังจบ',       reg: true,  survey: false },
-    { key: 'walkin-survey', label: 'เข้าร่วมได้เลย + ประเมินหลังจบ',    hint: 'ไม่ต้องจองที่นั่ง แต่ส่งแบบประเมินให้หลังกิจกรรม',  reg: false, survey: true },
-    { key: 'walkin-only',   label: 'เข้าร่วมได้เลย',                    hint: 'ไม่ต้องจองที่นั่ง และไม่เก็บแบบประเมิน',           reg: false, survey: false }
+    { key: 'walkin-only',   label: 'เข้าร่วมได้ทันที',          effect: 'ไม่ต้องลงทะเบียน / ไม่ทำแบบประเมิน', reg: false, survey: false },
+    { key: 'reg-only',      label: 'ลงทะเบียนอย่างเดียว',       effect: 'ต้องลงทะเบียน / ไม่ทำแบบประเมิน',    reg: true,  survey: false },
+    { key: 'survey-only',   label: 'ทำแบบประเมินอย่างเดียว',    effect: 'ไม่ต้องลงทะเบียน / ต้องทำแบบประเมิน', reg: false, survey: true },
+    { key: 'reg-survey',    label: 'ลงทะเบียนและทำแบบประเมิน',  effect: 'ต้องลงทะเบียน / ต้องทำแบบประเมิน',   reg: true,  survey: true }
   ];
 
   function joinMode() {
@@ -77,7 +93,9 @@
     slots: [{ id: 1, date: '', start: '', end: '', cap: '' }],
     nextSlotId: 2,
     fee: FEES[0], feeAmount: '',
-    join: JOIN_MODES[0].key,
+    /* ตั้งต้นเป็นรูปแบบที่มีเงื่อนไขครบ ผู้ใช้จะเห็นฟิลด์ทั้งหมดก่อนแล้วค่อยตัดออก
+       ถ้าตั้งต้นเป็น "เข้าร่วมได้ทันที" หน้าจอตอนเปิดจะว่างจนดูเหมือนโหลดไม่ครบ */
+    join: 'reg-survey',
     targets: [],
     formReg: FORM_REG[0].label,
     formsPost: [FORM_POST[0].label],
@@ -91,9 +109,9 @@
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- ตัวช่วยสร้าง markup ---------- */
-  function chipHtml(label, on, big, attr) {
-    return '<button type="button" class="ac-chip' + (on ? ' is-on' : '') + (big ? ' is-lg' : '') + '" ' +
-      attr + '="' + esc(label) + '">' + esc(label) + '</button>';
+  function chipHtml(label, on, attr, icon) {
+    return '<button type="button" class="ac-chip' + (on ? ' is-on' : '') + '" ' +
+      attr + '="' + esc(label) + '" aria-pressed="' + on + '">' + (icon || '') + esc(label) + '</button>';
   }
 
   function markHtml(on, round) {
@@ -138,40 +156,52 @@
 
   /* ================= เรนเดอร์แต่ละส่วน ================= */
 
-  function renderChips() {
+  /* ตัวเลือกที่ไม่เปลี่ยนตามการกรอก (dropdown / radio) สร้างครั้งเดียวตอนเปิดหน้า
+     ถ้าสร้างใหม่ทุกรอบ sync ช่องที่กำลังโฟกัสอยู่จะหลุดโฟกัสและ dropdown ที่เปิดค้างจะปิดเอง */
+  function initOptions() {
     /* ประเภทเป็น dropdown ไม่ใช่ชิป เพราะเลือกได้อย่างเดียวและอยู่ติดกับ "หมวดหมู่"
        ที่เลือกได้หลายอัน — ใช้คนละรูปแบบกันช่วยให้แยกออกทันทีว่าอันไหนเลือกได้กี่ค่า */
-    $('ac-kind').innerHTML = KINDS.map(function (k) {
-      return '<option value="' + esc(k) + '">' + esc(k) + '</option>';
-    }).join('');
-    $('ac-kind').value = state.kind;
+    $('ac-kind').innerHTML = KINDS.map(optionHtml).join('');
+    $('ac-mode').innerHTML = MODES.map(optionHtml).join('');
+    $('ac-place').innerHTML = PLACES.map(optionHtml).join('');
 
-    $('ac-cats').innerHTML = CATS.map(function (c) {
-      return chipHtml(c, state.cats.indexOf(c) > -1, false, 'data-cat');
-    }).join('');
-
-    $('ac-mode').innerHTML = MODES.map(function (m) {
-      return chipHtml(m, state.mode === m, false, 'data-mode');
+    /* ชื่อรูปแบบ + ผลลัพธ์อยู่ในบรรทัดเดียวกัน เพราะ <option> ใส่คำอธิบายบรรทัดที่สองไม่ได้ */
+    $('ac-reg').innerHTML = JOIN_MODES.map(function (m) {
+      return '<option value="' + esc(m.key) + '">' + esc(m.label + ' — ' + m.effect) + '</option>';
     }).join('');
 
+    /* ค่าเข้าร่วมมีสองทางที่ตัดกันชัด ใช้ radio ให้เห็นทั้งสองตัวเลือกพร้อมกัน
+       ไม่ใช่ dropdown ที่ต้องกดก่อนถึงจะรู้ว่ามีอะไรให้เลือกบ้าง */
     $('ac-fee').innerHTML = FEES.map(function (f) {
-      return chipHtml(f, state.fee === f, true, 'data-fee');
-    }).join('');
-
-    $('ac-targets').innerHTML = TARGETS.map(function (t) {
-      return chipHtml(t, state.targets.indexOf(t) > -1, false, 'data-target');
+      return '<label class="radio-item">' +
+        '<input type="radio" name="ac-fee-opt" value="' + esc(f) + '" data-fee="' + esc(f) + '"' +
+        (state.fee === f ? ' checked' : '') + '>' + esc(f) + '</label>';
     }).join('');
   }
 
-  function renderPicks() {
-    $('ac-reg').innerHTML = JOIN_MODES.map(function (m) {
-      var on = state.join === m.key;
-      return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-join="' + esc(m.key) + '">' +
-        '<span class="ac-pick-title">' + esc(m.label) + '</span>' +
-        '<span class="ac-pick-hint">' + esc(m.hint) + '</span>' +
-        '</button>';
+  function optionHtml(v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }
+
+  function renderChips() {
+    $('ac-kind').value = state.kind;
+    $('ac-mode').value = state.mode;
+    $('ac-place').value = state.place;
+    $('ac-reg').value = state.join;
+
+    /* ไอคอนช่วยให้จำหมวดหมู่ได้จากรูปทรง ไม่ต้องอ่านชื่อภาษาอังกฤษทุกครั้ง */
+    $('ac-cats').innerHTML = CATS.map(function (c) {
+      return chipHtml(c.name, state.cats.indexOf(c.name) > -1, 'data-cat', catIconSvg(c.icon));
     }).join('');
 
+    $('ac-targets').innerHTML = TARGETS.map(function (t) {
+      return chipHtml(t, state.targets.indexOf(t) > -1, 'data-target', '');
+    }).join('');
+
+    Array.prototype.forEach.call($('ac-fee').querySelectorAll('[data-fee]'), function (r) {
+      r.checked = r.getAttribute('data-fee') === state.fee;
+    });
+  }
+
+  function renderPicks() {
     $('ac-form-reg').innerHTML = FORM_REG.map(function (o) {
       var on = state.formReg === o.label;
       return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-reg="' + esc(o.label) + '">' +
@@ -263,11 +293,21 @@
     $('ac-add-slot').disabled = state.slots.length >= MAX_SLOTS;
   }
 
+  /* วันที่กับเวลาใช้ตัวเลือกวงล้อของระบบ (datetime-picker.js) ไม่ใช้ของเบราว์เซอร์
+     ค่าจริงเก็บที่ data-iso ส่วน value เป็นข้อความไทยไว้ให้คนอ่าน */
   function slotField(slot, key, label, type) {
-    var extra = type === 'date' ? ' lang="th-TH"' : (type === 'number' ? ' min="0" inputmode="numeric" placeholder="0"' : '');
+    var v = esc(slot[key] || '');
+    if (type === 'date' || type === 'time') {
+      return '<label class="ac-slot-field">' +
+        '<span class="ac-slot-label">' + esc(label) + '</span>' +
+        '<input type="text" class="input" data-picker="' + type + '" data-iso="' + v + '"' +
+        ' placeholder="' + (type === 'date' ? 'เลือกวันที่' : 'เลือกเวลา') + '"' +
+        ' data-slot-id="' + slot.id + '" data-slot-key="' + key + '">' +
+        '</label>';
+    }
     return '<label class="ac-slot-field">' +
       '<span class="ac-slot-label">' + esc(label) + '</span>' +
-      '<input type="' + type + '" class="input" value="' + esc(slot[key] || '') + '"' + extra +
+      '<input type="' + type + '" class="input" value="' + v + '" min="0" inputmode="numeric" placeholder="0"' +
       ' data-slot-id="' + slot.id + '" data-slot-key="' + key + '">' +
       '</label>';
   }
@@ -302,8 +342,9 @@
   }
 
   function winInput(group, key, type, value) {
-    return '<input type="' + type + '" class="input ac-window-input"' + (type === 'date' ? ' lang="th-TH"' : '') +
-      ' value="' + esc(value || '') + '" data-win-group="' + group + '" data-win-key="' + key + '">';
+    return '<input type="text" class="input ac-window-input" data-picker="' + type + '"' +
+      ' data-iso="' + esc(value || '') + '" placeholder="' + (type === 'date' ? 'เลือกวันที่' : 'เวลา') + '"' +
+      ' data-win-group="' + group + '" data-win-key="' + key + '">';
   }
 
   function renderToggles() {
@@ -335,8 +376,9 @@
     $('ac-preview-cover').querySelector('.ac-preview-cover-text').textContent =
       state.cover ? 'cover-ปลูกผักปลอดสาร.jpg' : 'ยังไม่ได้อัปโหลดรูปปก';
 
-    var tags = state.cats.length ? [state.kind].concat(state.cats.slice(0, 2)) : [state.kind];
-    $('ac-preview-tags').innerHTML = tags.map(function (t) {
+    /* ตัวอย่างแสดงเฉพาะหมวดหมู่ — "กิจกรรม/อีเว้นท์" เป็นข้อมูลสำหรับจัดการภายใน
+       ผู้เข้าร่วมไม่ได้ใช้แยกแยะอะไร ใส่ไปก็เบียดพื้นที่ป้ายที่มีความหมายจริง */
+    $('ac-preview-tags').innerHTML = state.cats.slice(0, 3).map(function (t) {
       return '<span class="ac-preview-tag">' + esc(t) + '</span>';
     }).join('');
 
@@ -477,28 +519,43 @@
   $('ac-detail').addEventListener('input', function () { state.detail = this.value; touch(); });
   $('ac-fee-input').addEventListener('input', function () { state.feeAmount = this.value; touch(); });
 
-  $('ac-place').innerHTML = PLACES.map(function (p) {
-    return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
-  }).join('');
   $('ac-kind').addEventListener('change', function () { state.kind = this.value; touch(); });
   $('ac-place').addEventListener('change', function () { state.place = this.value; touch(); });
+  $('ac-mode').addEventListener('change', function () { state.mode = this.value; touch(); });
+
+  /* เปลี่ยนรูปแบบการเข้าร่วมแล้วฟิลด์เงื่อนไข (ที่นั่งสำรอง · แบบฟอร์ม · ช่วงเวลา) จะซ่อน/แสดงตาม */
+  $('ac-reg').addEventListener('change', function () { state.join = this.value; touch(); });
+
+  /* radio ค่าเข้าร่วม — ผูกที่ container เพราะ input ถูกสร้างจาก JS */
+  $('ac-fee').addEventListener('change', function (e) {
+    var r = e.target.closest('[data-fee]');
+    if (!r) return;
+    state.fee = r.getAttribute('data-fee');
+    if (state.fee !== FEES[1]) { state.feeAmount = ''; $('ac-fee-input').value = ''; }
+    touch();
+  });
 
   $('ac-audience').addEventListener('change', touch);
   $('ac-waitlist').addEventListener('change', touch);
+
+  /* ช่องที่ใช้ตัวเลือกวงล้อเก็บค่าจริง (ISO) ไว้ที่ data-iso ส่วน .value เป็นข้อความไทย */
+  function fieldValue(el) {
+    return el.hasAttribute('data-picker') ? (el.getAttribute('data-iso') || '') : el.value;
+  }
 
   /* input ของรอบกิจกรรมและช่วงเวลาถูกเรนเดอร์ใหม่ได้ จึงผูก event แบบ delegate */
   document.addEventListener('input', function (e) {
     var slot = e.target.closest('[data-slot-id]');
     if (slot) {
       var row = state.slots.filter(function (s) { return String(s.id) === slot.getAttribute('data-slot-id'); })[0];
-      if (row) { row[slot.getAttribute('data-slot-key')] = slot.value; state.dirty = true; renderPreview(); renderChecklist(); }
+      if (row) { row[slot.getAttribute('data-slot-key')] = fieldValue(slot); state.dirty = true; renderPreview(); renderChecklist(); }
       return;
     }
     var win = e.target.closest('[data-win-group]');
     if (win) {
       var g = win.getAttribute('data-win-group');
       state.windows[g] = state.windows[g] || {};
-      state.windows[g][win.getAttribute('data-win-key')] = win.value;
+      state.windows[g][win.getAttribute('data-win-key')] = fieldValue(win);
       state.dirty = true;
     }
   });
@@ -510,23 +567,10 @@
     var cat = t.closest('[data-cat]');
     if (cat) { toggleIn('cats', cat.getAttribute('data-cat')); return touch(); }
 
-    var mode = t.closest('[data-mode]');
-    if (mode) { state.mode = mode.getAttribute('data-mode'); return touch(); }
-
-    var fee = t.closest('[data-fee]');
-    if (fee) {
-      state.fee = fee.getAttribute('data-fee');
-      if (state.fee !== FEES[1]) { state.feeAmount = ''; $('ac-fee-input').value = ''; }
-      return touch();
-    }
-
     var target = t.closest('[data-target]');
     if (target) { toggleIn('targets', target.getAttribute('data-target')); return touch(); }
 
     /* ---- การ์ดเลือก ---- */
-    var join = t.closest('[data-join]');
-    if (join) { state.join = join.getAttribute('data-join'); return touch(); }
-
     var fr = t.closest('[data-form-reg]');
     if (fr) { state.formReg = fr.getAttribute('data-form-reg'); return touch(); }
 
@@ -673,6 +717,7 @@
   });
 
   /* ---------- เริ่มต้น ---------- */
+  initOptions();
   renderSlots();
   sync();
   syncCombo();

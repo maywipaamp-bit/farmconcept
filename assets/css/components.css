@@ -6306,6 +6306,30 @@ button.multiselect:focus-visible {
    แล้วกล่องคำอธิบายที่กาง 320px ไปทางขวาจะทะลุขอบการ์ด */
 .ac-label-info { display: inline-flex; align-items: center; gap: var(--space-1); }
 
+/* ---------- ความหนาแน่นของหน้าเพิ่มกิจกรรม ----------
+   ฟอร์มนี้ยาว 5 กลุ่ม ถ้าใช้ขนาดเริ่มต้นของระบบต้องเลื่อนจอเยอะเกินจำเป็น
+   จึงลดขนาดตัวอักษรและระยะห่างลงหนึ่งขั้นเฉพาะหน้านี้ ไม่แตะค่ากลางของระบบ */
+.ac-form { font-size: var(--font-size-small); }
+.ac-form .form-label { font-size: var(--font-size-small); }
+.ac-section { gap: var(--space-3); }
+.ac-section-head { gap: var(--space-2); }
+.ac-section-no { width: 20px; height: 20px; }
+.ac-section-title { font-size: var(--font-size-body); }
+.ac-field { gap: var(--space-1); }
+.ac-field-row { gap: var(--space-3); }
+.ac-form .input,
+.ac-form .select,
+.ac-form .textarea { font-size: var(--font-size-small); }
+.ac-form .input,
+.ac-form .select { height: 36px; min-height: 36px; }
+.ac-form .textarea { min-height: 72px; }
+.ac-chip { min-height: 30px; padding: 0 var(--space-3); font-size: var(--font-size-small); }
+.ac-picks { gap: var(--space-2); }
+.ac-pick { padding: var(--space-2) var(--space-3); }
+.ac-slot { padding: var(--space-3); }
+.ac-slot-grid { gap: var(--space-2); }
+.ac-window { padding: var(--space-2) var(--space-3); }
+
 /* ---------- ไอคอนคำอธิบายท้ายป้ายฟิลด์ ----------
    ใช้แทนบรรทัดคำอธิบายยาว ๆ ที่กินพื้นที่ทุกครั้งทั้งที่อ่านครั้งเดียวก็พอ
    เป็น <button> ไม่ใช่ <span> เพื่อให้ Tab ไปโฟกัสอ่านได้ ไม่ใช่เห็นเฉพาะตอนใช้เมาส์ */
@@ -9873,3 +9897,141 @@ button.multiselect:focus-visible {
   .fr-bottombar-actions { width: 100%; }
   .fr-bottombar-actions .btn { flex: 1; }
 }
+/* ==========================================================================
+   ตัวเลือกวันที่/เวลาแบบวงล้อ (assets/js/datetime-picker.js)
+   ใช้แทนตัวเลือกของเบราว์เซอร์ ซึ่งหน้าตาต่างกันทุกเครื่องและคุมสไตล์ไม่ได้
+   ========================================================================== */
+
+:root { --dtp-row: 36px; }
+
+.dtp { position: fixed; inset: 0; z-index: var(--z-modal); }
+
+.dtp-backdrop { position: absolute; inset: 0; background: rgba(31, 41, 55, 0.45); }
+
+/* จอเล็กเป็นแผ่นเลื่อนขึ้นจากล่างแบบแอปมือถือ · จอใหญ่ลอยกลางจอ */
+.dtp-sheet {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+  box-shadow: var(--shadow-lg);
+  animation: dtp-up var(--transition-slow) both;
+}
+
+@keyframes dtp-up { from { transform: translate(-50%, 12px); opacity: 0 } to { transform: translate(-50%, 0); opacity: 1 } }
+
+@media (min-height: 560px) {
+  .dtp-sheet {
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    border-radius: var(--radius-modal);
+  }
+  @keyframes dtp-up { from { transform: translate(-50%, calc(-50% + 8px)); opacity: 0 } to { transform: translate(-50%, -50%); opacity: 1 } }
+}
+
+.dtp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.dtp-title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dtp-btn {
+  flex: none;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-small);
+  color: var(--color-text-action);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.dtp-btn:hover { background: var(--color-surface-muted); color: var(--color-text-primary); }
+.dtp-btn.is-primary { color: var(--color-primary-dark); font-weight: var(--font-weight-medium); }
+.dtp-btn.is-primary:hover { background: var(--color-primary-soft); }
+
+/* ---------- วงล้อ ---------- */
+.dtp-wheels {
+  position: relative;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.dtp-wheel {
+  flex: 1;
+  min-width: 0;
+  height: calc(var(--dtp-row) * 5);
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  /* ซ่อนแถบเลื่อน เพราะตัวเลือกนี้ใช้ลากไม่ใช่เลื่อนอ่าน */
+  scrollbar-width: none;
+}
+
+.dtp-wheel::-webkit-scrollbar { display: none; }
+
+/* ช่องว่างหัวท้าย 2 แถว เพื่อให้แถวแรกและแถวสุดท้ายเลื่อนมาอยู่กลางได้ */
+.dtp-wheel-pad { height: calc(var(--dtp-row) * 2); }
+
+.dtp-item {
+  height: var(--dtp-row);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* center ไม่ใช่ start — โค้ดคำนวณตำแหน่งจากสูตร scrollTop = index x ความสูงแถว
+     ซึ่งเป็นการจัดให้แถวอยู่กึ่งกลางวงล้อ ถ้าใช้ start เบราว์เซอร์จะ snap ไปชิดขอบบน
+     กลายเป็นคนละตำแหน่งกัน แล้วอ่านค่ากลับผิดไปสองแถว */
+  scroll-snap-align: center;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+/* แถวที่หยุดตรงกลาง = ค่าที่เลือก ทำให้เด่นด้วยสีและน้ำหนัก ไม่ใช่ขนาด
+   เพราะถ้าเปลี่ยนขนาดตัวอักษร ความสูงแถวจะเพี้ยนแล้ว snap ไม่ตรง */
+.dtp-item.is-on {
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-medium);
+}
+
+/* กรอบบอกตำแหน่งกึ่งกลาง — อยู่หลังตัวเลข กดทะลุไปที่วงล้อได้ */
+.dtp-marker {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  top: 50%;
+  height: var(--dtp-row);
+  transform: translateY(-50%);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  pointer-events: none;
+}
+
+/* ---------- ช่องกรอกที่ใช้ตัวเลือกนี้ ---------- */
+input[data-picker] { cursor: pointer; }
+input[data-picker]::placeholder { color: var(--color-text-muted); }
