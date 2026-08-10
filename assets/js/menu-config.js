@@ -48,7 +48,7 @@ window.TFC_MENU = [
     icon: '<path d="M3.5 12.5h4L10 7l3.5 10L16 12.5h4.5"/>',
     children: [
       { key: 'evaluations', label: 'แบบประเมิน', icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>', href: 'admin/evaluations/list.html', alsoMatch: ['admin/evaluations/create.html'] },
-      { key: 'evaluations-rounds', label: 'ตั้งค่ารอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/evaluations/rounds.html' }
+      { key: 'evaluations-rounds', label: 'รอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/evaluations/rounds.html' }
     ]
   },
   {
