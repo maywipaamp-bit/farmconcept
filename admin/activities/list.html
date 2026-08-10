@@ -126,15 +126,13 @@
   var mock = window.TFC_MOCK;
   var activities = mock.activities || [];
   var PAGE_SIZES = [10, 20, 50];
-  var state = { status: '', search: '', sort: 'updatedAt', page: 1, pageSize: PAGE_SIZES[0] };
+  var state = { status: '', search: '', type: '', instructor: '', area: '', sort: 'updatedAt', page: 1, pageSize: PAGE_SIZES[0] };
   var deleteTargetId = null;
 
-  /* บรรทัดสรุปใต้ชื่อหน้า ให้เหมือนหน้ารายการอื่น คำนวณจากข้อมูลจริง */
-  var actOpen = activities.filter(function (a) { return a.status === 'เปิดรับสมัคร'; }).length;
-  var actRegistered = activities.reduce(function (s, a) { return s + (a.registered || 0); }, 0);
+  /* ไม่มีบรรทัดสรุปใต้ชื่อหน้า — จำนวนทั้งหมดกับจำนวนแยกตามสถานะอ่านได้จาก
+     ชิปกรองอยู่แล้ว เขียนซ้ำอีกบรรทัดมีแต่จะเบียดพื้นที่ตาราง */
   window.TFC.renderPageHeader('activity-page-header', {
     title: 'จัดการกิจกรรม',
-    description: 'ทั้งหมด ' + activities.length + ' กิจกรรม · เปิดรับสมัคร ' + actOpen + ' · ผู้ลงทะเบียนรวม ' + actRegistered.toLocaleString('th-TH') + ' คน',
     actions: [
       {
         label: 'เพิ่มกิจกรรม',
@@ -187,10 +185,26 @@
     return (activity.areaList && activity.areaList.length ? activity.areaList : [activity.area]).filter(Boolean);
   }
 
+  /* ตัวเลือกของแต่ละตัวกรองมาจากข้อมูลจริงที่มีอยู่ ไม่ hardcode รายชื่อไว้
+     เพิ่มวิทยากรหรือพื้นที่ใหม่ในระบบแล้ว ตัวกรองหน้านี้เห็นเองทันที
+     และไม่มีตัวเลือกที่เลือกแล้วได้ผลลัพธ์ว่างเปล่าเพราะไม่มีกิจกรรมไหนใช้ */
+  function optionsFrom(pick) {
+    var seen = {};
+    activities.forEach(function (a) {
+      [].concat(pick(a)).filter(Boolean).forEach(function (v) { seen[v] = true; });
+    });
+    return Object.keys(seen).sort(function (a, b) { return a.localeCompare(b, 'th'); })
+      .map(function (v) { return { value: v, label: v }; });
+  }
+
   function filteredRows() {
     var term = state.search.trim().toLowerCase();
     var rows = activities.filter(function (a) {
       if (state.status && a.status !== state.status) return false;
+      if (state.type && a.type !== state.type) return false;
+      /* วิทยากรกับสถานที่เป็นได้หลายค่าต่อกิจกรรม จึงนับว่าตรงถ้ามีอย่างน้อยหนึ่งค่าที่ตรง */
+      if (state.instructor && responsible(a).indexOf(state.instructor) === -1) return false;
+      if (state.area && areasOf(a).indexOf(state.area) === -1) return false;
       if (!term) return true;
       return [a.name, a.id].concat(responsible(a), areasOf(a)).join(' ').toLowerCase().indexOf(term) !== -1;
     });
@@ -208,6 +222,9 @@
   window.TFC.searchPopover('activity-search-popover', {
     search: { id: 'activity-search', placeholder: 'ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่' },
     filters: [
+      { id: 'type', label: 'ประเภท', placeholder: 'ทั้งหมด', options: optionsFrom(function (a) { return a.type; }) },
+      { id: 'instructor', label: 'วิทยากร', placeholder: 'ทั้งหมด', options: optionsFrom(responsible) },
+      { id: 'area', label: 'สถานที่จัด', placeholder: 'ทั้งหมด', options: optionsFrom(areasOf) },
       {
         id: 'sort',
         label: 'เรียงลำดับ',
@@ -221,6 +238,9 @@
     ],
     onSearch: function (values, done) {
       state.search = values.keyword;
+      state.type = values.filters.type || '';
+      state.instructor = values.filters.instructor || '';
+      state.area = values.filters.area || '';
       state.sort = values.filters.sort || 'updatedAt';
       state.page = 1;
       render();
@@ -228,6 +248,9 @@
     },
     onClear: function () {
       state.search = '';
+      state.type = '';
+      state.instructor = '';
+      state.area = '';
       state.sort = 'updatedAt';
       state.page = 1;
       render();
@@ -307,7 +330,7 @@
   var EMPTY_HTML = '<div class="state-placeholder">' +
     '<span class="state-placeholder-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>' +
     '<div class="state-placeholder-title">ไม่พบกิจกรรมที่ตรงกับเงื่อนไข</div>' +
-    '<div class="state-placeholder-desc">ลองเปลี่ยนคำค้นหาหรือเลือกสถานะอื่น</div></div>';
+    '<div class="state-placeholder-desc">ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองที่เลือกไว้</div></div>';
 
   var listEl = document.getElementById('activity-list');
 

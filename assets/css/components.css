@@ -3619,6 +3619,10 @@
   flex-wrap: wrap;
 }
 
+/* ในแถบกรอง ชิปกินพื้นที่ที่เหลือทั้งหมด ปุ่มค้นหาจึงถูกดันไปชิดขวาเสมอ
+   ไม่ว่าจะมีชิปกี่ตัว ปุ่มก็อยู่ตำแหน่งเดิม สายตาไม่ต้องไล่หาใหม่ทุกครั้งที่กรอง */
+.list-filter-bar .status-pills { flex: 1 1 auto; min-width: 0; }
+
 .status-pill {
   display: inline-flex;
   align-items: center;
