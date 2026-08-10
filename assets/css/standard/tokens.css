@@ -4,11 +4,13 @@
    Import ไฟล์นี้ก่อน stylesheet อื่นทั้งหมด
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&display=swap');
 
 :root {
-  /* ---- Font ---- */
-  --font-sans: 'IBM Plex Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
+  /* ---- Font ----
+     เปลี่ยนฟอนต์ทั้งระบบที่บรรทัดนี้จุดเดียว (คู่กับ --font-family-base ใน assets/css/tokens.css)
+     ถ้าจะย้อนกลับเป็น IBM Plex Sans Thai ให้แก้ทั้งชื่อฟอนต์และ @import ด้านบนพร้อมกัน */
+  --font-sans: 'Noto Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --fw-light: 300;

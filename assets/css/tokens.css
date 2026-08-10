@@ -78,8 +78,10 @@
   /* แถบแสงที่วิ่งบน skeleton ตอนโหลด */
   --color-skeleton-sheen: #FAFBFA;
 
-  /* ---------- Font ---------- */
-  --font-family-base: 'IBM Plex Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
+  /* ---------- Font ----------
+     ต้องตรงกับ --font-sans ใน assets/css/standard/tokens.css เสมอ
+     (ไฟล์นั้นเป็นที่ @import ตัวฟอนต์ ถ้าแก้ที่นี่อย่างเดียวจะได้ฟอนต์สำรองแทน) */
+  --font-family-base: 'Noto Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
 
   /* Type scale ตาม CLAUDE.md — เล็กสุดที่อนุญาตคือ 12px และใช้เฉพาะ badge/caption */
   --font-size-page-title: 28px;
