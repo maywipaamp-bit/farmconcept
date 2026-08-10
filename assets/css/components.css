@@ -6330,6 +6330,106 @@ button.multiselect:focus-visible {
 .ac-slot-grid { gap: var(--space-2); }
 .ac-window { padding: var(--space-2) var(--space-3); }
 
+/* ---------- ค่าเข้าร่วม: ช่องยอดเงินอยู่ข้าง ๆ ตัวเลือกเสมอ ----------
+   คอลัมน์นี้กว้าง ~344px ตัวเลือกสองอัน + ช่องยอดเงินรวมกันเกิน จึงตกไปคนละบรรทัด
+   ปิด wrap ที่แถวนอก แล้วปล่อยให้ตัวเลือกซ้อนบรรทัดกันเองแทน ยอดเงินจึงอยู่ข้าง ๆ ตลอด */
+.ac-fee-row { flex-wrap: nowrap; align-items: center; }
+.ac-fee-row .ac-radios { min-width: 0; }
+.ac-fee-amount { flex: none; }
+.ac-fee-amount .input { width: 88px; }
+
+/* ---------- แถวการ์ดแบบประเมิน + ปุ่มดูตัวอย่าง ---------- */
+.ac-pick-row { display: flex; align-items: stretch; gap: var(--space-2); }
+.ac-pick-row .ac-pick { flex: 1; min-width: 0; }
+
+/* ปุ่มดูตัวอย่างต้องแยกจากการ์ดให้ชัด ไม่งั้นกดแล้วจะเผลอเลือกชุดนั้นไปด้วย */
+.ac-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  align-self: center;
+  padding: 0 var(--space-3);
+  min-height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-action);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ac-preview-btn:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary-soft-border);
+}
+
+.ac-preview-btn svg { flex: none; }
+
+/* จอแคบ: ปุ่มลงมาอยู่ใต้การ์ด ไม่ให้บีบชื่อชุดจนอ่านไม่ออก */
+@media (max-width: 600px) {
+  .ac-pick-row { flex-wrap: wrap; }
+  .ac-preview-btn { align-self: flex-start; }
+}
+
+/* ---------- แผงตัวอย่างคำถาม ---------- */
+.ac-preview-modal { max-width: 520px; }
+
+.ac-preview-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.ac-preview-name {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-strong);
+}
+
+.ac-preview-meta {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-preview-list {
+  margin: 0;
+  padding: 0 0 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ac-preview-q {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.ac-preview-q:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.ac-preview-q-text {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-base);
+  color: var(--color-text-body);
+  min-width: 0;
+}
+
+.ac-preview-q-text .req-mark { color: var(--color-danger); margin-left: 2px; }
+
+/* ชนิดคำถามเป็นข้อมูลประกอบ จางกว่าและไม่ตัดบรรทัด จะได้อ่านเป็นคอลัมน์เดียวกันลงมา */
+.ac-preview-q-type {
+  flex: none;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 /* ---------- ไอคอนคำอธิบายท้ายป้ายฟิลด์ ----------
    ใช้แทนบรรทัดคำอธิบายยาว ๆ ที่กินพื้นที่ทุกครั้งทั้งที่อ่านครั้งเดียวก็พอ
    เป็น <button> ไม่ใช่ <span> เพื่อให้ Tab ไปโฟกัสอ่านได้ ไม่ใช่เห็นเฉพาะตอนใช้เมาส์ */

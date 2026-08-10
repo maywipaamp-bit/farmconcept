@@ -62,17 +62,87 @@
   function needsReg() { return joinMode().reg; }
   function hasSurvey() { return joinMode().survey; }
 
+  /* คำถามจริงของแต่ละชุด ใช้ทั้งแสดงจำนวนในคำอธิบายและแสดงตัวอย่างตอนกด "ดูตัวอย่าง"
+     เก็บไว้ที่เดียวกัน จำนวนที่โชว์จึงตรงกับคำถามที่มีจริงเสมอ ไม่มีทางคลาดกัน */
   var FORM_REG = [
-    { label: 'แบบลงทะเบียนมาตรฐาน (ข้อมูลพื้นฐาน)', hint: 'ชื่อ เบอร์โทร พื้นที่ · 6 คำถาม' },
-    { label: 'แบบลงทะเบียน + ประเมินสุขภาพก่อนเข้าร่วม', hint: 'เพิ่มน้ำหนัก ส่วนสูง โรคประจำตัว · 14 คำถาม' },
-    { label: 'แบบลงทะเบียนสำหรับแกนนำชุมชน', hint: 'เพิ่มบทบาทและพื้นที่รับผิดชอบ · 10 คำถาม' }
+    { label: 'แบบลงทะเบียนมาตรฐาน (ข้อมูลพื้นฐาน)', note: 'ชื่อ เบอร์โทร พื้นที่', questions: [
+      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
+      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'ช่วงอายุ', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'เพศ', required: false },
+      { type: 'ตัวเลือกเดียว', text: 'พื้นที่ที่อาศัยอยู่', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'ทราบข่าวกิจกรรมจากช่องทางใด', required: false }
+    ] },
+    { label: 'แบบลงทะเบียน + ประเมินสุขภาพก่อนเข้าร่วม', note: 'เพิ่มข้อมูลสุขภาพตั้งต้น', questions: [
+      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
+      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'ช่วงอายุ', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'เพศ', required: false },
+      { type: 'ตัวเลือกเดียว', text: 'พื้นที่ที่อาศัยอยู่', required: true },
+      { type: 'ตัวเลข', text: 'น้ำหนัก (กก.)', required: true },
+      { type: 'ตัวเลข', text: 'ส่วนสูง (ซม.)', required: true },
+      { type: 'ตัวเลข', text: 'รอบเอว (ซม.)', required: false },
+      { type: 'ตัวเลือกหลายข้อ', text: 'โรคประจำตัว', required: false },
+      { type: 'ข้อความสั้น', text: 'ยาที่ใช้ประจำ', required: false },
+      { type: 'ตัวเลือกเดียว', text: 'ความถี่ในการออกกำลังกาย', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'การสูบบุหรี่', required: false },
+      { type: 'ตัวเลือกเดียว', text: 'การดื่มแอลกอฮอล์', required: false },
+      { type: 'ข้อความยาว', text: 'เป้าหมายด้านสุขภาพที่อยากเห็น', required: false }
+    ] },
+    { label: 'แบบลงทะเบียนสำหรับแกนนำชุมชน', note: 'เพิ่มบทบาทและพื้นที่รับผิดชอบ', questions: [
+      { type: 'ข้อความสั้น', text: 'ชื่อ–นามสกุล', required: true },
+      { type: 'เบอร์โทร', text: 'เบอร์โทรศัพท์', required: true },
+      { type: 'ข้อความสั้น', text: 'ชุมชน/หน่วยงานที่สังกัด', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'บทบาทในชุมชน', required: true },
+      { type: 'ตัวเลข', text: 'จำนวนปีที่ทำงานในพื้นที่', required: false },
+      { type: 'ตัวเลือกหลายข้อ', text: 'พื้นที่ที่รับผิดชอบ', required: true },
+      { type: 'ตัวเลือกหลายข้อ', text: 'ประสบการณ์จัดกิจกรรมที่ผ่านมา', required: false },
+      { type: 'ตัวเลือกเดียว', text: 'ช่วงเวลาที่สะดวกเข้าร่วม', required: false },
+      { type: 'ข้อความยาว', text: 'สิ่งที่คาดหวังจากการอบรม', required: false },
+      { type: 'ข้อความยาว', text: 'ข้อจำกัดหรือสิ่งที่ต้องการให้ช่วยเหลือ', required: false }
+    ] }
   ];
 
   var FORM_POST = [
-    { label: 'แบบประเมินความพึงพอใจ', hint: 'ให้คะแนน 5 หัวข้อ + ความเห็นปลายเปิด' },
-    { label: 'แบบประเมินความรู้หลังอบรม', hint: 'คำถามถูก/ผิด 10 ข้อ' },
-    { label: 'แบบประเมินวิทยากร', hint: 'ให้คะแนนรายวิทยากร' }
+    { label: 'แบบประเมินความพึงพอใจ', note: 'ให้คะแนน + ความเห็นปลายเปิด', questions: [
+      { type: 'คะแนน 1-5', text: 'ความพึงพอใจโดยรวมต่อกิจกรรม', required: true },
+      { type: 'คะแนน 1-5', text: 'ความรู้ที่ได้รับนำไปใช้ได้จริง', required: true },
+      { type: 'คะแนน 1-5', text: 'ความเหมาะสมของสถานที่และเวลา', required: true },
+      { type: 'คะแนน 1-5', text: 'ความชัดเจนของการสื่อสารก่อนกิจกรรม', required: false },
+      { type: 'คะแนน 1-5', text: 'ความคุ้มค่าเมื่อเทียบกับเวลาที่ใช้', required: false },
+      { type: 'ข้อความยาว', text: 'สิ่งที่ประทับใจที่สุด', required: false },
+      { type: 'ข้อความยาว', text: 'ข้อเสนอแนะเพิ่มเติม', required: false }
+    ] },
+    { label: 'แบบประเมินความรู้หลังอบรม', note: 'คำถามถูก/ผิด วัดความเข้าใจ', questions: [
+      { type: 'ถูก/ผิด', text: 'ผักปลอดสารต้องงดใช้ปุ๋ยทุกชนิด', required: true },
+      { type: 'ถูก/ผิด', text: 'ปุ๋ยหมักใช้ได้ทันทีหลังผสมเสร็จ', required: true },
+      { type: 'ถูก/ผิด', text: 'การปลูกพืชหมุนเวียนช่วยลดโรคในดิน', required: true },
+      { type: 'ถูก/ผิด', text: 'น้ำหมักชีวภาพใช้แทนน้ำเปล่าได้ทุกวัน', required: true },
+      { type: 'ถูก/ผิด', text: 'ควรรดน้ำผักตอนแดดจัดที่สุดของวัน', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'ระยะเวลาที่เหมาะสมในการหมักปุ๋ย', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'วิธีสังเกตว่าดินขาดธาตุอาหาร', required: true },
+      { type: 'ตัวเลือกหลายข้อ', text: 'วิธีกำจัดศัตรูพืชแบบไม่ใช้สารเคมี', required: true },
+      { type: 'ตัวเลือกเดียว', text: 'ช่วงเวลาที่เหมาะกับการเก็บเกี่ยว', required: false },
+      { type: 'ข้อความยาว', text: 'สิ่งที่จะนำกลับไปทำต่อที่บ้าน', required: false }
+    ] },
+    { label: 'แบบประเมินวิทยากร', note: 'ให้คะแนนรายวิทยากร', questions: [
+      { type: 'คะแนน 1-5', text: 'ความรู้ความเชี่ยวชาญในเนื้อหา', required: true },
+      { type: 'คะแนน 1-5', text: 'การอธิบายเข้าใจง่าย', required: true },
+      { type: 'คะแนน 1-5', text: 'การเปิดโอกาสให้ซักถาม', required: true },
+      { type: 'คะแนน 1-5', text: 'การบริหารเวลา', required: false },
+      { type: 'ข้อความยาว', text: 'ข้อเสนอแนะต่อวิทยากร', required: false }
+    ] }
   ];
+
+  /* คำอธิบายใต้ชื่อชุด สร้างจากคำถามจริง ไม่ได้พิมพ์ตัวเลขไว้เอง */
+  function formHint(o) {
+    var need = o.questions.filter(function (q) { return q.required; }).length;
+    return o.note + ' · ' + o.questions.length + ' คำถาม (จำเป็น ' + need + ')';
+  }
+
+  function formByLabel(label) {
+    return FORM_REG.concat(FORM_POST).filter(function (o) { return o.label === label; })[0];
+  }
 
   var QR_LINKS = [
     { label: 'ลงทะเบียนเข้าร่วม', url: 'farmconcept.th/r/0142' },
@@ -204,22 +274,28 @@
   function renderPicks() {
     $('ac-form-reg').innerHTML = FORM_REG.map(function (o) {
       var on = state.formReg === o.label;
-      return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-reg="' + esc(o.label) + '">' +
+      return '<div class="ac-pick-row">' +
+        '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-reg="' + esc(o.label) + '">' +
         markHtml(on, true) +
         '<span class="ac-pick-text">' +
           '<span class="ac-pick-title">' + esc(o.label) + '</span>' +
-          '<span class="ac-pick-hint">' + esc(o.hint) + '</span>' +
-        '</span></button>';
+          '<span class="ac-pick-hint">' + esc(formHint(o)) + '</span>' +
+        '</span></button>' +
+        previewBtn(o.label) +
+        '</div>';
     }).join('');
 
     $('ac-form-post').innerHTML = FORM_POST.map(function (o) {
       var on = state.formsPost.indexOf(o.label) > -1;
-      return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-post="' + esc(o.label) + '">' +
+      return '<div class="ac-pick-row">' +
+        '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-form-post="' + esc(o.label) + '">' +
         markHtml(on, false) +
         '<span class="ac-pick-text">' +
           '<span class="ac-pick-title">' + esc(o.label) + '</span>' +
-          '<span class="ac-pick-hint">' + esc(o.hint) + '</span>' +
-        '</span></button>';
+          '<span class="ac-pick-hint">' + esc(formHint(o)) + '</span>' +
+        '</span></button>' +
+        previewBtn(o.label) +
+        '</div>';
     }).join('');
 
     $('ac-post-count').textContent = state.formsPost.length === 0
@@ -227,6 +303,72 @@
       : 'เลือกแล้ว ' + state.formsPost.length + ' ชุด · ส่งให้ผู้เข้าร่วมหลังเช็คอินจบกิจกรรม';
     $('ac-post-count').classList.toggle('is-warning', state.formsPost.length === 0);
   }
+
+  /* ---------- ดูตัวอย่างแบบประเมิน ----------
+     ชื่อชุดอย่างเดียวบอกไม่ได้ว่าข้างในถามอะไร ผู้ใช้จึงเลือกผิดชุดได้ง่าย
+     ปุ่มนี้เปิดรายการคำถามจริงให้ดูก่อนตัดสินใจ โดยไม่ต้องออกจากหน้านี้ */
+  function previewBtn(label) {
+    return '<button type="button" class="ac-preview-btn" data-form-preview="' + esc(label) + '"' +
+      ' title="ดูคำถามในชุดนี้" aria-label="ดูตัวอย่างคำถามของ ' + esc(label) + '">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>' +
+      '<span>ดูตัวอย่าง</span></button>';
+  }
+
+  function openFormPreview(label) {
+    var o = formByLabel(label);
+    if (!o) return;
+    var need = o.questions.filter(function (q) { return q.required; }).length;
+
+    var root = document.createElement('div');
+    root.className = 'modal-overlay is-open ac-preview-overlay';
+    root.innerHTML =
+      '<div class="modal ac-preview-modal" role="dialog" aria-modal="true" aria-label="ตัวอย่างแบบประเมิน">' +
+        '<div class="modal-header">' +
+          '<div class="ac-preview-head">' +
+            '<span class="ac-preview-name">' + esc(o.label) + '</span>' +
+            '<span class="ac-preview-meta">' + o.questions.length + ' คำถาม · จำเป็นต้องตอบ ' + need + '</span>' +
+          '</div>' +
+          '<button type="button" class="modal-close" data-preview-close aria-label="ปิด">' +
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<ol class="ac-preview-list">' +
+            o.questions.map(function (q) {
+              return '<li class="ac-preview-q">' +
+                '<span class="ac-preview-q-text">' + esc(q.text) +
+                  (q.required ? '<span class="req-mark">*</span>' : '') + '</span>' +
+                '<span class="ac-preview-q-type">' + esc(q.type) + '</span>' +
+                '</li>';
+            }).join('') +
+          '</ol>' +
+        '</div>' +
+        '<div class="modal-footer">' +
+          '<button type="button" class="btn btn-outline" data-preview-close>ปิด</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(root);
+    document.body.style.overflow = 'hidden';
+    root.querySelector('[data-preview-close]').focus();
+  }
+
+  function closeFormPreview() {
+    var el = document.querySelector('.ac-preview-overlay');
+    if (!el) return;
+    el.remove();
+    if (!document.querySelector('.modal-overlay.is-open')) document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-preview-close]') || e.target.classList.contains('ac-preview-overlay')) return closeFormPreview();
+    var btn = e.target.closest('[data-form-preview]');
+    if (btn) { e.preventDefault(); e.stopPropagation(); openFormPreview(btn.getAttribute('data-form-preview')); }
+  }, true);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeFormPreview();
+  });
 
   /* combobox 2 เลเวล: ชื่อโปรแกรมเป็นหัวข้อกดไม่ได้ หลักสูตรย่อยกดเลือกได้ */
   function renderCourseCombo() {
