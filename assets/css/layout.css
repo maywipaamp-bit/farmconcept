@@ -553,12 +553,24 @@
    object-position ชิดซ้าย เพื่อให้โลโก้เกาะมุมซ้ายตรงกับเมนูด้านล่าง ไม่ลอยกลางแถบ */
 img.sidebar-logo {
   width: auto;
-  height: 36px;
-  max-width: 100%;
+  /* ไฟล์โลโก้มีขอบขาวเปล่าในตัว บน/ล่างด้านละ 11% ซ้าย/ขวาด้านละ 4%
+     ตัวอักษรจริงจึงสูงแค่ 79% ของกล่อง ต่อให้ขยายกล่องก็ยังดูเล็กและลอย
+     วิธีแก้: ตั้งกล่องให้สูง 51px แล้ว clip ขอบขาวทิ้ง เหลือตัวอักษรสูง 40px เต็มที่ว่างพอดี
+     ส่วน margin ติดลบคือการดึงพื้นที่ที่ clip ไปแล้วคืน ไม่ให้กินที่ในเลย์เอาต์ */
+  height: 51px;
+  max-width: none;
   border-radius: 0;
   background: none;
-  object-fit: contain;
-  object-position: left center;
+  clip-path: inset(10.7% 3.9%);
+  margin: -6px -6px -6px -6px;
+}
+
+/* ย่อเมนู: ซ่อนลูกศรกาง/ยุบเมนูย่อย
+   พอไม่มีข้อความเมนู ลูกศรจะลอยเดี่ยว ๆ อยู่กลางแถบ อ่านไม่ออกว่าเป็นของเมนูไหน
+   กดที่ไอคอนเมนูก็ยังกางเมนูย่อยได้เหมือนเดิม */
+.app-shell.is-sidebar-collapsed .nav-chevron,
+.app-shell.is-sidebar-collapsed .nav-submenu-toggle {
+  display: none;
 }
 
 /* ---------- ย่อเมนู ----------
@@ -582,6 +594,10 @@ img.sidebar-logo {
   max-width: none;
   flex: none;
   object-position: center;
+  /* ล้าง clip-path กับ margin ติดลบของโลโก้ตัวเต็ม — ไฟล์นี้คนละกรอบกัน
+     ถ้าไม่ล้าง ตัว f จะโดนเฉือนขอบและถูกดึงชิดซ้ายเกินไป */
+  clip-path: none;
+  margin: 0;
 }
 
 .auth-logo-img {
