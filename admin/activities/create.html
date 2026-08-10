@@ -223,11 +223,14 @@
             </div>
 
             <div class="ac-field">
-              <label class="form-label">การลงทะเบียน<span class="form-required">*</span></label>
+              <div class="ac-label-row">
+                <label class="form-label">รูปแบบการเข้าร่วม<span class="form-required">*</span></label>
+                <span class="ac-hint">กำหนดว่าต้องลงทะเบียนไหม และมีแบบประเมินหลังจบไหม</span>
+              </div>
               <div class="ac-picks" id="ac-reg"></div>
             </div>
 
-            <div class="ac-field-row">
+            <div class="ac-field-row" id="ac-reg-detail">
               <div class="ac-field ac-field-half">
                 <label class="form-label" for="ac-audience">ใครลงทะเบียนได้</label>
                 <select class="select" id="ac-audience">
@@ -262,7 +265,7 @@
               <h2 class="ac-section-title">แบบประเมินที่ใช้</h2>
             </div>
 
-            <div class="ac-field">
+            <div class="ac-field" id="ac-field-form-reg">
               <div class="ac-label-row">
                 <label class="form-label">ตอนลงทะเบียน<span class="form-required">*</span></label>
                 <span class="ac-hint">เลือกได้ 1 ชุด</span>
@@ -271,7 +274,7 @@
               <div class="ac-picks is-stacked" id="ac-form-reg"></div>
             </div>
 
-            <div class="ac-field">
+            <div class="ac-field" id="ac-field-form-post">
               <div class="ac-label-row">
                 <label class="form-label">หลังจบกิจกรรม</label>
                 <span class="ac-hint">เลือกได้มากกว่า 1</span>
@@ -281,8 +284,14 @@
             </div>
 
             <div class="ac-field">
-              <label class="form-label">ช่วงเวลาเปิด–ปิดระบบ</label>
-              <p class="ac-field-note">เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ (ลงทะเบียนถึงก่อนเริ่มกิจกรรม · เช็คอินช่วงจัดกิจกรรม · ประเมินได้ 7 วันหลังจบ) · แถวจะแสดงเฉพาะสิ่งที่เปิดใช้งานไว้</p>
+              <div class="ac-label-row">
+                <span class="ac-label-info">
+                <label class="form-label">ช่วงเวลาเปิด–ปิดระบบ</label>
+                <button type="button" class="ac-info" tabindex="0"
+                        aria-label="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ (ลงทะเบียนถึงก่อนเริ่มกิจกรรม · เช็คอินช่วงจัดกิจกรรม · ประเมินได้ 7 วันหลังจบ) · แถวจะแสดงเฉพาะสิ่งที่เปิดใช้งานไว้"
+                        data-tip="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ (ลงทะเบียนถึงก่อนเริ่มกิจกรรม · เช็คอินช่วงจัดกิจกรรม · ประเมินได้ 7 วันหลังจบ) · แถวจะแสดงเฉพาะสิ่งที่เปิดใช้งานไว้"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.2v.01M12 11.5v4.3"/></svg></button>
+                </span>
+              </div>
               <div class="ac-windows" id="ac-windows"></div>
             </div>
           </section>

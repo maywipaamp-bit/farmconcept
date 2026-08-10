@@ -6293,6 +6293,73 @@ button.multiselect:focus-visible {
 .ac-fee-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .ac-fee-amount { display: inline-flex; align-items: center; gap: var(--space-2); }
 .ac-fee-amount .input { width: 120px; }
+/* display ของคลาสนี้ชนะ [hidden] ของเบราว์เซอร์ (specificity สูงกว่า)
+   ถ้าไม่เขียนกฎนี้ ตั้ง .hidden = true ใน JS แล้วช่องกรอกเงินก็ยังโผล่อยู่ */
+.ac-fee-amount[hidden] { display: none; }
+
+/* ฟิลด์ที่ซ่อนตามรูปแบบการเข้าร่วม — เหตุผลเดียวกับข้างบน */
+.ac-field[hidden],
+.ac-field-row[hidden] { display: none; }
+
+/* ป้ายฟิลด์ + ไอคอนคำอธิบาย เกาะกันเป็นกลุ่มเดียว
+   ถ้าปล่อยให้เป็นลูกตรง ๆ ของ .ac-label-row (space-between) ไอคอนจะถูกดันไปสุดขวา
+   แล้วกล่องคำอธิบายที่กาง 320px ไปทางขวาจะทะลุขอบการ์ด */
+.ac-label-info { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+/* ---------- ไอคอนคำอธิบายท้ายป้ายฟิลด์ ----------
+   ใช้แทนบรรทัดคำอธิบายยาว ๆ ที่กินพื้นที่ทุกครั้งทั้งที่อ่านครั้งเดียวก็พอ
+   เป็น <button> ไม่ใช่ <span> เพื่อให้ Tab ไปโฟกัสอ่านได้ ไม่ใช่เห็นเฉพาะตอนใช้เมาส์ */
+.ac-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  cursor: help;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.ac-info:hover,
+.ac-info:focus-visible { color: var(--color-primary-dark); background: var(--color-primary-soft); }
+
+/* กล่องข้อความ: ยึดขอบซ้ายของไอคอน แล้วกางไปทางขวา กันล้นขอบการ์ดด้านขวา */
+.ac-info::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-tooltip);
+  width: max-content;
+  max-width: 320px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.ac-info:hover::after,
+.ac-info:focus-visible::after { opacity: 1; visibility: visible; }
+
+/* จอแคบ: ยึดขอบขวาแทน ไม่งั้นกล่องยาว 320px จะทะลุขอบจอ */
+@media (max-width: 600px) {
+  .ac-info::after { left: auto; right: 0; }
+}
 
 /* ---------- การ์ดตัวเลือก ---------- */
 .ac-picks { display: flex; flex-wrap: wrap; gap: var(--space-3); }

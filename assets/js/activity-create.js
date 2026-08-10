@@ -30,12 +30,21 @@
   var MODES = ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสม (Hybrid)'];
   var TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
-  var REG_ADVANCE = 'เปิดให้ลงทะเบียนล่วงหน้า';
-
-  var REG_MODES = [
-    { label: REG_ADVANCE, hint: 'ผู้เข้าร่วมจองที่นั่งผ่านหน้าเว็บ' },
-    { label: 'เข้าร่วมได้เลย (Walk-in)', hint: 'ไม่ต้องลงทะเบียนล่วงหน้า' }
+  /* ฟิลด์เดียวที่ตอบสองคำถามพร้อมกัน: ต้องลงทะเบียนไหม และมีแบบประเมินหลังจบไหม
+     ค่าที่เลือกที่นี่เป็นตัวกำหนดว่าจะแสดงฟิลด์ถัดไปชุดไหน จึงไม่ต้องให้ผู้ใช้
+     ตอบซ้ำอีกหลายจุดแล้วมาขัดกันเอง (เช่น เลือก Walk-in แต่ยังตั้งที่นั่งสำรองได้) */
+  var JOIN_MODES = [
+    { key: 'reg-survey',    label: 'ลงทะเบียนล่วงหน้า + ประเมินหลังจบ', hint: 'จองที่นั่งผ่านเว็บ และส่งแบบประเมินให้หลังกิจกรรม', reg: true,  survey: true },
+    { key: 'reg-only',      label: 'ลงทะเบียนล่วงหน้า',                hint: 'จองที่นั่งผ่านเว็บ ไม่เก็บแบบประเมินหลังจบ',       reg: true,  survey: false },
+    { key: 'walkin-survey', label: 'เข้าร่วมได้เลย + ประเมินหลังจบ',    hint: 'ไม่ต้องจองที่นั่ง แต่ส่งแบบประเมินให้หลังกิจกรรม',  reg: false, survey: true },
+    { key: 'walkin-only',   label: 'เข้าร่วมได้เลย',                    hint: 'ไม่ต้องจองที่นั่ง และไม่เก็บแบบประเมิน',           reg: false, survey: false }
   ];
+
+  function joinMode() {
+    return JOIN_MODES.filter(function (m) { return m.key === state.join; })[0] || JOIN_MODES[0];
+  }
+  function needsReg() { return joinMode().reg; }
+  function hasSurvey() { return joinMode().survey; }
 
   var FORM_REG = [
     { label: 'แบบลงทะเบียนมาตรฐาน (ข้อมูลพื้นฐาน)', hint: 'ชื่อ เบอร์โทร พื้นที่ · 6 คำถาม' },
@@ -68,7 +77,7 @@
     slots: [{ id: 1, date: '', start: '', end: '', cap: '' }],
     nextSlotId: 2,
     fee: FEES[0], feeAmount: '',
-    reg: REG_ADVANCE,
+    join: JOIN_MODES[0].key,
     targets: [],
     formReg: FORM_REG[0].label,
     formsPost: [FORM_POST[0].label],
@@ -155,9 +164,9 @@
   }
 
   function renderPicks() {
-    $('ac-reg').innerHTML = REG_MODES.map(function (m) {
-      var on = state.reg === m.label;
-      return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-reg="' + esc(m.label) + '">' +
+    $('ac-reg').innerHTML = JOIN_MODES.map(function (m) {
+      var on = state.join === m.key;
+      return '<button type="button" class="ac-pick' + (on ? ' is-on' : '') + '" data-join="' + esc(m.key) + '">' +
         '<span class="ac-pick-title">' + esc(m.label) + '</span>' +
         '<span class="ac-pick-hint">' + esc(m.hint) + '</span>' +
         '</button>';
@@ -266,9 +275,9 @@
   /* แถวช่วงเวลาแสดงเฉพาะสิ่งที่เปิดใช้งานไว้จริง ไม่งั้นผู้ใช้จะตั้งเวลาให้ระบบที่ไม่ได้เปิด */
   function activeWindows() {
     return [
-      state.reg === REG_ADVANCE ? { key: 'reg', label: 'เปิดให้ลงทะเบียน', hint: 'ผู้เข้าร่วมจองที่นั่งได้ในช่วงนี้' } : null,
+      needsReg() ? { key: 'reg', label: 'เปิดให้ลงทะเบียน', hint: 'ผู้เข้าร่วมจองที่นั่งได้ในช่วงนี้' } : null,
       { key: 'chk', label: 'เปิดให้เช็คอิน', hint: 'สแกน QR หน้างานได้ในช่วงนี้' },
-      state.formsPost.length > 0 ? { key: 'srv', label: 'เปิดให้ทำแบบประเมิน', hint: 'ตอบแบบประเมินหลังกิจกรรมได้ในช่วงนี้' } : null
+      hasSurvey() ? { key: 'srv', label: 'เปิดให้ทำแบบประเมิน', hint: 'ตอบแบบประเมินหลังกิจกรรมได้ในช่วงนี้' } : null
     ].filter(Boolean);
   }
 
@@ -445,7 +454,14 @@
     renderQr();
     renderChecklist();
 
+    /* ไม่มีค่าใช้จ่าย = ไม่ต้องมีช่องกรอกจำนวนเงินให้สับสน */
     $('ac-fee-amount').hidden = state.fee !== FEES[1];
+
+    /* ฟิลด์ที่มีความหมายเฉพาะตอนเปิดให้ลงทะเบียนล่วงหน้าเท่านั้น
+       ถ้าเข้าร่วมได้เลย การถามว่าใครลงทะเบียนได้/สำรองที่นั่งกี่คน/ใช้แบบฟอร์มไหน ไม่มีความหมาย */
+    $('ac-reg-detail').hidden = !needsReg();
+    $('ac-field-form-reg').hidden = !needsReg();
+    $('ac-field-form-post').hidden = !hasSurvey();
     $('ac-title-count').textContent = state.title.length + '/120';
     $('ac-detail-count').textContent = state.detail.length + '/500';
   }
@@ -508,8 +524,8 @@
     if (target) { toggleIn('targets', target.getAttribute('data-target')); return touch(); }
 
     /* ---- การ์ดเลือก ---- */
-    var reg = t.closest('[data-reg]');
-    if (reg) { state.reg = reg.getAttribute('data-reg'); return touch(); }
+    var join = t.closest('[data-join]');
+    if (join) { state.join = join.getAttribute('data-join'); return touch(); }
 
     var fr = t.closest('[data-form-reg]');
     if (fr) { state.formReg = fr.getAttribute('data-form-reg'); return touch(); }
