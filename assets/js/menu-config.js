@@ -39,17 +39,28 @@ window.TFC_MENU = [
   /* เมนู 'รายงาน' และหน้าจอ pages/reports/* ถูกลบออกจากระบบแล้ว
      สิทธิ์ `reports` ยังคงอยู่ใน roles[].permissions เพราะยังใช้คุมปุ่ม Export และปุ่ม
      "รายงานผล" ของโมดูลแบบฟอร์ม — ดูหมายเหตุที่ TFC_PERMISSION_MAP ด้านล่าง */
-  /* กลุ่มงานประเมินสุขภาพ — ตัวแบบฟอร์มกับการตั้งค่ารอบติดตามอยู่ด้วยกัน
-     หน้าสร้าง/แก้ไขแบบประเมินเข้าจากปุ่มในหน้ารายการ ไม่มีเมนูของตัวเอง
-     alsoMatch จึงทำให้เมนู "แบบประเมิน" ยังไฮไลต์อยู่ตอนเปิดหน้าสร้าง */
+  /* กลุ่มงานประเมินสุขภาพ — งานที่เอาแบบฟอร์มไปใช้ติดตามผลตามรอบ */
   {
     key: 'health-assessment',
     label: 'ประเมินสุขภาพ',
     icon: '<path d="M3.5 12.5h4L10 7l3.5 10L16 12.5h4.5"/>',
     children: [
-      { key: 'evaluations', label: 'แบบประเมิน', icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>', href: 'admin/evaluations/list.html', alsoMatch: ['admin/evaluations/create.html'] },
       { key: 'evaluations-rounds', label: 'รอบติดตาม', icon: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', href: 'admin/evaluations/rounds.html' }
     ]
+  },
+  /* แบบประเมินเป็นเมนูเดี่ยว ไม่อยู่ในกลุ่มประเมินสุขภาพ เพราะเป็นคนละงานกัน
+     ตัวนี้คือการดูแล "ตัวแบบฟอร์ม" ซึ่งเอาไปใช้ได้ทั้งกับกิจกรรมและการติดตามผล
+     ส่วนกลุ่มประเมินสุขภาพคือการเอาแบบฟอร์มไปใช้ติดตามผลตามรอบ
+     วางไว้เหนือ "พื้นฐาน" เพราะเป็นของที่ตั้งไว้ใช้ซ้ำ ใกล้กับข้อมูลตั้งต้นอื่น ๆ
+     มากกว่าจะเป็นงานประจำวันอย่างกิจกรรมหรือการติดตามผล
+     หน้าสร้าง/แก้ไขเข้าจากปุ่มในหน้ารายการ ไม่มีเมนูของตัวเอง alsoMatch จึงทำให้
+     เมนูนี้ยังไฮไลต์อยู่ตอนเปิดหน้าสร้าง */
+  {
+    key: 'evaluations',
+    label: 'แบบประเมิน',
+    icon: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    href: 'admin/evaluations/list.html',
+    alsoMatch: ['admin/evaluations/create.html']
   },
   {
     key: 'master-data',
@@ -98,7 +109,8 @@ window.TFC_PERMISSION_MAP = {
   activities: ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-satisfaction'],
   /* `evaluations` เคยเป็น fallback ไปที่ permissions.evaluations ตอนที่ไม่มีเมนู
      พอมีหน้าจอกลับมาแล้ว จึงผูกกับเมนูตามปกติเหมือนโมดูลอื่น
-     รวมสองเมนูที่ใช้สิทธิ์เดียวกัน: ตัวแบบฟอร์ม (evaluations) และรอบติดตาม (evaluations-rounds)
+     รวมเมนูที่ใช้สิทธิ์เดียวกัน: ตัวแบบฟอร์ม (evaluations ซึ่งเป็นเมนูเดี่ยว)
+     กับรอบติดตาม (evaluations-rounds) ที่อยู่ในกลุ่มประเมินสุขภาพ
      ตัว 'health-assessment' เป็นแค่หัวกลุ่ม ไม่ต้องใส่ เพราะ Permission Matrix ติ๊กที่ระดับลูก */
   evaluations: ['evaluations', 'evaluations-rounds']
 };
