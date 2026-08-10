@@ -56,10 +56,11 @@
   }
 
   /* ---------- 2–3. ฟิลด์ ----------
-     ระยะระหว่างฟิลด์ 12px · ระยะ label -> ช่องกรอก 8px ตามมาตรฐาน
-     ต้องต่างกันชัด ไม่งั้น label จะดูลอยจากช่องของตัวเองไปเกาะฟิลด์บน */
+     ระยะระหว่างฟิลด์ 12px · ระยะ label -> ช่องกรอกของตัวเอง 4px
+     ที่ 8px (ค่าตามมาตรฐาน) ระยะบนล่างของ label เกือบเท่ากัน จนอ่านไม่ออกว่า
+     label เป็นของช่องไหน — ต่างกันสามเท่าแบบนี้ตาจับกลุ่มได้ทันที */
   .login-form { display: flex; flex-direction: column; gap: var(--sp-3); }
-  .field { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .field { display: flex; flex-direction: column; gap: var(--sp-1); }
 
   .label {
     font-size: var(--fs-secondary);
