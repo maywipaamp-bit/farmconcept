@@ -33,7 +33,7 @@
 ## Design Tokens
 
 ### Font
-- Family: `IBM Plex Sans Thai` → fallback `Anuphan` → `system-ui` → `sans-serif`
+- Family: `Noto Sans Thai` → fallback `Anuphan` → `system-ui` → `sans-serif`
 - Weights ที่ใช้: 300 / 400 / 500 / 600 — **ห้ามใช้ 700**
 
 ### Type scale
@@ -130,7 +130,7 @@ sidebar 244px · row height 64px · content padding 32px
 ไม่มี state พิเศษที่มาจากงานออกแบบนี้ — งานนี้เป็นชั้นการนำเสนอ
 
 ## Assets
-- ฟอนต์: IBM Plex Sans Thai (Google Fonts, SIL Open Font License) — `tokens.css` มี `@import` ให้แล้ว; ถ้า repo self-host ให้เปลี่ยนเป็น `@font-face` ของ repo
+- ฟอนต์: Noto Sans Thai (Google Fonts, SIL Open Font License) — `tokens.css` มี `@import` ให้แล้ว; ถ้า repo self-host ให้เปลี่ยนเป็น `@font-face` ของ repo
 - ไอคอน: ให้ใช้ชุดไอคอนเส้นที่ repo มีอยู่แล้ว (เช่น Lucide / Heroicons outline) เส้น 1.5px — ในเอกสารอ้างอิงเป็นรูปทรงแทนที่ไว้เท่านั้น
 - โลโก้: ใช้ไฟล์โลโก้จริงของ The Farm Concept จาก repo
 

@@ -27,7 +27,7 @@
 ```
 
 ## Typography
-- Font Family: Kanit
+- Font Family: Noto Sans Thai
 - Page Title: 28–32px
 - Section Title: 20–24px
 - Card Title: 18–20px

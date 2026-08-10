@@ -1,5 +1,5 @@
 /* TheFarmConcept — Chart wrappers (Chart.js 4)
-   ห่อ Chart.js ไว้ชั้นเดียว เพื่อให้ทุกหน้าที่มีกราฟใช้ค่ามาตรฐานเดียวกัน: ฟอนต์ Kanit, โทนสีเขียวอ่อนของระบบ,
+   ห่อ Chart.js ไว้ชั้นเดียว เพื่อให้ทุกหน้าที่มีกราฟใช้ค่ามาตรฐานเดียวกัน: ฟอนต์ Noto Sans Thai, โทนสีเขียวอ่อนของระบบ,
    grid เท่าที่จำเป็น, tooltip ภาษาไทย และ legend ที่แสดงทั้งจำนวนและเปอร์เซ็นต์
    จับคู่กับ CSS .chart-card / .chart-canvas / .chart-legend ใน components.css
 
@@ -61,7 +61,7 @@ window.TFC = window.TFC || {};
   }
 
   function baseFont(size, weight) {
-    return { family: 'Kanit, sans-serif', size: size || 12, weight: weight || 400 };
+    return { family: 'Noto Sans Thai, sans-serif', size: size || 12, weight: weight || 400 };
   }
 
   function tooltipStyle(extra) {
@@ -94,10 +94,10 @@ window.TFC = window.TFC || {};
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = PALETTE.textStrong;
-      ctx.font = '600 26px Kanit, sans-serif';
+      ctx.font = '600 26px Noto Sans Thai, sans-serif';
       ctx.fillText(String(opts.total), center.x, center.y - 6);
       ctx.fillStyle = PALETTE.text;
-      ctx.font = '400 12px Kanit, sans-serif';
+      ctx.font = '400 12px Noto Sans Thai, sans-serif';
       ctx.fillText(opts.label || 'คน', center.x, center.y + 16);
       ctx.restore();
     }
@@ -118,7 +118,7 @@ window.TFC = window.TFC || {};
           if (!value) return;
           ctx.save();
           ctx.fillStyle = PALETTE.text;
-          ctx.font = '500 12px Kanit, sans-serif';
+          ctx.font = '500 12px Noto Sans Thai, sans-serif';
           ctx.textBaseline = 'middle';
           if (horizontal) {
             ctx.textAlign = 'left';

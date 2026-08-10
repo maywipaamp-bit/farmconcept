@@ -25,7 +25,7 @@
 - Border: `#E5E7EB`
 - Text Primary: `#1F2937`
 - Text Secondary: `#6B7280`
-- Font: Kanit
+- Font: Noto Sans Thai
 - Style: Modern, Minimal, Clean, Professional, Enterprise
 - Responsive: Mobile, Tablet, Desktop
 - ใช้ White Space อย่างเหมาะสม

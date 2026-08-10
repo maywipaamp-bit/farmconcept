@@ -23,7 +23,7 @@ Reuse Layout และ Component เดิม
 ```text
 อ่านมาตรฐาน UI จาก AGENTS.md และ docs/design-system.md
 สร้างภาพหน้าจอเป็น HTML เพียง 1 ไฟล์
-ใช้ Font Kanit และโทนขาวเขียวของระบบ
+ใช้ Font Noto Sans Thai และโทนขาวเขียวของระบบ
 รองรับ Desktop, Tablet และ Mobile
 เน้นให้หน้าตาใกล้เคียงภาพอ้างอิง แต่ต้องคงมาตรฐาน Design System เดิม
 ห้ามสร้างฐานข้อมูลหรือ Backend
