@@ -20,7 +20,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;                 /* ระยะการ์ด -> footer */
+    gap: var(--sp-4);          /* ระยะการ์ด -> footer */
     padding: var(--sp-6);
     background: radial-gradient(120% 90% at 50% 0%, #EEF7EF, #F6F8F6 55%, #F6F8F6);
   }
@@ -32,18 +32,20 @@
     background: var(--bg-surface);
     border: 1px solid #EEF1EE;
     border-radius: var(--r-xl);
-    padding: 40px 36px;
+    padding: var(--sp-8);
     box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 16px 40px rgba(16, 24, 40, .06);
     display: flex;
     flex-direction: column;
-    gap: var(--sp-5, 20px);
+    /* เดิมเขียน var(--sp-5, 20px) แต่ tokens.css ไม่มี --sp-5 จริง (สเกลข้าม 20px)
+       ค่าที่ได้จึงเป็น fallback 20px ซึ่งหลุดสเกล 4px — เปลี่ยนมาใช้ตัวแปรที่มีอยู่จริง */
+    gap: var(--sp-4);
     /* both = คงสถานะเฟรมแรกไว้ก่อนเริ่ม จึงไม่กระพริบตอนโหลด */
     animation: om-pop-in var(--dur-modal) var(--ease-out) both;
   }
 
   /* ---------- 1. โลโก้ + คำบรรยาย ---------- */
-  .login-brand { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
-  .login-logo  { width: 208px; height: auto; }
+  .login-brand { display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+  .login-logo  { width: 176px; height: auto; }
   .login-tagline {
     margin: 0;
     text-align: center;
@@ -53,8 +55,10 @@
     color: var(--text-secondary);
   }
 
-  /* ---------- 2–3. ฟิลด์ ---------- */
-  .login-form { display: flex; flex-direction: column; gap: var(--sp-4); }
+  /* ---------- 2–3. ฟิลด์ ----------
+     ระยะระหว่างฟิลด์ 12px · ระยะ label -> ช่องกรอก 8px ตามมาตรฐาน
+     ต้องต่างกันชัด ไม่งั้น label จะดูลอยจากช่องของตัวเองไปเกาะฟิลด์บน */
+  .login-form { display: flex; flex-direction: column; gap: var(--sp-3); }
   .field { display: flex; flex-direction: column; gap: var(--sp-2); }
 
   .label {
@@ -64,9 +68,10 @@
     color: var(--text-primary);
   }
 
+  /* padding 10px 12px = สูง 42px เท่าฟิลด์มาตรฐานของระบบ (STANDARD.md) */
   .input {
     width: 100%;
-    padding: 11px 14px;
+    padding: 10px var(--sp-3);
     border-radius: var(--r-md);
     border: 1px solid var(--border-default);
     font-size: var(--fs-body);
@@ -86,11 +91,13 @@
   }
 
   .password-wrap { position: relative; display: flex; flex-direction: column; }
-  .password-wrap .input { padding-right: 76px; }   /* เว้นที่ให้ปุ่มแสดง/ซ่อน */
+  /* ปุ่ม "แสดง/ซ่อน" กว้างสุด 42px + เว้นช่องไฟ 14px = 56px */
+  .password-wrap .input { padding-right: 56px; }
 
+  /* bottom 12px = กึ่งกลางแนวตั้งของช่องสูง 42px พอดี ((42 - 18) / 2) */
   .password-toggle {
     position: absolute;
-    right: 14px;
+    right: var(--sp-3);
     bottom: 12px;
     border: 0;
     background: none;
@@ -137,12 +144,15 @@
   }
   .login-remember input:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 4px; }
 
-  /* ---------- 6. ปุ่มเข้าสู่ระบบ ---------- */
+  /* ---------- 6. ปุ่มเข้าสู่ระบบ ----------
+     สูง 42px เท่าช่องกรอก ทั้งการ์ดจึงเป็นจังหวะเดียวกันตลอด ไม่มีปุ่มก้อนโตกว่าฟิลด์ */
   .btn-block {
     width: 100%;
     justify-content: center;
-    padding: 12px 20px;
-    font-size: 15px;
+    /* 11px (ไม่ใช่ 10px) เพราะ .btn ใช้ line-height 1.4 ส่วนช่องกรอกใช้ 1.6
+       ต้องชดเชยส่วนต่างนี้ ปุ่มถึงจะสูง 43px เท่าช่องกรอกพอดี */
+    padding: 11px 20px;
+    font-size: var(--fs-body);
   }
 
   /* ปุ่มหลักเท่านั้นที่เน้นด้วยน้ำหนัก 500 ปุ่มรองเป็น 400 ตามค่าเริ่มต้นของ .btn */
