@@ -181,9 +181,12 @@
     cursor: not-allowed;
   }
 
-  /* ปุ่มรองเป็น <a> — standard/base.css ขีดเส้นใต้ลิงก์ตอน hover ต้องปิดไว้ */
+  /* ปุ่มรองเป็น <a> — standard/base.css ขีดเส้นใต้ลิงก์ตอน hover ต้องปิดไว้
+     ตัวหนังสือ 13px เล็กกว่าปุ่มหลัก และไม่มีไอคอนนำหน้า เพื่อให้อ่านเป็นทางเลือกรอง
+     padding 12px ชดเชยตัวอักษรที่เล็กลง ปุ่มจึงยังสูง 44px เท่าปุ่มหลักและช่องกรอก */
   a.btn-block,
   a.btn-block:hover { text-decoration: none; color: var(--text-body); }
+  a.btn-block { padding: 12px 20px; font-size: var(--fs-secondary); }
 
   .spinner {
     width: 16px; height: 16px; flex: none;
@@ -209,10 +212,33 @@
   .login-footer a { color: inherit; }
   .login-footer a:hover { color: var(--text-secondary); text-decoration: underline; }
 
-  /* จอเตี้ยกว่านี้ให้เลื่อนได้ เพื่อไม่ให้เนื้อหาถูกตัดหาย
-     (สเปกกำหนดว่าห้ามมี scrollbar ตั้งแต่ 720px ขึ้นไป) */
+  /* ---------- มือถือ (จอแคบ) ----------
+     บีบขอบเข้ามาให้การ์ดได้ความกว้างคืน และย่อโลโก้ลง
+     เพราะที่ 360px ขอบ 24+32 กินไปด้านละ 56px เหลือเนื้อหาแค่ 248px */
+  @media (max-width: 480px) {
+    body { padding: var(--sp-4); }
+    .login-card { padding: var(--sp-6); border-radius: var(--r-lg); }
+    .login-logo { width: 152px; }
+  }
+
+  /* ---------- จอเตี้ย ----------
+     บีบระยะแนวตั้งก่อนเป็นอันดับแรก เพื่อให้ยังพอดีจอโดยไม่ต้องเลื่อน
+     ถ้าเตี้ยกว่านี้อีกค่อยปล่อยให้เลื่อนได้ ดีกว่าตัดเนื้อหาหาย
+     (สเปกกำหนดว่าห้ามมี scrollbar ตั้งแต่ 720px ขึ้นไป — ยังทำได้ตามนั้น) */
   @media (max-height: 719px) {
     html, body { height: auto; min-height: 100vh; overflow: auto; }
+    body { padding: var(--sp-4); }
+    .login-card { padding: var(--sp-6); gap: var(--sp-3); }
+    .login-brand { gap: var(--sp-1); }
+    .login-logo { width: 152px; }
+  }
+
+  /* ---------- จอแคบสุด (320px) ----------
+     ต้องประกาศหลังบล็อกจอเตี้ย เพราะจอ 320px มักเตี้ยไปด้วย ทั้งสองกฎจึงถูกใช้พร้อมกัน
+     ถ้าอยู่ก่อน ค่า padding ที่นี่จะโดนบล็อกจอเตี้ยเขียนทับ (specificity เท่ากัน ตัวหลังชนะ) */
+  @media (max-width: 360px) {
+    body { padding: var(--sp-3); }
+    .login-card { padding: var(--sp-4); }
   }
 </style>
 </head>
@@ -258,10 +284,7 @@
 
       <!-- 7. เส้นคั่น + ปุ่มรอง -->
       <hr class="login-divider">
-      <a class="btn btn-block" href="public/activities.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        กิจกรรมทั้งหมด
-      </a>
+      <a class="btn btn-block" href="public/activities.html">กิจกรรมทั้งหมด</a>
     </form>
   </main>
 
