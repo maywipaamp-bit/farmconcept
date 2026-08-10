@@ -7,7 +7,7 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-canvas);
 }
 
 /* ---------- Sidebar ---------- */

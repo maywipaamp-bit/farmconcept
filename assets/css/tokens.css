@@ -12,6 +12,11 @@
   --color-primary-soft: #F0FDF4;
 
   /* ---------- Colors : Surface ---------- */
+  /* พื้นของทั้งหน้า (body และ .app-shell) — ขาวล้วนทั้งระบบ
+     แยกจาก --color-background เพราะตัวนั้นยังใช้เป็นพื้นอ่อนของป้ายสถานะ
+     หัวตาราง และแถบ hover ซึ่งต้องต่างจากพื้นขาวถึงจะมองเห็น
+     เปลี่ยนสีพื้นทั้งระบบให้แก้ที่บรรทัดนี้บรรทัดเดียว */
+  --color-canvas: #FFFFFF;
   --color-background: #F6F8F6;
   --color-surface: #FFFFFF;
   --color-border: #E5E7EB;

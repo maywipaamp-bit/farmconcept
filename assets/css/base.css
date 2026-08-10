@@ -37,7 +37,7 @@ body {
   /* เนื้อหาทั่วไปใช้ระดับ body (#374151) ไม่ใช่ primary (#1F2937)
      เพื่อให้หัวข้อและคอลัมน์หลักเด่นขึ้นมาด้วย "สี" แทนการใช้ตัวหนา */
   color: var(--color-text-body);
-  background-color: var(--color-background);
+  background-color: var(--color-canvas);
   -webkit-font-smoothing: antialiased;
 }
 
