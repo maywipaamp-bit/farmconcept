@@ -25,8 +25,14 @@
   ];
 
   var PLACE_EMPTY = 'เลือกพื้นที่ดำเนินงาน';
-  var PLACES = [PLACE_EMPTY, 'The Farm Concept', 'ชุมชนพูนทรัพย์', 'ชุมชนตึกร้าง'];
-  var KINDS = ['กิจกรรม', 'อีเว้นท์'];
+  /* อ่านจากข้อมูลกลางก่อน ถ้าไม่มีค่อยใช้ค่าสำรอง — เพิ่มพื้นที่ในระบบแล้วหน้านี้ต้องเห็นเอง
+     ของเดิมเขียนรายชื่อไว้ตรง ๆ ทำให้พื้นที่ใหม่ไม่โผล่มาเป็นตัวเลือก */
+  var PLACES = [PLACE_EMPTY].concat(
+    (mock.areas || []).map(function (a) { return a.name; })
+  );
+  if (PLACES.length === 1) PLACES = [PLACE_EMPTY, 'The Farm Concept', 'ชุมชนพูนทรัพย์', 'ชุมชนตึกร้าง'];
+
+  var KINDS = mock.activityTypes || ['กิจกรรม', 'อีเว้นท์'];
 
   /* หมวดหมู่ + ไอคอน มาจากข้อมูลกลาง (หน้า "หมวดหมู่กิจกรรม" เป็นคนดูแล)
      ไม่ hardcode รายชื่อไว้ที่นี่ ไม่งั้นเพิ่มหมวดหมู่ในระบบแล้วหน้านี้ไม่รู้เรื่อง */
@@ -42,8 +48,11 @@
     return '<svg class="ac-chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + found.path + '</svg>';
   }
 
-  var MODES = ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสม (Hybrid)'];
-  var TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
+  var MODES = mock.activityVenueModes || ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสม (Hybrid)'];
+
+  /* เหมือน PLACES — อ่านจากข้อมูลกลาง เพิ่มกลุ่มเป้าหมายในระบบแล้วหน้านี้ต้องเห็นเอง */
+  var TARGETS = (mock.targetGroups || []).map(function (t) { return t.name; });
+  if (!TARGETS.length) TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
   /* สามขั้นตอนที่เป็นอิสระต่อกัน ติ๊กแยกกันได้ทั้งหมด
      ที่ติ๊กไว้ที่นี่คือแหล่งความจริงเดียว — ฟิลด์เงื่อนไขและแถวช่วงเวลาข้างล่างอ่านจากชุดนี้
@@ -757,9 +766,16 @@
       return;
     }
 
-    /* ---- ปุ่มล่าง ---- */
-    if (t.closest('#ac-save-draft')) return saveDraft(true);
+    /* ---- ปุ่มล่าง ----
+       ถ้าหน้าจอลงทะเบียน onSubmit ไว้ (หน้า Blade ที่ต่อฐานข้อมูลจริง) ให้ส่งงานต่อไปที่นั่น
+       ไม่ได้ลงทะเบียนไว้ = หน้า static เดิม ทำงานแบบเดิมคือแค่ขึ้น toast
+       แยกแบบนี้เพื่อให้ไฟล์นี้ใช้ได้ทั้งสองหน้าโดยไม่ต้องมีสองเวอร์ชัน */
+    if (t.closest('#ac-save-draft')) {
+      return api.onSubmit ? api.onSubmit(state, { publish: false }) : saveDraft(true);
+    }
+
     if (t.closest('#ac-publish') && !$('ac-publish').disabled) {
+      if (api.onSubmit) return api.onSubmit(state, { publish: true });
       state.dirty = false;
       if (window.TFC.showToast) window.TFC.showToast('บันทึกและเผยแพร่กิจกรรมเรียบร้อย', 'success');
       return;
@@ -912,6 +928,35 @@
     pushStateToDom();
     applyEditChrome(a);
   }
+
+  /* ---------- จุดต่อสำหรับหน้าที่ทำงานบนฐานข้อมูลจริง ----------
+     state ถูกปิดอยู่ใน IIFE นี้ หน้าอื่นจึงอ่านไม่ได้ ต้องเปิดช่องให้ผ่าน object เดียวนี้
+     เปิดเท่าที่จำเป็นจริง ไม่เปิดทั้ง scope:
+       onSubmit   หน้าจอกำหนดเองว่าจะบันทึกยังไง (ไม่กำหนด = พฤติกรรมเดิม)
+       state      อ่านค่าที่ผู้ใช้กรอกไปประกอบ payload
+       markSaved  ให้หน้าจอบอกกลับได้ว่าบันทึกสำเร็จแล้ว จะได้ไม่เตือนตอนออกจากหน้า */
+  var api = window.TFC.activityForm = {
+    onSubmit: null,
+    state: state,
+    markSaved: function () { state.dirty = false; },
+
+    /* จำสถานะเดิมของปุ่มเผยแพร่ไว้ เพราะ sync() เป็นคนคุมว่ากดได้หรือยังตามความครบของฟอร์ม
+       ถ้าเปิดกลับมาเฉย ๆ จะกลายเป็นกดได้ทั้งที่ยังกรอกไม่ครบ */
+    setBusy: function (on) {
+      var publish = $('ac-publish');
+      var draft = $('ac-save-draft');
+
+      if (on) {
+        api.wasDisabled = publish.disabled;
+        publish.disabled = true;
+        draft.disabled = true;
+        return;
+      }
+
+      publish.disabled = !!api.wasDisabled;
+      draft.disabled = false;
+    }
+  };
 
   /* ---------- เริ่มต้น ---------- */
   initEditMode();
