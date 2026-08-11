@@ -43,8 +43,8 @@
 @endpush
 
 @push('page-script')
-{{-- type="module" เพื่อให้ทำงานหลัง bundle ของ Vite ซึ่งถูก defer — ดูเหตุผลใน layouts/admin.blade.php --}}
-<script type="module">
+{{-- สคริปต์ธรรมดา ไม่ใช่ module — ต้องทำงานตอน parse ต่อจากสคริปต์กลางที่โหลดไว้ก่อนหน้า --}}
+<script>
 (function () {
   var mock = window.TFC_MOCK;
 
@@ -67,7 +67,7 @@
     actions: [
       {
         label: 'เพิ่มกิจกรรม',
-        href: '/admin/activities/create.html',
+        href: '{{ route('admin.activities.create') }}',
         icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
       }
     ]
@@ -200,7 +200,10 @@
     return '<div class="grid-row" data-id="' + activity.id + '">' +
       '<div class="grid-code">' + window.TFC.escapeHtml(activity.id) + '</div>' +
 
-      '<div><a class="grid-name" href="/admin/activities/create.html?id=' + activity.id + '">' + window.TFC.escapeHtml(activity.name) + '</a>' +
+      /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
+      '<div>' +
+      (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
+      '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit">' + window.TFC.escapeHtml(activity.name) + '</a>' +
       (responsible(activity).length ? '<div class="grid-sub">' + window.TFC.escapeHtml(responsible(activity).join(' · ')) + '</div>' : '') + '</div>' +
 
       '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
@@ -226,7 +229,7 @@
   function menuItems(activity) {
     var items = [
       { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: '/admin/activities/detail.html?id=' + activity.id },
-      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: '/admin/activities/create.html?id=' + activity.id, perm: 'activities' }
+      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: '/admin/activities/' + activity.id + '/edit', perm: 'activities' }
     ];
     if (canDelete(activity)) {
       items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',

@@ -17,9 +17,13 @@
     ลำดับการโหลด CSS ต้องตรงกับหน้าเดิมทุกบรรทัด — standard/* มาก่อน แล้วค่อย CSS เดิมของ repo
     ตามที่ CLAUDE.md อธิบายไว้ว่าตั้งใจให้ CSS เดิม override มาตรฐานใหม่ระหว่างการย้ายทีละหน้า
 --}}
-{{-- CSS 8 ไฟล์และ JS ที่ใช้ร่วมกัน ถูกรวมเป็นก้อนเดียวโดย Vite (ดู resources/css/app.css และ resources/js/app.js)
-     ลำดับการรวมอยู่ในไฟล์ entry ทั้งสอง ห้ามสลับ --}}
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+{{-- CSS รวมเป็นก้อนเดียวโดย Vite (ดู resources/css/app.css) ลำดับการรวมอยู่ในไฟล์ entry ห้ามสลับ
+
+     JS ยัง "ไม่" รวม bundle — เมื่อรวมเป็นโมดูลเดียว สคริปต์ที่พังตัวเดียวจะหยุดตัวที่เหลือทั้งหมด
+     ต่างจากเดิมที่เป็นสคริปต์แยก 11 ไฟล์ ซึ่งพังตัวหนึ่งตัวอื่นยังทำงานต่อได้
+     ทำให้หน้าขาวทั้งหน้าเพราะ TFC.renderPageHeader ไม่ถูกประกาศ
+     จะกลับมารวมอีกครั้งเมื่อหาและแก้ตัวที่พังได้แล้ว — resources/js/app.js ยังอยู่ครบ --}}
+@vite(['resources/css/app.css'])
 @stack('styles')
 </head>
 <body>
@@ -50,16 +54,30 @@
   <script src="{{ asset('assets/js/sidebar-render.js') }}"></script>
 
   <div class="app-main">
-    <main class="content">
+    {{-- บางหน้าต้องการคลาสเพิ่มบน main เช่นฟอร์มที่ต้องเว้นที่ให้แถบปุ่มล่าง --}}
+    <main class="content @yield('main-class')">
       @yield('content')
     </main>
+
+    {{-- ของที่ต้องอยู่นอก .content แต่ยังอยู่ใน .app-main เช่นแถบปุ่มล่างแบบติดขอบจอ --}}
+    @yield('after-content')
   </div>
 </div>
 
 @yield('modals')
 
-{{-- สคริปต์เฉพาะหน้าที่เป็นสคริปต์ธรรมดา — ทำงานตอน parse จึงมาก่อน bundle ของ Vite เสมอ --}}
+<script src="{{ asset('assets/js/data-service.js') }}"></script>
+<script src="{{ asset('assets/js/navigation.js') }}"></script>
+<script src="{{ asset('assets/js/modal.js') }}"></script>
+<script src="{{ asset('assets/js/profile-modal.js') }}"></script>
+<script src="{{ asset('assets/js/action-menu.js') }}"></script>
+<script src="{{ asset('assets/js/index-layout.js') }}"></script>
+<script src="{{ asset('assets/js/toast.js') }}"></script>
+<script src="{{ asset('assets/js/form.js') }}"></script>
+<script src="{{ asset('assets/js/smart-select.js') }}"></script>
+<script src="{{ asset('assets/js/search-popover.js') }}"></script>
 @stack('scripts')
+<script src="{{ asset('assets/js/app.js') }}"></script>
 
 {{-- สคริปต์ของหน้าต้อง "ทำงานหลัง" bundle เพราะเรียกใช้ TFC.renderPageHeader / renderPagination
      ที่มาจาก bundle — ประกาศเป็น type="module" เพื่อให้ถูก defer ไปทำงานตามหลัง

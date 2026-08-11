@@ -80,7 +80,7 @@
           <span class="frt-card-title" id="frt-sim-title">ทดลองคำนวณ</span>
           <label class="frt-sim-field">
             <span class="frt-sim-label">วันที่เข้ากลุ่มตัวอย่าง</span>
-            <input type="date" class="input frt-sim-date" id="frt-entry" lang="th-TH">
+            <input type="text" class="input frt-sim-date" id="frt-entry" data-picker="date" placeholder="เลือกวันที่">
           </label>
         </div>
 
@@ -115,6 +115,7 @@
 <script src="../../assets/js/toast.js"></script>
 <script src="../../assets/js/form.js"></script>
 <script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/datetime-picker.js"></script>
 <script>
 (function () {
   var esc = window.TFC.escapeHtml;
@@ -342,7 +343,7 @@
 
   /* เปลี่ยนวันที่ตั้งต้น — ทั้งคอลัมน์ตัวอย่างและไทม์ไลน์ต้องขยับทันที */
   byId('frt-entry').addEventListener('input', function () {
-    state.entry = this.value;
+    state.entry = this.getAttribute('data-iso') || '';
     updateAllRows();
     renderTimeline();
   });
@@ -381,7 +382,7 @@
   });
 
   /* ---------- เริ่มทำงาน ---------- */
-  byId('frt-entry').value = state.entry;
+  byId('frt-entry').setAttribute('data-iso', state.entry);
 
   svc.load().then(function (rows) {
     state.rows = rows;

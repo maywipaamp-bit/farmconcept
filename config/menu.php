@@ -23,7 +23,10 @@ return [
             'key' => 'dashboard',
             'label' => 'แดชบอร์ด',
             'icon' => '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/>',
-            'href' => 'admin/dashboard.html',
+            /* ย้ายเป็นหน้า Blade แล้ว (ไม่มี .html) — alsoMatch ไว้ให้ลิงก์เดิมยังไฮไลต์ถูก
+               ระหว่างที่หน้า static ยังชี้ ../dashboard.html อยู่ */
+            'href' => 'admin/dashboard',
+            'alsoMatch' => ['admin/dashboard.html'],
         ],
         [
             'key' => 'activities',
@@ -106,7 +109,7 @@ return [
                     'key' => 'master-data-target-groups',
                     'label' => 'กลุ่มเป้าหมาย',
                     'icon' => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-                    'href' => 'admin/basic/target-groups.html',
+                    'href' => 'admin/master/target-groups',
                 ],
                 [
                     'key' => 'master-data-programs',
@@ -124,7 +127,7 @@ return [
                     'key' => 'master-data-activity-formats',
                     'label' => 'หมวดหมู่กิจกรรม',
                     'icon' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
-                    'href' => 'admin/basic/activity-formats.html',
+                    'href' => 'admin/master/activity-formats',
                 ],
                 [
                     /* คนละหน้ากับ "รอบติดตาม" ในกลุ่มประเมินสุขภาพ — ตัวนั้นตั้งช่วงวันที่จริงร่วมกันทั้งระบบ

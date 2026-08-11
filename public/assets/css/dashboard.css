@@ -1,0 +1,988 @@
+﻿/* ==========================================================================
+   แดชบอร์ดภาพรวมการดำเนินงาน (admin/dashboard)
+
+   ค่าสี ฟอนต์ ระยะ และเงาในไฟล์นี้มาจาก handoff ของหน้านี้โดยเฉพาะ
+   ซึ่งเป็นชุดที่ต่างจาก token กลางของระบบ (เขียว #4f9455 ไม่ใช่ #16A34A ·
+   พื้น #eef2ec ไม่ใช่ #F6F8F6 · IBM Plex Sans Thai ไม่ใช่ Noto Sans Thai)
+   จึงประกาศเป็นตัวแปรชุดของตัวเองไว้ใต้ .dbo แล้วอ้างอิงตัวแปรทุกจุด
+   ไม่มีค่าสีลอย ๆ นอกบล็อกตัวแปร และไม่มีในไฟล์ Blade เลย — แก้สีทั้งหน้าที่บล็อก .dbo ที่เดียว
+
+   ขอบเขตอยู่ใต้ .dbo ทั้งหมด ไม่มีกฎใดหลุดไปแตะหน้าอื่น
+   คลาสของหน้านี้ใช้คำนำหน้า dbo- ทุกตัว ไม่ทับกับ .dash-* ของแดชบอร์ดชุดเดิม
+   ========================================================================== */
+
+/* ฟอนต์ของ handoff (IBM Plex Sans Thai 400/500/600 + IBM Plex Sans 500/600)
+   โหลดด้วย <link> ใน resources/views/admin/dashboard.blade.php ไม่ใช่ @import ที่นี่
+   เพราะไฟล์นี้ถูก Vite รวมเข้ากลางก้อน CSS — @import ที่ไม่ได้อยู่บนสุดของก้อนจะถูกทิ้ง
+   และ <link> ในหน้ายังเริ่มโหลดฟอนต์ได้เร็วกว่าโดยไม่ต้องรอ CSS มาถึงก่อน */
+
+.dbo {
+  /* ---- สเกลเขียว 5 ระดับ = "ปริมาณ" เข้ม=มาก · ใช้ร่วมกันทุกกราฟ ---- */
+  --dbo-g0: #2f6b36;
+  --dbo-g1: #4a8d51;
+  --dbo-g2: #69a870;
+  --dbo-g3: #8fc194;
+  --dbo-g4: #b6d8b9;
+
+  --dbo-brand: #4f9455;
+  --dbo-brand-hover: #427f48;
+
+  /* ---- สีที่มีความหมายเฉพาะ ห้ามนำไปใช้แทนสเกลปริมาณ ---- */
+  --dbo-female: #d1608a;
+  --dbo-female-tint: #fbeaf1;
+  --dbo-male: #3f7cb8;
+  --dbo-male-tint: #e8f1fb;
+  --dbo-warn: #c98a3c;
+  --dbo-warn-tint: #fbf1e3;
+
+  /* ---- พื้นและเส้น ----
+     พื้นหน้าเป็นขาวล้วนตามที่ใช้ทั้งระบบ (assets/css/tokens.css → --color-canvas)
+     ไม่ใช่ #eef2ec ของ handoff — ทีมขอให้ตรงกับหน้าอื่น
+
+     พอพื้นเป็นขาวเท่ากับการ์ด การ์ดต้องมีเส้นขอบช่วยแยก
+     เงาของ handoff จางเกินกว่าจะเห็นขอบการ์ดบนพื้นขาว ถ้าไม่มีขอบการ์ดจะกลืนหายไปเลย
+     ใช้แนวเดียวกับ .card ของระบบใน components.css ที่ใช้ขอบบาง + เงานุ่มคู่กัน */
+  --dbo-page: #ffffff;
+  --dbo-card: #ffffff;
+  --dbo-card-border: #e8ede6;
+  --dbo-track: #f2f5f0;
+  --dbo-track-deep: #ecefe9;
+  --dbo-divider: #eef1eb;
+  --dbo-axis: #e4eae1;
+  --dbo-hover: #f4f8f3;
+  --dbo-tint: #e9f4e6;
+  --dbo-tint-flat: #f0f3ef;
+
+  /* ---- ข้อความ ---- */
+  --dbo-text: #1f2c20;
+  --dbo-text-2: #4a564a;
+  --dbo-text-3: #7d8a7c;
+  --dbo-text-4: #9aa599;
+  /* ป้ายกำกับในกราฟ (legend, ชื่อช่วง, คอลัมน์ %) — อยู่ระหว่าง text-2 กับ text-3 */
+  --dbo-text-chart: #6f7d6e;
+  --dbo-eyebrow: #8a968a;
+  --dbo-on-brand: #ffffff;
+  /* ตัวอักษรบนกล่อง treemap เฉดอ่อน — เข้มกว่า --dbo-text เพื่อคอนทราสต์บนพื้นเขียว */
+  --dbo-on-tile: #22381f;
+
+  --dbo-pill-border: #e0e6dd;
+  --dbo-pill-border-hover: #9dc79f;
+
+  /* เตือนแบบเข้ม (ตัวเลขที่ต้องตามต่อ) และค่าที่ลดลง — คนละระดับกับ --dbo-warn ที่ใช้กับ "ก่อนเข้าร่วม" */
+  --dbo-warn-strong: #c4703c;
+  --dbo-danger: #c95252;
+
+  /* ---- ฟอนต์ — ตัวเลขทุกตัวใช้ IBM Plex Sans (ไม่ใช่ตัว Thai) ตาม handoff ---- */
+  --dbo-font: 'IBM Plex Sans Thai', 'Noto Sans Thai', system-ui, sans-serif;
+  --dbo-font-num: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+
+  /* ---- ขนาดตัวอักษร ----
+     ปรับความใหญ่ของทั้งหน้าที่บล็อกนี้จุดเดียว ไม่ต้องไล่แก้ทีละกฎ
+     เล็กกว่าค่าใน handoff หนึ่งขั้นตามที่ทีมขอ (ของเดิม kpi 32 · lead 24-26 · title 15)
+     เล็กสุด 11px ใช้เฉพาะป้ายในกราฟและหัวคอลัมน์ */
+  --dbo-fs-page: clamp(19px, 3vw, 22px);   /* ชื่อหน้า */
+  --dbo-fs-kpi: 26px;        /* ตัวเลขบนการ์ด KPI */
+  --dbo-fs-lead: 20px;       /* ตัวเลขนำในหัวการ์ด · กลางโดนัท · แผงเพศ */
+  --dbo-fs-stat: 18px;       /* ตัวเลขสรุปท้ายการ์ด */
+  --dbo-fs-title: 14px;      /* หัวการ์ด */
+  --dbo-fs-body: 13px;
+  --dbo-fs-label: 12.5px;
+  --dbo-fs-small: 12px;
+  --dbo-fs-micro: 11px;
+
+  /* ---- น้ำหนัก ----
+     600 ใช้เฉพาะหัวข้อ · ตัวเลขใช้ 500 ให้หน้าดูเบาลง ความเด่นมาจากขนาดกับสีแทนความหนา
+     (ตรงกับหลักของ CLAUDE.md ที่ให้สื่อความสำคัญด้วยสีก่อนน้ำหนัก) */
+  --dbo-fw-title: 600;
+  --dbo-fw-num: 500;
+  --dbo-fw-medium: 500;
+
+  --dbo-radius: 20px;
+  --dbo-radius-sm: 12px;
+  --dbo-bar: 4px;
+  --dbo-bar-lg: 6px;
+  --dbo-shadow: 0 1px 2px rgba(35, 60, 35, .05), 0 16px 40px -32px rgba(40, 80, 45, .5);
+
+  --dbo-dur: .15s;
+  --dbo-dur-bar: .3s;
+  --dbo-gap-row: 18px;
+}
+
+/* ---- เฉดตามอันดับ: rank 0 = มากสุด = เข้มสุด ----
+   Blade ใส่คลาสนี้ให้ชิ้นกราฟ แล้วชิ้นนั้นอ่าน --dbo-c เป็นสีของตัวเอง
+   ทำให้ฝั่ง PHP ส่งออกแค่ "อันดับ" ไม่ต้องรู้จักค่าสีเลย */
+.dbo-r0 { --dbo-c: var(--dbo-g0); }
+.dbo-r1 { --dbo-c: var(--dbo-g1); }
+.dbo-r2 { --dbo-c: var(--dbo-g2); }
+.dbo-r3 { --dbo-c: var(--dbo-g3); }
+.dbo-r4 { --dbo-c: var(--dbo-g4); }
+
+/* ==========================================================================
+   โครงหน้า
+   ========================================================================== */
+
+/* กินความกว้างเต็มเพื่อให้พื้น --dbo-page เต็มพื้นที่ทำงาน แล้วให้ชั้นในคุม max-width
+   ถ้าใส่พื้นบน .content ที่มี max-width จอกว้างจะเห็นขอบขาวสองข้าง */
+.content.dbo {
+  max-width: 100%;
+  padding: clamp(14px, 3vw, 26px) clamp(12px, 3vw, 30px) 40px;
+  background: var(--dbo-page);
+  font-family: var(--dbo-font);
+  color: var(--dbo-text);
+}
+
+.dbo-page {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbo-gap-row);
+}
+
+.dbo-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbo-gap-row);
+}
+
+/* จองความสูงไว้ก่อน ไม่ให้เนื้อหาที่ตามมากระโดดตอนสลับช่วงเวลา */
+.dbo-body { min-height: 900px; }
+
+/* ---- หัวหน้า ---- */
+.dbo-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.dbo-head-text {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dbo-eyebrow {
+  font-size: var(--dbo-fs-label);
+  letter-spacing: .06em;
+  color: var(--dbo-eyebrow);
+  white-space: nowrap;
+}
+
+/* เจาะจงกว่า `.content h1` ใน components.css ที่บังคับ 20px/400/เขียวเข้มให้ทุกหน้า */
+.content.dbo .dbo-title {
+  margin: 0;
+  font-size: var(--dbo-fs-page);
+  line-height: 1.35;
+  font-weight: var(--dbo-fw-title);
+  color: var(--dbo-text);
+  letter-spacing: -.015em;
+}
+
+.dbo-head-tools {
+  flex: 0 1 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dbo-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.dbo-pill {
+  height: 38px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--dbo-pill-border);
+  background: var(--dbo-card);
+  color: var(--dbo-text-2);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: var(--dbo-fs-body);
+  font-weight: var(--dbo-fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dbo-dur), border-color var(--dbo-dur), color var(--dbo-dur), transform var(--dbo-dur);
+}
+
+.dbo-pill:hover { border-color: var(--dbo-pill-border-hover); }
+.dbo-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79, 148, 85, .22); }
+.dbo-pill:active { transform: scale(.985); }
+
+.dbo-pill.is-active {
+  background: var(--dbo-brand);
+  border-color: var(--dbo-brand);
+  color: var(--dbo-on-brand);
+}
+
+.dbo-pill.is-active:hover { background: var(--dbo-brand-hover); border-color: var(--dbo-brand-hover); }
+
+/* ปุ่มที่กำลังรอข้อมูลต้องกดซ้ำไม่ได้ */
+.dbo-filters.is-busy .dbo-pill { pointer-events: none; opacity: .7; }
+
+.dbo-stamp {
+  margin-left: 8px;
+  font-size: var(--dbo-fs-label);
+  color: var(--dbo-eyebrow);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   ชิ้นส่วนที่ใช้ร่วมกัน
+   ========================================================================== */
+
+.dbo-card {
+  background: var(--dbo-card);
+  border: 1px solid var(--dbo-card-border);
+  border-radius: var(--dbo-radius);
+  padding: 22px 26px 24px;
+  box-shadow: var(--dbo-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dbo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+
+.dbo-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dbo-card-title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px 10px;
+  flex-wrap: wrap;
+}
+
+.dbo-card-title h2 {
+  margin: 0;
+  font-size: var(--dbo-fs-title);
+  line-height: 1.5;
+  font-weight: var(--dbo-fw-title);
+  color: var(--dbo-text);
+}
+
+.dbo-sub { font-size: var(--dbo-fs-label); color: var(--dbo-text-4); }
+.dbo-panel-title { font-size: var(--dbo-fs-label); color: var(--dbo-text-4); }
+.dbo-note { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); white-space: nowrap; }
+
+/* ตัวเลข วันที่ และคอลัมน์จำนวนต้องเรียงหลักตรงกัน ไม่ขยับตอนค่าเปลี่ยน */
+.dbo-num {
+  font-family: var(--dbo-font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+
+.dbo-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.dbo-legend-item { display: flex; align-items: center; gap: 7px; }
+.dbo-legend-label { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); white-space: nowrap; }
+.dbo-swatch { width: 10px; height: 10px; flex: none; border-radius: 3px; background: var(--dbo-c, var(--dbo-g1)); }
+.dbo-swatch--line { width: 14px; height: 3px; border-radius: 2px; }
+
+/* ---- Empty state ของแผงที่ยังไม่มีข้อมูล ----
+   แสดงเป็นกล่องในตำแหน่งเดิมของกราฟ ความสูงใกล้เคียงของจริง
+   หน้าจอจึงไม่ยุบเมื่อบางแผงยังว่าง */
+.dbo-empty {
+  flex: 1;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 1px dashed var(--dbo-axis);
+  border-radius: var(--dbo-radius-sm);
+  background: var(--dbo-track);
+  text-align: center;
+}
+
+.dbo-empty svg { color: var(--dbo-text-4); }
+.dbo-empty-title { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-medium); color: var(--dbo-text-2); }
+.dbo-empty-note { font-size: var(--dbo-fs-small); line-height: 1.6; color: var(--dbo-text-4); max-width: 34ch; text-wrap: pretty; }
+
+/* ---- Focus/dim ขณะชี้ชิ้นกราฟ ----
+   .is-focused ถูกใส่ที่ตัวหน้าเมื่อมีการชี้ · ชิ้นที่ตรงคีย์ได้ .is-on
+   เทียบคีย์ด้วย JS เพราะ CSS เทียบค่า attribute ข้าม element ไม่ได้ */
+.dbo-body.is-focused .dbo-mark:not(.is-on) { opacity: .35; }
+.dbo-hit.is-on { background: var(--dbo-hover); }
+.dbo-mark { transition: opacity var(--dbo-dur); }
+.dbo-hit { transition: background var(--dbo-dur); }
+
+/* ---- Tooltip — กล่องเดียวของทั้งหน้า ย้ายตำแหน่งด้วย style.left/top จาก JS ---- */
+.dbo-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-tooltip, 600);
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  background: var(--dbo-text);
+  color: var(--dbo-on-brand);
+  border-radius: var(--dbo-radius-sm);
+  padding: 10px 14px;
+  box-shadow: 0 12px 30px -12px rgba(20, 40, 22, .6);
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 132px;
+}
+
+.dbo-tip.is-open { display: flex; }
+.dbo-tip-head { display: flex; align-items: center; gap: 8px; }
+.dbo-tip-dot { width: 9px; height: 9px; flex: none; border-radius: 3px; background: currentColor; }
+.dbo-tip-title { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-medium); white-space: nowrap; }
+
+.dbo-tip-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dbo-tip-key { font-size: var(--dbo-fs-micro); color: rgba(255, 255, 255, .62); white-space: nowrap; }
+.dbo-tip-val { font-size: var(--dbo-fs-label); font-weight: var(--dbo-fw-num); white-space: nowrap; }
+
+/* ตารางสำรองสำหรับโปรแกรมอ่านหน้าจอ — ค่าหลักอ่านได้จากบนหน้าจออยู่แล้ว
+   ตารางนี้ให้โครงความสัมพันธ์ที่กราฟ CSS สื่อไม่ได้ */
+.dbo-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   แถว 1 — การ์ด KPI
+   ========================================================================== */
+
+.dbo-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.dbo-kpi { padding: 20px 22px 18px; gap: 14px; }
+
+.dbo-kpi-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dbo-kpi-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.dbo-kpi-label { font-size: var(--dbo-fs-body); line-height: 1.4; color: var(--dbo-text-3); }
+
+.dbo-kpi-value { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+
+.dbo-kpi-value .dbo-num {
+  font-size: var(--dbo-fs-kpi);
+  font-weight: var(--dbo-fw-num);
+  line-height: 1;
+  color: var(--dbo-text);
+  /* จองความกว้างไว้ ตัวเลขเปลี่ยนหลักแล้วบรรทัดไม่ขยับ */
+  min-width: 2ch;
+}
+
+.dbo-kpi-unit { font-size: var(--dbo-fs-label); color: var(--dbo-text-4); white-space: nowrap; }
+
+.dbo-kpi-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dbo-tint);
+  border-radius: 13px;
+  color: var(--dbo-g0);
+}
+
+.dbo-kpi-foot { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.dbo-delta { font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-medium); color: var(--dbo-g0); }
+.dbo-delta[data-tone="down"] { color: var(--dbo-warn); }
+.dbo-delta[data-tone="flat"] { color: var(--dbo-text-3); }
+.dbo-delta-note { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
+
+/* ==========================================================================
+   แถว 2 — ผู้เข้าร่วมกิจกรรมทั้งหมด
+   ========================================================================== */
+
+.dbo-total { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
+.dbo-total-main { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dbo-total-label { font-size: var(--dbo-fs-title); font-weight: var(--dbo-fw-title); color: var(--dbo-text); }
+.dbo-total-main .dbo-num { font-size: var(--dbo-fs-lead); font-weight: var(--dbo-fw-num); color: var(--dbo-text); }
+
+.dbo-total-side {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding-left: 20px;
+  border-left: 1px solid var(--dbo-divider);
+  flex-wrap: wrap;
+}
+
+.dbo-total-side-label { font-size: var(--dbo-fs-body); color: var(--dbo-text-3); }
+.dbo-total-side .dbo-num { font-size: var(--dbo-fs-stat); font-weight: var(--dbo-fw-num); color: var(--dbo-brand); }
+
+.dbo-panels { display: flex; flex-wrap: wrap; gap: 26px 0; align-items: stretch; }
+
+.dbo-panel { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* เส้นคั่นระหว่างแผงมีเฉพาะตอนที่แผงยังอยู่บรรทัดเดียวกัน
+   จอแคบที่แผงตกบรรทัดจะเห็นเส้นลอยกลางอากาศ จึงถอดออกใน media query ท้ายไฟล์
+
+   น้ำหนักการโตต่างกัน (0 : 1 : 3) ไม่ใช่เท่ากันทั้งสามแผง
+   แผงเพศมีเนื้อหาคงที่แค่สามบรรทัด ให้พื้นที่เพิ่มไปเท่าไหร่ก็เหลือว่าง
+   ถ้าแบ่งเท่ากัน แผงหลักสูตรจะถูกบีบจนตารางอันดับตกไปอยู่ใต้กราฟทั้งที่การ์ดยังมีที่ว่าง */
+.dbo-panel--gender { flex: 0 1 190px; padding-right: 26px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--age { flex: 1 1 250px; gap: 14px; padding: 0 26px; border-right: 1px solid var(--dbo-divider); }
+
+.dbo-panel--courses {
+  flex: 3 1 470px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  /* ชิดบนไว้ ถ้าจอแคบจนตารางต้องตกบรรทัดจริง จะได้ไม่ลอยห่างจากกราฟ */
+  align-items: flex-start;
+  gap: 24px;
+  padding-left: 26px;
+}
+
+/* ---- เพศ ---- */
+/* --dbo-c ของแถวเพศไม่ได้มาจากสเกลปริมาณ แต่ต้องมีเพื่อให้จุดสีในกล่อง tooltip
+   อ่านค่าจากที่เดียวกับชิ้นกราฟอื่น ๆ (JS อ่าน --dbo-c ของชิ้นที่ชี้อยู่) */
+.dbo-gender { display: flex; align-items: center; gap: 11px; --dbo-c: var(--dbo-g1); }
+.dbo-gender[data-sex="female"] { --dbo-c: var(--dbo-female); }
+.dbo-gender[data-sex="male"] { --dbo-c: var(--dbo-male); }
+
+.dbo-gender-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--dbo-tint);
+  color: var(--dbo-g1);
+}
+
+.dbo-gender[data-sex="female"] .dbo-gender-icon { background: var(--dbo-female-tint); color: var(--dbo-female); }
+.dbo-gender[data-sex="male"] .dbo-gender-icon { background: var(--dbo-male-tint); color: var(--dbo-male); }
+
+.dbo-gender-text { display: flex; flex-direction: column; gap: 2px; }
+.dbo-gender-count { display: flex; align-items: baseline; gap: 5px; }
+.dbo-gender-count .dbo-num { font-size: var(--dbo-fs-lead); font-weight: var(--dbo-fw-num); line-height: 1; color: var(--dbo-text); }
+.dbo-gender-unit { font-size: var(--dbo-fs-micro); color: var(--dbo-text-4); }
+.dbo-gender-label { font-size: var(--dbo-fs-small); color: var(--dbo-text-3); }
+
+/* ---- ช่วงอายุ ---- */
+.dbo-ages { display: flex; flex-direction: column; gap: 11px; }
+
+.dbo-age {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 3px 5px;
+  margin: -3px -5px;
+  border-radius: var(--dbo-bar-lg);
+}
+
+.dbo-age-label { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); text-align: right; }
+.dbo-age-bar { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.dbo-age-fill {
+  height: 20px;
+  min-width: 3px;
+  border-radius: var(--dbo-bar);
+  background: var(--dbo-c);
+  width: var(--dbo-w);
+  transition: width var(--dbo-dur-bar) ease, opacity var(--dbo-dur);
+}
+
+.dbo-age-count { font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-num); color: var(--dbo-text-2); }
+
+/* ---- หลักสูตร: กราฟแท่งตั้ง + ตารางอันดับ ---- */
+/* flex-basis ต่ำกว่าความกว้างที่อยากได้จริง เพราะค่านี้คือเกณฑ์ตัดสินว่าจะตกบรรทัดหรือไม่
+   ตั้งไว้ 300+240 ทำให้ตารางตกบรรทัดทันทีที่แผงแคบกว่า 564px ซึ่งเกิดบ่อยกว่าที่คิด
+   ทั้งคู่มี flex-grow จึงยืดเต็มพื้นที่ที่มีอยู่ดี การลด basis ไม่ได้ทำให้แคบลงบนจอกว้าง */
+.dbo-courses-chart { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.dbo-courses-table { flex: 1 1 210px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+/* ความสูงถูก JS ตั้งให้เท่ากับความสูงจริงของรายการช่วงอายุ เส้นฐานสองกราฟจึงตรงกัน
+   ค่าเริ่มต้นเป็นค่าที่ใกล้ของจริง กันเลย์เอาต์กระโดดก่อน JS วัดเสร็จ */
+.dbo-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: end;
+  height: var(--dbo-chart-h, 176px);
+  min-height: 120px;
+  border-bottom: 1px solid var(--dbo-axis);
+}
+
+.dbo-bar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 2px 0;
+  border-radius: var(--dbo-bar-lg) var(--dbo-bar-lg) 0 0;
+}
+
+.dbo-bar-count { flex: none; font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-num); color: var(--dbo-text); }
+.dbo-bar-slot { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+
+.dbo-bar-fill {
+  flex: none;
+  width: 100%;
+  max-width: 22px;
+  min-height: 4px;
+  height: var(--dbo-h);
+  border-radius: var(--dbo-bar) var(--dbo-bar) 0 0;
+  background: var(--dbo-c);
+  transition: height var(--dbo-dur-bar) ease, opacity var(--dbo-dur);
+}
+
+.dbo-bar-labels {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.dbo-bar-label {
+  min-width: 0;
+  text-align: center;
+  font-size: var(--dbo-fs-small);
+  line-height: 1.35;
+  color: var(--dbo-text-2);
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+.dbo-rank-head,
+.dbo-rank-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 46px 44px;
+  gap: 7px;
+  align-items: center;
+}
+
+.dbo-rank-head { padding-bottom: 7px; border-bottom: 1px solid var(--dbo-divider); }
+.dbo-rank-head span { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
+.dbo-rank-list { display: flex; flex-direction: column; gap: 6px; }
+
+.dbo-rank-row { padding: 3px 5px; margin: -3px -5px; border-radius: var(--dbo-bar-lg); }
+.dbo-rank-no { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
+
+.dbo-rank-name {
+  min-width: 0;
+  font-size: var(--dbo-fs-label);
+  color: var(--dbo-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dbo-rank-count { font-size: var(--dbo-fs-label); font-weight: var(--dbo-fw-num); color: var(--dbo-text); text-align: right; }
+.dbo-rank-pct { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); text-align: right; }
+.dbo-align-right { text-align: right; }
+
+/* ==========================================================================
+   แถว 3 ซ้าย — โดนัทกลุ่มตัวอย่าง
+   ========================================================================== */
+
+.dbo-card--cohort { flex: 1 1 300px; min-width: 0; }
+.dbo-card--rounds { flex: 2 1 340px; min-width: 0; }
+
+.dbo-donut-wrap { flex: 1; display: flex; align-items: center; gap: 20px; min-width: 0; flex-wrap: wrap; }
+.dbo-donut { position: relative; flex: none; width: 152px; height: 152px; }
+.dbo-donut svg { transform: rotate(-90deg); display: block; }
+
+.dbo-donut-seg {
+  fill: none;
+  stroke: var(--dbo-c);
+  stroke-width: 30;
+  cursor: pointer;
+  transition: opacity var(--dbo-dur), stroke-width var(--dbo-dur);
+}
+
+.dbo-donut-seg.is-on { stroke-width: 34; }
+
+.dbo-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.dbo-donut-center .dbo-num { font-size: var(--dbo-fs-lead); font-weight: var(--dbo-fw-num); line-height: 1; color: var(--dbo-text); }
+.dbo-donut-unit { font-size: var(--dbo-fs-micro); color: var(--dbo-text-4); }
+
+.dbo-donut-legend { flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 11px; }
+
+.dbo-donut-row {
+  display: grid;
+  grid-template-columns: 10px minmax(64px, 1fr) 48px 44px;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: var(--dbo-bar-lg);
+}
+
+.dbo-donut-row-label {
+  min-width: 0;
+  font-size: var(--dbo-fs-body);
+  color: var(--dbo-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dbo-donut-row-count { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-title); color: var(--dbo-text); text-align: right; }
+.dbo-donut-row-pct { font-size: var(--dbo-fs-label); color: var(--dbo-text-chart); text-align: right; }
+
+/* ==========================================================================
+   แถว 3 ขวา — การตอบแบบประเมินสุขภาพ
+   ========================================================================== */
+
+.dbo-rounds { display: flex; flex-direction: column; gap: 14px; }
+
+.dbo-round {
+  display: grid;
+  grid-template-columns: 96px minmax(120px, 1fr);
+  gap: 8px 12px;
+  align-items: center;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: 10px;
+}
+
+.dbo-round-label { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-medium); color: var(--dbo-text); }
+.dbo-round-body { min-width: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.dbo-round-track {
+  flex: 1 1 120px;
+  display: flex;
+  height: 22px;
+  border-radius: var(--dbo-bar-lg);
+  overflow: hidden;
+  background: var(--dbo-track-deep);
+}
+
+.dbo-round-fill {
+  width: var(--dbo-w);
+  background: var(--dbo-c);
+  border-radius: var(--dbo-bar-lg) 0 0 var(--dbo-bar-lg);
+  transition: width var(--dbo-dur-bar) ease;
+}
+
+.dbo-round-stat { flex: none; display: flex; align-items: baseline; gap: 5px; }
+.dbo-round-stat .dbo-num { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-num); color: var(--dbo-text); }
+.dbo-round-stat--miss .dbo-num { font-size: var(--dbo-fs-body); color: var(--dbo-text-2); }
+.dbo-round-stat--miss[data-tone="warn"] .dbo-num { color: var(--dbo-warn-strong); }
+.dbo-round-stat-label { font-size: var(--dbo-fs-micro); color: var(--dbo-text-4); white-space: nowrap; }
+
+.dbo-round-stats {
+  padding-top: 16px;
+  border-top: 1px solid var(--dbo-divider);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.dbo-round-summary { display: flex; flex-direction: column; gap: 4px; }
+.dbo-round-summary .dbo-num { font-size: var(--dbo-fs-stat); font-weight: var(--dbo-fw-num); line-height: 1; color: var(--dbo-g0); }
+.dbo-round-summary[data-tone="warn"] .dbo-num { color: var(--dbo-warn-strong); }
+.dbo-round-summary[data-tone="info"] .dbo-num { color: var(--dbo-male); }
+.dbo-round-summary-label { font-size: var(--dbo-fs-small); line-height: 1.5; color: var(--dbo-text-3); }
+
+/* ==========================================================================
+   แถว 4 — ผลประเมินก่อนและหลังเข้าร่วม
+   ========================================================================== */
+
+.dbo-compare { display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch; }
+
+.dbo-trend {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.dbo-trend-ticks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 260px;
+  padding: 6px 0;
+}
+
+.dbo-trend-ticks span { font-family: var(--dbo-font-num); font-variant-numeric: tabular-nums; font-size: var(--dbo-fs-micro); color: var(--dbo-text-4); text-align: right; }
+
+.dbo-trend-plot { position: relative; height: 260px; }
+.dbo-trend-plot svg { display: block; }
+.dbo-trend-grid { stroke: var(--dbo-track); stroke-width: 1; }
+.dbo-trend-grid.is-base { stroke: var(--dbo-axis); }
+
+.dbo-trend-line {
+  fill: none;
+  stroke: var(--dbo-c);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity var(--dbo-dur);
+}
+
+/* กล่องครอบจุดต้องปล่อยเมาส์ผ่านไปถึงเส้นใน <svg> ที่อยู่ข้างล่าง
+   ไม่ใส่ pointer-events: none แล้ว div ใสจะกินเมาส์ทั้งผืน เส้นจะชี้ไม่ได้เลย */
+.dbo-trend-dots { position: absolute; inset: 0; pointer-events: none; }
+
+.dbo-dot {
+  pointer-events: auto;
+  position: absolute;
+  left: var(--dbo-x);
+  top: var(--dbo-y);
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dbo-dot span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dbo-card);
+  border: 2.5px solid var(--dbo-c);
+}
+
+.dbo-dot-label {
+  position: absolute;
+  left: var(--dbo-x);
+  top: var(--dbo-y);
+  transform: translate(-50%, -50%);
+  font-family: var(--dbo-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--dbo-fs-micro);
+  font-weight: var(--dbo-fw-num);
+  color: var(--dbo-c);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ก่อนเข้าร่วม = เหลืองอำพัน · หลังเข้าร่วม = เขียวเข้ม (สีเชิงความหมาย ไม่ใช่สเกลปริมาณ) */
+.dbo-series--before { --dbo-c: var(--dbo-warn); }
+.dbo-series--after { --dbo-c: var(--dbo-g0); }
+
+.dbo-trend-axis {
+  grid-column: 2;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  padding-top: 10px;
+  border-top: 1px solid var(--dbo-axis);
+}
+
+.dbo-trend-axis-item { display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 0 4px; }
+
+.dbo-trend-axis-label {
+  text-align: center;
+  font-size: var(--dbo-fs-micro);
+  line-height: 1.35;
+  color: var(--dbo-text);
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+.dbo-trend-gain { font-size: var(--dbo-fs-micro); font-weight: var(--dbo-fw-num); color: var(--dbo-g0); }
+.dbo-trend-gain[data-tone="down"] { color: var(--dbo-danger); }
+
+.dbo-insights { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.dbo-insights-title { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-title); color: var(--dbo-text); }
+.dbo-insight { display: flex; gap: 11px; }
+
+.dbo-insight-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--dbo-tint);
+  color: var(--dbo-g0);
+}
+
+.dbo-insight[data-tone="warn"] .dbo-insight-icon { background: var(--dbo-warn-tint); color: var(--dbo-warn); }
+.dbo-insight[data-tone="muted"] .dbo-insight-icon { background: var(--dbo-tint-flat); color: var(--dbo-text-chart); }
+
+.dbo-insight-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dbo-insight-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.dbo-insight-head .dbo-num { font-size: var(--dbo-fs-title); font-weight: var(--dbo-fw-num); color: var(--dbo-g0); }
+.dbo-insight[data-tone="warn"] .dbo-insight-head .dbo-num { color: var(--dbo-warn); }
+.dbo-insight[data-tone="muted"] .dbo-insight-head .dbo-num { color: var(--dbo-text-chart); }
+.dbo-insight-title { font-size: var(--dbo-fs-label); font-weight: var(--dbo-fw-medium); color: var(--dbo-text); }
+.dbo-insight-note { font-size: var(--dbo-fs-small); line-height: 1.5; color: var(--dbo-text-3); text-wrap: pretty; }
+
+/* ==========================================================================
+   แถว 5 — พื้นที่ดำเนินงาน
+   ========================================================================== */
+
+.dbo-card--treemap { flex: 3 1 320px; min-width: 0; padding: 22px 24px; gap: 16px; }
+.dbo-card--areas { flex: 2 1 300px; min-width: 0; padding: 22px 24px; gap: 16px; }
+
+.dbo-treemap {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+  width: 100%;
+  border-radius: var(--dbo-radius-sm);
+  overflow: hidden;
+  background: var(--dbo-track);
+}
+
+.dbo-tile {
+  position: absolute;
+  left: var(--dbo-x);
+  top: var(--dbo-y);
+  width: var(--dbo-w);
+  height: var(--dbo-h);
+  padding: 10px 12px;
+  background: var(--dbo-c);
+  border: 2px solid var(--dbo-card);
+  border-radius: var(--dbo-bar-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: flex-end;
+  overflow: hidden;
+  cursor: pointer;
+  /* เฉดอ่อนตั้งแต่ระดับ 2 ลงไป ต้องใช้ตัวอักษรเข้มถึงจะได้คอนทราสต์พอ */
+  color: var(--dbo-on-tile);
+}
+
+.dbo-tile.dbo-r0 { color: var(--dbo-on-brand); }
+
+.dbo-tile-name {
+  flex: none;
+  min-width: 0;
+  font-size: var(--dbo-fs-body);
+  font-weight: var(--dbo-fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dbo-tile-count { flex: none; font-size: var(--dbo-fs-title); font-weight: var(--dbo-fw-num); white-space: nowrap; }
+
+/* กล่องเตี้ยไม่มีที่พอสำหรับสองบรรทัด เหลือแต่ตัวเลข (ชื่อยังอ่านได้จาก tooltip) */
+.dbo-tile.is-compact { padding: 6px 8px; }
+.dbo-tile.is-compact .dbo-tile-name { display: none; }
+.dbo-tile.is-compact .dbo-tile-count { font-size: var(--dbo-fs-micro); }
+
+.dbo-areas { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+
+.dbo-area {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 48px 46px;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  border-radius: var(--dbo-bar-lg);
+}
+
+.dbo-area-label {
+  font-size: var(--dbo-fs-label);
+  color: var(--dbo-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dbo-area-track {
+  display: flex;
+  height: 14px;
+  border-radius: var(--dbo-bar-lg);
+  overflow: hidden;
+  background: var(--dbo-track);
+  width: var(--dbo-w);
+  min-width: 3px;
+  transition: width var(--dbo-dur-bar) ease;
+}
+
+.dbo-area-seg { width: var(--dbo-w); background: var(--dbo-c); cursor: pointer; }
+.dbo-area-count { font-size: var(--dbo-fs-body); font-weight: var(--dbo-fw-title); color: var(--dbo-text); text-align: right; }
+.dbo-area-pct { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); text-align: right; }
+
+/* ==========================================================================
+   จอแคบ — ทุกแถวเป็น flex-wrap อยู่แล้ว เหลือแค่ถอดเส้นคั่นและระยะที่เกิน
+   ไม่มี breakpoint ตายตัวสำหรับการตกบรรทัด การ์ดจัดตัวเองจาก flex-basis
+   ========================================================================== */
+
+@media (max-width: 1080px) {
+  .dbo-panel--gender,
+  .dbo-panel--age {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .dbo-panel--age { padding-left: 0; }
+  .dbo-panel--courses { padding-left: 0; }
+}
+
+@media (max-width: 720px) {
+  .content.dbo { padding-left: 12px; padding-right: 12px; }
+  .dbo-card { padding: 18px 16px 20px; }
+  .dbo-card--treemap,
+  .dbo-card--areas { padding: 18px 16px; }
+  .dbo-kpi { padding: 16px 18px; }
+
+  .dbo-head-tools { margin-left: 0; justify-content: flex-start; }
+  .dbo-stamp { margin-left: 0; }
+
+  .dbo-total-side { padding-left: 0; border-left: 0; }
+
+  /* ป้ายช่วงอายุขึ้นบรรทัดบนของแท่ง ไม่บีบรางให้เหลือไม่กี่พิกเซล */
+  .dbo-age { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .dbo-age-label { text-align: left; }
+
+  .dbo-round { grid-template-columns: minmax(0, 1fr); }
+  .dbo-area { grid-template-columns: minmax(0, 1fr) 48px 46px; }
+  .dbo-area-track { grid-column: 1 / -1; }
+
+  .dbo-trend { grid-template-columns: 32px minmax(0, 1fr); }
+  .dbo-treemap { min-height: 260px; }
+  .dbo-body { min-height: 0; }
+}

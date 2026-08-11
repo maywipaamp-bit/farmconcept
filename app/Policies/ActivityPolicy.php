@@ -9,6 +9,18 @@ use Illuminate\Auth\Access\Response;
 class ActivityPolicy
 {
     /**
+     * สร้างกิจกรรมใหม่ — ใช้สิทธิ์เดียวกับการแก้ไข
+     *
+     * ยังไม่มีกิจกรรมให้ตรวจสถานะ จึงเหลือแค่เรื่องสิทธิ์เมนู
+     */
+    public function create(User $user): Response
+    {
+        return $user->canAccessMenu('activities-list')
+            ? Response::allow()
+            : Response::deny('ไม่มีสิทธิ์สร้างกิจกรรม');
+    }
+
+    /**
      * แก้ไขได้ทุกสถานะ ยกเว้นที่ยกเลิกไปแล้ว
      *
      * กิจกรรมที่ยกเลิกเป็นบันทึกทางประวัติศาสตร์ — แก้ย้อนหลังจะทำให้รายงานที่อ้างอิงไปแล้วเพี้ยน
@@ -41,6 +53,18 @@ class ActivityPolicy
 
         if ($activity->status !== Activity::STATUS_DRAFT) {
             return Response::deny('กิจกรรมที่เผยแพร่แล้วลบไม่ได้ หากต้องการยุติกิจกรรม ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน');
+        }
+
+        /* อีเวนท์ที่ยังมีกิจกรรมอยู่ข้างในลบไม่ได้ — ต้องย้ายหรือลบกิจกรรมออกให้หมดก่อน
+           FK ตั้งเป็น RESTRICT ไว้อีกชั้นแล้ว ตรงนี้มีไว้เพื่อบอกเหตุผลเป็นภาษาคน
+           แทนที่จะให้ผู้ใช้เจอ error ของฐานข้อมูลดิบ ๆ */
+        $childCount = $activity->childActivities()->count();
+
+        if ($childCount > 0) {
+            return Response::deny(
+                'อีเวนท์นี้มีกิจกรรมอยู่ ' . $childCount . ' รายการ ลบไม่ได้ '
+                . 'ให้ย้ายกิจกรรมออกจากอีเวนท์หรือลบกิจกรรมเหล่านั้นก่อน'
+            );
         }
 
         return Response::allow();

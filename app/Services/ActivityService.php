@@ -59,12 +59,13 @@ class ActivityService
     private function columns(array $data): array
     {
         $keys = [
-            'name', 'description', 'type', 'participant_type',
+            'name', 'description', 'type', 'participant_type', 'parent_event_id',
             'program_id', 'course_id', 'format_id',
             'data_source', 'venue_mode', 'status',
             'requires_registration', 'requires_checkin', 'has_post_survey',
             'has_fee', 'capacity', 'organizer',
             'start_date', 'end_date', 'checkin_start_at', 'checkin_end_at',
+            'survey_start_at', 'survey_end_at',
             'is_published', 'publish_start_at', 'publish_end_at',
             'visibility', 'is_featured',
         ];
@@ -144,6 +145,67 @@ class ActivityService
             $qr->is_active = $enabled;
             $qr->save();
         }
+    }
+
+    /**
+     * สร้างกิจกรรมใหม่
+     *
+     * เดินตามเส้นทางเดียวกับ update() ทุกขั้น ต่างกันแค่ต้องออกรหัสและบันทึกผู้สร้าง
+     * QR ถูกสร้างตั้งแต่ตอนนี้เลย (syncQrCodes) เพราะฟอร์มมีสวิตช์ลงทะเบียน/เช็คอิน
+     * อยู่แล้ว ถ้ารอให้แก้ไขอีกรอบจะได้กิจกรรมที่เปิดลงทะเบียนแต่ไม่มี QR ให้สแกน
+     *
+     * @param  array<string, mixed>  $data  ข้อมูลที่ผ่าน ActivityRequest มาแล้ว
+     */
+    public function create(array $data, User $actor): Activity
+    {
+        return DB::transaction(function () use ($data, $actor): Activity {
+            $activity = new Activity($this->columns($data));
+            $activity->code = $this->nextCode();
+            $activity->created_by = $actor->id;
+            $activity->updated_by = $actor->id;
+            $activity->save();
+
+            $activity->areas()->sync($data['area_ids'] ?? []);
+            $activity->instructors()->sync($data['instructor_ids'] ?? []);
+            $activity->targetGroups()->sync($data['target_group_ids'] ?? []);
+
+            $this->syncRounds($activity, $data['rounds'] ?? []);
+            $this->syncQrCodes($activity);
+
+            ActivityLog::create([
+                'user_id' => $actor->id,
+                'action' => 'activity.created',
+                'subject_type' => 'activity',
+                'subject_id' => $activity->id,
+                'detail' => 'สร้างกิจกรรม ' . $activity->code . ' — ' . $activity->name,
+            ]);
+
+            return $activity;
+        });
+    }
+
+    /**
+     * รหัสกิจกรรมถัดไปของปีปัจจุบัน — ACT-2026-001
+     *
+     * เรียกได้เฉพาะภายใน transaction ของ create() เท่านั้น
+     * lockForUpdate กันสองคนกดบันทึกพร้อมกันแล้วได้รหัสซ้ำ ซึ่ง unique index
+     * จะปฏิเสธคนหลังทิ้งไปเฉย ๆ โดยที่ผู้ใช้ไม่เข้าใจว่าทำอะไรผิด
+     *
+     * นับจากรหัสสูงสุด ไม่ใช่จำนวนแถว เพราะกิจกรรมที่ถูกลบไปแล้วยังกินเลขเดิมอยู่
+     * (soft delete) นับจำนวนแถวจะออกเลขซ้ำกับของที่ลบไป
+     */
+    private function nextCode(): string
+    {
+        $prefix = 'ACT-' . now()->year . '-';
+
+        $last = Activity::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->max('code');
+
+        $running = $last ? (int) Str::afterLast($last, '-') : 0;
+
+        return $prefix . str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
     }
 
     /**

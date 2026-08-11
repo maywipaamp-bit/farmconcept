@@ -1375,7 +1375,7 @@ dd { margin: 0; }
   min-width: 200px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-md);
   padding: var(--space-2);
   z-index: var(--z-dropdown);
@@ -3430,7 +3430,7 @@ dd { margin: 0; }
 
 /* รายการตัวเลือกของ Smart Dropdown (แผงที่เรา render เอง จึงคุมหน้าตาได้ทั้งหมด) */
 .smart-select-panel {
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-card);
   padding: var(--space-2);
 }
 
@@ -3639,7 +3639,7 @@ dd { margin: 0; }
   padding: var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-lg);
   display: none;
 }
@@ -4897,6 +4897,13 @@ button.multiselect:focus-visible {
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
   margin-top: 2px;
+}
+
+/* ป้ายบอกว่าแถวนี้เป็นกิจกรรมที่อยู่ในอีเวนท์ — อยู่เหนือชื่อเพื่อให้อ่านเป็นลำดับชั้น */
+.grid-parent {
+  font-size: var(--font-size-caption);
+  color: var(--color-primary-dark);
+  margin-bottom: 2px;
 }
 
 .grid-num {
@@ -6309,7 +6316,9 @@ button.multiselect:focus-visible {
 
 .ac-layout { display: flex; flex-wrap: wrap; gap: var(--space-5); align-items: flex-start; }
 
-.ac-form { display: flex; flex-direction: column; gap: var(--space-4); flex: 1 1 600px; min-width: 0; }
+/* ระยะระหว่างการ์ดแต่ละหัวข้อ 24px ตาม CLAUDE.md ("ระยะระหว่างกลุ่ม 24–32px")
+   ของเดิม 16px เท่ากับระยะระหว่างฟิลด์ในหัวข้อเดียวกัน ทำให้ห้าหัวข้อดูติดกันเป็นพืดเดียว */
+.ac-form { display: flex; flex-direction: column; gap: var(--space-5); flex: 1 1 600px; min-width: 0; }
 
 .ac-side {
   display: flex;
@@ -6736,6 +6745,9 @@ button.multiselect:focus-visible {
 
 .ac-combo-caret { flex: none; color: var(--color-text-muted); }
 
+/* แท็กค่าที่เลือกใช้พื้นขาวขอบปกติ ไม่ใช่พื้นเขียว
+   ค่าที่เลือกแล้วเป็นข้อมูลธรรมดา ไม่ใช่สถานะที่ต้องเน้น
+   ถ้าเป็นสีเขียวทุกอัน ฟอร์มที่กรอกครบจะกลายเป็นเขียวเต็มหน้าและแย่งสายตาจากปุ่มหลัก */
 .ac-tag {
   display: inline-flex;
   align-items: center;
@@ -6744,9 +6756,9 @@ button.multiselect:focus-visible {
   white-space: nowrap;
   border-radius: var(--radius-full);
   padding: 4px 6px 4px 10px;
-  color: var(--color-primary-dark);
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-primary-soft-border);
+  color: var(--color-text-body);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .ac-tag-x {
@@ -6811,6 +6823,9 @@ button.multiselect:focus-visible {
 .ac-combo-item.is-on { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .ac-combo-item .ac-mark { margin-top: 0; }
 
+/* แบบเลือกค่าเดียว: ไม่มีจุดนำหน้า ชื่อกินพื้นที่เต็ม เครื่องหมายถูกไปชิดขวา */
+.ac-combo-item.is-plain { justify-content: space-between; }
+.ac-combo-tick { flex: none; color: var(--color-primary); }
 .ac-combo-empty {
   font-size: var(--font-size-small);
   color: var(--color-text-muted);
@@ -6881,16 +6896,18 @@ button.multiselect:focus-visible {
 .ac-window,
 .ac-toggle { min-width: 0; }
 
+/* แถวสวิตช์เป็นแถวเปล่า ไม่ใช่กล่อง — ตัวมันอยู่ในการ์ดอยู่แล้ว
+   กรอบกับพื้นสีทำให้เกิดกล่องซ้อนกล่อง ซึ่งเป็นต้นเหตุหลักที่หน้าดูรก
+   ใช้เส้นคั่นบาง ๆ แทนเพื่อแยกแถว ตามหลัก "เส้นคั่นแนวนอนเท่านั้น" ใน CLAUDE.md */
 .ac-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  border-radius: var(--radius-input);
-  border: 1px solid var(--color-border-soft);
-  background: var(--color-surface-muted);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) 0;
 }
+
+.ac-toggle + .ac-toggle { border-top: 1px solid var(--color-border-soft); }
 
 .ac-toggle-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
@@ -6960,9 +6977,11 @@ button.multiselect:focus-visible {
 
 .ac-cover-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 
+/* ข้อความในกล่องแนบรูปเป็นคำแนะนำ ไม่ใช่เนื้อหา จึงลดลงมาเท่าขนาดป้ายฟิลด์
+   ของเดิม 14px สีเข้ม ทำให้กล่องเปล่ากลายเป็นจุดที่เด่นที่สุดในหัวข้อนั้น */
 .ac-cover-headline {
-  font-size: var(--font-size-body);
-  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
 }
 
 .ac-cover-hint {
@@ -7072,15 +7091,17 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 /* ---------- QR และลิงก์ ---------- */
 .ac-qr-list { display: flex; flex-direction: column; gap: var(--space-2); }
 
+/* เหมือน .ac-toggle — สามแถวนี้อยู่ในการ์ดอยู่แล้ว กรอบรอบแต่ละแถวทำให้เป็นกล่องซ้อนกล่อง
+   ใช้เส้นคั่นระหว่างแถวแทน */
 .ac-qr-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  border-radius: var(--radius-input);
-  border: 1px solid var(--color-border-soft);
-  padding: 10px var(--space-3);
+  padding: 10px 0;
   min-width: 0;
 }
+
+.ac-qr-item + .ac-qr-item { border-top: 1px solid var(--color-border-soft); }
 
 .ac-qr-thumb {
   width: 34px; height: 34px;
@@ -7171,10 +7192,13 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   border: 1px solid var(--color-border);
   transition: background var(--transition-base), border-color var(--transition-base);
 }
+/* ข้อที่ครบแล้วใช้เครื่องหมายถูกสีเขียวบนพื้นโปร่ง ไม่ใช่วงกลมทึบ
+   ของเดิมเป็นวงเขียวทึบทั้งเก้าข้อ กลายเป็นจุดสีสดเก้าจุดเรียงกัน แย่งสายตาไปจาก
+   ข้อที่ยังขาดซึ่งเป็นสิ่งเดียวที่ผู้ใช้ต้องทำต่อ */
 .ac-check.is-ok .ac-check-dot {
-  color: var(--color-text-inverse);
-  background: var(--color-success);
-  border-color: var(--color-success);
+  color: var(--color-success);
+  background: transparent;
+  border-color: transparent;
 }
 
 /* ---------- แถบปุ่มล่าง ---------- */
@@ -7207,12 +7231,15 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   background: var(--color-border-soft);
   overflow: hidden;
 }
+/* ใช้สีเทาระหว่างกรอกยังไม่ครบ ไม่ใช่สีส้ม — แถบยาวเต็มความกว้างจอ
+   สีเตือนทำให้รู้สึกว่ามีอะไรผิด ทั้งที่แค่ยังกรอกไม่ครบซึ่งเป็นเรื่องปกติของฟอร์มที่กำลังทำ
+   ครบแล้วค่อยเปลี่ยนเป็นเขียวเพื่อบอกว่าเผยแพร่ได้ */
 .ac-progress span {
   display: block;
   height: 100%;
   width: 0;
   border-radius: var(--radius-full);
-  background: var(--color-warning);
+  background: var(--color-text-muted);
   transition: width var(--transition-slow), background var(--transition-base);
 }
 .ac-progress span.is-ready { background: var(--color-success); }
@@ -11373,7 +11400,9 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 
 .dtp { position: fixed; inset: 0; z-index: var(--z-modal); }
 
-.dtp-backdrop { position: absolute; inset: 0; background: rgba(31, 41, 55, 0.45); }
+/* ฉากหลังโปร่งใส — ยังคงไว้เพื่อรับคลิกนอกแผงสำหรับปิด แต่ไม่หรี่จอเหมือน modal
+   ปฏิทินเป็นแผงเลือกค่าของช่องกรอก ไม่ใช่หน้าต่างที่ต้องดึงความสนใจทั้งจอ */
+.dtp-backdrop { position: absolute; inset: 0; background: transparent; }
 
 /* จอเล็กเป็นแผ่นเลื่อนขึ้นจากล่างแบบแอปมือถือ · จอใหญ่ลอยกลางจอ */
 .dtp-sheet {
@@ -11392,6 +11421,25 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 }
 
 @keyframes dtp-up { from { transform: translate(-50%, 12px); opacity: 0 } to { transform: translate(-50%, 0); opacity: 1 } }
+
+/* ---------- แบบยึดกับช่องกรอก (ค่าเริ่มต้นตอนนี้) ----------
+   วางใต้ช่องที่กดเหมือนแผงของ combobox ไม่ใช่แผ่นลอยกลางจอ
+   พิกัด top/left ถูกกำหนดจาก JS (anchorTo) จึงล้างค่าจัดกึ่งกลางของกฎด้านบนทิ้งทั้งหมด */
+.dtp-sheet.is-anchored {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  transform: none;
+  width: max-content;
+  max-width: min(468px, calc(100vw - var(--space-6)));
+  /* มนครบทั้งสี่มุมเท่ากับแผงของ combobox — ของเดิมมนแค่ขอบบนเพราะเป็นแผ่นเลื่อนขึ้นจากล่าง */
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 16px 40px rgba(16, 24, 40, 0.10);
+  animation: dtp-drop var(--transition-base) both;
+}
+
+@keyframes dtp-drop { from { transform: translateY(-6px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
 @media (min-height: 560px) {
   .dtp-sheet {
@@ -12308,7 +12356,9 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .ac-slot-row {
   display: grid;
-  grid-template-columns: 28px minmax(132px, 1.3fr) 92px 92px 96px 32px;
+  /* ช่องวันที่กว้างคงที่พอดีกับ "5 ก.ย. 2569" — ของเดิมเป็น 1.3fr จึงยืดกินพื้นที่ที่เหลือทั้งแถว
+     คอลัมน์สุดท้าย 1fr เป็นที่ว่างไว้รับส่วนเกิน แทนที่จะยัดให้ช่องใดช่องหนึ่งยาวเกินจำเป็น */
+  grid-template-columns: 28px minmax(150px, 1.4fr) minmax(88px, .9fr) minmax(88px, .9fr) minmax(96px, .8fr) 32px;
   gap: var(--space-2);
   align-items: center;
   min-width: 0;
@@ -13519,4 +13569,36 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   margin-left: 0;
   min-width: 38px;
   text-align: right;
+}
+
+/* ---------- ซ่อนแถบขวาของฟอร์มกิจกรรม ----------
+   พับเพื่อคืนความกว้างทั้งหมดให้ฟอร์ม ตอนที่ต้องกรอกข้อมูลยาว ๆ
+   แถบขวาเป็นของประกอบ (พรีวิว · QR · เช็กลิสต์) ไม่ใช่สิ่งที่ต้องเห็นตลอดเวลา */
+.ac-layout.is-side-hidden .ac-side { display: none; }
+
+/* ฟอร์มยืดเต็มความกว้างแทน — flex-basis เดิม 600px ทำให้เหลือที่ว่างข้างขวาเปล่า ๆ */
+.ac-layout.is-side-hidden .ac-form { flex-basis: 100%; }
+
+/* ---------- แถวจัดประเภทกิจกรรม: ประเภท · หมวดหมู่ · กลุ่มเป้าหมาย ----------
+   สามช่องนี้ตอบคำถามเดียวกันคือ "กิจกรรมนี้จัดอยู่กลุ่มไหน" จึงอยู่แถวเดียวกัน
+   ประเภทเป็น select ที่มีแค่สองค่า จึงแคบกว่าอีกสองช่องที่เป็น combobox เลือกหลายค่า */
+.ac-field-row-classify {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ac-field-row-classify { grid-template-columns: 1fr; }
+}
+
+/* ค่าเดียวที่เลือกไว้ในคอมโบ — ข้อความธรรมดา ไม่ใช่แท็ก เพราะเอาออกไม่ได้อยู่แล้ว
+   (ต้องมีค่าเสมอ ต่างจากคอมโบเลือกหลายค่าที่เอาออกทีละอันได้) */
+.ac-combo-single {
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

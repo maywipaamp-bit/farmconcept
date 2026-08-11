@@ -39,6 +39,12 @@ return [
     'image' => ':attribute ต้องเป็นไฟล์รูปภาพ',
     'file' => ':attribute ต้องเป็นไฟล์',
     'mimes' => ':attribute ต้องเป็นไฟล์ชนิด :values',
+    'mimetypes' => ':attribute ต้องเป็นไฟล์ชนิด :values',
+    'dimensions' => ':attribute มีขนาดภาพไม่ถูกต้อง',
+
+    /* เกิดเมื่อ PHP รับไฟล์ไม่สำเร็จตั้งแต่ต้น เช่น ไฟล์ใหญ่เกิน upload_max_filesize
+       หรือเซิร์ฟเวอร์สร้างไฟล์ชั่วคราวไม่ได้ — เป็นปัญหาฝั่งเซิร์ฟเวอร์ ไม่ใช่ผู้ใช้กรอกผิด */
+    'uploaded' => 'อัปโหลด:attribute ไม่สำเร็จ ไฟล์อาจใหญ่เกินที่เซิร์ฟเวอร์รับได้',
 
     'after' => ':attribute ต้องอยู่หลัง :date',
     'after_or_equal' => ':attribute ต้องเป็น :date หรือหลังจากนั้น',

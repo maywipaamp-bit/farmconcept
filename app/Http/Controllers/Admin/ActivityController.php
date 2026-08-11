@@ -5,14 +5,27 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ActivityRequest;
 use App\Models\Activity;
+use App\Models\ActivityFormat;
+use App\Models\Area;
+use App\Models\Course;
+use App\Models\Instructor;
+use App\Models\Program;
+use App\Models\TargetGroup;
 use App\Services\ActivityService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ActivityController extends Controller
 {
+    /** รหัสสมมติของกิจกรรมที่ยังไม่ได้บันทึก — ฟอร์มใช้เป็นคีย์ชั่วคราวเท่านั้น ไม่เคยลงฐาน */
+    private const NEW_CODE = 'NEW';
+
+    /** เพดานรูปปกตามกฎของแอป — ใช้ทั้งตอน validate และตอนบอกหน้าจอ */
+    private const COVER_MAX_KB = 5120;
+
     use AuthorizesRequests;
 
     /**
@@ -27,7 +40,10 @@ class ActivityController extends Controller
         /* forList() ใส่ eager load + withCount ให้แล้ว จึงไม่เกิด N+1 ตอนวาดคอลัมน์
            โปรแกรม/พื้นที่/วิทยากร และไม่ต้องนับผู้ลงทะเบียนทีละแถว */
         $activities = Activity::forList()
-            ->with(['rounds:id,activity_id,round_date,time_start,time_end,location,capacity'])
+            ->with([
+                'rounds:id,activity_id,round_date,time_start,time_end,location,capacity',
+                'parentEvent:id,code,name',
+            ])
             ->orderByDesc('updated_at')
             ->get();
 
@@ -35,6 +51,263 @@ class ActivityController extends Controller
             'activities' => $activities->map(fn (Activity $a) => $this->toListRow($a)),
             'sessions' => $activities->mapWithKeys(fn (Activity $a) => [$a->code => $this->toSessions($a)]),
         ]);
+    }
+
+    /**
+     * ฟอร์มแก้ไขกิจกรรม
+     *
+     * ฟอร์มเดิมอ้างอิงทุกอย่างด้วย "ชื่อ" ไม่ใช่ id จึงต้องส่งตารางแปลงชื่อ→id ไปด้วย
+     * และส่งค่าปัจจุบันทั้งชุดไป เพื่อให้ฟิลด์ที่ฟอร์มไม่ได้คุม (visibility / organizer /
+     * data_source) คงค่าเดิมไว้ตอนบันทึก ไม่ถูกล้างเป็นค่าว่าง
+     */
+    public function edit(Activity $activity): View
+    {
+        $this->authorize('update', $activity);
+
+        $activity->load(['areas', 'instructors', 'targetGroups', 'rounds', 'program', 'course', 'format', 'parentEvent']);
+
+        return $this->formView($activity);
+    }
+
+    /**
+     * ฟอร์มสร้างกิจกรรมใหม่
+     *
+     * ใช้ Blade ตัวเดียวกับหน้าแก้ไข เพราะฟิลด์เหมือนกันทุกช่อง
+     * ต่างกันแค่ปลายทางที่ส่งข้อมูลไป ถ้าแยกไฟล์จะต้องแก้สองที่ทุกครั้งที่เพิ่มฟิลด์
+     *
+     * กิจกรรมยังไม่มีตัวตนในฐาน จึงสร้าง instance เปล่าที่ยังไม่บันทึกขึ้นมาแทน
+     * แล้วผูก relation ว่างไว้เอง ไม่ปล่อยให้ Eloquent ไปยิง query ด้วยคีย์ null
+     */
+    public function create(): View
+    {
+        $this->authorize('create', Activity::class);
+
+        $activity = new Activity([
+            'code' => self::NEW_CODE,
+            'status' => Activity::STATUS_DRAFT,
+            'type' => Activity::TYPE_ACTIVITY,
+            'visibility' => 'สาธารณะ',
+            'capacity' => 0,
+            'fee' => 0,
+        ]);
+
+        foreach (['areas', 'instructors', 'targetGroups', 'rounds'] as $many) {
+            $activity->setRelation($many, collect());
+        }
+
+        foreach (['program', 'course', 'format', 'parentEvent'] as $one) {
+            $activity->setRelation($one, null);
+        }
+
+        $activity->registrations_count = 0;
+
+        return $this->formView($activity);
+    }
+
+    /**
+     * บันทึกกิจกรรมใหม่
+     *
+     * ใช้ ActivityRequest ตัวเดียวกับการแก้ไข — ฉบับร่างตรวจน้อย เผยแพร่ตรวจครบ
+     * ตอบ URL ของหน้าแก้ไขกลับไปด้วย เพื่อให้หน้าจอเปลี่ยนโหมดต่อได้โดยไม่ต้องโหลดใหม่
+     */
+    public function store(ActivityRequest $request, ActivityService $service): JsonResponse
+    {
+        $this->authorize('create', Activity::class);
+
+        $activity = $service->create($request->validated(), $request->user());
+
+        return response()->json([
+            'message' => 'สร้าง' . ($activity->isEvent() ? 'อีเวนท์' : 'กิจกรรม') . ' "' . $activity->name . '" แล้ว',
+            'code' => $activity->code,
+            'redirect' => route('admin.activities.edit', $activity->code),
+            'activity' => $this->toListRow($activity->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
+        ], 201);
+    }
+
+    /**
+     * ข้อมูลทั้งหมดที่ฟอร์มต้องใช้ — ใช้ร่วมกันทั้งโหมดสร้างและโหมดแก้ไข
+     *
+     * ฟอร์มเดิมอ้างอิงทุกอย่างด้วย "ชื่อ" ไม่ใช่ id จึงต้องส่งตารางแปลงชื่อ→id ไปด้วย
+     * และส่งค่าปัจจุบันทั้งชุดไป เพื่อให้ฟิลด์ที่ฟอร์มไม่ได้คุม (visibility / organizer /
+     * data_source) คงค่าเดิมไว้ตอนบันทึก ไม่ถูกล้างเป็นค่าว่าง
+     */
+    private function formView(Activity $activity): View
+    {
+        return view('admin.activities.form', [
+            'activity' => $activity,
+            'isCreate' => ! $activity->exists,
+            'activities' => [$this->toFormRow($activity)],
+            'sessions' => [$activity->code => $this->toSessions($activity)],
+            'areas' => Area::orderBy('name')->get(['id', 'name']),
+            'targetGroups' => TargetGroup::active()->get(['id', 'name']),
+
+            /* ต้องส่ง icon ไปด้วย ไม่งั้นชิปหมวดหมู่จะไม่มีไอคอน
+               (catIconSvg ใช้ค่านี้ไปหา path ใน activityCategoryIcons) */
+            'formats' => ActivityFormat::active()->get(['id', 'name', 'icon'])
+                ->map(fn (ActivityFormat $f) => ['name' => $f->name, 'icon' => $f->icon, 'active' => true]),
+
+            /* โปรแกรม → หลักสูตร → วิทยากรที่สอนหลักสูตรนั้น
+               ของเดิมเขียนไว้ตายตัวในไฟล์ JS และเป็นคนละชุดกับฐานข้อมูลทั้งหมด */
+            'catalog' => $this->programCatalog(),
+
+            /* อีเวนท์ที่เลือกเป็นแม่ได้ — ไม่รวมตัวเอง กันชี้หาตัวเอง */
+            'events' => Activity::selectableEvents($activity->id)->get(['id', 'name']),
+
+            /* สองชุดนี้ยังไม่มีตารางในฐาน — docs/activity-module.md บรรทัด 84 ระบุว่า
+               ประเภทกิจกรรมไม่ต้องมีหน้าจอจัดการ จึงเก็บเป็น config ไปก่อน
+               ถ้าภายหลังทำเป็นตาราง ให้เปลี่ยนมาอ่านจากตารางที่นี่จุดเดียว */
+            'types' => config('farmconcept.activity_types'),
+            'venueModes' => config('farmconcept.venue_modes'),
+            'lookup' => $this->lookupTables(),
+            'current' => $this->currentPayload($activity),
+            'coverMaxBytes' => $this->coverMaxBytes(),
+        ]);
+    }
+    /**
+     * เพดานขนาดรูปปกที่อัปได้จริงบนเครื่องนี้ (ไบต์)
+     *
+     * กฎของแอปคือ 5MB แต่ PHP ตัดไฟล์ทิ้งตั้งแต่ก่อนถึง Laravel ถ้าเกิน upload_max_filesize
+     * หรือ post_max_size — ผลคือ Laravel เห็นเป็น "ไม่ได้แนบไฟล์มา" แล้วฟ้องผิดเรื่อง
+     * ส่งค่าที่เล็กที่สุดในสามค่าไปให้หน้าจอ เพื่อบอกผู้ใช้ตรง ๆ ก่อนจะส่งไฟล์ที่ไม่มีทางผ่าน
+     */
+    private function coverMaxBytes(): int
+    {
+        $toBytes = function (string $value): int {
+            $value = trim($value);
+            $unit = strtolower(substr($value, -1));
+            $number = (int) $value;
+
+            return match ($unit) {
+                'g' => $number * 1024 ** 3,
+                'm' => $number * 1024 ** 2,
+                'k' => $number * 1024,
+                default => $number,
+            };
+        };
+
+        return min(
+            self::COVER_MAX_KB * 1024,
+            $toBytes(ini_get('upload_max_filesize') ?: '2M'),
+            $toBytes(ini_get('post_max_size') ?: '8M'),
+        );
+    }
+
+    /**
+     * โปรแกรม → หลักสูตร → วิทยากร ในรูปแบบที่ฟอร์มใช้เลือกแบบต่อเนื่อง
+     *
+     * วิทยากรของแต่ละหลักสูตรมาจาก mst_instructor_course ไม่ใช่รายชื่อวิทยากรทั้งหมด
+     * เพื่อให้เลือกได้เฉพาะคนที่สอนหลักสูตรนั้นจริง
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function programCatalog(): array
+    {
+        return Program::active()
+            ->with(['courses.instructors:id,name'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Program $program) => [
+                'program' => $program->name,
+                'courses' => $program->courses->map(fn (Course $course) => [
+                    'name' => $course->name,
+                    'teachers' => $course->instructors->pluck('name')->all(),
+                ])->all(),
+            ])
+            ->all();
+    }
+
+    /**
+     * ตารางแปลงชื่อ → id ของทุก master data ที่ฟอร์มใช้
+     *
+     * @return array<string, mixed>
+     */
+    private function lookupTables(): array
+    {
+        return [
+            'areas' => Area::pluck('id', 'name'),
+            'targetGroups' => TargetGroup::pluck('id', 'name'),
+            'instructors' => Instructor::pluck('id', 'name'),
+            'formats' => ActivityFormat::pluck('id', 'name'),
+            'events' => Activity::where('type', Activity::TYPE_EVENT)->pluck('id', 'name'),
+            'courses' => Course::get(['id', 'name', 'program_id'])
+                ->keyBy('name')
+                ->map(fn (Course $c) => ['id' => $c->id, 'program_id' => $c->program_id]),
+        ];
+    }
+
+    /**
+     * ค่าปัจจุบันในรูปแบบเดียวกับที่ ActivityRequest รับ
+     *
+     * @return array<string, mixed>
+     */
+    private function currentPayload(Activity $activity): array
+    {
+        return [
+            'name' => $activity->name,
+            'description' => $activity->description,
+            'type' => $activity->type,
+            'participant_type' => $activity->participant_type,
+            'parent_event_id' => $activity->parent_event_id,
+            'status' => $activity->status,
+            'visibility' => $activity->visibility,
+            'program_id' => $activity->program_id,
+            'course_id' => $activity->course_id,
+            'format_id' => $activity->format_id,
+            'venue_mode' => $activity->venue_mode,
+            'data_source' => $activity->data_source,
+            'organizer' => $activity->organizer,
+            'capacity' => $activity->capacity,
+            'has_fee' => $activity->has_fee,
+            'fee' => (float) $activity->fee,
+            'requires_registration' => $activity->requires_registration,
+            'requires_checkin' => $activity->requires_checkin,
+            'has_post_survey' => $activity->has_post_survey,
+            'is_published' => $activity->is_published,
+            'is_featured' => $activity->is_featured,
+            'start_date' => $activity->start_date?->toDateString(),
+            'end_date' => $activity->end_date?->toDateString(),
+            'checkin_start_at' => $activity->checkin_start_at?->format('Y-m-d H:i:s'),
+            'checkin_end_at' => $activity->checkin_end_at?->format('Y-m-d H:i:s'),
+            'survey_start_at' => $activity->survey_start_at?->format('Y-m-d H:i:s'),
+            'survey_end_at' => $activity->survey_end_at?->format('Y-m-d H:i:s'),
+            'publish_start_at' => $activity->publish_start_at?->format('Y-m-d H:i:s'),
+            'publish_end_at' => $activity->publish_end_at?->format('Y-m-d H:i:s'),
+            'area_ids' => $activity->areas->pluck('id'),
+            'instructor_ids' => $activity->instructors->pluck('id'),
+            'target_group_ids' => $activity->targetGroups->pluck('id'),
+        ];
+    }
+
+    /** รูปแบบที่ activity-create.js คาดไว้ตอนเติมค่าลงฟอร์ม (โหมดแก้ไข) */
+    private function toFormRow(Activity $activity): array
+    {
+        return $this->toListRow($activity) + [
+            'description' => $activity->description,
+            'parentEventName' => $activity->parentEvent?->name,
+            'course' => $activity->course?->name,
+            'targetGroups' => $activity->targetGroups->pluck('name')->all(),
+            'isPublished' => $activity->is_published,
+            'isFeatured' => $activity->is_featured,
+            'tags' => $activity->format ? [$activity->format->name] : [],
+            'area' => $activity->areas->first()?->name,
+            'evaluationFormIds' => [],
+            'coverImage' => $activity->cover_image_path,
+
+            /* สวิตช์จริงจากฐานข้อมูล — ฟอร์มเดิมต้องอนุมานเอาเองเพราะข้อมูลจำลองไม่มีสามฟิลด์นี้ */
+            'joinFlags' => [
+                'reg' => $activity->requires_registration,
+                'chk' => $activity->requires_checkin,
+                'survey' => $activity->has_post_survey,
+            ],
+
+            /* ช่วงเวลา — ฟอร์มผ่าเป็นช่องวันกับช่องเวลาเอง */
+            'publishStart' => $activity->publish_start_at?->format('Y-m-d H:i'),
+            'publishEnd' => $activity->publish_end_at?->format('Y-m-d H:i'),
+            'checkinStart' => $activity->checkin_start_at?->format('Y-m-d H:i'),
+            'checkinEnd' => $activity->checkin_end_at?->format('Y-m-d H:i'),
+            'surveyStart' => $activity->survey_start_at?->format('Y-m-d H:i'),
+            'surveyEnd' => $activity->survey_end_at?->format('Y-m-d H:i'),
+        ];
     }
 
     /**
@@ -53,6 +326,59 @@ class ActivityController extends Controller
             'message' => 'บันทึกกิจกรรม "' . $updated->name . '" แล้ว',
             'activity' => $this->toListRow($updated->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
         ]);
+    }
+
+    /**
+     * อัปโหลดรูปปกกิจกรรม
+     *
+     * แยกเป็น endpoint ของตัวเองแทนการส่งไฟล์มากับ PUT ที่บันทึกฟอร์ม
+     * เพราะ PHP อ่าน multipart จาก PUT ไม่ได้ตรง ๆ และการอัปทันทีทำให้เห็นรูปพรีวิวได้เลย
+     *
+     * เก็บบน disk `public` เพราะรูปปกเป็นของสาธารณะ ผู้เข้าร่วมเห็นบนหน้ากิจกรรม
+     * ต่างจากสลิปการชำระเงินที่ต้องเก็บนอก public แล้วเสิร์ฟผ่าน route ที่ตรวจสิทธิ์
+     */
+    public function uploadCover(Request $request, Activity $activity): JsonResponse
+    {
+        $this->authorize('update', $activity);
+
+        $request->validate(
+            ['cover' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::COVER_MAX_KB]],
+            [],
+            ['cover' => 'รูปภาพปก']
+        );
+
+        /* ลบไฟล์เดิมก่อน ไม่งั้นเปลี่ยนรูปหลายรอบจะเหลือไฟล์กำพร้าสะสมไปเรื่อย ๆ */
+        $this->deleteCoverFile($activity);
+
+        $path = $request->file('cover')->store('activity-covers', 'public');
+
+        $activity->forceFill(['cover_image_path' => $path])->save();
+
+        return response()->json([
+            'message' => 'อัปโหลดรูปปกแล้ว',
+            'path' => $path,
+            'url' => Storage::disk('public')->url($path),
+            'label' => $request->file('cover')->getClientOriginalName()
+                . ' · ' . round($request->file('cover')->getSize() / 1048576, 1) . 'MB',
+        ]);
+    }
+
+    /** ลบรูปปก — ลบทั้งไฟล์และค่าในฐาน ไม่ปล่อยให้ไฟล์ค้าง */
+    public function deleteCover(Activity $activity): JsonResponse
+    {
+        $this->authorize('update', $activity);
+
+        $this->deleteCoverFile($activity);
+        $activity->forceFill(['cover_image_path' => null])->save();
+
+        return response()->json(['message' => 'ลบรูปปกแล้ว']);
+    }
+
+    private function deleteCoverFile(Activity $activity): void
+    {
+        if ($activity->cover_image_path) {
+            Storage::disk('public')->delete($activity->cover_image_path);
+        }
     }
 
     /**
@@ -97,6 +423,7 @@ class ActivityController extends Controller
             'instructorList' => $activity->instructors->pluck('name')->all(),
             'program' => $activity->program?->name,
             'format' => $activity->format?->name,
+            'parentEventName' => $activity->parentEvent?->name,
             'updatedAt' => $activity->updated_at?->toIso8601String(),
         ];
     }

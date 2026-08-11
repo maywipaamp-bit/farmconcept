@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Activity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -56,6 +57,9 @@ class ActivityRequest extends FormRequest
             'status' => ['required', 'in:' . implode(',', self::STATUSES)],
             'visibility' => ['required', 'in:' . implode(',', self::VISIBILITIES)],
 
+            /* อีเวนท์แม่ — ตรวจว่าเป็นอีเวนท์จริงและไม่ใช่ตัวเองใน after() เพราะ exists ตรวจได้แค่ว่ามีแถวอยู่ */
+            'parent_event_id' => ['nullable', 'integer', 'exists:act_activities,id'],
+
             'program_id' => ['nullable', 'integer', 'exists:mst_programs,id'],
             'course_id' => ['nullable', 'integer', 'exists:mst_courses,id'],
             'format_id' => [$whenPublishing, 'integer', 'exists:mst_activity_formats,id'],
@@ -80,6 +84,9 @@ class ActivityRequest extends FormRequest
             /* ช่วงเช็คอินจำเป็นเมื่อเปิดใช้เช็คอินเท่านั้น ไม่ผูกกับการเผยแพร่ */
             'checkin_start_at' => ['nullable', 'required_if:requires_checkin,true', 'date'],
             'checkin_end_at' => ['nullable', 'required_if:requires_checkin,true', 'date', 'after:checkin_start_at'],
+
+            'survey_start_at' => ['nullable', 'date'],
+            'survey_end_at' => ['nullable', 'date', 'after:survey_start_at'],
 
             'publish_start_at' => ['nullable', 'date'],
             'publish_end_at' => ['nullable', 'date', 'after:publish_start_at'],
@@ -117,8 +124,11 @@ class ActivityRequest extends FormRequest
             'end_date' => 'วันที่สิ้นสุด',
             'checkin_start_at' => 'เวลาเริ่มเช็คอิน',
             'checkin_end_at' => 'เวลาสิ้นสุดเช็คอิน',
+            'survey_start_at' => 'เวลาเริ่มทำแบบประเมิน',
+            'survey_end_at' => 'เวลาสิ้นสุดทำแบบประเมิน',
             'publish_start_at' => 'เวลาเริ่มเผยแพร่',
             'publish_end_at' => 'เวลาสิ้นสุดเผยแพร่',
+            'parent_event_id' => 'อีเวนท์ที่สังกัด',
             'area_ids' => 'สถานที่จัด',
             'target_group_ids' => 'กลุ่มเป้าหมาย',
             'rounds' => 'รอบกิจกรรม',
@@ -154,7 +164,42 @@ class ActivityRequest extends FormRequest
         return [
             fn (Validator $v) => $this->checkRoundsDoNotOverlap($v),
             fn (Validator $v) => $this->checkPublishWindow($v),
+            fn (Validator $v) => $this->checkParentEvent($v),
         ];
+    }
+
+    /**
+     * อีเวนท์แม่ต้องเป็นอีเวนท์จริง · ไม่ใช่ตัวเอง · และอีเวนท์เองห้ามมีแม่
+     *
+     * ห้ามซ้อนหลายชั้นเพราะยังไม่มีข้อกำหนดว่าอีเวนท์ในอีเวนท์หมายความว่าอะไร
+     * ปล่อยไว้จะได้โครงสร้างที่ลึกไม่จำกัดโดยไม่มีใครตั้งใจ แล้วรายงานจะนับซ้ำ
+     */
+    private function checkParentEvent(Validator $validator): void
+    {
+        $parentId = $this->input('parent_event_id');
+
+        if ($this->input('type') === Activity::TYPE_EVENT && $parentId) {
+            $validator->errors()->add('parent_event_id', 'อีเวนท์ซ้อนในอีเวนท์อื่นไม่ได้');
+
+            return;
+        }
+
+        if (! $parentId) {
+            return;
+        }
+
+        /* route model binding ใส่กิจกรรมที่กำลังแก้ไว้ให้แล้ว ใช้กันไม่ให้ชี้หาตัวเอง */
+        $editing = $this->route('activity');
+
+        if ($editing && (int) $parentId === $editing->id) {
+            $validator->errors()->add('parent_event_id', 'กิจกรรมอยู่ในตัวเองไม่ได้');
+
+            return;
+        }
+
+        if (! Activity::whereKey($parentId)->where('type', Activity::TYPE_EVENT)->exists()) {
+            $validator->errors()->add('parent_event_id', 'รายการที่เลือกไม่ใช่อีเวนท์');
+        }
     }
 
     /**

@@ -18,6 +18,11 @@ class Activity extends Model
 
     public const STATUS_CANCELLED = 'ยกเลิก';
 
+    /** อีเวนท์กับกิจกรรมอยู่ตารางเดียวกัน แยกด้วยคอลัมน์ type */
+    public const TYPE_EVENT = 'อีเว้นท์';
+
+    public const TYPE_ACTIVITY = 'กิจกรรม';
+
     protected $table = 'act_activities';
 
     /** ผูก {activity} ใน route กับคอลัมน์ code ไม่ใช่ id — URL จะได้อ่านออกและไม่เปิดเผยลำดับข้อมูล */
@@ -40,9 +45,36 @@ class Activity extends Model
         'end_date' => 'date',
         'checkin_start_at' => 'datetime',
         'checkin_end_at' => 'datetime',
+        'survey_start_at' => 'datetime',
+        'survey_end_at' => 'datetime',
         'publish_start_at' => 'datetime',
         'publish_end_at' => 'datetime',
     ];
+
+    /** อีเวนท์ที่กิจกรรมนี้อยู่ภายใต้ — ว่างได้ แปลว่าเป็นกิจกรรมเดี่ยว */
+    public function parentEvent(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class, 'parent_event_id');
+    }
+
+    /** กิจกรรมที่อยู่ในอีเวนท์นี้ */
+    public function childActivities(): HasMany
+    {
+        return $this->hasMany(Activity::class, 'parent_event_id');
+    }
+
+    public function isEvent(): bool
+    {
+        return $this->type === self::TYPE_EVENT;
+    }
+
+    /** อีเวนท์ที่เลือกเป็นแม่ได้ — ต้องเป็นอีเวนท์ และไม่ใช่ตัวเอง */
+    public function scopeSelectableEvents(Builder $query, ?int $excludeId = null): Builder
+    {
+        return $query->where('type', self::TYPE_EVENT)
+            ->when($excludeId, fn (Builder $q) => $q->whereKeyNot($excludeId))
+            ->orderBy('name');
+    }
 
     public function program(): BelongsTo
     {

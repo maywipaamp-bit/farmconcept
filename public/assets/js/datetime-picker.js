@@ -207,6 +207,30 @@ window.TFC.datetimePicker = (function () {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  /* วางแผงปฏิทินให้ยึดกับช่องที่กด แทนการลอยกลางจอแบบ modal
+     .dtp เป็น position:fixed พิกัดจาก getBoundingClientRect() จึงใช้ได้ตรง ๆ ไม่ต้องบวก scroll
+     ถ้าที่ว่างด้านล่างไม่พอให้พลิกไปอยู่เหนือช่อง และหนีบไม่ให้ล้นขอบจอทั้งซ้ายและขวา */
+  function anchorTo(sheet, input) {
+    var GAP = 6;
+    var EDGE = 12;
+    var rect = input.getBoundingClientRect();
+
+    sheet.classList.add('is-anchored');
+
+    var width = sheet.offsetWidth;
+    var height = sheet.offsetHeight;
+    var spaceBelow = window.innerHeight - rect.bottom;
+    var placeAbove = spaceBelow < height + GAP + EDGE && rect.top > spaceBelow;
+
+    var left = Math.min(
+      Math.max(EDGE, rect.left),
+      Math.max(EDGE, window.innerWidth - width - EDGE)
+    );
+
+    sheet.style.left = left + 'px';
+    sheet.style.top = (placeAbove ? Math.max(EDGE, rect.top - height - GAP) : rect.bottom + GAP) + 'px';
+  }
+
   function openFor(input) {
     if (open && open.input === input) return;
     close(false);
@@ -233,6 +257,7 @@ window.TFC.datetimePicker = (function () {
         buildDate(sel) +
       '</div>';
     document.body.appendChild(root);
+    anchorTo(root.querySelector('.dtp-sheet'), input);
 
     open = { input: input, root: root, sel: sel };
     document.addEventListener('keydown', onKey, true);

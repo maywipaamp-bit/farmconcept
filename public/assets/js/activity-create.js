@@ -8,8 +8,11 @@
   var esc = window.TFC.escapeHtml;
   var mock = window.TFC_MOCK || {};
 
-  /* ---------- ข้อมูลตั้งต้น ---------- */
-  var CATALOG = [
+  /* ---------- ข้อมูลตั้งต้น ----------
+     โปรแกรม/หลักสูตร/วิทยากร มาจากข้อมูลพื้นฐานในฐานข้อมูล
+     ค่าสำรองด้านล่างใช้เฉพาะตอนเปิดหน้า static เดิมที่ยังไม่มีข้อมูลจริงส่งมาให้
+     (ชุดสำรองเป็นคนละชุดกับฐานข้อมูล จงใจไม่แก้ให้ตรง เพราะเป็นแค่ตัวอย่างของต้นแบบ) */
+  var CATALOG = mock.programCatalog || [
     { program: 'โปรแกรมเกษตรในเมือง', courses: [
       { name: 'ปลูกผักในพื้นที่จำกัด', teachers: ['ดร.กิตติพงศ์ วัฒนสุข', 'อรุณี ทองสุข'] },
       { name: 'ทำปุ๋ยหมักจากเศษอาหาร', teachers: ['อรุณี ทองสุข'] }
@@ -53,6 +56,9 @@
   /* เหมือน PLACES — อ่านจากข้อมูลกลาง เพิ่มกลุ่มเป้าหมายในระบบแล้วหน้านี้ต้องเห็นเอง */
   var TARGETS = (mock.targetGroups || []).map(function (t) { return t.name; });
   if (!TARGETS.length) TARGETS = ['เด็กและเยาวชน', 'วัยทำงาน', 'ผู้สูงอายุ', 'กลุ่มเปราะบาง'];
+  /* อีเวนท์ที่เลือกเป็นแม่ได้ — หน้าที่ต่อฐานข้อมูลจริงส่งมาให้ หน้า static เดิมไม่มี */
+  var EVENTS = (mock.selectableEvents || []).map(function (e) { return e.name; });
+
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
   /* สามขั้นตอนที่เป็นอิสระต่อกัน ติ๊กแยกกันได้ทั้งหมด
      ที่ติ๊กไว้ที่นี่คือแหล่งความจริงเดียว — ฟิลด์เงื่อนไขและแถวช่วงเวลาข้างล่างอ่านจากชุดนี้
@@ -107,6 +113,7 @@
   var state = {
     title: '', detail: '',
     kind: KINDS[0], cats: ['FOOD'], mode: MODES[0],
+    parentEvent: '',
     place: PLACE_EMPTY,
     cover: false,
     courses: [], hosts: [],
@@ -139,6 +146,14 @@
     return '<span class="ac-mark' + (round ? ' is-round' : '') + (on ? ' is-on' : '') + '">' +
       (round ? '' : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>') +
       '</span>';
+  }
+
+  /* เครื่องหมายถูกท้ายรายการที่เลือกอยู่ ใช้กับ combobox แบบเลือกค่าเดียว
+     แบบเลือกหลายค่ายังใช้ markHtml เพราะต้องเห็นช่องว่างของตัวที่ยังไม่เลือก */
+  function tickHtml() {
+    return '<svg class="ac-combo-tick" width="15" height="15" viewBox="0 0 24 24" fill="none" ' +
+      'stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   }
 
   function toggleIn(key, value) {
@@ -182,9 +197,6 @@
   function initOptions() {
     /* ประเภทเป็น dropdown ไม่ใช่ชิป เพราะเลือกได้อย่างเดียวและอยู่ติดกับ "หมวดหมู่"
        ที่เลือกได้หลายอัน — ใช้คนละรูปแบบกันช่วยให้แยกออกทันทีว่าอันไหนเลือกได้กี่ค่า */
-    $('ac-kind').innerHTML = KINDS.map(optionHtml).join('');
-    $('ac-mode').innerHTML = MODES.map(optionHtml).join('');
-    $('ac-place').innerHTML = PLACES.map(optionHtml).join('');
 
     /* คลาส .ac-cond ไม่ใช่ .ac-check — .ac-check เป็นของเช็กลิสต์ในแผงขวาอยู่แล้ว ชนกันไม่ได้ */
     $('ac-reg').innerHTML = JOIN_FLAGS.map(function (f) {
@@ -202,25 +214,12 @@
     }).join('');
   }
 
-  function optionHtml(v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }
 
   function renderChips() {
-    $('ac-kind').value = state.kind;
-    $('ac-mode').value = state.mode;
-    $('ac-place').value = state.place;
 
     Array.prototype.forEach.call($('ac-reg').querySelectorAll('[data-join]'), function (b) {
       b.checked = !!state.join[b.getAttribute('data-join')];
     });
-
-    /* ไอคอนช่วยให้จำหมวดหมู่ได้จากรูปทรง ไม่ต้องอ่านชื่อภาษาอังกฤษทุกครั้ง */
-    $('ac-cats').innerHTML = CATS.map(function (c) {
-      return chipHtml(c.name, state.cats.indexOf(c.name) > -1, 'data-cat', catIconSvg(c.icon));
-    }).join('');
-
-    $('ac-targets').innerHTML = TARGETS.map(function (t) {
-      return chipHtml(t, state.targets.indexOf(t) > -1, 'data-target', '');
-    }).join('');
 
     Array.prototype.forEach.call($('ac-fee').querySelectorAll('[data-fee]'), function (r) {
       r.checked = r.getAttribute('data-fee') === state.fee;
@@ -334,6 +333,101 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeFormPreview();
   });
+
+  /* ตัวสร้าง combobox แบบเลือกได้หลายค่า ใช้ร่วมกันทุกช่องที่เป็นรายการชั้นเดียว
+     (หมวดหมู่ · กลุ่มเป้าหมาย) — หลักสูตรกับวิทยากรมีเงื่อนไขเฉพาะจึงยังแยกฟังก์ชันไว้
+
+     cfg = { stateKey, valuesId, panelId, removeAttr, itemAttr, placeholder, options }
+     options เป็นรายการ { value, icon } — icon เว้นว่างได้ */
+  function renderTagCombo(cfg) {
+    var selected = state[cfg.stateKey];
+
+    $(cfg.valuesId).innerHTML = selected.length
+      ? selected.map(function (v) {
+          return '<span class="ac-tag">' + esc(v) +
+            '<button type="button" class="ac-tag-x" ' + cfg.removeAttr + '="' + esc(v) + '" aria-label="เอา ' + esc(v) + ' ออก">' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></span>';
+        }).join('')
+      : '<span class="ac-combo-placeholder">' + esc(cfg.placeholder) + '</span>';
+
+    $(cfg.panelId).innerHTML = cfg.options.map(function (o) {
+      var on = selected.indexOf(o.value) > -1;
+      return '<button type="button" class="ac-combo-item' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" ' +
+        cfg.itemAttr + '="' + esc(o.value) + '">' +
+        markHtml(on, false) + (o.icon ? catIconSvg(o.icon) : '') + esc(o.value) + '</button>';
+    }).join('');
+  }
+
+  /* combobox แบบเลือกค่าเดียว ใช้แทน <select> ของเบราว์เซอร์
+     เพราะรายการที่เบราว์เซอร์วาดเองแต่งด้วย CSS ไม่ได้เลย จึงมุมเหลี่ยมและหน้าตาต่างกันทุกเครื่อง
+     เลือกแล้วปิดแผงทันที ต่างจากแบบเลือกหลายค่าที่เปิดค้างไว้ให้เลือกต่อ
+
+     cfg = { stateKey, valuesId, panelId, itemAttr, options, placeholder } */
+  function renderPickCombo(cfg) {
+    var current = state[cfg.stateKey];
+    var isEmpty = !current || current === cfg.placeholder;
+
+    $(cfg.valuesId).innerHTML = isEmpty
+      ? '<span class="ac-combo-placeholder">' + esc(cfg.placeholder || 'เลือก') + '</span>'
+      : '<span class="ac-combo-single">' + esc(current) + '</span>';
+
+    $(cfg.panelId).innerHTML = cfg.options.map(function (v) {
+      var on = v === current;
+      return '<button type="button" class="ac-combo-item is-plain' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" ' +
+        cfg.itemAttr + '="' + esc(v) + '">' + esc(v) + (on ? tickHtml() : '') + '</button>';
+    }).join('');
+  }
+
+  function renderEventCombo() {
+    /* แสดงเฉพาะตอนกรอกกิจกรรม — อีเวนท์ซ้อนอีเวนท์ไม่ได้ */
+    var field = $('ac-field-parent-event');
+    if (!field) return;
+    field.hidden = state.kind !== 'กิจกรรม';
+
+    renderPickCombo({
+      stateKey: 'parentEvent', valuesId: 'ac-event-values', panelId: 'ac-event-panel',
+      itemAttr: 'data-parent-event', options: EVENTS, placeholder: 'ไม่อยู่ในอีเวนท์'
+    });
+
+    /* ยังไม่มีอีเวนท์ให้เลือก ต้องบอกเหตุผล ไม่ใช่เปิดแผงเปล่า */
+    if (!EVENTS.length) {
+      $('ac-event-panel').innerHTML = '<div class="ac-combo-empty">ยังไม่มีอีเวนท์ในระบบ — สร้างรายการประเภท "อีเว้นท์" ก่อน</div>';
+    }
+  }
+
+  function renderSingleCombos() {
+    renderPickCombo({ stateKey: 'kind', valuesId: 'ac-kind-values', panelId: 'ac-kind-panel', itemAttr: 'data-kind', options: KINDS });
+    renderPickCombo({ stateKey: 'mode', valuesId: 'ac-mode-values', panelId: 'ac-mode-panel', itemAttr: 'data-mode', options: MODES });
+    renderPickCombo({
+      stateKey: 'place', valuesId: 'ac-place-values', panelId: 'ac-place-panel', itemAttr: 'data-place',
+      /* ตัวแรกของ PLACES เป็นข้อความ placeholder ไม่ใช่พื้นที่จริง จึงไม่ใส่ลงรายการให้เลือก */
+      options: PLACES.slice(1), placeholder: PLACE_EMPTY
+    });
+  }
+
+  function renderCatCombo() {
+    renderTagCombo({
+      stateKey: 'cats',
+      valuesId: 'ac-cat-values',
+      panelId: 'ac-cat-panel',
+      removeAttr: 'data-remove-cat',
+      itemAttr: 'data-cat',
+      placeholder: 'คลิกเพื่อเลือกหมวดหมู่',
+      options: CATS.map(function (c) { return { value: c.name, icon: c.icon }; })
+    });
+  }
+
+  function renderTargetCombo() {
+    renderTagCombo({
+      stateKey: 'targets',
+      valuesId: 'ac-target-values',
+      panelId: 'ac-target-panel',
+      removeAttr: 'data-remove-target',
+      itemAttr: 'data-target',
+      placeholder: 'คลิกเพื่อเลือกกลุ่มเป้าหมาย',
+      options: TARGETS.map(function (t) { return { value: t, icon: '' }; })
+    });
+  }
 
   /* combobox 2 เลเวล: ชื่อโปรแกรมเป็นหัวข้อกดไม่ได้ หลักสูตรย่อยกดเลือกได้ */
   function renderCourseCombo() {
@@ -587,8 +681,10 @@
   function renderCover() {
     var zone = $('ac-cover');
     zone.classList.toggle('is-filled', state.cover);
+    /* ชื่อไฟล์จริงมาจาก state.coverLabel ที่หน้าจอตั้งให้หลังอัปโหลดสำเร็จ
+       ข้อความตัวอย่างใช้เฉพาะหน้า static เดิมที่ยังอัปโหลดจริงไม่ได้ */
     $('ac-cover-headline').textContent = state.cover
-      ? 'cover-ปลูกผักปลอดสาร.jpg · 1.8MB'
+      ? (state.coverLabel || 'cover-ปลูกผักปลอดสาร.jpg · 1.8MB')
       : 'ลากไฟล์มาวาง หรือเลือกจากเครื่อง';
     $('ac-cover-pick').textContent = state.cover ? 'เปลี่ยนรูป' : 'เลือกไฟล์';
     $('ac-cover-remove').hidden = !state.cover;
@@ -598,6 +694,10 @@
   function sync() {
     renderChips();
     renderPicks();
+    renderSingleCombos();
+    renderEventCombo();
+    renderCatCombo();
+    renderTargetCombo();
     renderCourseCombo();
     renderHostCombo();
     renderWindows();
@@ -629,9 +729,6 @@
   $('ac-detail').addEventListener('input', function () { state.detail = this.value; touch(); });
   $('ac-fee-input').addEventListener('input', function () { state.feeAmount = this.value; touch(); });
 
-  $('ac-kind').addEventListener('change', function () { state.kind = this.value; touch(); });
-  $('ac-place').addEventListener('change', function () { state.place = this.value; touch(); });
-  $('ac-mode').addEventListener('change', function () { state.mode = this.value; touch(); });
 
   /* ติ๊กรูปแบบการเข้าร่วม — คุมทั้งแบบฟอร์มที่ต้องเลือกและแถวช่วงเวลาข้างล่าง */
   $('ac-reg').addEventListener('change', function (e) {
@@ -677,12 +774,55 @@
   document.addEventListener('click', function (e) {
     var t = e.target;
 
-    /* ---- chip ---- */
+    /* ---- combobox เลือกค่าเดียว (ประเภท · สถานที่ · รูปแบบ) ----
+       เลือกแล้วปิดแผงทันที เพราะเลือกได้ค่าเดียวอยู่แล้ว ไม่มีเหตุให้เปิดค้าง */
+    if (t.closest('#ac-event-control')) { state.combo = state.combo === 'event' ? null : 'event'; return syncCombo(); }
+
+    var pickEvent = t.closest('[data-parent-event]');
+    if (pickEvent) {
+      var value = pickEvent.getAttribute('data-parent-event');
+      /* กดค่าเดิมซ้ำ = เอาออก เพราะไม่มีปุ่มล้างค่าแยก */
+      state.parentEvent = state.parentEvent === value ? '' : value;
+      state.combo = null; touch(); return syncCombo();
+    }
+
+    if (t.closest('#ac-kind-control')) { state.combo = state.combo === 'kind' ? null : 'kind'; return syncCombo(); }
+    if (t.closest('#ac-place-control')) { state.combo = state.combo === 'place' ? null : 'place'; return syncCombo(); }
+    if (t.closest('#ac-mode-control')) { state.combo = state.combo === 'mode' ? null : 'mode'; return syncCombo(); }
+
+    var pickKind = t.closest('[data-kind]');
+    if (pickKind) { state.kind = pickKind.getAttribute('data-kind'); state.combo = null; touch(); return syncCombo(); }
+
+    var pickPlace = t.closest('[data-place]');
+    if (pickPlace) { state.place = pickPlace.getAttribute('data-place'); state.combo = null; touch(); return syncCombo(); }
+
+    var pickMode = t.closest('[data-mode]');
+    if (pickMode) { state.mode = pickMode.getAttribute('data-mode'); state.combo = null; touch(); return syncCombo(); }
+    /* ---- หมวดหมู่ / กลุ่มเป้าหมาย (combobox) ----
+       ปุ่มเอาแท็กออกต้องมาก่อนตัวควบคุม ไม่งั้นคลิกกากบาทจะไปโดนการเปิด/ปิดแผงแทน */
+    var rmCat = t.closest('[data-remove-cat]');
+    if (rmCat) {
+      e.stopPropagation();
+      toggleIn('cats', rmCat.getAttribute('data-remove-cat'));
+      return touch();
+    }
+
+    var rmTarget = t.closest('[data-remove-target]');
+    if (rmTarget) {
+      e.stopPropagation();
+      toggleIn('targets', rmTarget.getAttribute('data-remove-target'));
+      return touch();
+    }
+
+    if (t.closest('#ac-cat-control')) { state.combo = state.combo === 'cat' ? null : 'cat'; return syncCombo(); }
+    if (t.closest('#ac-target-control')) { state.combo = state.combo === 'target' ? null : 'target'; return syncCombo(); }
+
+    /* เลือกแล้วไม่ปิดแผง ผู้ใช้มักเลือกหลายค่าติดกัน — เหมือนหลักสูตรกับวิทยากร */
     var cat = t.closest('[data-cat]');
-    if (cat) { toggleIn('cats', cat.getAttribute('data-cat')); return touch(); }
+    if (cat) { toggleIn('cats', cat.getAttribute('data-cat')); touch(); return syncCombo(); }
 
     var target = t.closest('[data-target]');
-    if (target) { toggleIn('targets', target.getAttribute('data-target')); return touch(); }
+    if (target) { toggleIn('targets', target.getAttribute('data-target')); touch(); return syncCombo(); }
 
     /* ---- การ์ดเลือก ---- */
     var fr = t.closest('[data-form-reg]');
@@ -741,8 +881,19 @@
     }
 
     /* ---- รูปปก ---- */
-    if (t.closest('#ac-cover-pick')) { state.cover = true; return touch(); }
-    if (t.closest('#ac-cover-remove')) { state.cover = false; return touch(); }
+    /* หน้าที่ต่อฐานข้อมูลจริงลงทะเบียนตัวจัดการไว้ (อัปโหลดไฟล์จริง)
+       ไม่ได้ลงทะเบียน = หน้า static เดิม แค่สลับสถานะให้เห็นหน้าตา */
+    if (t.closest('#ac-cover-pick')) {
+      if (api.onPickCover) return api.onPickCover();
+      state.cover = true;
+      return touch();
+    }
+
+    if (t.closest('#ac-cover-remove')) {
+      if (api.onRemoveCover) return api.onRemoveCover();
+      state.cover = false;
+      return touch();
+    }
 
     /* ---- toggle ---- */
     var tg = t.closest('[data-toggle]');
@@ -794,7 +945,14 @@
   }
 
   function syncCombo() {
-    [['course', 'ac-course-panel', 'ac-course-control'], ['host', 'ac-host-panel', 'ac-host-control']]
+    [['kind', 'ac-kind-panel', 'ac-kind-control'],
+     ['event', 'ac-event-panel', 'ac-event-control'],
+     ['place', 'ac-place-panel', 'ac-place-control'],
+     ['mode', 'ac-mode-panel', 'ac-mode-control'],
+     ['cat', 'ac-cat-panel', 'ac-cat-control'],
+     ['target', 'ac-target-panel', 'ac-target-control'],
+     ['course', 'ac-course-panel', 'ac-course-control'],
+     ['host', 'ac-host-panel', 'ac-host-control']]
       .forEach(function (c) {
         var open = state.combo === c[0];
         $(c[1]).hidden = !open;
@@ -841,16 +999,24 @@
      หน้านี้ทำหน้าที่เป็นทั้งฟอร์มสร้างและฟอร์มแก้ไข จะได้ไม่ต้องดูแลสองฟอร์ม
      ที่ต้องคอยแก้ให้ตรงกันตลอด (ของเดิมคือ edit.html + activity-form.js ซึ่งถูกลบไปแล้ว)
      ถ้ามี ?id= ให้ดึงกิจกรรมนั้นมาเติมลงฟอร์ม แล้วเปลี่ยนชื่อหน้ากับปุ่มให้ตรงกับงาน */
+  /* หน้า Blade ระบุรหัสกิจกรรมมาให้ตรง ๆ เพราะ URL เป็น /admin/activities/{code}/edit
+     ไม่มี ?id= แบบหน้า static เดิม — รองรับทั้งสองแบบไว้ จะได้ไม่ต้องมีสองเวอร์ชัน */
   function editingId() {
-    return new URLSearchParams(location.search).get('id') || '';
+    return window.TFC_ACTIVITY_EDIT_ID || new URLSearchParams(location.search).get('id') || '';
   }
 
   function fillFromActivity(a) {
     state.title = a.name || '';
     state.detail = a.description || '';
     state.kind = KINDS.indexOf(a.type) > -1 ? a.type : KINDS[0];
-    state.cats = (a.tags || []).filter(function (t) { return CATS.indexOf(t) > -1; });
-    if (!state.cats.length && CATS.indexOf(a.format) > -1) state.cats = [a.format];
+    /* CATS เป็นรายการ object {name, icon} ไม่ใช่รายการข้อความ
+       ของเดิมใช้ CATS.indexOf(ข้อความ) ซึ่งไม่มีทางเจอ หมวดหมู่จึงว่างเสมอตอนเปิดแก้ไข */
+    function isKnownCat(value) {
+      return CATS.some(function (c) { return c.name === value; });
+    }
+
+    state.cats = (a.tags || []).filter(isKnownCat);
+    if (!state.cats.length && isKnownCat(a.format)) state.cats = [a.format];
     state.place = PLACES.indexOf(a.area) > -1 ? a.area : PLACE_EMPTY;
     state.cover = !!a.coverImage;
     state.targets = (a.targetGroups || []).filter(function (t) { return TARGETS.indexOf(t) > -1; });
@@ -858,8 +1024,27 @@
     state.courses = a.course ? [a.course] : [];
     state.fee = a.hasFee ? FEES[1] : FEES[0];
     state.feeAmount = a.hasFee ? String(a.fee || '') : '';
+    state.parentEvent = a.parentEventName || '';
     state.publish = !!a.isPublished;
     state.pin = !!a.isFeatured;
+
+    /* ช่วงเวลาเก็บเป็นค่าเดียว ("2026-08-10 09:00") แต่ฟอร์มแยกช่องวันกับเวลา จึงต้องผ่าครึ่ง
+       ของเดิมไม่ได้เติมส่วนนี้เลย ช่วงเวลาจึงว่างทุกครั้งที่เปิดแก้ไข */
+    function splitAt(value) {
+      if (!value) return {};
+      var parts = String(value).replace('T', ' ').split(' ');
+      return { date: parts[0] || '', time: (parts[1] || '').slice(0, 5) };
+    }
+
+    function windowFrom(startValue, endValue) {
+      var s = splitAt(startValue);
+      var e = splitAt(endValue);
+      return { from: s.date || '', fromT: s.time || '', to: e.date || '', toT: e.time || '' };
+    }
+
+    state.windows.reg = windowFrom(a.publishStart, a.publishEnd);
+    state.windows.chk = windowFrom(a.checkinStart, a.checkinEnd);
+    state.windows.srv = windowFrom(a.surveyStart, a.surveyEnd);
 
     /* รอบกิจกรรมมาจาก activitySessions ถ้ามี ไม่งั้นใช้วันเริ่มกับเวลาของตัวกิจกรรมเอง */
     var sessions = (mock.activitySessions || {})[a.id] || [];
@@ -875,7 +1060,9 @@
     /* ชุดข้อมูลกลางยังไม่มีฟิลด์ "ต้องลงทะเบียนไหม / มีแบบประเมินหลังจบไหม" ตรง ๆ
        จึงอนุมานจากสิ่งที่มี: กำหนดจำนวนรับหรือมีผู้ลงทะเบียนแล้ว = เปิดให้ลงทะเบียน
        ผูกชุดแบบประเมินไว้ = มีแบบประเมินหลังจบ */
-    state.join = {
+    /* ถ้าแหล่งข้อมูลบอกสวิตช์มาตรง ๆ ให้ใช้ค่านั้น (ฐานข้อมูลจริงมีคอลัมน์แล้ว)
+       ถ้าไม่มีค่อยอนุมานจากสิ่งที่พอมีแบบเดิม — ข้อมูลจำลองยังไม่มีสามฟิลด์นี้ */
+    state.join = a.joinFlags || {
       reg: !!(a.capacity || a.registered),
       survey: !!(a.evaluationFormIds && a.evaluationFormIds.length)
     };
@@ -926,7 +1113,10 @@
     }
     fillFromActivity(a);
     pushStateToDom();
-    applyEditChrome(a);
+
+    /* โหมดสร้างใหม่ใช้เส้นทางนี้ด้วยเพื่อเติมค่าตั้งต้นจากแถวเปล่า
+       แต่หัวหน้ากับป้ายปุ่มต้องคงเป็นของหน้าสร้าง ไม่ใช่ "บันทึกการแก้ไข" */
+    if (!window.TFC_ACTIVITY_IS_NEW) applyEditChrome(a);
   }
 
   /* ---------- จุดต่อสำหรับหน้าที่ทำงานบนฐานข้อมูลจริง ----------
@@ -937,8 +1127,19 @@
        markSaved  ให้หน้าจอบอกกลับได้ว่าบันทึกสำเร็จแล้ว จะได้ไม่เตือนตอนออกจากหน้า */
   var api = window.TFC.activityForm = {
     onSubmit: null,
+    onPickCover: null,
+    onRemoveCover: null,
     state: state,
     markSaved: function () { state.dirty = false; },
+
+    /* ตั้งรูปปกจากภายนอกหลังอัปโหลดสำเร็จ — label เป็นข้อความที่แสดงในกล่อง
+       ส่งค่าว่างหรือ null = ไม่มีรูปปก */
+    setCover: function (label) {
+      state.cover = !!label;
+      state.coverLabel = label || '';
+      renderCover();
+      sync();
+    },
 
     /* จำสถานะเดิมของปุ่มเผยแพร่ไว้ เพราะ sync() เป็นคนคุมว่ากดได้หรือยังตามความครบของฟอร์ม
        ถ้าเปิดกลับมาเฉย ๆ จะกลายเป็นกดได้ทั้งที่ยังกรอกไม่ครบ */
