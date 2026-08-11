@@ -12688,16 +12688,20 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   gap: var(--space-2);
   flex: 1 1 220px;
   min-width: 0;
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  /* เส้นขอบจาง + เงาอ่อนตั้งแต่ตอนพัก การ์ดจึง "ลอย" ขึ้นมาแทนที่จะถูก "ตีกรอบ"
+     พอพื้นหน้าเป็นสีขาว กรอบ 1px สีเข้มจะกลายเป็นตารางเส้นแข็ง ๆ เต็มจอ */
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--dash-radius);
   background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
   text-decoration: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  /* ช้าลงหนึ่งขั้น การเปลี่ยนสถานะจึงไหลตาม ไม่กระตุกเป็นขั้น */
+  transition: border-color var(--transition-slow), box-shadow var(--transition-slow), transform var(--transition-slow);
 }
 .dash-kpi:hover {
   border-color: var(--color-primary-soft-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
 .dash-kpi:active { transform: scale(.985); }
@@ -12783,7 +12787,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
   background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-soft);
 }
 .dash-count.is-urgent {
   color: var(--color-warning-text);
@@ -12822,17 +12826,32 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-weight: var(--font-weight-medium);
 }
 
-/* track กินความสูงที่เหลือ แท่งจึงสูงเทียบกันได้ตรงสัดส่วนจริง */
-.dash-bar-track { display: flex; align-items: flex-end; width: 100%; flex: 1; min-height: 0; }
+/* track กินความสูงที่เหลือ แท่งจึงสูงเทียบกันได้ตรงสัดส่วนจริง
+   ใส่พื้นรางจาง ๆ ทรงแคปซูลไว้ด้วย แท่งจะได้ไม่ลอยอยู่บนเส้นฐานแข็ง ๆ
+   และมองเห็นความสูงที่ยังเหลือของแต่ละเดือนไปในตัว */
+.dash-bar-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-full);
+  /* ตัดแท่งตามรูปราง — เดือนที่ค่าน้อยจนแท่งเตี้ยกว่าความกว้าง มุมล่างของแท่ง
+     จะมนน้อยกว่ามุมของราง แล้วโผล่พ้นออกมา ปล่อยให้รางเป็นตัวกำหนดรูปทรง */
+  overflow: hidden;
+}
 
 .dash-bar-fill {
   width: 100%;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--color-primary-soft-border);
-  transition: background var(--transition-fast);
+  /* มนเฉพาะด้านบน ส่วนด้านล่างรางเป็นคนตัดให้เข้ารูปเอง */
+  border-radius: var(--radius-full) var(--radius-full) 0 0;
+  /* ไล่เฉดอ่อนลงทางด้านล่าง แท่งจึงดูนุ่มกว่าสีทึบแบนทั้งแท่ง */
+  background: linear-gradient(180deg, var(--color-primary-soft-border), var(--color-primary-soft));
+  transition: background var(--transition-slow);
 }
-.dash-bar.is-top .dash-bar-fill { background: var(--color-primary); }
-.dash-bar:hover .dash-bar-fill { background: var(--color-success); }
+.dash-bar.is-top .dash-bar-fill { background: linear-gradient(180deg, var(--color-primary), var(--color-success)); }
+.dash-bar:hover .dash-bar-fill { background: linear-gradient(180deg, var(--color-success), var(--color-primary-soft-border)); }
 
 .dash-bar-label {
   font-size: var(--font-size-caption);
@@ -12860,13 +12879,16 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   height: 136px;
   flex: none;
   border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
 }
 
 .dash-donut-hole {
   display: grid;
   place-items: center;
-  width: 88px;
-  height: 88px;
+  /* รูใหญ่ขึ้น วงแหวนจึงบางลงจาก 24px เหลือ 20px อ่านเบากว่าวงหนา ๆ
+     แต่ยังหนาพอให้แยกสีทั้งสี่ส่วนออกจากกันได้ */
+  width: 96px;
+  height: 96px;
   border-radius: var(--radius-full);
   background: var(--color-surface);
 }
