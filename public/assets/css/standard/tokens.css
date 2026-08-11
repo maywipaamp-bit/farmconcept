@@ -1,0 +1,96 @@
+/* ============================================================
+   Design tokens — ระบบ The Farm Concept
+   ใช้เป็นไฟล์เดียวของ "แหล่งความจริง" สำหรับฟอนต์ สี ระยะห่าง
+   Import ไฟล์นี้ก่อน stylesheet อื่นทั้งหมด
+   ============================================================ */
+
+/* ต้องโหลด Anuphan มาด้วย ไม่ใช่แค่ Noto Sans Thai
+   เพราะ --font-sans ประกาศ Anuphan ไว้เป็นตัวสำรองตัวแรก ถ้าไม่โหลดมา
+   เครื่องที่ไม่มี Anuphan ติดตั้งไว้จะตกไปใช้ system-ui ทันทีที่ Noto โหลดไม่ทัน
+   ซึ่งเป็นคนละรูปทรงกับที่ออกแบบไว้
+   ชุดน้ำหนักตรงกับ docs/design-standard/typography-standard.dc.html บรรทัด 13
+   URL นี้ซ้ำกับ <link rel="preload"> ใน resources/views/layouts/admin.blade.php
+   แก้ที่ไหนต้องแก้ให้ตรงกันทั้งสองที่ (เบราว์เซอร์ยุบเป็นคำขอเดียวเมื่อ URL ตรงกัน) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Anuphan:wght@200;300;400;500;600&display=swap');
+
+:root {
+  /* ---- Font ----
+     เปลี่ยนฟอนต์ทั้งระบบที่บรรทัดนี้จุดเดียว (คู่กับ --font-family-base ใน assets/css/tokens.css)
+     ถ้าจะย้อนกลับเป็น IBM Plex Sans Thai ให้แก้ทั้งชื่อฟอนต์และ @import ด้านบนพร้อมกัน */
+  --font-sans: 'Noto Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --fw-light: 300;
+  --fw-regular: 400;   /* ค่าเริ่มต้นของทุกข้อความ */
+  --fw-medium: 500;    /* เน้น */
+  --fw-semibold: 600;  /* หัวข้อเท่านั้น */
+  /* ห้ามใช้ 700 ในหน้าจอระบบ */
+
+  /* ---- Type scale : size / line-height ---- */
+  --fs-page-title: 28px;      --lh-page-title: 1.4;
+  --fs-section-title: 20px;   --lh-section-title: 1.45;
+  --fs-card-title: 16px;      --lh-card-title: 1.5;
+  --fs-body: 14px;            --lh-body: 1.6;
+  --fs-secondary: 13px;       --lh-secondary: 1.6;
+  --fs-caption: 12px;         --lh-caption: 1.5;
+  /* เล็กสุดที่อนุญาต = 12px */
+
+  /* ---- Text colors ---- */
+  --text-strong: #111827;     /* ชื่อหน้า, หัวข้อ */
+  --text-primary: #1F2937;    /* คอลัมน์หลัก, label */
+  --text-body: #374151;       /* เนื้อหาทั่วไป */
+  --text-secondary: #6B7280;  /* หัวตาราง, คำอธิบาย */
+  --text-muted: #9CA3AF;      /* ลำดับที่, placeholder */
+  --text-faint: #C7CDD4;      /* ตัวเลขแถว */
+  --text-brand: #16A34A;
+  --text-on-brand: #FFFFFF;
+  /* ห้ามใช้ #000 กับข้อความ */
+
+  /* ---- Surfaces & borders ---- */
+  --bg-app: #F6F8F6;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #FAFBFA;       /* row hover, header ของตาราง */
+  --bg-brand-soft: #F0FDF4;   /* เมนูที่เลือก, ป้ายสถานะ */
+  --border-default: #E5E7EB;
+  --border-subtle: #EEF1EE;
+  --border-row: #F4F6F4;
+  --border-brand-soft: #BBF7D0;
+
+  /* ---- Brand ---- */
+  --brand-500: #22C55E;
+  --brand-600: #16A34A;       /* ปุ่มหลัก */
+  --brand-700: #15803D;       /* hover, ข้อความบนพื้นอ่อน */
+
+  /* ---- Status ---- */
+  --status-success-text: #15803D;  --status-success-bg: #F0FDF4;  --status-success-border: #BBF7D0;
+  --status-warning-text: #B45309;  --status-warning-bg: #FFFBEB;  --status-warning-border: #FDE68A;
+  --status-danger-text: #B91C1C;   --status-danger-bg: #FEF2F2;   --status-danger-border: #FECACA;
+  --status-neutral-text: #4B5563;  --status-neutral-bg: #F9FAFB;  --status-neutral-border: #E5E7EB;
+
+  /* ---- Spacing (4px scale — ใช้เฉพาะค่าเหล่านี้) ---- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+
+  /* ---- Radius ---- */
+  --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-pill: 999px;
+
+  /* ---- Elevation ---- */
+  --shadow-card: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.03);
+  --shadow-panel: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.05);
+  --shadow-button: 0 1px 2px rgba(22,163,74,0.24);
+  --focus-ring: 0 0 0 3px rgba(22,163,74,0.20);
+
+  /* ---- Motion ---- */
+  --dur-fast: 120ms;      /* hover, สีพื้น, ขอบ */
+  --dur: 150ms;           /* ค่าเริ่มต้น */
+  --dur-slow: 220ms;      /* popover, dropdown เปิด/ปิด */
+  --dur-modal: 260ms;     /* popup เข้า/ออก */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);        /* ทั่วไป */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);   /* สิ่งที่ปรากฏขึ้น */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);       /* สิ่งที่หายไป */
+
+  /* ---- Layout ---- */
+  --sidebar-w: 244px;
+  --row-h: 64px;
+  --content-pad: var(--sp-8);
+}

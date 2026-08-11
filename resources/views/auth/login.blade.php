@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ | The Farm Concept</title>
+<link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{{-- URL เดียวกับใน standard/tokens.css และ layouts/admin.blade.php --}}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Anuphan:wght@200;300;400;500;600&display=swap">
+<!-- หน้านี้ยึดมาตรฐานเป็นหลักตามสเปก จึงโหลดเฉพาะ assets/css/standard/*
+     (base.css มี .btn .input :focus-visible และ keyframes om-pop-in ให้แล้ว) -->
+<link rel="stylesheet" href="{{ asset('assets/css/standard/tokens.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/standard/base.css') }}">
+<style>
+  /* ---------- โครงหน้า ---------- */
+  html, body {
+    height: 100vh;
+    overflow: hidden;          /* ห้ามมี scrollbar ที่จอสูง 720px ขึ้นไป */
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);          /* ระยะการ์ด -> footer */
+    padding: var(--sp-6);
+    /* พื้นขาวเหมือนทั้งระบบ — ของเดิมเป็นไล่เฉดเขียว-เทา ซึ่งอ่านเป็นพื้นเทา
+       และเป็นหน้าเดียวในระบบที่พื้นไม่ขาว การ์ดยังแยกตัวได้ด้วยเส้นขอบกับเงาที่มีอยู่
+       หน้านี้โหลดเฉพาะ standard/tokens.css จึงใช้ --bg-surface ไม่ใช่ --color-canvas
+       ซึ่งอยู่ในไฟล์ที่หน้านี้ไม่ได้โหลด (ประกาศไปก็ไม่มีค่า กลายเป็นพื้นโปร่ง) */
+    background: var(--bg-surface);
+  }
+
+  /* ---------- การ์ด ---------- */
+  .login-card {
+    width: 100%;
+    max-width: 420px;          /* จอแคบกว่านี้การ์ดกว้าง 100% เอง */
+    background: var(--bg-surface);
+    border: 1px solid #EEF1EE;
+    border-radius: var(--r-xl);
+    padding: var(--sp-8);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 16px 40px rgba(16, 24, 40, .06);
+    display: flex;
+    flex-direction: column;
+    /* เดิมเขียน var(--sp-5, 20px) แต่ tokens.css ไม่มี --sp-5 จริง (สเกลข้าม 20px)
+       ค่าที่ได้จึงเป็น fallback 20px ซึ่งหลุดสเกล 4px — เปลี่ยนมาใช้ตัวแปรที่มีอยู่จริง */
+    gap: var(--sp-4);
+    /* both = คงสถานะเฟรมแรกไว้ก่อนเริ่ม จึงไม่กระพริบตอนโหลด */
+    animation: om-pop-in var(--dur-modal) var(--ease-out) both;
+  }
+
+  /* ---------- 1. โลโก้ + คำบรรยาย ---------- */
+  .login-brand { display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+  .login-logo  { width: 240px; height: auto; }
+  .login-tagline {
+    margin: 0;
+    text-align: center;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    font-weight: var(--fw-regular);
+    color: var(--text-secondary);
+  }
+
+  /* ---------- 2–3. ฟิลด์ ----------
+     ระยะระหว่างฟิลด์ 12px · ระยะ label -> ช่องกรอกของตัวเอง 4px
+     ที่ 8px (ค่าตามมาตรฐาน) ระยะบนล่างของ label เกือบเท่ากัน จนอ่านไม่ออกว่า
+     label เป็นของช่องไหน — ต่างกันสามเท่าแบบนี้ตาจับกลุ่มได้ทันที */
+  .login-form { display: flex; flex-direction: column; gap: var(--sp-3); }
+  .field { display: flex; flex-direction: column; gap: var(--sp-1); }
+
+  .label {
+    font-size: var(--fs-secondary);
+    line-height: var(--lh-secondary);
+    font-weight: var(--fw-medium);
+    color: var(--text-primary);
+  }
+
+  /* padding 10px 12px = สูง 42px เท่าฟิลด์มาตรฐานของระบบ (STANDARD.md) */
+  .input {
+    width: 100%;
+    padding: 10px var(--sp-3);
+    border-radius: var(--r-md);
+    border: 1px solid var(--border-default);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    color: var(--text-body);
+    background: var(--bg-surface);
+  }
+
+  .input::placeholder { color: var(--text-muted); }
+
+  /* focus เป็น ring เขียว ไม่ใช้ outline default ของเบราว์เซอร์ */
+  .input:focus,
+  .input:focus-visible {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, .20);
+  }
+
+  .password-wrap { position: relative; display: flex; flex-direction: column; }
+  /* ปุ่ม "แสดง/ซ่อน" กว้างสุด 42px + เว้นช่องไฟ 14px = 56px */
+  .password-wrap .input { padding-right: 56px; }
+
+  /* bottom 12px = กึ่งกลางแนวตั้งของช่องสูง 42px พอดี ((42 - 18) / 2) */
+  .password-toggle {
+    position: absolute;
+    right: var(--sp-3);
+    bottom: 12px;
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font: var(--fw-regular) var(--fs-secondary)/1.4 var(--font-sans);
+    color: var(--text-secondary);
+  }
+  .password-toggle:hover { color: var(--text-body); }
+  .password-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--r-sm); }
+
+  /* ---------- 4. Error banner ---------- */
+  .login-error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: var(--r-md);
+    font-size: var(--fs-secondary);
+    line-height: var(--lh-secondary);
+    font-weight: var(--fw-regular);
+    color: #B91C1C;
+    animation: om-slide-in var(--dur-slow) var(--ease-out) both;
+  }
+  .login-error[hidden] { display: none; }
+  .login-error svg { flex: none; width: 16px; height: 16px; margin-top: 3px; stroke-width: 1.5; }
+
+  /* ---------- 5. จำการเข้าสู่ระบบ ---------- */
+  .login-remember {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--fs-secondary);
+    line-height: var(--lh-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .login-remember input {
+    width: 16px; height: 16px; margin: 0;
+    accent-color: #16A34A;
+    cursor: pointer;
+  }
+  .login-remember input:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 4px; }
+
+  /* ---------- 6. ปุ่มเข้าสู่ระบบ ----------
+     สูง 42px เท่าช่องกรอก ทั้งการ์ดจึงเป็นจังหวะเดียวกันตลอด ไม่มีปุ่มก้อนโตกว่าฟิลด์ */
+  .btn-block {
+    width: 100%;
+    justify-content: center;
+    /* 11px (ไม่ใช่ 10px) เพราะ .btn ใช้ line-height 1.4 ส่วนช่องกรอกใช้ 1.6
+       ต้องชดเชยส่วนต่างนี้ ปุ่มถึงจะสูง 43px เท่าช่องกรอกพอดี */
+    padding: 11px 20px;
+    font-size: var(--fs-body);
+  }
+
+  /* ปุ่มหลักเท่านั้นที่เน้นด้วยน้ำหนัก 500 ปุ่มรองเป็น 400 ตามค่าเริ่มต้นของ .btn */
+  .btn--primary.btn-block { font-weight: var(--fw-medium); }
+
+  /* ขณะรอเท่านั้นที่ใช้เขียวอ่อน #4ADE80 — สถานะ disabled ปกติ (ยังกรอกไม่ครบ)
+     ใช้ opacity ตามมาตรฐานของ .btn:disabled ไม่ใช่สีเดียวกับตอนโหลด */
+  /* ใช้ #login-submit ร่วมด้วยเพื่อยกระดับ specificity ให้ชนะ .btn--primary ของ standard/base.css แน่นอน */
+  #login-submit.is-loading,
+  .btn--primary.is-loading {
+    background: #4ADE80;
+    border-color: #4ADE80;
+    opacity: 1;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* ปุ่มเข้าสู่ระบบต้องไม่ดูเป็นปุ่มที่ถูกปิด — คงพื้นเขียวเข้มและตัวหนังสือสีขาวไว้เสมอ
+     (standard/base.css ตั้ง .btn:disabled { opacity: .5 } ไว้ ต้องเขียนทับ)
+     ยังกดไม่ได้จริงตามสเปก แค่ไม่แสดงผลแบบจาง */
+  #login-submit:disabled {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: var(--text-on-brand);
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  /* ปุ่มรองเป็น <a> — standard/base.css ขีดเส้นใต้ลิงก์ตอน hover ต้องปิดไว้
+     ตัวหนังสือ 13px เล็กกว่าปุ่มหลัก และไม่มีไอคอนนำหน้า เพื่อให้อ่านเป็นทางเลือกรอง
+     padding 12px ชดเชยตัวอักษรที่เล็กลง ปุ่มจึงยังสูง 44px เท่าปุ่มหลักและช่องกรอก */
+  a.btn-block,
+  a.btn-block:hover { text-decoration: none; color: var(--text-body); }
+  a.btn-block { padding: 12px 20px; font-size: var(--fs-secondary); }
+
+  .spinner {
+    width: 16px; height: 16px; flex: none;
+    border: 2px solid rgba(255, 255, 255, .55);
+    border-top-color: var(--text-on-brand);
+    border-radius: 50%;
+    animation: login-spin .7s linear infinite;
+  }
+  @keyframes login-spin { to { transform: rotate(360deg); } }
+
+  /* ---------- 7. เส้นคั่น + ปุ่มรอง ---------- */
+  .login-divider { height: 1px; background: #F4F6F4; border: 0; margin: 0; }
+
+  /* ---------- Footer ---------- */
+  .login-footer {
+    margin: 0;
+    text-align: center;
+    font-size: var(--fs-caption);
+    line-height: var(--lh-caption);
+    font-weight: var(--fw-regular);
+    color: var(--text-muted);
+  }
+  .login-footer a { color: inherit; }
+  .login-footer a:hover { color: var(--text-secondary); text-decoration: underline; }
+
+  /* ---------- มือถือ (จอแคบ) ----------
+     บีบขอบเข้ามาให้การ์ดได้ความกว้างคืน และย่อโลโก้ลง
+     เพราะที่ 360px ขอบ 24+32 กินไปด้านละ 56px เหลือเนื้อหาแค่ 248px */
+  @media (max-width: 480px) {
+    body { padding: var(--sp-4); }
+    .login-card { padding: var(--sp-6); border-radius: var(--r-lg); }
+    .login-logo { width: 200px; }
+  }
+
+  /* ---------- จอเตี้ย ----------
+     บีบระยะแนวตั้งก่อนเป็นอันดับแรก เพื่อให้ยังพอดีจอโดยไม่ต้องเลื่อน
+     ถ้าเตี้ยกว่านี้อีกค่อยปล่อยให้เลื่อนได้ ดีกว่าตัดเนื้อหาหาย
+     (สเปกกำหนดว่าห้ามมี scrollbar ตั้งแต่ 720px ขึ้นไป — ยังทำได้ตามนั้น) */
+  @media (max-height: 719px) {
+    html, body { height: auto; min-height: 100vh; overflow: auto; }
+    body { padding: var(--sp-4); }
+    .login-card { padding: var(--sp-6); gap: var(--sp-3); }
+    .login-brand { gap: var(--sp-1); }
+    .login-logo { width: 200px; }
+  }
+
+  /* ---------- จอแคบสุด (320px) ----------
+     ต้องประกาศหลังบล็อกจอเตี้ย เพราะจอ 320px มักเตี้ยไปด้วย ทั้งสองกฎจึงถูกใช้พร้อมกัน
+     ถ้าอยู่ก่อน ค่า padding ที่นี่จะโดนบล็อกจอเตี้ยเขียนทับ (specificity เท่ากัน ตัวหลังชนะ) */
+  @media (max-width: 360px) {
+    body { padding: var(--sp-3); }
+    .login-card { padding: var(--sp-4); }
+  }
+</style>
+</head>
+<body>
+
+  <main class="login-card">
+    <!-- 1. โลโก้ + คำบรรยาย -->
+    <div class="login-brand">
+      <img class="login-logo" src="{{ asset('assets/images/logo-farm.png') }}" alt="The Farm Concept" width="208" height="68">
+      <p class="login-tagline">ระบบติดตามและประเมินผลการเปลี่ยนแปลงสุขภาพ</p>
+    </div>
+
+    <form class="login-form" id="login-form" method="POST" action="{{ route('login.attempt') }}" novalidate>
+      @csrf
+
+      <!-- 2. ชื่อผู้ใช้งาน -->
+      <div class="field">
+        <label class="label" for="login-username">ชื่อผู้ใช้งาน</label>
+        <input class="input" id="login-username" name="username" type="text"
+               value="{{ old('username') }}"
+               placeholder="เช่น weera02" autocomplete="username" autofocus>
+      </div>
+
+      <!-- 3. รหัสผ่าน -->
+      <div class="field password-wrap">
+        <label class="label" for="login-password">รหัสผ่าน</label>
+        <input class="input" id="login-password" name="password" type="password"
+               autocomplete="current-password">
+        <button type="button" class="password-toggle" id="login-toggle" aria-controls="login-password">แสดง</button>
+      </div>
+
+      {{-- ข้อความผิดพลาดมาจากเซิร์ฟเวอร์ ไม่ใช่การตรวจฝั่งเบราว์เซอร์
+           ข้อความเดียวกันทั้งกรณีชื่อผู้ใช้ผิดและรหัสผ่านผิด เพื่อไม่ให้เดาได้ว่าบัญชีไหนมีอยู่จริง --}}
+      <div class="login-error" id="login-error" role="alert" @if (! $errors->any()) hidden @endif>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span id="login-error-text">{{ $errors->first() }}</span>
+      </div>
+
+      <!-- 5. จำการเข้าสู่ระบบ -->
+      <label class="login-remember" for="login-remember">
+        <input type="checkbox" id="login-remember" name="remember" value="1" @checked(old('remember'))>
+        จำการเข้าสู่ระบบไว้
+      </label>
+
+      <!-- 6. ปุ่มเข้าสู่ระบบ -->
+      <button type="submit" class="btn btn--primary btn-block" id="login-submit" disabled>เข้าสู่ระบบ</button>
+
+      <!-- 7. เส้นคั่น + ปุ่มรอง -->
+      <hr class="login-divider">
+      <a class="btn btn-block" href="{{ url('/activities.html') }}">กิจกรรมทั้งหมด</a>
+    </form>
+  </main>
+
+  <p class="login-footer">
+    เวอร์ชัน 1.0.0 · <a href="#">ติดต่อผู้ดูแลระบบ</a> · <a href="#">นโยบายความเป็นส่วนตัว</a>
+  </p>
+
+<script>
+(function () {
+  var form     = document.getElementById('login-form');
+  var username = document.getElementById('login-username');
+  var password = document.getElementById('login-password');
+  var toggle   = document.getElementById('login-toggle');
+  var submit   = document.getElementById('login-submit');
+  var errorBox = document.getElementById('login-error');
+  var errorText= document.getElementById('login-error-text');
+
+  /* ปุ่มเข้าสู่ระบบกดได้ต่อเมื่อกรอกครบทั้งสองช่อง */
+  function syncSubmitState() {
+    submit.disabled = !username.value.trim() || !password.value.trim();
+  }
+  username.addEventListener('input', syncSubmitState);
+  password.addEventListener('input', syncSubmitState);
+  syncSubmitState();
+
+  /* สลับ type ระหว่าง password / text */
+  toggle.addEventListener('click', function () {
+    var showing = password.type === 'text';
+    password.type = showing ? 'password' : 'text';
+    toggle.textContent = showing ? 'แสดง' : 'ซ่อน';
+    password.focus();
+  });
+
+  /* ส่งฟอร์มจริงไปที่เซิร์ฟเวอร์ — การตรวจรหัสผ่านและการนับครั้งที่กรอกผิด
+     ทำที่ฝั่งเซิร์ฟเวอร์ทั้งหมด ตรงนี้ทำแค่ให้ปุ่มเข้าสถานะกำลังทำงานและกดซ้ำไม่ได้ */
+  form.addEventListener('submit', function () {
+    if (submit.disabled) return;
+    submit.disabled = true;
+    submit.classList.add('is-loading');
+    submit.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังเข้าสู่ระบบ…';
+  });
+
+  /* มีข้อความผิดพลาดค้างอยู่ = เพิ่งกรอกผิดมา ย้าย focus ไปช่องรหัสผ่านให้แก้ได้ทันที */
+  if (!errorBox.hidden) {
+    password.focus();
+  }
+})();
+</script>
+</body>
+</html>

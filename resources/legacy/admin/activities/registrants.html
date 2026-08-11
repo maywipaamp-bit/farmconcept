@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผู้ลงทะเบียน | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../home.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.png" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <main class="content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <a href="list.html">จัดการกิจกรรม</a> <span>/</span>
+        <span class="is-current">ผู้ลงทะเบียน</span>
+      </nav>
+      <div class="rg-header">
+        <div class="rg-header-text">
+          <h1 class="rg-title">ผู้ลงทะเบียน</h1>
+          <div class="rg-activity-line" id="rg-activity-line"></div>
+        </div>
+        <div class="rg-header-actions">
+          <button type="button" class="btn btn-outline" id="rg-export">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
+            ส่งออก Excel
+          </button>
+          <button type="button" class="btn btn-primary" id="rg-add">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            เพิ่มผู้ลงทะเบียน
+          </button>
+        </div>
+      </div>
+
+      <div class="rg-stats" id="rg-stats"></div>
+
+      <div class="rg-filter-bar">
+        <div class="rg-tabs" id="rg-tabs" role="tablist"></div>
+        <div class="rg-search" id="rg-search">
+          <button type="button" class="rg-search-btn" id="rg-search-btn" aria-expanded="false" aria-label="ค้นหาผู้ลงทะเบียน">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+          </button>
+          <div class="rg-search-panel" id="rg-search-panel" hidden>
+            <span class="rg-search-arrow"></span>
+            <input type="text" class="input" id="rg-query" placeholder="ค้นหาชื่อ เบอร์โทร หรือรหัสลงทะเบียน" autocomplete="off">
+            <div class="rg-search-foot">
+              <span class="rg-search-count" id="rg-search-count"></span>
+              <button type="button" class="rg-search-clear" id="rg-search-clear">ล้างคำค้นหา</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rg-table-card">
+        <div class="rg-table-scroll">
+          <div class="rg-table">
+            <div class="rg-tr rg-th">
+              <div>ผู้ลงทะเบียน</div>
+              <div>ติดต่อ</div>
+              <div>รอบ</div>
+              <div class="text-right">ยอดเงิน</div>
+              <div>การชำระเงิน</div>
+              <div>Check-in</div>
+              <div></div>
+            </div>
+            <div id="rg-rows"></div>
+          </div>
+        </div>
+        <div class="rg-foot" id="rg-foot"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- สลิปการชำระเงิน -->
+<div class="modal-overlay" id="rg-slip-modal">
+  <div class="modal rg-slip">
+    <div class="modal-header">
+      <h3 class="modal-title" id="rg-slip-title">สลิปการชำระเงิน</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="rg-slip-image" id="rg-slip-image"></div>
+      <dl class="field-view-grid" id="rg-slip-facts"></dl>
+    </div>
+    <div class="modal-footer" id="rg-slip-actions"></div>
+  </div>
+</div>
+
+<!-- รายละเอียดผู้ลงทะเบียน -->
+<div class="modal-overlay" id="rg-detail-modal">
+  <div class="modal rg-detail">
+    <div class="modal-header">
+      <div class="rg-detail-head">
+        <span class="rg-avatar" id="rg-detail-avatar"></span>
+        <span class="rg-detail-head-text">
+          <span class="rg-detail-name" id="rg-detail-name"></span>
+          <span class="rg-detail-code" id="rg-detail-code"></span>
+        </span>
+      </div>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <dl class="field-view-grid" id="rg-detail-fields"></dl>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ยืนยันยกเลิกเช็คอิน -->
+<div class="modal-overlay" id="rg-undo-modal">
+  <div class="modal rg-undo">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-danger mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4.5V9h4.5"/></svg>
+      </span>
+      <h3 class="modal-title mb-3">ยกเลิกการเช็คอิน</h3>
+      <p class="text-secondary" id="rg-undo-message"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ไม่ใช่ตอนนี้</button>
+      <button type="button" class="btn btn-danger" id="rg-undo-ok">ยืนยันยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/activity-registrants.js"></script>
+</body>
+</html>

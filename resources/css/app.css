@@ -1,9 +1,21 @@
-@import 'tailwindcss';
+/* ============================================================
+   จุดรวม CSS ทั้งระบบสำหรับ Vite
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+   ลำดับสำคัญมาก ต้องตรงกับที่หน้าจอเคยโหลดทีละไฟล์เป๊ะ:
+   standard/* มาก่อน แล้วค่อย CSS เดิมของ repo
+   ตามที่ CLAUDE.md อธิบายไว้ว่าตั้งใจให้ CSS เดิม override มาตรฐานใหม่
+   ระหว่างการย้ายทีละหน้า สลับลำดับเมื่อไหร่หน้าจอเพี้ยนทันที
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-}
+   ไฟล์ต้นทางยังอยู่ที่ public/assets/css/ ตามเดิม เพราะหน้า static ที่ยังไม่ได้ย้าย
+   ยังโหลดตรงจากที่นั่นอยู่ ที่นี่แค่ import เข้ามารวมเป็นก้อนเดียว
+   เมื่อย้ายหน้าครบแล้วค่อยย้ายไฟล์ต้นทางเข้ามาไว้ใน resources/css/
+   ============================================================ */
+
+@import '../../public/assets/css/standard/tokens.css';
+@import '../../public/assets/css/standard/base.css';
+@import '../../public/assets/css/tokens.css';
+@import '../../public/assets/css/base.css';
+@import '../../public/assets/css/layout.css';
+@import '../../public/assets/css/components.css';
+@import '../../public/assets/css/utilities.css';
+@import '../../public/assets/css/responsive.css';

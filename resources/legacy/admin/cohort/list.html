@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กลุ่มตัวอย่าง | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../home.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.png" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <main class="content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <span class="is-current">กลุ่มตัวอย่าง</span>
+      </nav>
+      <div class="co-header">
+        <h1 class="co-title">กลุ่มตัวอย่าง</h1>
+        <div class="co-header-actions">
+          <button type="button" class="btn btn-outline" id="co-export">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
+            ส่งออก Excel
+          </button>
+          <button type="button" class="btn btn-primary" data-open-modal="co-add-modal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            เพิ่มกลุ่มตัวอย่าง
+          </button>
+        </div>
+      </div>
+
+      <div class="co-stats" id="co-stats"></div>
+
+      <div class="co-filter-bar">
+        <div class="co-tabs" id="co-tabs" role="tablist"></div>
+        <div class="co-search" id="co-search">
+          <button type="button" class="co-search-btn" id="co-search-btn" aria-expanded="false" aria-label="ค้นหาและกรอง">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+          </button>
+          <div class="co-search-panel" id="co-search-panel" hidden>
+            <span class="co-search-arrow"></span>
+            <label class="co-field">
+              <span class="co-field-label">คำค้นหา</span>
+              <input type="text" class="input" id="co-q" placeholder="ชื่อ รหัสบุคคล หรือเบอร์โทร" autocomplete="off">
+            </label>
+            <label class="co-field">
+              <span class="co-field-label">รอบถัดไป</span>
+              <select class="select" id="co-round"></select>
+            </label>
+            <label class="co-field">
+              <span class="co-field-label">พื้นที่</span>
+              <select class="select" id="co-area"></select>
+            </label>
+            <div class="co-search-foot">
+              <button type="button" class="co-link" id="co-clear">ล้างค่า</button>
+              <button type="button" class="btn btn-primary btn-sm" id="co-apply">ดูผลลัพธ์</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card co-table-card">
+        <div class="co-legend" id="co-legend"></div>
+        <div class="co-table-scroll">
+          <div class="co-table">
+            <div class="co-tr co-th">
+              <div>ชื่อ / รหัส</div>
+              <div>พื้นที่</div>
+              <div>กลุ่มเป้าหมาย</div>
+              <div class="text-center">ก่อน</div>
+              <div class="text-center">3 เดือน</div>
+              <div class="text-center">6 เดือน</div>
+              <div class="text-center">12 เดือน</div>
+              <div>รอบถัดไป</div>
+              <div>สถานะ</div>
+              <div></div>
+            </div>
+            <div id="co-rows"></div>
+          </div>
+        </div>
+        <div class="co-foot" id="co-foot"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- เพิ่มกลุ่มตัวอย่าง -->
+<div class="modal-overlay" id="co-add-modal">
+  <div class="modal co-add">
+    <div class="modal-header">
+      <h3 class="modal-title">เพิ่มกลุ่มตัวอย่าง</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="co-add-form">
+      <div class="modal-body">
+        <div class="co-form-grid" id="co-form-grid"></div>
+
+        <div class="co-block">
+          <label class="form-label">รอบการติดตาม<span class="form-required">*</span></label>
+          <div class="co-chips" id="co-round-chips"></div>
+          <div class="co-due-table" id="co-due-table"></div>
+        </div>
+
+        <div class="co-block">
+          <label class="co-consent">
+            <input type="checkbox" id="co-consent">
+            <span>ได้รับความยินยอมในการเก็บข้อมูลแล้ว<span class="form-required">*</span></span>
+          </label>
+          <label class="co-field" id="co-consent-file" hidden>
+            <span class="co-field-label">แนบเอกสารความยินยอม</span>
+            <input type="file" class="input" id="co-file">
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="co-save" disabled>บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ยืนยันหลังบันทึก -->
+<div class="modal-overlay" id="co-saved-modal">
+  <div class="modal modal-sm">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-success mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </span>
+      <h3 class="modal-title mb-3">เพิ่มกลุ่มตัวอย่างแล้ว</h3>
+      <p class="text-secondary" id="co-saved-name"></p>
+      <div class="co-link-box">
+        <div class="co-link-text">
+          <span class="co-link-label">ลิงก์ทำแบบประเมินก่อนเข้าร่วม</span>
+          <span class="co-link-url" id="co-saved-link"></span>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="co-saved-copy">คัดลอกลิงก์</button>
+      </div>
+
+      <!-- ตอนเพิ่งเข้ากลุ่มคือจังหวะที่ชวนผูก LINE ได้ง่ายที่สุด เพราะเจ้าหน้าที่ยังอยู่กับเขา
+           ผูกตรงนี้ได้ = ไม่ต้องตามเองทุกรอบตลอด 12 เดือน -->
+      <div class="co-link-box">
+        <div class="co-link-text">
+          <span class="co-link-label">ลิงก์ผูก LINE (แจ้งเตือนอัตโนมัติ)</span>
+          <span class="co-link-url" id="co-bind-link"></span>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="co-bind-copy">คัดลอกลิงก์</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" data-close-modal>เสร็จสิ้น</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/followup-template-service.js"></script>
+<script src="../../assets/js/cohort-data.js"></script>
+<script src="../../assets/js/cohort-list.js"></script>
+</body>
+</html>

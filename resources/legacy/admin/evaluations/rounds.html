@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รอบติดตาม | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../home.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.png" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <main class="content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <span class="is-current">รอบติดตาม</span>
+      </nav>
+      <div class="fb-header">
+        <h1 class="fb-title">รอบติดตาม</h1>
+        <a class="btn btn-primary" href="round-create.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          สร้างรอบติดตาม
+        </a>
+      </div>
+
+      <!-- QR ถาวรของระบบติดตามสุขภาพ — สร้างครั้งเดียว ใช้ตลอดโครงการ
+           URL ไม่มีรหัสคน รหัสรอบ หรือรหัสแบบประเมินอยู่ข้างใน จึงไม่ต้องพิมพ์ใหม่เมื่อเพิ่มรอบหรือเพิ่มคน
+           แบบประเมินที่ผู้ตอบได้เห็น มาจากรอบของเขา (batch.form) ไม่ได้มาจาก QR -->
+      <section class="card fb-qr-card" aria-labelledby="fb-qr-title">
+        <div class="fb-qr" id="fb-qr" aria-hidden="true"></div>
+
+        <div class="fb-qr-text">
+          <h2 class="fb-qr-title" id="fb-qr-title">QR ทำแบบประเมินติดตามสุขภาพ</h2>
+          <p class="fb-qr-desc">ใช้อันเดียวตลอดโครงการ เพิ่มรอบหรือเพิ่มคนไม่ต้องสร้างใหม่ — ผู้ตอบสแกนแล้วยืนยันตัวตนก่อน ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของเขา</p>
+          <div class="copy-link fb-qr-link">
+            <code class="copy-link-url">farmconcept.th/h</code>
+            <button type="button" class="copy-link-btn" id="fb-qr-copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+              <span id="fb-qr-copy-text">คัดลอกลิงก์</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="fb-qr-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="fb-qr-open">ขยาย</button>
+          <button type="button" class="btn btn-outline btn-sm" id="fb-qr-download">ดาวน์โหลด</button>
+        </div>
+      </section>
+
+      <div class="fb-filter-bar">
+        <div class="fb-tabs" id="fb-tabs" role="tablist"></div>
+        <div class="fb-filter-right">
+          <span class="fb-count" id="fb-count"></span>
+          <div class="fb-search" id="fb-search">
+            <button type="button" class="fb-search-btn" id="fb-search-btn" aria-expanded="false" aria-label="ค้นหาและกรอง">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+            </button>
+            <div class="fb-search-panel" id="fb-search-panel" hidden>
+              <span class="fb-search-arrow"></span>
+              <label class="co-field">
+                <span class="co-field-label">คำค้นหา</span>
+                <input type="text" class="input" id="fb-q" placeholder="ชื่อรอบติดตาม" autocomplete="off">
+              </label>
+              <label class="co-field">
+                <span class="co-field-label">แบบประเมิน</span>
+                <select class="select" id="fb-form"></select>
+              </label>
+              <div class="fb-search-foot">
+                <button type="button" class="co-link" id="fb-clear">ล้างค่า</button>
+                <button type="button" class="btn btn-primary btn-sm" id="fb-apply">ดูผลลัพธ์</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card fb-table-card">
+        <div class="fb-table-scroll">
+          <div class="fb-table">
+            <div class="fb-tr fb-th">
+              <div>#</div>
+              <div>ชื่อรอบติดตาม</div>
+              <div>ช่วงวันครบกำหนด</div>
+              <div>แบบประเมิน</div>
+              <div class="text-center">จำนวนติดตาม</div>
+              <div>ตอบแล้ว</div>
+              <div class="text-center">แจ้งเตือนได้</div>
+              <div class="text-center">แจ้งเตือนไม่ได้</div>
+              <div>สถานะ</div>
+              <div></div>
+            </div>
+            <div id="fb-rows"></div>
+          </div>
+        </div>
+        <div class="fb-foot" id="fb-foot"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Popup ขยาย QR สำหรับพิมพ์ติดที่ศูนย์ชุมชนหรือแนบใบยินยอม -->
+<div class="modal-overlay" id="fb-qr-modal">
+  <div class="modal fb-qr-modal" role="dialog" aria-modal="true" aria-labelledby="fb-qr-modal-title">
+    <div class="modal-header">
+      <h3 class="modal-title" id="fb-qr-modal-title">QR ทำแบบประเมินติดตามสุขภาพ</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="fb-qr-sheet" id="fb-qr-sheet">
+        <span class="fb-qr-sheet-title">แบบประเมินติดตามสุขภาพ</span>
+        <div class="fb-qr is-large" id="fb-qr-large" aria-hidden="true"></div>
+        <span class="fb-qr-sheet-url">farmconcept.th/h</span>
+        <span class="fb-qr-sheet-note">สแกนแล้วยืนยันตัวตนด้วย LINE หรือเบอร์โทร + รหัสบนใบยินยอม</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ปิด</button>
+      <button type="button" class="btn btn-outline" id="fb-qr-print">พิมพ์</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/index-layout.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/activity-module.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/followup-template-service.js"></script>
+<script src="../../assets/js/cohort-data.js"></script>
+<script src="../../assets/js/round-data.js"></script>
+<script src="../../assets/js/round-list.js"></script>
+</body>
+</html>

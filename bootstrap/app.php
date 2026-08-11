@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        /* ผู้ที่ล็อกอินอยู่แล้วเปิดหน้า /login ให้พากลับเข้าหลังบ้าน
+           ไม่ใช่หน้าเว็บสาธารณะซึ่งเป็นค่าเริ่มต้นของ Laravel */
+        $middleware->redirectUsersTo('/admin/activities/list');
+
+        $middleware->alias([
+            'menu' => \App\Http\Middleware\EnsureMenuAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

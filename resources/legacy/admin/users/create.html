@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th" class="is-preload">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เพิ่มผู้ใช้งาน | TheFarmConcept</title>
+<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../assets/css/standard/base.css">
+<link rel="stylesheet" href="../../assets/css/tokens.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/layout.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="../../assets/css/utilities.css">
+<link rel="stylesheet" href="../../assets/css/responsive.css">
+</head>
+<body>
+
+<div class="app-shell">
+<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
+  <div class="sidebar-overlay"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="../../home.html" class="sidebar-brand">
+        <img class="sidebar-logo" src="../../assets/images/logo-farm.png" alt="The Farm Concept">
+      </a>
+      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
+  </aside>
+
+  <script src="../../assets/js/mock-data.js"></script>
+  <script src="../../assets/js/menu-config.js"></script>
+  <script src="../../assets/js/sidebar-render.js"></script>
+
+  <div class="app-main">
+    <main class="content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <a href="list.html">ผู้ใช้งาน</a> <span>/</span>
+        <span class="is-current">เพิ่มผู้ใช้งาน</span>
+      </nav>
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>เพิ่มผู้ใช้งาน</h1>
+        </div>
+      </div>
+
+      <form data-mock-submit="เพิ่มผู้ใช้งานสำเร็จ" data-mock-redirect="list.html">
+        <div class="card mb-5">
+          <h2 class="card-title">ข้อมูลผู้ใช้งาน</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="u-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
+              <input class="input" id="u-name" placeholder="เช่น สุนิสา แก้วมณี" data-validate required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-email">อีเมล<span class="form-required">*</span></label>
+              <input class="input" type="email" id="u-email" placeholder="name@thefarmconcept.org" data-validate required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-phone">เบอร์โทรศัพท์</label>
+              <input class="input" type="tel" id="u-phone" placeholder="08x-xxx-xxxx">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-role">บทบาท<span class="form-required">*</span></label>
+              <select class="select" id="u-role" required>
+                <option value="">เลือกบทบาท</option>
+                <option>ผู้ดูแลระบบสูงสุด</option>
+                <option>ผู้ดูแลโครงการ</option>
+                <option>เจ้าหน้าที่โครงการ</option>
+              </select>
+              <div class="form-helper">กำหนดสิทธิ์การเข้าถึงตามบทบาท — ดูรายละเอียดที่หน้าบทบาทและสิทธิ์</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-area">พื้นที่รับผิดชอบ</label>
+              <select class="select" id="u-area">
+                <option>ชุมชนพูนทรัพย์</option>
+                <option>The Farm Concept</option>
+                <option>ชุมชนตึกร้าง</option>
+                <option>ชุมชนตึกร้าง</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-status">สถานะ</label>
+              <select class="select" id="u-status">
+                <option>ใช้งานอยู่</option>
+                <option>ระงับการใช้งาน</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-action-bar">
+          <button type="button" class="btn btn-outline" data-go-back>ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="../../assets/js/data-service.js"></script>
+<script src="../../assets/js/navigation.js"></script>
+<script src="../../assets/js/modal.js"></script>
+<script src="../../assets/js/profile-modal.js"></script>
+<script src="../../assets/js/action-menu.js"></script>
+<script src="../../assets/js/toast.js"></script>
+<script src="../../assets/js/form.js"></script>
+<script src="../../assets/js/smart-select.js"></script>
+<script src="../../assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>มาตรฐานการออกแบบ | The Farm Concept</title>
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<!-- หน้านี้ย้ายมาใช้มาตรฐานใหม่เต็มรูปแบบแล้ว จึงโหลดเฉพาะ assets/css/standard/*
+     ไม่โหลด CSS ชุดเดิมของ repo (tokens/base/layout/components/utilities/responsive)
+     เพื่อให้เป็นตัวอย่างจริงว่าหน้าจอที่ย้ายมาตรฐานเสร็จแล้วหน้าตาเป็นอย่างไร -->
+<link rel="stylesheet" href="assets/css/standard/tokens.css">
+<link rel="stylesheet" href="assets/css/standard/base.css">
+<style>
+  /* สไตล์เฉพาะหน้านี้ — ใช้ตัวแปรจาก tokens.css เท่านั้น ไม่มีค่า hardcode */
+  .page      { max-width: 1180px; margin: 0 auto; padding: var(--sp-12) var(--sp-8) var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-12); }
+  .eyebrow   { font-size: var(--fs-secondary); line-height: var(--lh-secondary); font-weight: var(--fw-medium); color: var(--text-brand); }
+  .lede      { max-width: 760px; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
+
+  .head      { display: flex; flex-direction: column; gap: var(--sp-4); padding-bottom: var(--sp-8); border-bottom: 1px solid var(--border-default); }
+  .brand     { display: flex; align-items: center; gap: var(--sp-3); }
+  /* โลโก้เป็นภาพแนวนอน (2048×670) จึงล็อกความสูงและปล่อยความกว้างตามสัดส่วน ไม่ crop */
+  .brand__logo { height: 30px; width: auto; border-radius: var(--r-sm); }
+  .brand .eyebrow { padding-left: var(--sp-3); border-left: 1px solid var(--border-default); }
+  .head__row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-6); flex-wrap: wrap; }
+  .head__act { display: flex; gap: var(--sp-3); }
+
+  .sec       { display: flex; flex-direction: column; gap: var(--sp-6); }
+  .sec__head { display: flex; flex-direction: column; gap: var(--sp-1); }
+
+  .grid      { display: grid; gap: var(--sp-4); }
+  .grid--2   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--3   { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid--4   { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .pad       { padding: var(--sp-6); }
+  .stack     { display: flex; flex-direction: column; gap: var(--sp-4); }
+  .stack--sm { gap: var(--sp-2); }
+  .stack--xs { gap: var(--sp-1); }
+  .row       { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+  code       { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--text-secondary);
+               background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--r-sm); padding: 2px var(--sp-1); }
+  .em        { font-weight: var(--fw-medium); color: var(--text-primary); }
+
+  /* type scale */
+  .scale__item { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--sp-6); align-items: baseline;
+                 padding: var(--sp-4) 0; border-bottom: 1px solid var(--border-row); }
+  .scale__item:last-child { border-bottom: none; }
+  .scale__name { font-size: var(--fs-secondary); line-height: var(--lh-secondary); font-weight: var(--fw-medium); color: var(--text-primary); }
+  .scale__meta { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* swatch */
+  .swatch__box { height: 56px; border-radius: var(--r-md); border: 1px solid var(--border-subtle); }
+  .swatch__name{ font-size: var(--fs-secondary); line-height: var(--lh-secondary); font-weight: var(--fw-medium); color: var(--text-primary); }
+  .swatch__hex { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* do / don't */
+  .rule       { display: flex; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-md); border: 1px solid var(--border-subtle); }
+  .rule--do   { background: var(--status-success-bg); border-color: var(--status-success-border); }
+  .rule--dont { background: var(--status-danger-bg);  border-color: var(--status-danger-border); }
+  .rule__tag  { flex: none; font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: var(--fw-medium); }
+  .rule--do   .rule__tag { color: var(--status-success-text); }
+  .rule--dont .rule__tag { color: var(--status-danger-text); }
+  .rule__text { font-size: var(--fs-secondary); line-height: var(--lh-secondary); color: var(--text-body); }
+
+  .check__row { display: flex; gap: var(--sp-3); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-body); }
+  .check__box { flex: none; width: 18px; height: 18px; margin-top: 4px; border-radius: var(--r-sm);
+                border: 1px solid var(--border-default); background: var(--bg-subtle); }
+
+  .navdemo    { display: flex; flex-direction: column; gap: var(--sp-1); max-width: var(--sidebar-w); }
+  .scroll-x   { overflow-x: auto; }
+
+  @media (max-width: 1024px) {
+    .page      { padding: var(--sp-8) var(--sp-6) var(--sp-12); gap: var(--sp-8); }
+    .grid--2, .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .scale__item { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
+  }
+  @media (max-width: 640px) {
+    .grid--2, .grid--3, .grid--4 { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <header class="head">
+    <div class="brand">
+      <img class="brand__logo" src="assets/images/logo-farm.png" alt="The Farm Concept" width="92" height="30">
+      <span class="eyebrow">DESIGN STANDARD</span>
+    </div>
+    <div class="head__row">
+      <div class="stack">
+        <h1>มาตรฐานการออกแบบระบบ The Farm Concept</h1>
+        <p class="lede">ทุกหน้าจอในระบบยึดตัวแปรจาก <code>assets/css/standard/tokens.css</code> และ primitive จาก <code>assets/css/standard/base.css</code> เป็นหลัก เหนือกว่าสไตล์เดิมของ repo และเหนือกว่าค่า default ของไลบรารีที่ใช้อยู่ — หน้านี้ใช้อ้างอิงระหว่างพัฒนา และเป็นตัวอย่างจริงของหน้าจอที่ย้ายมาตรฐานเสร็จแล้ว</p>
+      </div>
+      <div class="head__act">
+        <a class="btn" href="login.html">เข้าสู่ระบบ</a>
+        <a class="btn" href="admin/dashboard.html">แดชบอร์ด</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ หลักการ ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>หลักการ</h2>
+      <p class="t-secondary">ปัญหาเดิมของระบบคือ “เข้มและหนักเกินไป” — ความสำคัญของข้อความสื่อด้วย <span class="em">สี</span> ก่อน แล้วจึงเป็น <span class="em">น้ำหนัก</span> และ <span class="em">ขนาด</span> ตามลำดับ</p>
+    </div>
+    <div class="grid grid--3">
+      <div class="card pad stack stack--sm">
+        <h3>น้ำหนักตัวอักษร</h3>
+        <p class="t-secondary">400 เป็นค่าเริ่มต้น · 500 เฉพาะที่ต้องเน้น · 600 เฉพาะหัวข้อ · <span style="font-weight: var(--fw-medium); color: var(--status-danger-text);">ห้ามใช้ 700</span></p>
+      </div>
+      <div class="card pad stack stack--sm">
+        <h3>สีตัวอักษร</h3>
+        <p class="t-secondary">เข้มที่สุดคือ <code>--text-strong</code> #111827 · ห้ามใช้ <code>#000</code> กับข้อความทุกกรณี</p>
+      </div>
+      <div class="card pad stack stack--sm">
+        <h3>ระยะบรรทัด</h3>
+        <p class="t-secondary">เนื้อหาภาษาไทยไม่ต่ำกว่า 1.6 · หัวข้อ 1.35–1.5 · ขนาดเล็กสุด 12px ใช้เฉพาะ badge และ caption</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Type scale ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>Type scale</h2>
+      <p class="t-secondary">8 ระดับ — ทุก <code>font-size</code> ในระบบต้องมาจากตัวแปรเหล่านี้</p>
+    </div>
+    <div class="card pad">
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">page-title</span><span class="scale__meta">28 / 1.4 · 600 · --text-strong</span></div>
+        <div class="t-page-title">ชื่อหน้า — พื้นที่ดำเนินงาน</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">section-title</span><span class="scale__meta">20 / 1.45 · 600 · --text-strong</span></div>
+        <div class="t-section">หัวข้อกลุ่ม และหัว Popup</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">card-title</span><span class="scale__meta">16 / 1.5 · 500 · --text-primary</span></div>
+        <div class="t-card-title">หัวการ์ด และชื่อรายการที่คลิกได้</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">body-strong</span><span class="scale__meta">14 / 1.6 · 500 · --text-primary</span></div>
+        <div class="t-body-strong">คอลัมน์หลักของตาราง และ label ของฟอร์ม</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">body</span><span class="scale__meta">14 / 1.6 · 400 · --text-body</span></div>
+        <div class="t-body">เนื้อหาทั่วไปและค่าในตาราง เป็นน้ำหนักเริ่มต้นของทั้งระบบ</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">table-header</span><span class="scale__meta">13 / 1.5 · 500 · --text-secondary</span></div>
+        <div style="font-size: var(--fs-secondary); line-height: var(--lh-secondary); font-weight: var(--fw-medium); color: var(--text-secondary);">หัวตาราง — ไม่ใช้ตัวหนา ไม่ใช้สีเข้ม</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">secondary</span><span class="scale__meta">13 / 1.6 · 400 · --text-secondary</span></div>
+        <div class="t-secondary">คำอธิบายใต้ชื่อ helper text และวันที่</div>
+      </div>
+      <div class="scale__item">
+        <div class="stack stack--xs"><span class="scale__name">caption</span><span class="scale__meta">12 / 1.5 · 500 · ตามสถานะ</span></div>
+        <div class="row"><span class="badge badge--success">เปิดใช้งาน</span><span class="t-caption t-num" style="color: var(--text-muted);">อัปเดต 09/08/2569</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ สีตัวอักษร ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>สีตัวอักษร</h2>
+      <p class="t-secondary">6 ระดับไล่จากเข้มไปจาง — ใช้ระดับความเข้มแทนการใช้ตัวหนา</p>
+    </div>
+    <div class="card pad grid grid--3" style="gap: var(--sp-6) var(--sp-4);">
+      <div class="stack stack--xs"><span style="color: var(--text-strong);">ชื่อหน้าและหัวข้อ</span><span class="swatch__hex">--text-strong · #111827</span></div>
+      <div class="stack stack--xs"><span style="color: var(--text-primary);">คอลัมน์หลักและ label</span><span class="swatch__hex">--text-primary · #1F2937</span></div>
+      <div class="stack stack--xs"><span style="color: var(--text-body);">เนื้อหาทั่วไป</span><span class="swatch__hex">--text-body · #374151</span></div>
+      <div class="stack stack--xs"><span style="color: var(--text-secondary);">หัวตารางและคำอธิบาย</span><span class="swatch__hex">--text-secondary · #6B7280</span></div>
+      <div class="stack stack--xs"><span style="color: var(--text-muted);">ลำดับที่และ placeholder</span><span class="swatch__hex">--text-muted · #9CA3AF</span></div>
+      <div class="stack stack--xs"><span style="color: var(--text-faint);">ตัวเลขแถวในตาราง</span><span class="swatch__hex">--text-faint · #C7CDD4</span></div>
+    </div>
+  </section>
+
+  <!-- ============ สีแบรนด์ พื้นผิว สถานะ ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>สีแบรนด์ พื้นผิว และสถานะ</h2>
+      <p class="t-secondary">พื้นหลังแอปเป็นเทาอมเขียว ไม่ใช่ขาวล้วน เพื่อให้การ์ดสีขาวลอยขึ้นมา</p>
+    </div>
+    <div class="grid grid--4">
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--brand-500);"></div><span class="swatch__name">brand-500</span><span class="swatch__hex">#22C55E · focus</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--brand-600);"></div><span class="swatch__name">brand-600</span><span class="swatch__hex">#16A34A · ปุ่มหลัก</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--brand-700);"></div><span class="swatch__name">brand-700</span><span class="swatch__hex">#15803D · hover</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--bg-brand-soft);"></div><span class="swatch__name">bg-brand-soft</span><span class="swatch__hex">#F0FDF4 · เมนูที่เลือก</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--bg-app);"></div><span class="swatch__name">bg-app</span><span class="swatch__hex">#F6F8F6 · พื้นหลังแอป</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--bg-surface);"></div><span class="swatch__name">bg-surface</span><span class="swatch__hex">#FFFFFF · การ์ด</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--bg-subtle);"></div><span class="swatch__name">bg-subtle</span><span class="swatch__hex">#FAFBFA · row hover</span></div>
+      <div class="stack stack--sm"><div class="swatch__box" style="background: var(--border-default);"></div><span class="swatch__name">border-default</span><span class="swatch__hex">#E5E7EB · เส้นขอบ</span></div>
+    </div>
+    <div class="row">
+      <span class="badge badge--success">เปิดใช้งาน</span>
+      <span class="badge badge--warning">รอดำเนินการ</span>
+      <span class="badge badge--danger">ยกเลิก</span>
+      <span class="badge badge--neutral">ร่าง</span>
+      <span class="t-secondary">ป้ายสถานะเป็นพื้นอ่อนพร้อมขอบ ไม่ใช้สีทึบ</span>
+    </div>
+  </section>
+
+  <!-- ============ Primitives ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>Component พื้นฐาน</h2>
+      <p class="t-secondary">มาจาก <code>base.css</code> โดยตรง — ทุกตัวมี hover และ focus-visible ครบ</p>
+    </div>
+
+    <div class="grid grid--2">
+      <div class="card pad stack">
+        <h3>ปุ่ม</h3>
+        <p class="t-secondary">หนึ่งหน้าจอมีปุ่ม <code>.btn--primary</code> ได้ปุ่มเดียว — ปุ่มเขียวปุ่มเดียวของหน้านี้อยู่ตรงนี้</p>
+        <div class="row">
+          <button class="btn" type="button">ดาวน์โหลด</button>
+          <button class="btn btn--primary" type="button">เพิ่มพื้นที่ดำเนินงาน</button>
+          <button class="btn" type="button" disabled>ปิดใช้งาน</button>
+        </div>
+      </div>
+
+      <div class="card pad stack">
+        <h3>เมนู Sidebar</h3>
+        <p class="t-secondary">เมนูที่เลือกเป็นพื้นเขียวอ่อนพร้อมแถบซ้าย 2px ไม่ใช่กล่องเขียวทึบเต็มความกว้าง</p>
+        <div class="navdemo">
+          <a class="nav-item" href="#"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>แดชบอร์ด</a>
+          <a class="nav-item nav-item--active" href="#"><svg viewBox="0 0 24 24"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>พื้นที่ดำเนินงาน</a>
+          <a class="nav-item" href="#"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>กิจกรรม</a>
+        </div>
+      </div>
+
+      <div class="card pad stack">
+        <h3>ฟิลด์ฟอร์ม</h3>
+        <p class="t-secondary">Label อยู่เหนือฟิลด์เสมอ ระยะ 8px · ห้ามวาง label ด้านซ้าย · ช่องที่มี <span class="req">*</span> จำเป็นต้องกรอก</p>
+        <div class="field">
+          <label class="label" for="demo-name">ชื่อพื้นที่ <span class="req">*</span></label>
+          <input class="input" id="demo-name" type="text" placeholder="เช่น The Farm Concept">
+          <span class="help">ชื่อที่แสดงในรายการและรายงานทั้งหมด</span>
+        </div>
+        <div class="field">
+          <label class="label" for="demo-code">รหัสพื้นที่ <span class="req">*</span></label>
+          <input class="input input--error" id="demo-code" type="text" value="AREA 01">
+          <span class="error">รหัสพื้นที่ต้องไม่มีช่องว่าง</span>
+        </div>
+      </div>
+
+      <div class="card pad stack">
+        <h3>สถานะกำลังโหลด</h3>
+        <p class="t-secondary">โหลดครั้งแรกใช้ skeleton ที่มีรูปร่างและจำนวนแถวใกล้เคียงข้อมูลจริง — ไม่ใช้ spinner กลางจอ</p>
+        <div class="stack stack--sm">
+          <div class="skeleton skeleton--text" style="width: 45%;"></div>
+          <div class="skeleton skeleton--text-sm"></div>
+          <div class="skeleton skeleton--text" style="width: 70%;"></div>
+          <div class="skeleton skeleton--text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตาราง ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>ตาราง</h2>
+      <p class="t-secondary">เส้นคั่นแนวนอนเท่านั้น ไม่มีเส้นตั้ง · แถวสูง 64px · hover เป็น <code>--bg-subtle</code> · เน้นได้คอลัมน์เดียว</p>
+    </div>
+    <div class="card" style="overflow: hidden;">
+      <div class="scroll-x">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>ชื่อพื้นที่</th>
+              <th>ประเภทพื้นที่</th>
+              <th>กลุ่มพื้นที่</th>
+              <th>ผู้ประสานงาน</th>
+              <th style="text-align: right;">กิจกรรม</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-index">1</td>
+              <td>
+                <div class="t-body-strong">The Farm Concept</div>
+                <div class="t-muted">เขตบางนา กรุงเทพมหานคร</div>
+              </td>
+              <td>เอกชน</td>
+              <td>พื้นที่ต้นแบบ</td>
+              <td>วีระ ศรีสมบัติ</td>
+              <td class="cell-num">6</td>
+              <td><span class="badge badge--success">เปิดใช้งาน</span></td>
+            </tr>
+            <tr>
+              <td class="cell-index">2</td>
+              <td>
+                <div class="t-body-strong">ชุมชนพูนทรัพย์</div>
+                <div class="t-muted">เขตสายไหม กรุงเทพมหานคร</div>
+              </td>
+              <td>ชุมชน/หมู่บ้าน</td>
+              <td>พื้นที่ต้นแบบส่วนขยาย</td>
+              <td>อรุณี ทองสุข</td>
+              <td class="cell-num">4</td>
+              <td><span class="badge badge--success">เปิดใช้งาน</span></td>
+            </tr>
+            <tr>
+              <td class="cell-index">3</td>
+              <td>
+                <div class="t-body-strong">ชุมชนตึกร้าง</div>
+                <div class="t-muted">เขตบางพลัด กรุงเทพมหานคร</div>
+              </td>
+              <td>ชุมชน/หมู่บ้าน</td>
+              <td>พื้นที่ต้นแบบส่วนขยาย</td>
+              <td>ปิยะดา รุ่งเรือง</td>
+              <td class="cell-num">3</td>
+              <td><span class="badge badge--success">เปิดใช้งาน</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Spacing / radius / motion ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>ระยะห่าง มุมโค้ง และ Motion</h2>
+      <p class="t-secondary">ระยะห่างใช้เฉพาะสเกล 4px — ค่านอกสเกลถือว่าผิดมาตรฐาน</p>
+    </div>
+    <div class="grid grid--3">
+      <div class="card pad stack stack--sm">
+        <h3>Spacing</h3>
+        <p class="t-secondary t-num">4 · 8 · 12 · 16 · 24 · 32 · 48 · 64</p>
+        <p class="t-muted">ตัวแปร <code>--sp-1</code> ถึง <code>--sp-16</code></p>
+      </div>
+      <div class="card pad stack stack--sm">
+        <h3>Radius</h3>
+        <p class="t-secondary t-num">8 · 10 · 14 · 18 · 999</p>
+        <p class="t-muted">ปุ่มและฟิลด์ <code>--r-md</code> · การ์ด <code>--r-lg</code> · badge <code>--r-pill</code></p>
+      </div>
+      <div class="card pad stack stack--sm">
+        <h3>Motion</h3>
+        <p class="t-secondary t-num">120ms hover · 220ms dropdown · 260ms popup</p>
+        <p class="t-muted">ห้ามเกิน 300ms กับ UI ที่ใช้งานประจำ และห้าม <code>transition: all</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Do / Don't ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>ควรทำ และห้ามทำ</h2>
+    </div>
+    <div class="grid grid--2">
+      <div class="rule rule--do"><span class="rule__tag">ควรทำ</span><span class="rule__text">เน้นข้อมูลด้วยสีที่เข้มขึ้นหนึ่งระดับ</span></div>
+      <div class="rule rule--dont"><span class="rule__tag">ห้ามทำ</span><span class="rule__text">เน้นข้อมูลด้วย <code>font-weight: 700</code> หรือ <code>bold</code></span></div>
+      <div class="rule rule--do"><span class="rule__tag">ควรทำ</span><span class="rule__text">หัวตาราง 13px / 500 / <code>--text-secondary</code></span></div>
+      <div class="rule rule--dont"><span class="rule__tag">ห้ามทำ</span><span class="rule__text">หัวตารางตัวหนาสีเข้ม หรือใส่ตัวพิมพ์ใหญ่ทั้งคำกับข้อความไทย</span></div>
+      <div class="rule rule--do"><span class="rule__tag">ควรทำ</span><span class="rule__text">ตารางใช้เส้นคั่นแนวนอนอย่างเดียว</span></div>
+      <div class="rule rule--dont"><span class="rule__tag">ห้ามทำ</span><span class="rule__text">ตีเส้นขอบล้อมทุกด้านของทุกเซลล์</span></div>
+      <div class="rule rule--do"><span class="rule__tag">ควรทำ</span><span class="rule__text">ปุ่มเขียวปุ่มเดียวต่อหนึ่งหน้าจอ</span></div>
+      <div class="rule rule--dont"><span class="rule__tag">ห้ามทำ</span><span class="rule__text">ปุ่มเขียวหลายปุ่มจนไม่รู้ว่าอันไหนคือสิ่งที่ควรกด</span></div>
+    </div>
+  </section>
+
+  <!-- ============ Checklist ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <h2>Checklist ก่อนส่งงาน</h2>
+      <p class="t-secondary">กฎฉบับเต็มอยู่ใน <code>CLAUDE.md</code> และ <code>docs/design-standard/STANDARD.md</code></p>
+    </div>
+    <div class="card pad stack">
+      <div class="check__row"><span class="check__box"></span><span>ค้นหา <code>font-weight: 700</code>, <code>bold</code>, <code>#000</code>, <code>#111</code>, <code>#222</code> ในไฟล์ที่แก้ — ต้องไม่เจอ</span></div>
+      <div class="check__row"><span class="check__box"></span><span>ค้นหาค่าสี hex ที่ไม่ได้มาจาก tokens — ต้องไม่เจอ</span></div>
+      <div class="check__row"><span class="check__box"></span><span>ทุก <code>font-size</code> มาจากตัวแปรของ type scale</span></div>
+      <div class="check__row"><span class="check__box"></span><span>ตารางมีคอลัมน์ที่เน้นไม่เกินหนึ่งคอลัมน์</span></div>
+      <div class="check__row"><span class="check__box"></span><span>ทุก interactive element มี hover และ focus-visible</span></div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

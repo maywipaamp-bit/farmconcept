@@ -1,0 +1,670 @@
+/* ==========================================================================
+   TheFarmConcept — Layout
+   Backoffice Shell (Sidebar + Topbar + Content) และ Public Layout
+   ========================================================================== */
+
+/* ---------- App Shell ----------
+   พื้นของ shell เป็นเทาอ่อนที่สุดที่มี ไม่ใช่ขาว เพื่อให้ "แผงเนื้อหา" ที่เป็น
+   สี่เหลี่ยมมนสีขาวลอยแยกออกจากแถบเมนูได้ ถ้าพื้นเป็นขาวล้วน มุมมนจะมองไม่เห็นเลย
+   ต่างกันแค่ระดับที่ตาแทบไม่รู้สึกว่าเป็นสีเทา แต่พอให้เห็นขอบแผง */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-surface-muted);
+}
+
+/* ---------- Sidebar ----------
+   ไม่มีเส้นขอบขวาแล้ว เพราะช่องว่างระหว่างเมนูกับแผงเนื้อหาทำหน้าที่คั่นแทน
+   มีทั้งเส้นและช่องว่างพร้อมกันจะกลายเป็นสองเส้นแบ่งซ้อนกัน */
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-base);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: var(--z-sticky);
+}
+
+.app-shell.is-sidebar-collapsed .sidebar {
+  width: var(--sidebar-width-collapsed);
+}
+
+/* ขอบบนล่างบางเป็นพิเศษ เพราะแถบนี้สูงเท่า topbar คือ 56px
+   ถ้าเว้นตามปกติ จะเหลือที่ให้โลโก้ไม่ถึงความสูงของตัวโลโก้เอง
+   ผลคือ overflow: hidden ตัดหัวท้ายโลโก้ทิ้ง */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  height: var(--topbar-height);
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* ตัวถ่วงซ้ายที่กว้างเท่าปุ่มย่อทางขวา — โลโก้จึงอยู่กึ่งกลางแถบจริง ๆ
+   ถ้าไม่มีตัวนี้ ปุ่มย่อจะกินที่เฉพาะฝั่งขวา แล้วโลโก้ถูกดันไปเกาะซ้าย
+   ใช้ ::before แทนการเพิ่ม element เพราะไม่ต้องไปแก้ markup ทั้ง 25 หน้า */
+.sidebar-header::before {
+  content: '';
+  flex: none;
+  width: 24px;
+}
+
+/* ย่อแล้วเหลือที่แค่โลโก้กับปุ่ม ไม่มีที่ให้ตัวถ่วง */
+.app-shell.is-sidebar-collapsed .sidebar-header::before {
+  display: none;
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-inverse);
+  /* เดิมเป็น --font-weight-bold (700) ซึ่งมาตรฐานห้ามใช้ — token นั้นถูกถอดออกแล้ว */
+  font-weight: var(--font-weight-semibold);
+}
+
+.sidebar-title {
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-primary);
+}
+
+.sidebar-brand:hover {
+  text-decoration: none;
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-title,
+.app-shell.is-sidebar-collapsed .nav-label,
+.app-shell.is-sidebar-collapsed .nav-section-title {
+  display: none;
+}
+
+/* ไม่มีระยะขอบซ้าย/ขวา เพื่อให้แถบไฮไลต์ของเมนูกินเต็มความกว้าง
+   ระยะขอบของเนื้อหาไปอยู่ที่ .nav-item แทน */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) 0;
+}
+
+.nav-section-title {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-3) var(--space-3) var(--space-1);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  /* มุมฉาก — ไฮไลต์กินเต็มความกว้างแถบ อ่านเป็นแถบเดียวต่อเนื่องกับขอบซ้าย
+     ไม่ใช่ก้อนลอยที่มีขอบมนอยู่กลางแถบ */
+  border-radius: 0;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  margin-bottom: 2px;
+}
+
+.nav-item:hover {
+  background: var(--color-primary-soft);
+  text-decoration: none;
+}
+
+.nav-item.is-active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.nav-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Long Thai menu labels wrap rather than overflow the sidebar */
+.nav-label {
+  min-width: 0;
+}
+
+/* เมนูย่อยเยื้องด้วย padding ของตัว .nav-item เอง ไม่ใช่ padding ของกล่องครอบ
+   ไฮไลต์ของเมนูย่อยจึงยังกินเต็มความกว้างเหมือนเมนูหลัก */
+.nav-submenu .nav-item {
+  padding-left: var(--space-6);
+}
+
+.nav-submenu .nav-item {
+  font-size: var(--font-size-small);
+}
+
+/* 2-level accordion sidebar (TFC.renderSidebarNav in navigation.js) */
+.nav-group {
+  margin-bottom: 2px;
+}
+
+.nav-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.nav-item-row .nav-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.nav-item-parent-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+}
+
+.nav-submenu-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.nav-submenu-toggle:hover {
+  background: var(--color-primary-soft);
+}
+
+.nav-chevron {
+  transition: transform var(--transition-fast);
+}
+
+.nav-submenu-toggle[aria-expanded="true"] .nav-chevron,
+.nav-item-parent-toggle[aria-expanded="true"] .nav-chevron {
+  transform: rotate(180deg);
+}
+
+.nav-item-parent-toggle .nav-chevron {
+  margin-left: auto;
+}
+
+.app-shell.is-sidebar-collapsed .nav-submenu,
+.app-shell.is-sidebar-collapsed .nav-submenu-toggle {
+  display: none;
+}
+
+.sidebar-toggle {
+  margin-left: auto;
+  flex: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: transform var(--transition-base), color var(--transition-fast), background var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+  color: var(--color-text-primary);
+  background: var(--color-background);
+}
+
+/* Rotate the whole button (not the inner <svg>) — some browsers do not resolve CSS transform on an outermost <svg> element */
+.app-shell.is-sidebar-collapsed .sidebar-toggle {
+  transform: rotate(180deg);
+}
+
+/* Collapsed-sidebar tooltip bubble, positioned via JS (navigation.js) to escape the scrollable nav's clipping */
+.nav-tooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+  z-index: var(--z-tooltip);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.nav-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ---------- Sidebar Overlay (Mobile Drawer) ---------- */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 41, 55, 0.4);
+  z-index: var(--z-drawer);
+}
+
+/* ---------- App Main ----------
+   พื้นที่หน้าจอเป็นแผงสีขาวมุมมน แยกตัวออกจากแถบเมนูด้วยช่องว่างรอบด้าน
+   ไม่ใช่พื้นผืนเดียวกันที่ไหลชนขอบจอ ทำให้เห็นได้ทันทีว่าตรงไหนคือเมนู
+   ตรงไหนคือเนื้อหา โดยไม่ต้องมีเส้นแบ่งมาขีดคั่น
+
+   ยึดหัวไว้กับจอ (sticky ที่ระยะ margin) แล้วให้เนื้อในเลื่อนเอง แผงจึงยังเห็น
+   มุมมนอยู่ตลอดเวลาที่เลื่อนหน้า ไม่ใช่มนแค่ตอนอยู่บนสุด */
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-modal);
+  /* ตัดเนื้อหาที่ล้นให้เข้ารูปมุมมนของแผง ไม่ให้โผล่พ้นมุมออกมา */
+  overflow: hidden;
+}
+
+/* ---------- ปุ่มเปิดลิ้นชักเมนู (มือถือ) ----------
+   แถบบนถูกถอดออกทั้งระบบแล้ว ปุ่มนี้จึงลอยอยู่มุมซ้ายบนแทน
+   navigation.js เป็นคนสร้าง element ให้ ที่นี่คุมแค่หน้าตากับการซ่อน/แสดง
+   ซ่อนเป็นค่าตั้งต้น แล้วเปิดคืนเฉพาะจอมือถือที่ responsive.css */
+.drawer-btn {
+  display: none;
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-sticky);
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* ---------- โปรไฟล์ผู้ใช้ท้ายแถบซ้าย (sidebar-render.js เป็นคนสร้าง) ----------
+   ย้ายลงมาจากมุมขวาบน แถบบนจึงเหลือความกว้างทั้งแถวให้ breadcrumb กับช่องค้นหา */
+.sidebar-foot {
+  display: block;
+  position: relative;
+  flex: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.sidebar-profile:hover {
+  background: var(--color-primary-soft);
+}
+
+.sidebar-profile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.sidebar-profile-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-profile-name {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-role {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-caret { flex: none; color: var(--color-text-secondary); }
+
+/* เมนูย่อยต้องเปิดขึ้นบน เพราะปุ่มอยู่ติดขอบล่างจอ ถ้าเปิดลงจะตกออกนอกจอทันที
+   และกางเต็มความกว้างแถบ ไม่ให้ล้นออกไปทับเนื้อหา */
+.sidebar-foot .dropdown-menu {
+  top: auto;
+  bottom: calc(100% + var(--space-1));
+  left: var(--space-2);
+  right: var(--space-2);
+  min-width: 0;
+}
+
+/* พับแถบแล้วเหลือแค่รูป จัดกึ่งกลางรางให้ตรงกับไอคอนเมนู */
+.app-shell.is-sidebar-collapsed .sidebar-profile-info,
+.app-shell.is-sidebar-collapsed .sidebar-profile-caret { display: none; }
+
+.app-shell.is-sidebar-collapsed .sidebar-profile {
+  justify-content: center;
+  padding: var(--space-3) var(--space-2);
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-foot .dropdown-menu {
+  left: 0;
+  right: auto;
+  min-width: 200px;
+}
+
+/* ---------- Content ---------- */
+.content {
+  flex: 1;
+  padding: var(--space-5);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.page-header-text h1 {
+  margin-bottom: var(--space-1);
+}
+
+.page-description {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+
+.page-header-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-toolbar-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.page-toolbar-count {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.page-toolbar-count strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.page-toolbar-field-wide {
+  min-width: 260px;
+}
+
+.filter-select {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+/* ---------- Public Layout ---------- */
+.public-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.public-header-inner {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  gap: var(--space-4);
+}
+
+.public-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.public-nav a {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.public-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.public-hero {
+  background: var(--color-primary-soft);
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+}
+
+.public-hero-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.public-content {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+}
+
+.public-content-narrow {
+  max-width: 720px;
+}
+
+.public-footer {
+  background: var(--color-text-primary);
+  color: rgba(255, 255, 255, 0.8);
+  padding: var(--space-6) var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.public-footer-inner {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  font-size: var(--font-size-small);
+}
+
+.public-footer a {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Auth Layout (Login) ---------- */
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  padding: var(--space-5);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+
+.auth-brand-title {
+  font-size: var(--font-size-card-title);
+  margin-bottom: 4px;
+}
+
+/* ---------- Branding: โลโก้จริงของ The Farm Concept ----------
+   สูง 36px พอดีกับที่ว่าง 40px ของแถบหัว (56px ลบขอบบนล่าง 8+8)
+   ไฟล์ต้นฉบับ 2048x670 จึงคมชัดเต็มที่ ไม่ได้ขยายเกินขนาดไฟล์
+   object-position ชิดซ้าย เพื่อให้โลโก้เกาะมุมซ้ายตรงกับเมนูด้านล่าง ไม่ลอยกลางแถบ */
+img.sidebar-logo {
+  /* ไฟล์โลโก้มีขอบเปล่าในตัว บน/ล่างด้านละ 11% ซ้าย/ขวาด้านละ 4%
+     ตัวอักษรจริงจึงสูงแค่ 78% ของกล่อง ต่อให้ขยายกล่องก็ยังดูเล็กและลอย
+     วิธีแก้: clip ขอบเปล่าทิ้ง แล้ว margin ติดลบดึงพื้นที่ที่ clip ไปแล้วคืน
+     ไม่ให้กินที่ในเลย์เอาต์
+
+     ความกว้างยึดกับที่ว่างจริงของแถบ (ไม่ใช่ตั้งความสูงตายตัวแล้วปล่อยความกว้าง
+     ตามอัตราส่วน) โลโก้จึงเต็มช่องที่มีอยู่ ไม่เหลือที่ว่างค้างทางขวา */
+  width: 100%;
+  height: auto;
+  max-width: none;
+  border-radius: 0;
+  background: none;
+  /* ค่าที่ตัดออกวัดจากไฟล์จริง (2048x670 RGBA): ขอบเปล่าบน/ล่างด้านละ 11.19%
+     ซ้าย 3.96% ขวา 4.00% — ปัดลงเล็กน้อยเพื่อไม่ให้เฉือนเข้าเนื้อตัวอักษร */
+  clip-path: inset(11.1% 3.9%);
+  /* ดึงคืนเฉพาะแนวตั้ง — ส่วนที่ clip ทิ้งไปบน/ล่างไม่ควรกินที่ในเลย์เอาต์
+     แนวนอนต้องเป็น 0 ไม่งั้น margin ติดลบจะเลื่อนกล่องไปทางซ้าย 6px
+     (ไม่ได้ขยายสองข้างเท่ากัน) แล้วโลโก้จะไม่อยู่กึ่งกลางแถบ */
+  margin: -6px 0;
+}
+
+/* ย่อเมนู: ซ่อนลูกศรกาง/ยุบเมนูย่อย
+   พอไม่มีข้อความเมนู ลูกศรจะลอยเดี่ยว ๆ อยู่กลางแถบ อ่านไม่ออกว่าเป็นของเมนูไหน
+   กดที่ไอคอนเมนูก็ยังกางเมนูย่อยได้เหมือนเดิม */
+.app-shell.is-sidebar-collapsed .nav-chevron,
+.app-shell.is-sidebar-collapsed .nav-submenu-toggle {
+  display: none;
+}
+
+/* ---------- ย่อเมนู ----------
+   แถบแคบเหลือ 60px — ขอบ 6px สองข้าง + ไอคอน 26px + ปุ่มย่อ 22px คือ 60px พอดี
+   ปุ่มย่อจึงต้องเล็กลงด้วย ไม่งั้นจะดันโลโก้ตกขอบ */
+.app-shell.is-sidebar-collapsed .sidebar-header {
+  padding: var(--space-1);
+  gap: 0;
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-toggle {
+  padding: 2px;
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-brand { flex: none; }
+
+/* สลับไปใช้โลโก้ย่อรูปตัว f ซึ่งเป็นสี่เหลี่ยมจัตุรัส เหมาะกับแถบแคบกว่า wordmark
+   content: url() สลับไฟล์ภาพได้จาก CSS ล้วน ไม่ต้องแก้ <img> ทั้ง 24 หน้า */
+.app-shell.is-sidebar-collapsed img.sidebar-logo {
+  content: url('../images/favicon.png');
+  width: 26px;
+  height: 26px;
+  max-width: none;
+  flex: none;
+  object-position: center;
+  /* ล้าง clip-path กับ margin ติดลบของโลโก้ตัวเต็ม — ไฟล์นี้คนละกรอบกัน
+     ถ้าไม่ล้าง ตัว f จะโดนเฉือนขอบและถูกดึงชิดซ้ายเกินไป */
+  clip-path: none;
+  margin: 0;
+}
+
+.auth-logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+

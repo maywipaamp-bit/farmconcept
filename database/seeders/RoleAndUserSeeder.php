@@ -15,8 +15,8 @@ use RuntimeException;
  */
 class RoleAndUserSeeder extends Seeder
 {
-    /** รหัสผ่านของผู้ใช้เดโมทุกคน — ใช้กับเครื่องพัฒนาเท่านั้น */
-    private const DEV_PASSWORD = 'password';
+    /** รหัสผ่านของผู้ใช้เดโมทุกคน — ใช้กับเครื่องพัฒนาเท่านั้น มี guard กัน production ไว้ใน run() */
+    private const DEV_PASSWORD = '4321';
 
     /** คีย์เมนูทั้งหมด ต้องตรงกับ assets/js/menu-config.js — เพิ่มเมนูที่นั่นแล้วต้องมาเพิ่มที่นี่ */
     private const MENU_KEYS = [
@@ -92,6 +92,9 @@ class RoleAndUserSeeder extends Seeder
         /* [code, ชื่อ, username, อีเมล, รหัสพื้นที่, สถานะ, บทบาททั้งหมดของคนนั้น]
            USR-002 มีสองบทบาท — เป็นเหตุผลที่ usr_role_user เป็น many-to-many ไม่ใช่คอลัมน์เดียว */
         $users = [
+            /* บัญชีสำหรับพัฒนา — ต้นแบบใช้ชื่อ admin ในหน้าล็อกอินอยู่แล้ว จึงคงชื่อเดิมไว้
+               ไม่ได้อยู่ในชุดข้อมูลจำลอง เพิ่มเข้ามาเพื่อให้เข้าระบบทดสอบได้เร็ว */
+            ['USR-000', 'ผู้ดูแลระบบ', 'admin', 'admin@thefarmconcept.org', null, 'ใช้งานอยู่', ['super_admin']],
             ['USR-001', 'สุนิสา แก้วมณี', 'sunisa01', 'sunisa@thefarmconcept.org', 'AREA-002', 'ใช้งานอยู่', ['staff']],
             ['USR-002', 'วีระ ศรีสมบัติ', 'weera02', 'weera@thefarmconcept.org', 'AREA-001', 'ใช้งานอยู่', ['project_admin', 'staff']],
             ['USR-003', 'ปิยะดา รุ่งเรือง', 'piyada03', 'piyada@thefarmconcept.org', 'AREA-003', 'ระงับการใช้งาน', ['staff']],

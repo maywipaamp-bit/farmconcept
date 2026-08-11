@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Instructor extends Model
+{
+    protected $table = 'mst_instructors';
+
+    protected $guarded = ['id'];
+
+    protected $casts = ['is_active' => 'bool'];
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function expertises(): HasMany
+    {
+        return $this->hasMany(InstructorExpertise::class);
+    }
+
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'mst_instructor_course');
+    }
+
+    public function activities(): BelongsToMany
+    {
+        return $this->belongsToMany(Activity::class, 'act_activity_instructor');
+    }
+}
