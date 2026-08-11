@@ -21,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        /* ค่าเริ่มต้นของ Laravel จำกัดไว้เฉพาะ api/* ทำให้คำขอ fetch จากหน้าจอหลังบ้าน
+           ได้หน้า error เป็น HTML กลับไป แล้วหน้าจอเอาข้อความเหตุผลไปแสดงไม่ได้
+           เพิ่ม expectsJson() เข้ามาเพื่อให้คำขอที่ขอ JSON มา ได้ JSON กลับไปเสมอ */
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

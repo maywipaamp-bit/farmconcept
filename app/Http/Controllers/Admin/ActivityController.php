@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ActivityRequest;
 use App\Models\Activity;
+use App\Services\ActivityService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ActivityController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * รายการกิจกรรม
      *
@@ -27,6 +34,41 @@ class ActivityController extends Controller
         return view('admin.activities.list', [
             'activities' => $activities->map(fn (Activity $a) => $this->toListRow($a)),
             'sessions' => $activities->mapWithKeys(fn (Activity $a) => [$a->code => $this->toSessions($a)]),
+        ]);
+    }
+
+    /**
+     * บันทึกการแก้ไขกิจกรรม
+     *
+     * การตรวจข้อมูลอยู่ที่ ActivityRequest ทั้งหมด (ฉบับร่างตรวจน้อย เผยแพร่ตรวจครบ)
+     * ตัวงานอยู่ที่ Service เพราะต้องเขียน 6 ตารางใน transaction เดียว
+     */
+    public function update(ActivityRequest $request, Activity $activity, ActivityService $service): JsonResponse
+    {
+        $this->authorize('update', $activity);
+
+        $updated = $service->update($activity, $request->validated(), $request->user());
+
+        return response()->json([
+            'message' => 'บันทึกกิจกรรม "' . $updated->name . '" แล้ว',
+            'activity' => $this->toListRow($updated->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
+        ]);
+    }
+
+    /**
+     * ลบกิจกรรม
+     *
+     * ตรวจสิทธิ์ผ่าน ActivityPolicy — ล้มเหลวจะได้ 403 พร้อมเหตุผลที่แสดงให้ผู้ใช้อ่านได้
+     * ตัวงานจริงอยู่ที่ Service เพราะมีสองขั้นตอนที่ต้องสำเร็จพร้อมกัน (ลบ + บันทึก log)
+     */
+    public function destroy(Request $request, Activity $activity, ActivityService $service): JsonResponse
+    {
+        $this->authorize('delete', $activity);
+
+        $service->delete($activity, $request->user());
+
+        return response()->json([
+            'message' => 'ลบกิจกรรม "' . $activity->name . '" แล้ว',
         ]);
     }
 

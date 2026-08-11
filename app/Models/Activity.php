@@ -13,7 +13,18 @@ class Activity extends Model
 {
     use SoftDeletes;
 
+    /** สถานะที่โค้ดตัดสินใจด้วย — ค่าที่เหลืออ่านจาก mock_data ฝั่งหน้าจอ ยังไม่มี state machine (รอทีมธุรกิจ) */
+    public const STATUS_DRAFT = 'ฉบับร่าง';
+
+    public const STATUS_CANCELLED = 'ยกเลิก';
+
     protected $table = 'act_activities';
+
+    /** ผูก {activity} ใน route กับคอลัมน์ code ไม่ใช่ id — URL จะได้อ่านออกและไม่เปิดเผยลำดับข้อมูล */
+    public function getRouteKeyName(): string
+    {
+        return 'code';
+    }
 
     protected $guarded = ['id'];
 

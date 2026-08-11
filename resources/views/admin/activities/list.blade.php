@@ -30,7 +30,9 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close-modal>ยกเลิก</button>
-      <button class="btn btn-danger" id="activity-delete-confirm" data-close-modal>ลบกิจกรรม</button>
+      {{-- ไม่มี data-close-modal เพราะต้องรอผลจากเซิร์ฟเวอร์ก่อนจึงปิด
+           ถ้าปิดทันทีที่กด ผู้ใช้จะไม่เห็นว่าลบไม่สำเร็จ --}}
+      <button class="btn btn-danger" id="activity-delete-confirm">ลบกิจกรรม</button>
     </div>
   </div>
 </div>
@@ -269,9 +271,9 @@
     });
   }
 
-  /* ---------- ลบกิจกรรม ----------
-     ยังลบเฉพาะในหน่วยความจำเหมือนหน้าเดิม — ยังไม่มี endpoint ลบจริง
-     ต้องทำเป็น DELETE /admin/activities/{code} ในขั้นถัดไป */
+  /* ---------- ลบกิจกรรม ---------- 
+     เปิดกล่องยืนยันจากเมนู ⋮ แล้วเตรียมข้อความตามสถานะของแถวนั้น
+     เกณฑ์ตรงกับ ActivityPolicy ฝั่งเซิร์ฟเวอร์ ไม่งั้นจะมีปุ่มให้กดแล้วค่อยบอกว่าลบไม่ได้ */
   listEl.addEventListener('click', function (e) {
     var trigger = e.target.closest('[data-action-menu]');
     if (!trigger) return;
@@ -280,7 +282,6 @@
 
     var activity = window.TFC.activity.get(deleteTargetId);
     var messageEl = document.getElementById('activity-delete-message');
-    var confirmBtn = document.getElementById('activity-delete-confirm');
     if (!activity) return;
 
     if (!canDelete(activity)) {
@@ -293,14 +294,49 @@
     }
   });
 
-  document.getElementById('activity-delete-confirm').addEventListener('click', function () {
+  /* ลบจริงที่เซิร์ฟเวอร์ ไม่ใช่ลบแค่ในหน่วยความจำ
+     ไม่ใช้ optimistic update เพราะเซิร์ฟเวอร์ตรวจสิทธิ์และสถานะซ้ำอีกชั้น คำขออาจถูกปฏิเสธได้จริง
+     จึงต้องรอผลก่อนแล้วค่อยเอาแถวออก */
+  var confirmBtn = document.getElementById('activity-delete-confirm');
+
+  confirmBtn.addEventListener('click', function () {
     var index = activities.findIndex(function (a) { return a.id === deleteTargetId; });
-    if (index === -1) return;
-    var removed = activities.splice(index, 1)[0];
-    renderPills();
-    render();
-    if (window.TFC.showToast) window.TFC.showToast('ลบกิจกรรม "' + removed.name + '" แล้ว', 'success');
+    if (index === -1 || confirmBtn.disabled) return;
+
+    var target = activities[index];
+    setDeleting(true);
+
+    fetch('/admin/activities/' + encodeURIComponent(target.id), {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json'
+      }
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (!res.ok) throw new Error(body.message || 'ลบไม่สำเร็จ กรุณาลองใหม่');
+          return body;
+        });
+      })
+      .then(function (body) {
+        activities.splice(index, 1);
+        window.TFC.closeModal('activity-delete-modal');
+        renderPills();
+        render();
+        if (window.TFC.showToast) window.TFC.showToast(body.message || 'ลบกิจกรรมแล้ว', 'success');
+      })
+      .catch(function (err) {
+        if (window.TFC.showToast) window.TFC.showToast(err.message, 'danger');
+      })
+      .finally(function () { setDeleting(false); });
   });
+
+  /* ปุ่มเข้าสถานะรอทันทีที่กด กันกดซ้ำระหว่างรอเซิร์ฟเวอร์ */
+  function setDeleting(on) {
+    confirmBtn.disabled = on;
+    confirmBtn.textContent = on ? 'กำลังลบ…' : 'ลบกิจกรรม';
+  }
 
   renderPills();
   render();

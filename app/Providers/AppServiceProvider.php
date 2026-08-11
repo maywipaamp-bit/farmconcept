@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Activity;
 use App\Models\SatisfactionResponse;
 use App\Models\SurveyResponse;
 use App\Services\MenuService;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'satisfaction' => SatisfactionResponse::class,
             'survey' => SurveyResponse::class,
+            'activity' => Activity::class,
         ]);
 
         /* ปิด lazy loading นอก production — เจอ N+1 ตั้งแต่ตอนพัฒนา ไม่ใช่ตอนขึ้นจริง

@@ -19,8 +19,12 @@ class ActivityLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * withTrashed เพราะ log ส่วนใหญ่ที่ต้องย้อนดูคือ log ของสิ่งที่ถูกลบไปแล้ว
+     * ถ้าไม่ใส่ subject จะ resolve ไม่ได้พอดีในกรณีที่ต้องใช้มากที่สุด
+     */
     public function subject(): MorphTo
     {
-        return $this->morphTo();
+        return $this->morphTo()->withTrashed();
     }
 }

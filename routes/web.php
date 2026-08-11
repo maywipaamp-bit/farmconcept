@@ -39,6 +39,16 @@ Route::middleware('auth')->group(function () {
             Route::get('/list', [ActivityController::class, 'index'])
                 ->middleware('menu:activities-list')
                 ->name('index');
+
+            /* {activity} ผูกกับคอลัมน์ code ผ่าน Activity::getRouteKeyName()
+               ต้องมาหลัง /list ไม่งั้น "list" จะถูกตีความเป็นรหัสกิจกรรม */
+            Route::put('/{activity}', [ActivityController::class, 'update'])
+                ->middleware('menu:activities-list')
+                ->name('update');
+
+            Route::delete('/{activity}', [ActivityController::class, 'destroy'])
+                ->middleware('menu:activities-list')
+                ->name('destroy');
         });
     });
 
