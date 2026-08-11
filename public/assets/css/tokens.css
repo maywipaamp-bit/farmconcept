@@ -25,22 +25,23 @@
   --color-surface-muted: #FAFBFA;
 
   /* ---------- Colors : Text ----------
-     ไล่ 6 ระดับตาม CLAUDE.md — ความสำคัญของข้อความสื่อด้วย "สี" ก่อน แล้วจึงเป็นน้ำหนัก
-     ห้ามใช้สีเข้มกว่า --color-text-strong (#111827) กับข้อความ และห้ามใช้ #000 */
-  --color-text-strong: #111827;     /* ชื่อหน้า, หัวข้อ */
-  --color-text-primary: #1F2937;    /* คอลัมน์หลักของตาราง, label ฟอร์ม */
-  --color-text-body: #374151;       /* เนื้อหาทั่วไป, ค่าในตาราง */
-  --color-text-secondary: #6B7280;  /* หัวตาราง, คำอธิบาย */
-  --color-text-muted: #9CA3AF;      /* ลำดับที่, placeholder */
-  --color-text-faint: #C7CDD4;      /* ตัวเลขแถวในตาราง */
+     ชุดเขียวอมเทาตามสเปก typography (design_handoff_typography)
+     ความสำคัญของข้อความสื่อด้วย "สี" ก่อน แล้วจึงเป็นน้ำหนัก
+     ห้ามใช้สีเข้มกว่า --color-text-strong (#1f2c20) กับข้อความ และห้ามใช้ #000
+     ค่าเหล่านี้ต้องตรงกับ --text-* ใน standard/tokens.css เสมอ */
+  --color-text-strong: #1f2c20;     /* ชื่อหน้า, หัวการ์ด, ข้อความในช่องกรอก */
+  --color-text-primary: #33422f;    /* คอลัมน์หลักของตาราง, label ฟอร์ม */
+  --color-text-body: #4a564a;       /* เนื้อหาทั่วไป, ค่าในตาราง */
+  --color-text-secondary: #7d8a7c;  /* คำอธิบาย, caption */
+  --color-text-muted: #9aa599;      /* หัวคอลัมน์, meta, หน่วย, placeholder ในกราฟ */
+  --color-text-faint: #b3bdb1;      /* placeholder ในช่องกรอก */
+  --color-text-overline: #8a968a;   /* THEFARMCONCEPT · ADMIN */
   --color-text-inverse: #FFFFFF;
-  /* ข้อความบนปุ่มรองและปุ่มไอคอน — เข้มกว่า --color-text-secondary หนึ่งขั้น
-     เพราะ #6B7280 บนพื้นขาวขนาด 13px อ่านยากบนแท็บเล็ตหน้างานที่มีแสงจ้า
-     ห้ามใช้ --color-text-muted (#9CA3AF) กับข้อความบนปุ่ม */
-  --color-text-action: #4B5563;
-  /* ชื่อเดิม คงไว้เพื่อไม่ให้ 5 จุดที่ใช้อยู่พัง — ค่าเท่ากับ --color-text-muted
-     ของใหม่ให้ใช้ --color-text-muted แทน เพราะสื่อความหมายตรงกว่า */
-  --color-text-disabled: #9CA3AF;
+  /* ข้อความบนปุ่มรองและปุ่มไอคอน — ตรงกับ "Button (secondary)" ในสเปก
+     ห้ามใช้ --color-text-muted กับข้อความบนปุ่ม เพราะจางเกินไปบนแท็บเล็ตหน้างานที่มีแสงจ้า */
+  --color-text-action: #4a564a;
+  /* ชื่อเดิม คงไว้เพื่อไม่ให้ 5 จุดที่ใช้อยู่พัง — ค่าเท่ากับ --color-text-muted */
+  --color-text-disabled: #9aa599;
 
   /* ---------- Colors : Status ----------
      แต่ละสถานะเป็นชุดสามค่า: -text (ตัวอักษร) / -soft (พื้น) / -border (ขอบ)
@@ -86,19 +87,27 @@
   /* ---------- Font ----------
      ต้องตรงกับ --font-sans ใน assets/css/standard/tokens.css เสมอ
      (ไฟล์นั้นเป็นที่ @import ตัวฟอนต์ ถ้าแก้ที่นี่อย่างเดียวจะได้ฟอนต์สำรองแทน) */
-  --font-family-base: 'Noto Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
+  --font-family-base: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
 
-  /* Type scale ตาม CLAUDE.md — เล็กสุดที่อนุญาตคือ 12px และใช้เฉพาะ badge/caption */
-  --font-size-page-title: 28px;
+  /* ตัวเลขล้วนเท่านั้น (KPI, จำนวน, %, วันที่แบบเลข) — ตัวเลขที่ปนในประโยคไทยใช้ฟอนต์ไทย */
+  --font-family-numeric: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+
+  /* Type scale ตามสเปก typography — เล็กสุด 10.5px และ 10.5–11px ใช้เฉพาะป้ายในกราฟ */
+  --font-size-page-title: 25px;
   --font-size-section-title: 20px;
-  --font-size-card-title: 16px;
-  --font-size-body: 14px;
+  --font-size-card-title: 15px;
+  --font-size-body: 15px;
   --font-size-small: 13px;
-  --font-size-caption: 12px;
+  --font-size-caption: 12.5px;
+  --font-size-micro: 11.5px;      /* footer, หน่วย, tick */
+  --font-size-chart-tick: 11px;   /* ป้ายในกราฟเท่านั้น */
+  --font-size-input: 15px;
+  --font-size-form-label: 13px;
+  --font-size-button: 15.5px;
+  --font-size-button-secondary: 15px;
   /* ตัวเลขตัวชี้วัดเดียวของหน้าจอ (เช่น "เช็คอินแล้ว 12 จาก 32 คน" บนหน้า Check-in)
-     เท่าชื่อหน้าเป็นเพดาน — ไม่ใหญ่กว่านั้น ความเด่นมาจากสีเขียวและน้ำหนัก 600 แทนขนาด
      ใช้ได้หน้าละหนึ่งจุดเท่านั้น — ตัวเลขอื่นใช้ --font-size-section-title */
-  --font-size-metric: 28px;
+  --font-size-metric: 32px;
 
   /* 400 เป็นค่าเริ่มต้น · 500 เฉพาะที่ต้องเน้น · 600 เฉพาะหัวข้อ
      ไม่มี --font-weight-bold (700) เพราะมาตรฐานห้ามใช้ */
@@ -106,8 +115,11 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  --line-height-base: 1.6;    /* เนื้อหาไทยห้ามต่ำกว่า 1.6 */
-  --line-height-tight: 1.4;   /* หัวข้อ อยู่ในช่วง 1.35–1.5 */
+  /* สเปก: หัวข้อ 1.2–1.35 · เนื้อความ 1.5–1.65 · ป้ายในกราฟ 1.3–1.4
+     เนื้อความไทยใช้ 1.6 ซึ่งอยู่ในช่วงของสเปกและไม่ต่ำกว่าที่ CLAUDE.md กำหนด */
+  --line-height-base: 1.6;
+  --line-height-tight: 1.3;   /* หัวข้อ */
+  --line-height-chart: 1.35;  /* ป้ายในกราฟ */
 
   /* ---------- Spacing Scale ---------- */
   --space-1: 4px;

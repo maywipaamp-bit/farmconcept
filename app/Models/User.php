@@ -58,6 +58,8 @@ class User extends Authenticatable
         return [
             'name' => $this->name,
             'username' => $this->username ?? '',
+            /* เมนูผู้ใช้ในแถบด้านข้างแสดงอีเมลใต้ชื่อตามสเปกของ sidebar */
+            'email' => $this->email ?? '',
             'phone' => $this->phone ?? '',
             'role' => $role?->name ?? '',
             'roleCode' => $role?->code ?? '',

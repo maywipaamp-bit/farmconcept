@@ -28,10 +28,14 @@ class TargetGroupController extends MasterDataController
         return 'TG';
     }
 
+    /**
+     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
+     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     */
     protected function query()
     {
         /* หน้าจอแสดงจำนวนกิจกรรมที่ใช้กลุ่มนี้ — นับด้วย withCount ไม่งั้นจะยิง query ต่อแถว */
-        return TargetGroup::query()->withCount('activities')->orderBy('sort_order')->orderBy('id');
+        return TargetGroup::query()->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array

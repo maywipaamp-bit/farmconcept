@@ -1,43 +1,15 @@
-<!DOCTYPE html>
-<html lang="th" class="is-preload">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ตั้งค่ารอบติดตาม | TheFarmConcept</title>
-<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
-<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
-<link rel="stylesheet" href="../../assets/css/standard/base.css">
-<link rel="stylesheet" href="../../assets/css/tokens.css">
-<link rel="stylesheet" href="../../assets/css/base.css">
-<link rel="stylesheet" href="../../assets/css/layout.css">
-<link rel="stylesheet" href="../../assets/css/components.css">
-<link rel="stylesheet" href="../../assets/css/utilities.css">
-<link rel="stylesheet" href="../../assets/css/responsive.css">
-<link rel="stylesheet" href="../../assets/css/typography-spec.css">
-<link rel="stylesheet" href="../../assets/css/sidebar-shell.css">
-</head>
-<body>
+@extends('layouts.admin')
 
-<div class="app-shell">
-<script>(function(){try{if(localStorage.getItem('tfc-subnav-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-subnav-collapsed');}}catch(e){}})();</script>
-  <!-- เมนูสองชั้น (แถบไอคอน + แผงเมนูย่อย) สร้างจาก window.TFC_MENU ที่กรองสิทธิ์มาแล้ว -->
-  <div id="sidebar-shell" data-nav-base="../../"></div>
+@section('title', 'ตั้งค่ารอบติดตาม')
+@section('main-class', 'frt-content')
 
-  <script src="../../assets/js/mock-data.js"></script>
-  <script src="../../assets/js/menu-config.js"></script>
-  <script src="../../assets/js/sidebar-render.js"></script>
-
-  <div class="app-main">
-    <main class="content frt-content">
+@section('content')
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span>
         <span>พื้นฐาน</span> <span>/</span>
         <span class="is-current">ตั้งค่ารอบติดตาม</span>
       </nav>
-      <!-- ชื่อหน้า 28px/600 + ปุ่มหลัก "เพิ่มรอบ" มุมขวา -->
+      {{-- ชื่อหน้า 28px/600 + ปุ่มหลัก "เพิ่มรอบ" มุมขวา --}}
       <div class="page-header" id="frt-page-header"></div>
 
       <!-- ---------- ตารางรอบ ---------- -->
@@ -47,7 +19,7 @@
           <span class="frt-card-note" id="frt-table-note"></span>
         </div>
 
-        <!-- wrapper เลื่อนแนวนอนได้ ตัวแถวมีความกว้างขั้นต่ำ กันคอลัมน์ถูกบีบจนอ่านไม่ออก -->
+        {{-- wrapper เลื่อนแนวนอนได้ ตัวแถวมีความกว้างขั้นต่ำ กันคอลัมน์ถูกบีบจนอ่านไม่ออก --}}
         <div class="frt-scroll">
           <div class="frt-rows">
             <div class="frt-row frt-head">
@@ -81,8 +53,9 @@
           <div class="frt-timeline" id="frt-timeline"></div>
         </div>
       </section>
-    </main>
+@endsection
 
+@section('after-content')
     <!-- ---------- แถบล่าง ---------- -->
     <div class="frt-bottombar">
       <div class="frt-bottombar-inner">
@@ -93,20 +66,20 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
+@endsection
 
-<script src="../../assets/js/data-service.js"></script>
-<script src="../../assets/js/followup-template-service.js"></script>
-<script src="../../assets/js/navigation.js"></script>
-<script src="../../assets/js/modal.js"></script>
-<script src="../../assets/js/profile-modal.js"></script>
-<script src="../../assets/js/action-menu.js"></script>
-<script src="../../assets/js/index-layout.js"></script>
-<script src="../../assets/js/toast.js"></script>
-<script src="../../assets/js/form.js"></script>
-<script src="../../assets/js/app.js"></script>
-<script src="../../assets/js/datetime-picker.js"></script>
+@push('scripts')
+<script>
+/* บอก service ว่าต่อฐานข้อมูลจริงแล้ว — ต้องมาก่อนไฟล์ service ทำงาน เพราะอ่านค่านี้ตอนสร้างตัวเอง */
+window.TFC_CONFIG = window.TFC_CONFIG || {};
+window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-rounds.index'));
+</script>
+<script src="{{ asset('assets/js/followup-template-service.js') }}"></script>
+@endpush
+
+@push('page-script')
+{{-- ลำดับต้องตรงกับหน้าเดิม: app.js -> datetime-picker.js -> สคริปต์ของหน้า --}}
+<script src="{{ asset('assets/js/datetime-picker.js') }}"></script>
 <script>
 (function () {
   var esc = window.TFC.escapeHtml;
@@ -351,8 +324,8 @@
       /* เตือนทุกครั้งที่บันทึก เพราะเป็นผลข้างเคียงที่มองไม่เห็นจากหน้าจอ:
          รอบของคนที่ถูกสร้างไปแล้ว snapshot ค่า offset ไว้ในระเบียนของตัวเอง จึงไม่ขยับตาม */
       toast('บันทึกแล้ว · มีผลกับผู้เข้าร่วมที่เข้ากลุ่มตัวอย่างหลังจากนี้เท่านั้น รอบของคนเดิมไม่เปลี่ยน', 'success');
-    })['catch'](function () {
-      toast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'danger');
+    })['catch'](function (err) {
+      toast(err.message || 'บันทึกไม่สำเร็จ กรุณาลองใหม่', 'danger');
     }).then(function () {
       btn.textContent = 'บันทึกการตั้งค่า';
       renderSummary();
@@ -378,11 +351,16 @@
   svc.load().then(function (rows) {
     state.rows = rows;
     state.saved = clone(rows);
+
+    /* วันอ้างอิงมาจากเซิร์ฟเวอร์ตอน load() จึงต้องตั้งช่อง "ทดลองคำนวณ" ใหม่หลังโหลดเสร็จ
+       ค่าที่ตั้งไว้ก่อนหน้าเป็นค่าตั้งต้นที่เขียนอยู่ในไฟล์ service */
+    state.entry = svc.serverToday();
+    byId('frt-entry').setAttribute('data-iso', state.entry);
+
     renderAll();
-  })['catch'](function () {
-    toast('โหลดการตั้งค่าไม่สำเร็จ', 'danger');
+  })['catch'](function (err) {
+    toast(err.message || 'โหลดการตั้งค่าไม่สำเร็จ', 'danger');
   });
 })();
 </script>
-</body>
-</html>
+@endpush

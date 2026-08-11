@@ -8,11 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {{-- URL เดียวกับใน standard/tokens.css และ layouts/admin.blade.php --}}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Anuphan:wght@200;300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
 <!-- หน้านี้ยึดมาตรฐานเป็นหลักตามสเปก จึงโหลดเฉพาะ assets/css/standard/*
      (base.css มี .btn .input :focus-visible และ keyframes om-pop-in ให้แล้ว) -->
 <link rel="stylesheet" href="{{ asset('assets/css/standard/tokens.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/standard/base.css') }}">
+{{-- สเปก typography ของทุกหน้าจอ — ต้องมาหลัง standard/* เพราะเป็นชั้นที่กำหนดขนาด/สี/line-height สุดท้าย
+     ไฟล์นั้นเขียนตัวแปรแบบมีค่าสำรอง จึงทำงานได้แม้หน้านี้จะไม่ได้โหลด assets/css/tokens.css --}}
+<link rel="stylesheet" href="{{ asset('assets/css/typography-spec.css') }}">
 <style>
   /* ---------- โครงหน้า ---------- */
   html, body {
@@ -58,8 +61,9 @@
   .login-tagline {
     margin: 0;
     text-align: center;
-    font-size: var(--fs-body);
-    line-height: var(--lh-body);
+    /* 14.5px เป็นค่าเฉพาะของหน้านี้ตามสเปก ไม่มีที่ใช้ซ้ำ จึงไม่ตั้งเป็นตัวแปร */
+    font-size: 14.5px;
+    line-height: 1.55;
     font-weight: var(--fw-regular);
     color: var(--text-secondary);
   }
@@ -72,10 +76,12 @@
   .field { display: flex; flex-direction: column; gap: var(--sp-1); }
 
   .label {
-    font-size: var(--fs-secondary);
+    font-size: var(--fs-form-label);
     line-height: var(--lh-secondary);
     font-weight: var(--fw-medium);
-    color: var(--text-primary);
+    letter-spacing: .02em;
+    /* หน้านี้ใช้ label โทนอ่อนกว่าฟอร์มในระบบหลัง ตามสเปกของหน้าเข้าสู่ระบบ */
+    color: var(--text-label-soft);
   }
 
   /* padding 10px 12px = สูง 42px เท่าฟิลด์มาตรฐานของระบบ (STANDARD.md) */
@@ -84,13 +90,13 @@
     padding: 10px var(--sp-3);
     border-radius: var(--r-md);
     border: 1px solid var(--border-default);
-    font-size: var(--fs-body);
+    font-size: var(--fs-input);
     line-height: var(--lh-body);
-    color: var(--text-body);
+    color: var(--text-strong);
     background: var(--bg-surface);
   }
 
-  .input::placeholder { color: var(--text-muted); }
+  .input::placeholder { color: var(--text-faint); }
 
   /* focus เป็น ring เขียว ไม่ใช้ outline default ของเบราว์เซอร์ */
   .input:focus,
@@ -114,6 +120,8 @@
     padding: 0;
     cursor: pointer;
     font: var(--fw-regular) var(--fs-secondary)/1.4 var(--font-sans);
+    font-size: var(--fs-secondary);
+    font-weight: var(--fw-regular);
     color: var(--text-secondary);
   }
   .password-toggle:hover { color: var(--text-body); }
@@ -162,7 +170,7 @@
     /* 11px (ไม่ใช่ 10px) เพราะ .btn ใช้ line-height 1.4 ส่วนช่องกรอกใช้ 1.6
        ต้องชดเชยส่วนต่างนี้ ปุ่มถึงจะสูง 43px เท่าช่องกรอกพอดี */
     padding: 11px 20px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-button);
   }
 
   /* ปุ่มหลักเท่านั้นที่เน้นด้วยน้ำหนัก 500 ปุ่มรองเป็น 400 ตามค่าเริ่มต้นของ .btn */
@@ -196,7 +204,14 @@
      padding 12px ชดเชยตัวอักษรที่เล็กลง ปุ่มจึงยังสูง 44px เท่าปุ่มหลักและช่องกรอก */
   a.btn-block,
   a.btn-block:hover { text-decoration: none; color: var(--text-body); }
-  a.btn-block { padding: 12px 20px; font-size: var(--fs-secondary); }
+
+  /* สเปกให้ปุ่มรอง 15px / 500 — padding ลดเหลือ 10px ชดเชยตัวอักษรที่ใหญ่ขึ้น
+     ปุ่มจึงยังสูงเท่าปุ่มหลักและช่องกรอก */
+  a.btn-block {
+    padding: 10px 20px;
+    font-size: var(--fs-button-secondary);
+    font-weight: var(--fw-medium);
+  }
 
   .spinner {
     width: 16px; height: 16px; flex: none;

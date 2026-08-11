@@ -29,9 +29,13 @@ class ProgramController extends MasterDataController
         return 'PROG';
     }
 
+    /**
+     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
+     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     */
     protected function query()
     {
-        return Program::query()->with('courses:id,program_id,name,sort_order')->withCount('activities')->orderBy('id');
+        return Program::query()->with('courses:id,program_id,name,sort_order')->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array

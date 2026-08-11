@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
 <link rel="stylesheet" href="../../assets/css/standard/tokens.css">
 <link rel="stylesheet" href="../../assets/css/standard/base.css">
 <link rel="stylesheet" href="../../assets/css/tokens.css">
@@ -15,25 +16,15 @@
 <link rel="stylesheet" href="../../assets/css/components.css">
 <link rel="stylesheet" href="../../assets/css/utilities.css">
 <link rel="stylesheet" href="../../assets/css/responsive.css">
+<link rel="stylesheet" href="../../assets/css/typography-spec.css">
+<link rel="stylesheet" href="../../assets/css/sidebar-shell.css">
 </head>
 <body>
 
 <div class="app-shell">
-<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
-  <div class="sidebar-overlay"></div>
-
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <a href="../../home.html" class="sidebar-brand">
-        <img class="sidebar-logo" src="../../assets/images/logo-farm.png" alt="The Farm Concept">
-      </a>
-      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-    </div>
-
-    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="../../"></nav>
-  </aside>
+<script>(function(){try{if(localStorage.getItem('tfc-subnav-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-subnav-collapsed');}}catch(e){}})();</script>
+  <!-- เมนูสองชั้น (แถบไอคอน + แผงเมนูย่อย) สร้างจาก window.TFC_MENU ที่กรองสิทธิ์มาแล้ว -->
+  <div id="sidebar-shell" data-nav-base="../../"></div>
 
   <script src="../../assets/js/mock-data.js"></script>
   <script src="../../assets/js/menu-config.js"></script>

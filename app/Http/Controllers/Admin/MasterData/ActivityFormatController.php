@@ -28,9 +28,13 @@ class ActivityFormatController extends MasterDataController
         return 'FMT';
     }
 
+    /**
+     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
+     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     */
     protected function query()
     {
-        return ActivityFormat::query()->withCount('activities')->orderBy('id');
+        return ActivityFormat::query()->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array

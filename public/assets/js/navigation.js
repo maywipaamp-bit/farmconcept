@@ -2,98 +2,25 @@
    The sidebar markup itself is built earlier by assets/js/sidebar-render.js (loaded right after the
    sidebar's </aside> so it paints without flashing); this file only wires up the interactions. */
 (function () {
+  /* โครงเมนูสองชั้นคุมการย่อแผง drawer และเมนูผู้ใช้เองใน sidebar-render.js
+     ซึ่งเป็นที่ที่สร้างมาร์กอัปเหล่านั้น จึงไม่มีอะไรให้ผูกจากที่นี่อีก
+
+     ปุ่มเปิดลิ้นชักบนมือถือยังต้องสร้างจากที่นี่ เพราะเป็นปุ่มลอยนอกโครงเมนู
+     สร้างที่เดียวไม่ต้องเติมมาร์กอัปซ้ำในทุกหน้า */
   var appShell = document.querySelector('.app-shell');
 
-  if (appShell) {
-    var sidebarToggle = document.querySelector('[data-sidebar-collapse-toggle]');
-    var overlay = document.querySelector('.sidebar-overlay');
+  if (appShell && !document.querySelector('[data-sidebar-open]')) {
+    var menuBtn = document.createElement('button');
+    menuBtn.type = 'button';
+    menuBtn.className = 'drawer-btn';
+    menuBtn.setAttribute('data-sidebar-open', '');
+    menuBtn.setAttribute('aria-label', 'เปิดเมนู');
+    menuBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>';
+    appShell.appendChild(menuBtn);
 
-    /* ปุ่มเปิดลิ้นชักเมนูของมือถือ — เดิมอยู่ในแถบบนซึ่งถูกถอดออกทั้งระบบแล้ว
-       จึงสร้างเป็นปุ่มลอยแทน แสดงเฉพาะจอมือถือ (คุมด้วย CSS ใน responsive.css)
-       สร้างจากที่นี่ที่เดียว ไม่ต้องไปเติม markup ซ้ำในทุกหน้า */
-    var menuBtn = document.querySelector('[data-sidebar-open]');
-    if (!menuBtn) {
-      menuBtn = document.createElement('button');
-      menuBtn.type = 'button';
-      menuBtn.className = 'drawer-btn';
-      menuBtn.setAttribute('data-sidebar-open', '');
-      menuBtn.setAttribute('aria-label', 'เปิดเมนู');
-      menuBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>';
-      appShell.appendChild(menuBtn);
-    }
-
-    var openMobileSidebar = function () {
-      appShell.classList.add('is-sidebar-open');
-    };
-
-    var closeMobileSidebar = function () {
-      appShell.classList.remove('is-sidebar-open');
-    };
-
-    if (menuBtn) {
-      menuBtn.addEventListener('click', openMobileSidebar);
-    }
-
-    if (overlay) {
-      overlay.addEventListener('click', closeMobileSidebar);
-    }
-
-    if (sidebarToggle) {
-      if (localStorage.getItem('tfc-sidebar-collapsed') === '1') {
-        appShell.classList.add('is-sidebar-collapsed');
-      }
-      sidebarToggle.addEventListener('click', function () {
-        appShell.classList.toggle('is-sidebar-collapsed');
-        localStorage.setItem(
-          'tfc-sidebar-collapsed',
-          appShell.classList.contains('is-sidebar-collapsed') ? '1' : '0'
-        );
-      });
-    }
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeMobileSidebar();
+    menuBtn.addEventListener('click', function () {
+      appShell.classList.add('is-drawer-open');
     });
-
-    /* Tooltip for collapsed-sidebar nav icons (Desktop/Tablet only — Mobile drawer always shows full labels).
-       Rendered as a single body-level element so it is never clipped by the scrollable .sidebar-nav. */
-    var navTooltip = null;
-    function ensureNavTooltip() {
-      if (!navTooltip) {
-        navTooltip = document.createElement('div');
-        navTooltip.className = 'nav-tooltip';
-        document.body.appendChild(navTooltip);
-      }
-      return navTooltip;
-    }
-
-    function showNavTooltip(item) {
-      if (!appShell.classList.contains('is-sidebar-collapsed')) return;
-      if (window.innerWidth < 768) return;
-      var label = item.querySelector('.nav-label');
-      if (!label) return;
-      var tooltip = ensureNavTooltip();
-      tooltip.textContent = label.textContent;
-      var rect = item.getBoundingClientRect();
-      tooltip.style.top = (rect.top + rect.height / 2) + 'px';
-      tooltip.style.left = (rect.right + 8) + 'px';
-      tooltip.classList.add('is-visible');
-    }
-
-    function hideNavTooltip() {
-      if (navTooltip) navTooltip.classList.remove('is-visible');
-    }
-
-    document.querySelectorAll('.nav-item').forEach(function (item) {
-      item.addEventListener('mouseenter', function () { showNavTooltip(item); });
-      item.addEventListener('mouseleave', hideNavTooltip);
-      item.addEventListener('focus', function () { showNavTooltip(item); });
-      item.addEventListener('blur', hideNavTooltip);
-    });
-
-    if (sidebarToggle) {
-      sidebarToggle.addEventListener('click', hideNavTooltip);
-    }
   }
 
   /* Public site mobile nav toggle (pages/public/*.html has no .app-shell) */

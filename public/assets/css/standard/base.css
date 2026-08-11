@@ -120,7 +120,7 @@ a:hover { color: var(--brand-700); text-decoration: underline; }
 .error { font-size: var(--fs-caption); color: var(--status-danger-text); }
 
 /* ---- Form layout ---- */
-.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px var(--sp-4); }
+.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px var(--sp-4); }
 .form-grid .span-2 { grid-column: span 2; }
 .form-group { background: var(--bg-surface); border: 1px solid #F1F4F1; border-radius: var(--r-lg); padding: var(--sp-6) 28px; display: flex; flex-direction: column; gap: var(--sp-5, 20px); }
 .form-group__title { font-size: var(--fs-card-title); font-weight: var(--fw-medium); line-height: var(--lh-card-title); color: var(--text-primary); }

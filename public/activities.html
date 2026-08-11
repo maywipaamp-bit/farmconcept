@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap" rel="stylesheet">
 <!-- Bootstrap 5 loaded before this page's own <style> block so its rules take precedence on any shared class names (btn, card, etc.) and the screens below stay pixel-identical to the reference prototype. -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <style>
@@ -37,17 +37,24 @@
        Never hardcode font-size/weight/line-height in a rule below; reference these instead.
        font-weight 600 is reserved for H1 only — everything else stays at 500 or lighter,
        and line-height never exceeds 1.5. ---- */
-    --fs-h1:18px;    --fw-h1:600; --lh-h1:1.3;   /* page-level heading, e.g. "ลงทะเบียนสำเร็จ" */
-    --fs-h2:15px;    --fw-h2:500; --lh-h2:1.3;   /* section heading, e.g. "กิจกรรมแนะนำ" */
+    /* ค่าตามสเกลกลางของสเปก typography — หน้านี้เป็นการ์ดแคบบนมือถือ
+       จึงใช้ปลายล่างของแต่ละช่วง ยกเว้นที่สเปกกำหนดค่าเดียว
+       เดิม --fs-label เป็น 11px ซึ่งต่ำกว่าที่สเปกอนุญาต (10.5–11px ใช้ได้เฉพาะป้ายในกราฟ)
+       และปุ่ม 13px ต่ำกว่าช่วง 14–15px ของปุ่มรอง */
+    --fs-h1:24px;    --fw-h1:600; --lh-h1:1.25;  /* page-level heading, e.g. "ลงทะเบียนสำเร็จ" */
+    --fs-h2:15px;    --fw-h2:600; --lh-h2:1.35;  /* section heading, e.g. "กิจกรรมแนะนำ" */
     --fs-title:15px; --fw-title:500; --lh-title:1.4; /* activity/card name */
-    --fs-body:14px;  --fw-body:400; --lh-body:1.45;  /* main content, form labels/inputs */
-    --fs-meta:12px;  --fw-meta:400; --lh-meta:1.35;  /* secondary text: date/time/price */
-    --fs-label:11px; --fw-label:500; --lh-label:1.3; /* small/uppercase group labels */
-    --fs-button:13px; --fw-button:500; --lh-button:1; /* button text */
+    --fs-body:15px;  --fw-body:400; --lh-body:1.55; /* main content, form labels/inputs */
+    --fs-meta:12.5px;  --fw-meta:400; --lh-meta:1.4; /* secondary text: date/time/price */
+    --fs-label:12.5px; --fw-label:500; --lh-label:1.35; /* small group labels */
+    --fs-button:15px; --fw-button:500; --lh-button:1.2; /* button text */
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
-    font-family:'Noto Sans Thai', sans-serif;
+    font-family:'IBM Plex Sans Thai', system-ui, sans-serif;
+    /* ของเดิมไม่ตั้ง font-size ที่ body ข้อความที่ไม่ได้ระบุขนาดจึงตกไปใช้ค่าเริ่มต้นของเบราว์เซอร์ (16px)
+       ซึ่งเกินช่วงเนื้อความของสเปก (14–15px) */
+    font-size:var(--fs-body);
     background:var(--page-bg);
     color:var(--text-primary);
     min-height:100vh;
@@ -201,7 +208,7 @@
   /* ===== Badges ===== */
   .badge{
     display:inline-block;
-    font-size:11px;
+    font-size:var(--fs-meta);
     font-weight:500;
     padding:4px 10px;
     border-radius:999px;
@@ -472,7 +479,9 @@
   }
   .events-menu-group-label{
     font-size:var(--fs-label);font-weight:var(--fw-label);line-height:var(--lh-label);color:var(--text-secondary);
-    text-transform:uppercase;letter-spacing:.06em;
+    /* ไม่ใส่ text-transform:uppercase เพราะป้ายเหล่านี้เป็นข้อความไทย ("ทางลัด" "โซเชียลมีเดีย")
+       letter-spacing ยังเก็บไว้ตามรูปแบบ overline ของสเปก */
+    letter-spacing:.06em;
     padding:4px 10px 0;
   }
   .events-menu-link{
@@ -487,7 +496,7 @@
     display:flex;align-items:center;justify-content:center;
   }
   .events-menu-icon svg{width:14px;height:14px;stroke:var(--primary);}
-  .events-menu-label{flex:1;font-size:11px;font-weight:500;color:var(--text-primary);}
+  .events-menu-label{flex:1;font-size:var(--fs-meta);font-weight:500;color:var(--text-primary);}
   .events-menu-chevron{display:none;}
 
   .btn-sm{
@@ -601,14 +610,14 @@
   .other-activity-thumb{position:relative;height:78px;background-size:118%;background-position:center;}
   /* This 3-column grid is dense/compact by design — explicitly allowed to run smaller than the
      shared typography scale rather than forcing every card up to the Title tier. */
-  .other-activity-badge{position:absolute;left:6px;bottom:-8px;background:var(--primary);color:#fff;font-size:9px;font-weight:600;padding:3px 8px;border-radius:999px;letter-spacing:.2px;}
+  .other-activity-badge{position:absolute;left:6px;bottom:-8px;background:var(--primary);color:#fff;font-size:var(--fs-meta);font-weight:600;padding:3px 8px;border-radius:999px;letter-spacing:.2px;}
   .other-activity-body{padding:10px 8px 6px;}
-  .other-activity-title{font-size:10.5px;font-weight:500;line-height:1.3;margin:0 0 4px;min-height:24px;color:var(--text-primary);
+  .other-activity-title{font-size:var(--fs-meta);font-weight:500;line-height:1.35;margin:0 0 4px;min-height:34px;color:var(--text-primary);
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-  .other-activity-meta{display:flex;align-items:center;gap:4px;font-size:9.5px;font-weight:400;color:var(--text-secondary);margin:1.5px 0;}
+  .other-activity-meta{display:flex;align-items:center;gap:4px;font-size:var(--fs-meta);font-weight:400;color:var(--text-secondary);margin:1.5px 0;}
   .other-activity-meta svg{width:10px;height:10px;stroke:var(--text-secondary);flex-shrink:0;}
-  .other-activity-price{display:flex;align-items:center;gap:4px;font-size:9.5px;font-weight:500;color:var(--dark-green);margin-top:2px;}
-  .other-activity-price .meta-icon-baht{width:10px;height:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:500;line-height:1;}
+  .other-activity-price{display:flex;align-items:center;gap:4px;font-size:var(--fs-meta);font-weight:500;color:var(--dark-green);margin-top:2px;}
+  .other-activity-price .meta-icon-baht{width:10px;height:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:var(--fs-meta);font-weight:500;line-height:1;}
 
   .back-link{
     display:inline-flex;align-items:center;gap:5px;
@@ -665,7 +674,7 @@
     margin-top:20px;padding-top:14px;border-top:1px solid var(--border);
   }
   .demo-nav button{
-    font-family:inherit;font-size:10.5px;color:#98A2B3;background:none;border:1px dashed var(--border);
+    font-family:inherit;font-size:var(--fs-meta);color:#98A2B3;background:none;border:1px dashed var(--border);
     border-radius:999px;padding:4px 10px;cursor:pointer;
   }
 </style>

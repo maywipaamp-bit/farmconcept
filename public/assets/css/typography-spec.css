@@ -1,0 +1,343 @@
+/* ==========================================================================
+   Typography spec — TheFarmConcept (ทุกหน้าจอ)
+   อ้างอิง: design_handoff_typography/README.md
+
+   ไฟล์นี้อยู่ท้ายสุดของ bundle เพราะต้องชนะกฎเดิมที่เจาะจงกว่าคลาสเดี่ยว
+   (เช่น `.content h1` ที่บังคับขนาด/สีชื่อหน้าให้ทุกหน้า)
+
+   ค่าทั้งหมดอ่านจากตัวแปรใน tokens.css — ห้าม hardcode ขนาดหรือสีที่นี่
+   ยกเว้นค่าที่สเปกกำหนดเฉพาะหน้าจอเดียวและไม่มีที่ใช้ซ้ำ
+
+   ไม่แตะเมนูด้านข้าง (.sidebar, .app-shell) — คงของเดิมในโปรเจกต์ตามที่ระบุไว้
+   ========================================================================== */
+
+/* ==========================================================================
+   1. สเกลกลาง — ใช้ร่วมทุกหน้า
+   ========================================================================== */
+
+body {
+  font-family: var(--font-family-base, var(--font-sans));
+  font-size: var(--font-size-body, var(--fs-body));
+  line-height: var(--line-height-base, var(--lh-body));
+  color: var(--color-text-body, var(--text-body));
+}
+
+/* ชื่อหน้า — 24–25px / 600 / letter-spacing -.015em
+   .content h1 กับ .page-header h1 เป็นสองทางที่หน้าต่าง ๆ ใช้อยู่ ต้องคุมทั้งคู่ */
+.content h1,
+.page-header h1,
+.page-header-text h1 {
+  font-size: var(--font-size-page-title, var(--fs-page-title));
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+  line-height: var(--line-height-tight, var(--lh-page-title));
+  letter-spacing: -0.015em;
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+/* หัวการ์ดทุกใบ — 15px / 600 */
+.card-title,
+.card-header h2,
+.card-header h3,
+.section-title,
+.modal-title {
+  font-size: var(--font-size-card-title, var(--fs-card-title));
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+  line-height: var(--lh-card-title, 1.35);
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+/* คำอธิบายต่อท้ายหัวการ์ด และหัวแผงย่อย — 12.5px / 400 */
+.card-subtitle,
+.panel-label,
+.card-header .text-secondary {
+  font-size: var(--font-size-caption, var(--fs-caption));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  line-height: var(--lh-caption, 1.5);
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+/* เนื้อความ */
+.page-description,
+.form-helper,
+.text-body {
+  font-size: var(--font-size-body, var(--fs-body));
+  line-height: var(--line-height-base, var(--lh-body));
+  color: var(--color-text-body, var(--text-body));
+}
+
+/* caption / body เล็ก — 12–13px */
+.caption,
+.small,
+.form-hint {
+  font-size: var(--font-size-small, var(--fs-secondary));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  line-height: var(--lh-secondary, 1.55);
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+/* micro / meta — footer, หน่วย, tick */
+.meta,
+.unit,
+.cell-updated-at {
+  font-size: var(--font-size-micro, var(--fs-micro));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  line-height: var(--lh-micro, 1.35);
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+/* overline — THEFARMCONCEPT · ADMIN
+   ข้อความอังกฤษล้วน จึงใช้ตัวพิมพ์ใหญ่ได้ · ห้ามใช้กับข้อความไทย */
+.overline {
+  font-size: var(--font-size-caption, var(--fs-caption));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  letter-spacing: 0.06em;
+  color: var(--color-text-overline, var(--text-overline));
+}
+
+/* ---------- ฟอร์ม ---------- */
+
+.form-label {
+  font-size: var(--font-size-form-label, var(--fs-form-label));
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary, var(--text-primary));
+}
+
+.input,
+.select,
+.textarea {
+  font-family: var(--font-family-base, var(--font-sans));
+  font-size: var(--font-size-input, var(--fs-input));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--color-text-faint, var(--text-faint));
+}
+
+.textarea {
+  line-height: var(--line-height-base, var(--lh-body));
+}
+
+/* ---------- ปุ่ม ---------- */
+
+.btn {
+  font-family: var(--font-family-base, var(--font-sans));
+  font-size: var(--font-size-button-secondary, var(--fs-button-secondary));
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+  color: var(--color-text-action, var(--text-body));
+}
+
+.btn-primary,
+.btn.btn--primary {
+  font-size: var(--font-size-button, var(--fs-button));
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+  letter-spacing: 0.01em;
+  color: var(--color-text-inverse, var(--text-on-brand));
+}
+
+/* ---------- ตัวเลข ----------
+   IBM Plex Sans เฉพาะตัวเลขล้วน — ตัวเลขที่ปนอยู่ในประโยคไทยใช้ฟอนต์ไทยตามปกติ
+   tabular-nums ทำให้คอลัมน์ตัวเลขตรงกันทุกแถว ตามกฎข้อ 9 ของ CLAUDE.md */
+.num,
+.grid-num,
+.master-count-num,
+.status-pill-count,
+.pagination-btn {
+  font-family: var(--font-family-numeric, var(--font-numeric));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ตัวเลขในตาราง / ท้ายแท่งกราฟ — 12–14px / 600 */
+.grid-num,
+.data-table .num {
+  font-size: var(--font-size-numeric-table, var(--fs-numeric-table, 13px));
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+/* KPI ใหญ่ — 32px / 600 */
+.metric-value,
+.kpi-value {
+  font-family: var(--font-family-numeric, var(--font-numeric));
+  font-size: var(--font-size-metric, var(--fs-kpi));
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text-strong, var(--text-strong));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   2. ตาราง
+   หัวคอลัมน์ไม่ใช่ตัวหนาและไม่ใช่สีเข้ม — ข้อมูลต้องเด่นกว่าหัวคอลัมน์
+   ========================================================================== */
+
+.data-table th {
+  font-size: var(--font-size-small, var(--fs-secondary));
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+.data-table td {
+  font-size: var(--font-size-small, var(--fs-secondary));
+  line-height: var(--lh-secondary, 1.55);
+  color: var(--color-text-body, var(--text-body));
+}
+
+/* ==========================================================================
+   3. หน้าเข้าสู่ระบบ
+   ========================================================================== */
+
+.login-tagline,
+.login-subtitle {
+  font-size: 14.5px;
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  line-height: 1.55;
+  color: var(--color-text-secondary, var(--text-secondary));
+  text-align: center;
+}
+
+.login-form .form-label {
+  color: var(--text-label-soft, #55624f);
+}
+
+.login-toggle-password {
+  font-size: var(--font-size-small, var(--fs-secondary));
+  font-weight: var(--font-weight-regular, var(--fw-regular));
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.login-forgot {
+  font-size: 13.5px;
+}
+
+/* ==========================================================================
+   4. แบบประเมินความพึงพอใจ (มือถือ)
+   ========================================================================== */
+
+.survey-header-title {
+  font-size: 15.5px;
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+  color: var(--color-text-inverse, var(--text-on-brand));
+}
+
+.survey-header-sub {
+  font-size: var(--font-size-caption, var(--fs-caption));
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.survey-note {
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.survey-question {
+  font-size: var(--font-size-input, var(--fs-input));
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+  line-height: 1.5;
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+/* "เลือกได้มากกว่า 1 ข้อ" · "ไม่บังคับ" */
+.survey-question-hint {
+  font-size: var(--font-size-caption, var(--fs-caption));
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+.survey-scale-number {
+  font-family: var(--font-family-numeric, var(--font-numeric));
+  font-size: 19px;
+  font-weight: var(--font-weight-semibold, var(--fw-semibold));
+}
+
+.survey-scale-label {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.survey-chip {
+  font-size: 13.5px;
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+}
+
+.survey-submit {
+  font-size: 16px;
+  font-weight: var(--font-weight-medium, var(--fw-medium));
+}
+
+.survey-submit-status {
+  font-size: var(--font-size-caption, var(--fs-caption));
+}
+
+/* พื้นที่กดบนมือถือไม่ต่ำกว่า 44px */
+@media (max-width: 767px) {
+  .survey-chip,
+  .survey-scale-btn,
+  .survey-submit,
+  .survey-page .btn {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   5. กฎการตัดบรรทัดของข้อความไทย
+   ========================================================================== */
+
+/* ย่อหน้าเนื้อความ — ไม่ให้เหลือคำโดดบรรทัดสุดท้าย */
+p,
+.page-description,
+.form-helper,
+.text-body,
+.card-subtitle {
+  text-wrap: pretty;
+}
+
+/* คอลัมน์ข้อความในตารางต้องตัดบรรทัดได้ ไม่ใช่ดันตารางให้กว้างจนต้องเลื่อนแนวนอน
+   คอลัมน์ที่ยังต้องอยู่บรรทัดเดียวจริง ๆ (รหัส วันที่ ปุ่มจัดการ) ระบุ .nowrap ไว้เองอยู่แล้ว */
+.data-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ชื่อที่ยาวเกินคอลัมน์ให้ตัดด้วย ellipsis แทนการดันความกว้าง
+   ต้องมี min-width: 0 คู่เสมอ ไม่งั้น flex/grid item จะไม่ยอมหดแล้ว ellipsis ไม่ทำงาน */
+.cell-title-link,
+.grid-name,
+.master-avatar-cell > span {
+  min-width: 0;
+}
+
+.text-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ชื่อหัวข้อในกราฟที่ต้องขึ้นบรรทัดใหม่ — ไทยไม่ควรตัดกลางคำ */
+.chart-axis-label,
+.chart-series-label,
+.dbo-x-label {
+  white-space: pre-line;
+  word-break: keep-all;
+  line-height: var(--line-height-chart, var(--lh-chart-tick));
+}
+
+/* คอลัมน์กริดที่มีข้อความต้องเป็น minmax(0, …) ไม่ใช่ 1fr
+   ไม่งั้นข้อความยาวจะดันคอลัมน์จนล้นกรอบแทนที่จะตัดบรรทัด
+   ตัวที่ประกาศ 1fr ไว้แล้วในไฟล์อื่นแก้เป็น minmax(0, 1fr) ที่ต้นทาง */
+.ac-field-row,
+.form-row,
+.form-row-3,
+.master-avatar-cell {
+  min-width: 0;
+}
+
+.ac-field-row > *,
+.form-row > *,
+.form-row-3 > * {
+  min-width: 0;
+}

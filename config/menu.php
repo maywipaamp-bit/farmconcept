@@ -103,7 +103,7 @@ return [
                     'key' => 'master-data-areas',
                     'label' => 'พื้นที่ดำเนินงาน',
                     'icon' => '<path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
-                    'href' => 'admin/areas/list.html',
+                    'href' => 'admin/master/areas',
                 ],
                 [
                     'key' => 'master-data-target-groups',
@@ -113,15 +113,15 @@ return [
                 ],
                 [
                     'key' => 'master-data-programs',
-                    'label' => 'โปรแกรม/หลักสูตร',
+                    'label' => 'โปรแกรมการเรียนรู้',
                     'icon' => '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
-                    'href' => 'admin/basic/programs.html',
+                    'href' => 'admin/master/programs',
                 ],
                 [
                     'key' => 'master-data-instructors',
                     'label' => 'วิทยากร',
                     'icon' => '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
-                    'href' => 'admin/basic/instructors.html',
+                    'href' => 'admin/master/instructors',
                 ],
                 [
                     'key' => 'master-data-activity-formats',
@@ -135,7 +135,7 @@ return [
                     'key' => 'master-data-follow-up-rounds',
                     'label' => 'ตั้งค่ารอบติดตาม',
                     'icon' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-                    'href' => 'admin/basic/follow-up-rounds.html',
+                    'href' => 'admin/master/follow-up-rounds',
                 ],
             ],
         ],

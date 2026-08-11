@@ -12,7 +12,7 @@
      @import ถูกเจอหลัง tokens.css ดาวน์โหลดเสร็จ กลายเป็นคำขอต่อแถวสองชั้น
      ทำให้เห็นฟอนต์สำรองแวบหนึ่งก่อนของจริงจะมา (อาการ "ฟอนต์เพี้ยน" ตอนเปิดหน้า)
      URL ต้องตรงกับใน tokens.css เป๊ะ เบราว์เซอร์จะได้ยุบเป็นคำขอเดียว --}}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Anuphan:wght@200;300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
 {{--
     ลำดับการโหลด CSS ต้องตรงกับหน้าเดิมทุกบรรทัด — standard/* มาก่อน แล้วค่อย CSS เดิมของ repo
     ตามที่ CLAUDE.md อธิบายไว้ว่าตั้งใจให้ CSS เดิม override มาตรฐานใหม่ระหว่างการย้ายทีละหน้า
@@ -29,23 +29,12 @@
 <body>
 
 <div class="app-shell">
-{{-- อ่านสถานะย่อเมนูก่อนเบราว์เซอร์วาดเฟรมแรก ไม่งั้นเมนูจะกระพริบจากกว้างเป็นแคบทุกครั้งที่เปลี่ยนหน้า --}}
-<script>(function(){try{if(localStorage.getItem('tfc-sidebar-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-sidebar-collapsed');}}catch(e){}})();</script>
-  <div class="sidebar-overlay"></div>
+{{-- อ่านสถานะย่อแผงก่อนเบราว์เซอร์วาดเฟรมแรก ไม่งั้นแผงจะกระพริบจากกว้างเป็นหายทุกครั้งที่เปลี่ยนหน้า --}}
+<script>(function(){try{if(localStorage.getItem('tfc-subnav-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-subnav-collapsed');}}catch(e){}})();</script>
 
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <a href="{{ url('/home.html') }}" class="sidebar-brand">
-        <img class="sidebar-logo" src="{{ asset('assets/images/logo-farm.png') }}" alt="The Farm Concept">
-      </a>
-      <button type="button" class="sidebar-toggle" data-sidebar-collapse-toggle aria-label="ย่อ/ขยายเมนู">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-    </div>
-
-    {{-- data-nav-base เป็น "/" เพราะ Laravel เสิร์ฟจาก docroot เดียว ไม่ใช่ path สัมพัทธ์แบบหน้า HTML เดิม --}}
-    <nav class="sidebar-nav" id="sidebar-nav" aria-label="เมนูหลัก" data-nav-base="/"></nav>
-  </aside>
+  {{-- เมนูสองชั้น (แถบไอคอน + แผงเมนูย่อย) สร้างจาก window.TFC_MENU ที่กรองสิทธิ์มาแล้ว
+       data-nav-base เป็น "/" เพราะ Laravel เสิร์ฟจาก docroot เดียว ไม่ใช่ path สัมพัทธ์แบบหน้า HTML เดิม --}}
+  <div id="sidebar-shell" data-nav-base="/"></div>
 
   {{-- โหลดตรงนี้ ไม่ใช่ท้าย body — ตอนนี้ mount ของเมนูมีแล้วแต่เบราว์เซอร์ยังไม่วาด
        เมนูจึงขึ้นครบตั้งแต่เฟรมแรก ถ้าย้ายไปท้าย body เมนูจะกระพริบว่างแล้วค่อยเต็มทุกครั้ง --}}

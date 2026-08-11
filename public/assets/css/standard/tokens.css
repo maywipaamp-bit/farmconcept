@@ -4,20 +4,22 @@
    Import ไฟล์นี้ก่อน stylesheet อื่นทั้งหมด
    ============================================================ */
 
-/* ต้องโหลด Anuphan มาด้วย ไม่ใช่แค่ Noto Sans Thai
-   เพราะ --font-sans ประกาศ Anuphan ไว้เป็นตัวสำรองตัวแรก ถ้าไม่โหลดมา
-   เครื่องที่ไม่มี Anuphan ติดตั้งไว้จะตกไปใช้ system-ui ทันทีที่ Noto โหลดไม่ทัน
-   ซึ่งเป็นคนละรูปทรงกับที่ออกแบบไว้
-   ชุดน้ำหนักตรงกับ docs/design-standard/typography-standard.dc.html บรรทัด 13
-   URL นี้ซ้ำกับ <link rel="preload"> ใน resources/views/layouts/admin.blade.php
-   แก้ที่ไหนต้องแก้ให้ตรงกันทั้งสองที่ (เบราว์เซอร์ยุบเป็นคำขอเดียวเมื่อ URL ตรงกัน) */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Anuphan:wght@200;300;400;500;600&display=swap');
+/* IBM Plex Sans Thai สำหรับข้อความไทยทุกตัว · IBM Plex Sans เฉพาะตัวเลข
+   (KPI, จำนวน, %, วันที่แบบเลข) — ตัวเลขที่ปนอยู่ในประโยคไทยใช้ฟอนต์ไทยตามปกติ
+   Production ควรย้ายมา self-host ตามสเปก
+
+   URL นี้ซ้ำกับ <link> ใน resources/views/layouts/admin.blade.php และหน้า static เดิม
+   แก้ที่ไหนต้องแก้ให้ตรงกันทุกที่ (เบราว์เซอร์ยุบเป็นคำขอเดียวเมื่อ URL ตรงกัน) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap');
 
 :root {
   /* ---- Font ----
-     เปลี่ยนฟอนต์ทั้งระบบที่บรรทัดนี้จุดเดียว (คู่กับ --font-family-base ใน assets/css/tokens.css)
-     ถ้าจะย้อนกลับเป็น IBM Plex Sans Thai ให้แก้ทั้งชื่อฟอนต์และ @import ด้านบนพร้อมกัน */
-  --font-sans: 'Noto Sans Thai', 'Anuphan', system-ui, -apple-system, sans-serif;
+     เปลี่ยนฟอนต์ทั้งระบบที่บรรทัดนี้จุดเดียว (คู่กับ --font-family-base ใน assets/css/tokens.css) */
+  --font-sans: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+
+  /* ตัวเลขล้วนเท่านั้น — KPI, จำนวนในตาราง, %, วันที่แบบเลข
+     ใช้ผ่านคลาส .num หรือ font-family: var(--font-numeric) ไม่ใช้กับประโยคไทย */
+  --font-numeric: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --fw-light: 300;
@@ -26,25 +28,44 @@
   --fw-semibold: 600;  /* หัวข้อเท่านั้น */
   /* ห้ามใช้ 700 ในหน้าจอระบบ */
 
-  /* ---- Type scale : size / line-height ---- */
-  --fs-page-title: 28px;      --lh-page-title: 1.4;
-  --fs-section-title: 20px;   --lh-section-title: 1.45;
-  --fs-card-title: 16px;      --lh-card-title: 1.5;
-  --fs-body: 14px;            --lh-body: 1.6;
-  --fs-secondary: 13px;       --lh-secondary: 1.6;
-  --fs-caption: 12px;         --lh-caption: 1.5;
-  /* เล็กสุดที่อนุญาต = 12px */
+  /* ---- Type scale : size / line-height ----
+     ตามสเปก typography: หัวข้อ line-height 1.2–1.35 · เนื้อความ 1.5–1.65 · ป้ายในกราฟ 1.3–1.4
+     เนื้อความไทยใช้ 1.6 ซึ่งอยู่ในช่วงของสเปกและไม่ต่ำกว่าที่ CLAUDE.md กำหนด */
+  --fs-page-title: 25px;      --lh-page-title: 1.25;
+  --fs-section-title: 20px;   --lh-section-title: 1.3;
+  --fs-card-title: 15px;      --lh-card-title: 1.35;
+  --fs-body: 15px;            --lh-body: 1.6;
+  --fs-secondary: 13px;       --lh-secondary: 1.55;
+  --fs-caption: 12.5px;       --lh-caption: 1.5;
 
-  /* ---- Text colors ---- */
-  --text-strong: #111827;     /* ชื่อหน้า, หัวข้อ */
-  --text-primary: #1F2937;    /* คอลัมน์หลัก, label */
-  --text-body: #374151;       /* เนื้อหาทั่วไป */
-  --text-secondary: #6B7280;  /* หัวตาราง, คำอธิบาย */
-  --text-muted: #9CA3AF;      /* ลำดับที่, placeholder */
-  --text-faint: #C7CDD4;      /* ตัวเลขแถว */
+  /* footer · หน่วย · tick ในกราฟ — เล็กสุดที่สเปกอนุญาตคือ 10.5px
+     และ 10.5–11px ใช้ได้เฉพาะป้ายในกราฟเท่านั้น */
+  --fs-micro: 11.5px;         --lh-micro: 1.35;
+  --fs-chart-tick: 11px;      --lh-chart-tick: 1.3;
+
+  /* ช่องกรอกและปุ่มมีสเกลของตัวเอง ไม่ผูกกับ --fs-body */
+  --fs-input: 15px;
+  --fs-form-label: 13px;
+  --fs-button: 15.5px;
+  --fs-button-secondary: 15px;
+
+  /* ตัวเลข */
+  --fs-kpi: 32px;             --lh-kpi: 1.15;
+  --fs-numeric-table: 13px;
+
+  /* ---- Text colors ----
+     ชุดเขียวอมเทาตามสเปก typography — ความสำคัญสื่อด้วยสีก่อน แล้วจึงเป็นน้ำหนัก
+     เข้มสุดคือ --text-strong (#1f2c20) ห้ามใช้สีเข้มกว่านี้และห้ามใช้ #000 */
+  --text-strong: #1f2c20;     /* ชื่อหน้า, หัวการ์ด, ข้อความในช่องกรอก, ตัวเลข */
+  --text-primary: #33422f;    /* label ฟอร์ม, คอลัมน์หลัก */
+  --text-body: #4a564a;       /* เนื้อความทั่วไป, ปุ่มรอง */
+  --text-secondary: #7d8a7c;  /* คำอธิบาย, caption */
+  --text-muted: #9aa599;      /* meta, หน่วย, tick, หัวคอลัมน์ */
+  --text-faint: #b3bdb1;      /* placeholder */
+  --text-overline: #8a968a;   /* THEFARMCONCEPT · ADMIN */
+  --text-label-soft: #55624f; /* label ฟอร์มแบบอ่อน (หน้าเข้าสู่ระบบ) */
   --text-brand: #16A34A;
   --text-on-brand: #FFFFFF;
-  /* ห้ามใช้ #000 กับข้อความ */
 
   /* ---- Surfaces & borders ---- */
   --bg-app: #F6F8F6;

@@ -1,166 +1,312 @@
-/* TheFarmConcept — Sidebar renderer: builds the 2-level nav from window.TFC_MENU (assets/js/menu-config.js).
+/* TheFarmConcept — เมนูด้านข้างสองชั้น (icon rail + submenu panel)
+   สร้างจาก window.TFC_MENU ซึ่งเป็นโครงเมนูที่ผ่านการกรองสิทธิ์จากเซิร์ฟเวอร์มาแล้ว
 
-   IMPORTANT — load position: this file is included immediately after the closing </aside> of the
-   sidebar, NOT at the end of <body> with the other scripts. At that point the <nav id="sidebar-nav">
-   mount already exists but the browser has not painted yet, so the sidebar appears fully built on the
-   first frame. Loading it at the end of <body> made the sidebar flash in empty-then-filled on every
-   navigation. Its only dependencies are window.TFC_MENU and window.TFC.escapeHtml, so mock-data.js
-   and menu-config.js are loaded alongside it at the same early position.
+   ตำแหน่งการโหลด: ไฟล์นี้ถูกใส่ทันทีหลัง #sidebar-shell ไม่ใช่ท้าย <body>
+   ตอนนั้น mount มีแล้วแต่เบราว์เซอร์ยังไม่วาด เมนูจึงขึ้นครบตั้งแต่เฟรมแรก
+   ถ้าย้ายไปท้าย body เมนูจะกระพริบว่างแล้วค่อยเต็มทุกครั้งที่เปลี่ยนหน้า
 
-   Interaction handlers (expand/collapse, tooltips, drawer) stay in navigation.js at the end of <body>,
-   because those also bind to topbar/content elements that do not exist this early. */
+   พฤติกรรมที่ตัดสินไว้: คลิกหมวดในแถบไอคอน = "สลับแผงให้ดู" เท่านั้น ยังไม่เปลี่ยนหน้า
+   ต้นแบบเลือกรายการแรกของหมวดให้อัตโนมัติ ซึ่งเมื่อผูกกับ router จริงแปลว่าเด้งหน้าทันทีที่คลิก
+   ผู้ใช้ที่แค่อยากดูว่าหมวดนั้นมีอะไรจะโดนพาออกจากงานที่ทำค้างอยู่ จึงให้กดรายการในแผงเองอีกที */
 (function () {
-  var mount = document.getElementById('sidebar-nav');
+  var mount = document.getElementById('sidebar-shell');
   if (!mount || !window.TFC_MENU) return;
 
+  var esc = window.TFC.escapeHtml;
   var base = mount.getAttribute('data-nav-base') || '';
+  var shell = mount.closest('.app-shell');
+  var user = (window.TFC_MOCK && window.TFC_MOCK.currentUser) || {};
+
   var currentPath = window.location.pathname.replace(/\/+$/, '');
   var currentHref = currentPath + window.location.search;
 
-  function iconSvg(pathMarkup) {
-    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + pathMarkup + '</svg>';
-  }
+  var SUBNAV_KEY = 'tfc-subnav-collapsed';
 
-  function resolvedHref(rootRelativeHref) {
-    return base + rootRelativeHref;
-  }
+  /* ---------- ตัวช่วยเรื่อง URL ---------- */
 
-  function isCurrentHref(rootRelativeHref) {
-    if (!rootRelativeHref) return false;
+  function resolvedHref(href) { return base + href; }
+
+  function pathOf(href) {
     var a = document.createElement('a');
-    a.href = resolvedHref(rootRelativeHref);
-    var linkPath = a.pathname.replace(/\/+$/, '');
-    return (linkPath + a.search) === currentHref;
+    a.href = resolvedHref(href);
+    return { path: a.pathname.replace(/\/+$/, ''), search: a.search };
   }
 
-  /* alsoMatch เทียบเฉพาะ path ไม่รวม query string เพราะหน้ารายละเอียดมักมี ?id=
-     ต่างจาก href ของเมนูเองที่ต้องเทียบทั้ง query ด้วย (placeholder.html?title=… ใช้แยกเมนูกัน) */
-  function isCurrentPath(rootRelativeHref) {
-    if (!rootRelativeHref) return false;
-    var a = document.createElement('a');
-    a.href = resolvedHref(rootRelativeHref);
-    return a.pathname.replace(/\/+$/, '') === currentPath;
+  function isCurrentHref(href) {
+    if (!href) return false;
+    var p = pathOf(href);
+    return (p.path + p.search) === currentHref;
   }
 
-  /* เมนูจะไฮไลต์เมื่ออยู่ที่ href ของตัวเอง หรืออยู่ที่หน้าใน alsoMatch
-     ใช้กับโมดูลที่มีเมนูเดียวแต่มีหลายหน้า เช่น หน้าสร้าง/แก้ไข ที่ไม่มีเมนูของตัวเอง */
+  /* alsoMatch เทียบเฉพาะ path ไม่รวม query string เพราะหน้ารายละเอียดมักมี ?id= */
+  function isCurrentPath(href) {
+    if (!href) return false;
+    return pathOf(href).path === currentPath;
+  }
+
+  /* เมนูไฮไลต์เมื่ออยู่ที่ href ของตัวเอง หรืออยู่ที่หน้าใน alsoMatch
+     ใช้กับโมดูลที่มีเมนูเดียวแต่หลายหน้า เช่นหน้าสร้าง/แก้ไขที่ไม่มีเมนูของตัวเอง */
   function isActiveItem(item) {
-    if (isCurrentHref(item.href)) return true;
-    return (item.alsoMatch || []).some(isCurrentPath);
+    return isCurrentHref(item.href) || (item.alsoMatch || []).some(isCurrentPath);
   }
 
-  function leafLinkHtml(item) {
-    var active = isActiveItem(item) ? ' is-active' : '';
-    return '<a href="' + resolvedHref(item.href) + '" class="nav-item' + active + '" data-nav-key="' + item.key + '">' +
-      '<span class="nav-item-icon">' + iconSvg(item.icon) + '</span>' +
-      '<span class="nav-label">' + window.TFC.escapeHtml(item.label) + '</span>' +
-      '</a>';
+  /* ---------- โครงข้อมูล ----------
+     หมวดที่ไม่มีเมนูย่อย (แดชบอร์ด) ถือเป็นหมวดที่มีรายการเดียวคือตัวมันเอง
+     แผงจึงมีเนื้อหาเสมอ ไม่มีหมวดไหนที่กดแล้วแผงว่าง */
+  var categories = window.TFC_MENU.map(function (item) {
+    return {
+      key: item.key,
+      label: item.label,
+      icon: item.icon,
+      items: (item.children && item.children.length) ? item.children : [item]
+    };
+  });
+
+  function findActiveCategory() {
+    for (var i = 0; i < categories.length; i++) {
+      if (categories[i].items.some(isActiveItem)) return i;
+    }
+    return 0;
   }
 
-  /* เส้นทางของหน้าปัจจุบันในโครงเมนู — navigation.js เอาไปสร้าง breadcrumb ต่อ
+  var activeIndex = findActiveCategory();
+  var shownIndex = activeIndex;
+
+  /* ---------- เส้นทางของหน้าปัจจุบัน — navigation.js เอาไปสร้าง breadcrumb ต่อ ----------
      เก็บจากที่นี่เพราะที่นี่คือที่เดียวที่รู้ว่าเมนูไหน "ตรงกับหน้านี้" อยู่แล้ว
-     ของเดิม breadcrumb เขียนมือไว้ในทุกหน้า พอโครงเมนูเปลี่ยนก็ค้างเป็นของเก่า
-     ทั้งหมด (เคยเช็คแล้วเพี้ยนสิบกว่าหน้าพร้อมกัน) */
+     ของเดิม breadcrumb เขียนมือไว้ในทุกหน้า พอโครงเมนูเปลี่ยนก็ค้างเป็นของเก่าทั้งหมด */
   window.TFC.navTrail = null;
 
-  function recordTrail(group, item) {
-    if (window.TFC.navTrail) return;
+  (function recordTrail() {
+    var cat = categories[activeIndex];
+    if (!cat) return;
+
+    var item = cat.items.filter(isActiveItem)[0];
+    if (!item) return;
+
     var trail = [];
-    if (group) trail.push({ label: group.label });
+    if (cat.items.length > 1 || cat.items[0] !== item) trail.push({ label: cat.label });
+
     trail.push({
       label: item.label,
       href: resolvedHref(item.href),
-      /* ตรงกับ href ของเมนูเป๊ะ = เรากำลังอยู่ที่หน้าของเมนูนั้นเอง
-         ถ้าตรงผ่าน alsoMatch = อยู่ที่หน้าย่อยซึ่งไม่มีเมนูของตัวเอง
-         ตัวนี้เป็นตัวบอกว่า breadcrumb ต้องมีชั้นสุดท้ายที่หน้าเขียนไว้เองต่อท้ายไหม */
+      /* ตรงกับ href เป๊ะ = อยู่ที่หน้าของเมนูนั้นเอง · ตรงผ่าน alsoMatch = อยู่หน้าย่อยที่ไม่มีเมนูของตัวเอง
+         ตัวนี้บอกว่า breadcrumb ต้องมีชั้นสุดท้ายที่หน้าเขียนเองต่อท้ายไหม */
       isCurrent: isCurrentHref(item.href)
     });
+
     window.TFC.navTrail = trail;
+  })();
+
+  /* ---------- ไอคอน ---------- */
+
+  function railIcon(pathMarkup) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + pathMarkup + '</svg>';
   }
 
-  var chevron = '<svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
+  function itemIcon(pathMarkup) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + pathMarkup + '</svg>';
+  }
 
-  mount.innerHTML = window.TFC_MENU.map(function (item) {
-    if (!item.children || !item.children.length) {
-      if (isActiveItem(item)) recordTrail(null, item);
-      return leafLinkHtml(item);
+  var ICON = {
+    bell: '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    cog: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.79 1.05 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1"/>',
+    doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    exit: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+    help: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'
+  };
+
+  /* ---------- แถบไอคอน ---------- */
+
+  function railHtml() {
+    var main = categories.map(function (cat, i) {
+      return '<button type="button" class="rail-btn' + (i === shownIndex ? ' is-active' : '') + '"' +
+        ' data-rail="' + i + '" title="' + esc(cat.label) + '" aria-label="' + esc(cat.label) + '"' +
+        ' aria-current="' + (i === activeIndex ? 'true' : 'false') + '">' +
+        railIcon(cat.icon) + '</button>';
+    }).join('');
+
+    /* ปุ่มระบบยังไม่มีหน้าปลายทางในโปรเจกต์ จึงใส่ไว้ตามสเปกแต่ยังไม่ผูกลิงก์
+       ทำเป็นปุ่มที่กดแล้วไม่มีอะไรเกิดขึ้นดีกว่าซ่อนไว้ เพราะโครงเมนูต้องตรงกับที่ออกแบบ */
+    var system =
+      '<button type="button" class="rail-btn is-system" title="การแจ้งเตือน" aria-label="การแจ้งเตือน" data-rail-system="notifications">' +
+        railIcon(ICON.bell) +
+      '</button>' +
+      '<button type="button" class="rail-btn is-system" title="แอปทั้งหมด" aria-label="แอปทั้งหมด" data-rail-system="apps">' +
+        railIcon(ICON.grid) +
+      '</button>' +
+      '<button type="button" class="rail-btn is-system" title="ตั้งค่า" aria-label="ตั้งค่า" data-rail-system="settings">' +
+        railIcon(ICON.cog) +
+      '</button>';
+
+    var avatar = user.avatar
+      ? '<img src="' + esc(user.avatar) + '" alt="" onerror="this.remove()">'
+      : esc(user.initials || (user.name || '?').charAt(0));
+
+    return '<nav class="rail" aria-label="หมวดเมนูหลัก">' +
+      main +
+      '<span class="rail-spacer"></span>' +
+      system +
+      '<div class="rail-user">' +
+        '<button type="button" class="rail-avatar" id="rail-avatar" aria-haspopup="menu" aria-expanded="false"' +
+        ' aria-label="เมนูผู้ใช้งาน" title="บัญชีผู้ใช้งาน">' + avatar + '</button>' +
+        userMenuHtml() +
+      '</div>' +
+      '</nav>';
+  }
+
+  function userMenuHtml() {
+    /* ออกจากระบบต้องเป็น POST พร้อม CSRF token ไม่ใช่ลิงก์ธรรมดา
+       ไม่งั้นเว็บอื่นฝัง <img src="/logout"> แล้วเตะผู้ใช้ออกจากระบบได้ */
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var token = meta ? meta.getAttribute('content') : '';
+
+    return '<div class="rail-menu" id="rail-user-menu" role="menu" hidden>' +
+      '<div class="rail-menu-head">' +
+        '<span class="rail-menu-name">' + esc(user.name || '') + '</span>' +
+        '<span class="rail-menu-mail">' + esc(user.email || user.role || '') + '</span>' +
+      '</div>' +
+      '<div class="rail-menu-divider"></div>' +
+      '<a class="rail-menu-item" role="menuitem" href="' + base + 'admin/profile.html">' +
+        itemIcon(ICON.user) + '<span>โปรไฟล์</span>' +
+      '</a>' +
+      '<form method="POST" action="' + base + 'logout">' +
+        '<input type="hidden" name="_token" value="' + esc(token) + '">' +
+        '<button type="submit" class="rail-menu-item is-danger" role="menuitem">' +
+          itemIcon(ICON.exit) + '<span>ออกจากระบบ</span>' +
+        '</button>' +
+      '</form>' +
+      '</div>';
+  }
+
+  /* ---------- แผงเมนูย่อย ---------- */
+
+  function subnavHtml() {
+    var cat = categories[shownIndex] || categories[0];
+
+    var items = cat.items.map(function (item) {
+      var active = isActiveItem(item);
+
+      return '<a class="subnav-item' + (active ? ' is-active' : '') + '" href="' + resolvedHref(item.href) + '"' +
+        ' data-nav-key="' + item.key + '"' + (active ? ' aria-current="page"' : '') + '>' +
+        itemIcon(item.icon || ICON.doc) +
+        '<span class="subnav-item-label">' + esc(item.label) + '</span>' +
+        '</a>';
+    }).join('');
+
+    return '<div class="subnav" id="app-subnav">' +
+      '<div class="subnav-head">' +
+        '<a href="' + base + 'home.html" aria-label="หน้าแรก">' +
+          '<img class="subnav-logo" src="' + base + 'assets/images/logo-farm.png" alt="The Farm Concept">' +
+        '</a>' +
+        '<button type="button" class="subnav-toggle" data-subnav-toggle title="ย่อเมนู" aria-label="ย่อเมนู" aria-expanded="true">‹</button>' +
+      '</div>' +
+      '<div class="subnav-title">' + esc(cat.label) + '</div>' +
+      '<nav class="subnav-list" aria-label="' + esc(cat.label) + '">' +
+        '<div class="subnav-group">' + items + '</div>' +
+      '</nav>' +
+      '<div class="subnav-foot">' +
+        '<a class="subnav-foot-link" href="' + base + 'home.html">' + itemIcon(ICON.help) + '<span>คู่มือการใช้งาน</span></a>' +
+        '<div class="subnav-foot-meta">' +
+          '<span>เวอร์ชัน ' + esc((window.TFC_APP && window.TFC_APP.version) || '1.0.0') + '</span>' +
+          '<span>TheFarmConcept © ' + esc((window.TFC_APP && window.TFC_APP.year) || '') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="subnav-reopen">' +
+        '<button type="button" class="subnav-toggle" data-subnav-toggle title="ขยายเมนู" aria-label="ขยายเมนู" aria-expanded="false">›</button>' +
+      '</div>';
+  }
+
+  function render() {
+    mount.innerHTML = railHtml() + subnavHtml() + '<div class="drawer-scrim" data-drawer-close></div>';
+  }
+
+  render();
+
+  /* ---------- สลับหมวด ----------
+     วาดใหม่ทั้งก้อนเพราะแผงเปลี่ยนทั้งชื่อหมวดและรายการ การแก้ทีละ node
+     ต้องไล่ลบ/เพิ่มเองทุกจุด ซึ่งพลาดง่ายกว่าและไม่ได้เร็วขึ้นจริงที่ขนาดนี้ */
+  mount.addEventListener('click', function (e) {
+    var railBtn = e.target.closest('[data-rail]');
+
+    if (railBtn) {
+      shownIndex = Number(railBtn.getAttribute('data-rail'));
+      render();
+
+      /* บนจอแคบแผงเป็น drawer ทับเนื้อหา — เลือกหมวดแล้วต้องเปิดให้เห็นรายการทันที */
+      if (shell && window.matchMedia('(max-width: 1023px)').matches) {
+        shell.classList.add('is-drawer-open');
+      }
+      return;
     }
 
-    var submenuId = 'nav-submenu-' + item.key;
-    var childrenActive = item.children.some(isActiveItem);
-    var selfActive = isActiveItem(item);
+    if (e.target.closest('[data-subnav-toggle]')) {
+      toggleSubnav();
+      return;
+    }
 
-    item.children.forEach(function (child) {
-      if (isActiveItem(child)) recordTrail(item, child);
-    });
-    if (selfActive) recordTrail(null, item);
-    var expanded = childrenActive; // auto-expand only the group containing the current page
+    if (e.target.closest('[data-drawer-close]') && shell) {
+      shell.classList.remove('is-drawer-open');
+      return;
+    }
 
-    var headerHtml = item.href
-      ? '<div class="nav-item-row">' +
-        '<a href="' + resolvedHref(item.href) + '" class="nav-item nav-item-parent' + (selfActive ? ' is-active' : '') + '" data-nav-key="' + item.key + '">' +
-        '<span class="nav-item-icon">' + iconSvg(item.icon) + '</span><span class="nav-label">' + window.TFC.escapeHtml(item.label) + '</span>' +
-        '</a>' +
-        '<button type="button" class="nav-submenu-toggle" data-nav-submenu-toggle="' + submenuId + '" aria-expanded="' + expanded + '" aria-label="ขยาย/ยุบเมนู ' + window.TFC.escapeHtml(item.label) + '">' + chevron + '</button>' +
-        '</div>'
-      : '<button type="button" class="nav-item nav-item-parent nav-item-parent-toggle' + (childrenActive ? ' is-active' : '') + '" data-nav-submenu-toggle="' + submenuId + '" aria-expanded="' + expanded + '">' +
-        '<span class="nav-item-icon">' + iconSvg(item.icon) + '</span><span class="nav-label">' + window.TFC.escapeHtml(item.label) + '</span>' +
-        chevron +
-        '</button>';
+    var avatar = e.target.closest('#rail-avatar');
+    if (avatar) {
+      toggleUserMenu(avatar.getAttribute('aria-expanded') !== 'true');
+      return;
+    }
 
-    return '<div class="nav-group' + (selfActive || childrenActive ? ' is-active-group' : '') + '">' +
-      headerHtml +
-      '<div class="nav-submenu' + (expanded ? '' : ' hidden') + '" id="' + submenuId + '">' +
-      item.children.map(leafLinkHtml).join('') +
-      '</div></div>';
-  }).join('');
+    /* ปุ่มระบบยังไม่มีหน้าปลายทาง — บอกให้รู้ว่ายังไม่เปิดใช้ ดีกว่ากดแล้วเงียบ */
+    var sys = e.target.closest('[data-rail-system]');
+    if (sys && window.TFC.showToast) {
+      window.TFC.showToast('ส่วนนี้ยังไม่เปิดใช้งาน', 'info');
+    }
+  });
 
-  /* ---------- โปรไฟล์ผู้ใช้ท้ายแถบซ้าย ----------
-     ย้ายลงมาจากมุมขวาบน เพื่อคืนความกว้างทั้งแถวให้แถบบนไว้ใช้กับ breadcrumb และค้นหา
-     สร้างจาก JS ที่เดียวเหมือนเมนู แทนที่จะเขียนซ้ำในทุกหน้า (ของเดิมซ้ำอยู่ 25 หน้า
-     และชื่อที่เขียนไว้ก็ไม่ตรงกับ currentUser จริง ต้องอาศัย JS มาเขียนทับทีหลัง)
-     ชื่อคลาสตรงกับที่ profile-modal.js ใช้อัปเดตหลังแก้โปรไฟล์ */
-  /* token มาจาก <meta name="csrf-token"> ที่เลย์เอาต์ฝั่งเซิร์ฟเวอร์ใส่ไว้ทุกหน้า */
-  function csrfToken() {
-    var meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
+  /* ---------- ย่อ/ขยายแผง ---------- */
+
+  function toggleSubnav() {
+    if (!shell) return;
+
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      shell.classList.toggle('is-drawer-open');
+      return;
+    }
+
+    var collapsed = shell.classList.toggle('is-subnav-collapsed');
+    try { localStorage.setItem(SUBNAV_KEY, collapsed ? '1' : '0'); } catch (err) { /* โหมดส่วนตัวเขียนไม่ได้ */ }
   }
 
-  var sidebar = mount.closest('.sidebar');
-  var user = (window.TFC_MOCK && window.TFC_MOCK.currentUser) || {};
-  if (sidebar && !sidebar.querySelector('.sidebar-profile')) {
-    var esc = window.TFC.escapeHtml;
-    var avatarImg = user.avatar
-      ? '<img src="' + esc(user.avatar) + '" alt="" onerror="this.remove()">'
-      : '<img src="' + base + 'assets/images/avatar-default.png" alt="" onerror="this.remove()">';
+  /* ---------- เมนูผู้ใช้ ---------- */
 
-    var box = document.createElement('div');
-    box.className = 'sidebar-foot dropdown';
-    box.innerHTML =
-      '<button type="button" class="sidebar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">' +
-        '<span class="avatar avatar-sm">' + esc(user.initials || '') + avatarImg + '</span>' +
-        '<span class="sidebar-profile-info">' +
-          '<span class="sidebar-profile-name">' + esc(user.name || '') + '</span>' +
-          '<span class="sidebar-profile-role">' + esc(user.role || '') + '</span>' +
-        '</span>' +
-        '<svg class="sidebar-profile-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>' +
-      '</button>' +
-      '<div class="dropdown-menu">' +
-        '<a class="dropdown-item" href="' + base + 'admin/profile.html">' +
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>' +
-          'โปรไฟล์ของฉัน' +
-        '</a>' +
-        '<div class="dropdown-divider"></div>' +
-        /* ออกจากระบบต้องเป็น POST พร้อม CSRF token ไม่ใช่ลิงก์ธรรมดา
-           ไม่งั้นเว็บอื่นฝัง <img src="/logout"> แล้วเตะผู้ใช้ออกจากระบบได้ */
-        '<form method="POST" action="/logout" class="dropdown-logout">' +
-          '<input type="hidden" name="_token" value="' + esc(csrfToken()) + '">' +
-          '<button type="submit" class="dropdown-item is-danger">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>' +
-            'ออกจากระบบ' +
-          '</button>' +
-        '</form>' +
-      '</div>';
-    sidebar.appendChild(box);
+  function toggleUserMenu(open) {
+    var avatar = document.getElementById('rail-avatar');
+    var menu = document.getElementById('rail-user-menu');
+    if (!avatar || !menu) return;
+
+    avatar.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+
+    if (open) {
+      var first = menu.querySelector('.rail-menu-item');
+      if (first) first.focus();
+    }
   }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.rail-user')) return;
+    toggleUserMenu(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+
+    toggleUserMenu(false);
+    if (shell) shell.classList.remove('is-drawer-open');
+  });
 })();

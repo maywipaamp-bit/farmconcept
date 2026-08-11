@@ -28,7 +28,7 @@ window.TFC.followUpTemplateService = (function () {
 
   /* วันที่อ้างอิงของระบบตัวอย่าง — ต้องตรงกับ TODAY ใน assets/js/cohort-data.js
      ชุดข้อมูลตัวอย่างอยู่ในช่วงปี 2026 ถ้าใช้นาฬิกาเครื่องผู้ใช้ สถานะรอบจะเพี้ยนทั้งหมด */
-  var SERVER_TODAY = '2026-08-10';
+  var SERVER_TODAY = cfg.followUpToday || '2026-08-10';
 
   /* ตัวหารสำหรับแปลงจำนวนวันเป็น "≈ กี่เดือน / กี่ปี"
      ประกาศเป็นค่าคงที่เพราะถูกใช้ทั้งตอนแสดงผลและตอนตรวจค่า — ห้ามพิมพ์เลขซ้ำในสองที่ */
@@ -54,7 +54,7 @@ window.TFC.followUpTemplateService = (function () {
      ตัวเลขจริงมาจากเซิร์ฟเวอร์ (COUNT ของ follow_up_rounds ที่อ้าง template นี้)
      และ **เซิร์ฟเวอร์ต้องตรวจซ้ำตอน DELETE เสมอ** — ปุ่มที่ปิดไว้บนจอกันได้แค่การกดพลาด
      --------------------------------------------------------------- */
-  var USAGE = { 'FRT-1': 128, 'FRT-2': 96, 'FRT-3': 41, 'FRT-4': 0 };
+  var USAGE = cfg.followUpUsage || { 'FRT-1': 128, 'FRT-2': 96, 'FRT-3': 41, 'FRT-4': 0 };
 
   function usageCount(id) { return USAGE[id] || 0; }
 
@@ -163,12 +163,27 @@ window.TFC.followUpTemplateService = (function () {
      ชั้นขนส่งข้อมูล — จุดเดียวที่ต้องแก้เมื่อมี backend จริง
      --------------------------------------------------------------- */
   function request(path, options) {
+    var tag = document.querySelector('meta[name="csrf-token"]');
+
     return fetch(API_BASE + path, Object.assign({
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': tag ? tag.getAttribute('content') : ''
+      },
       credentials: 'same-origin'
     }, options || {})).then(function (res) {
-      if (!res.ok) throw new Error('follow-up template api ' + res.status + ' ' + path);
-      return res.json();
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (res.ok) return data;
+
+        /* ข้อความจากเซิร์ฟเวอร์เป็นภาษาไทยและบอกเหตุผลจริง เช่น ลบรอบที่มีคนใช้อยู่ไม่ได้
+           โยนต่อไปให้หน้าจอแสดง ดีกว่าโยนรหัสสถานะที่ผู้ใช้อ่านไม่รู้เรื่อง */
+        var msg = data.errors
+          ? Object.keys(data.errors).map(function (k) { return data.errors[k][0]; }).join(' · ')
+          : (data.message || 'ทำรายการไม่สำเร็จ');
+
+        throw new Error(msg);
+      });
     });
   }
 
@@ -183,8 +198,16 @@ window.TFC.followUpTemplateService = (function () {
 
   /* GET /follow-up/round-templates */
   function load() {
-    if (API_BASE) return request('/follow-up/round-templates');
-    return local(cached());
+    if (!API_BASE) return local(cached());
+
+    return request('').then(function (data) {
+      /* จำค่าที่ได้จากเซิร์ฟเวอร์ไว้ ผู้เรียกแบบ synchronous (ระบบกลุ่มตัวอย่าง)
+         จะได้ค่าจริง ไม่ใช่ค่าตั้งต้นที่เขียนไว้ในไฟล์นี้ */
+      store = data.rows || [];
+      if (data.today) SERVER_TODAY = data.today;
+      if (data.usage) USAGE = data.usage;
+      return JSON.parse(JSON.stringify(store));
+    });
   }
 
   /* ค่าปัจจุบันแบบ synchronous — สำหรับผู้เรียกที่ต้องใช้ทันทีตอนสคริปต์ถูกโหลด
@@ -199,8 +222,12 @@ window.TFC.followUpTemplateService = (function () {
      sort_order คิดจากลำดับแถวบนจอ ผู้ใช้ไม่ต้องกรอกเลขลำดับเอง */
   function save(templates) {
     var payload = (templates || []).map(function (t, i) {
+      /* แถวที่เพิ่งกด "เพิ่มรอบ" ยังไม่มีรหัสจริง หน้าจอตั้ง id ชั่วคราวไว้ให้ตัวเองอ้างอิงเท่านั้น
+         ต้องส่ง null ไป ไม่งั้นเซิร์ฟเวอร์จะหารหัสนั้นไม่เจอแล้วตอบ 404 */
+      var isNew = /^FRT-NEW-/.test(String(t.id || ''));
+
       return {
-        id: t.id,
+        id: isNew ? null : t.id,
         name: String(t.name || '').trim(),
         offsetDays: Number(t.offsetDays),
         isActive: !!t.isActive,
@@ -208,7 +235,11 @@ window.TFC.followUpTemplateService = (function () {
       };
     });
     if (API_BASE) {
-      return request('/follow-up/round-templates', { method: 'PUT', body: JSON.stringify(payload) });
+      return request('', { method: 'PUT', body: JSON.stringify({ rows: payload }) }).then(function (data) {
+        store = data.rows || [];
+        if (data.usage) USAGE = data.usage;
+        return JSON.parse(JSON.stringify(store));
+      });
     }
     store = JSON.parse(JSON.stringify(payload));
     return local(store);

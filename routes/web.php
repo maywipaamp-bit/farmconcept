@@ -102,6 +102,9 @@ Route::middleware('auth')->group(function () {
             $tables = [
                 'target-groups' => [MasterData\TargetGroupController::class, 'master-data-target-groups'],
                 'activity-formats' => [MasterData\ActivityFormatController::class, 'master-data-activity-formats'],
+                'programs' => [MasterData\ProgramController::class, 'master-data-programs'],
+                'instructors' => [MasterData\InstructorController::class, 'master-data-instructors'],
+                'areas' => [MasterData\AreaController::class, 'master-data-areas'],
             ];
 
             foreach ($tables as $slug => [$controller, $menuKey]) {
@@ -115,6 +118,26 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/{code}', [$controller, 'destroy'])->name('destroy');
                 });
             }
+
+            /* รูปวิทยากรแยก endpoint เพราะ PHP อ่าน multipart จาก PUT ไม่ได้ — แบบเดียวกับรูปปกกิจกรรม */
+            Route::middleware('menu:master-data-instructors')->group(function () {
+                Route::post('/instructors/{code}/photo', [MasterData\InstructorController::class, 'uploadPhoto'])
+                    ->name('instructors.photo.store');
+
+                Route::delete('/instructors/{code}/photo', [MasterData\InstructorController::class, 'deletePhoto'])
+                    ->name('instructors.photo.destroy');
+            });
+
+            /*
+             | ตั้งค่ารอบติดตามไม่ได้แก้ทีละแถว แต่แก้ทั้งตารางแล้วกดบันทึกครั้งเดียว
+             | จึงมีแค่ GET กับ PUT ก้อนเดียว ไม่มี POST/DELETE รายแถว
+             */
+            Route::prefix('follow-up-rounds')->name('follow-up-rounds.')
+                ->middleware('menu:master-data-follow-up-rounds')
+                ->group(function () {
+                    Route::get('/', [MasterData\FollowUpRoundTemplateController::class, 'index'])->name('index');
+                    Route::put('/', [MasterData\FollowUpRoundTemplateController::class, 'bulkSave'])->name('save');
+                });
         });
     });
 

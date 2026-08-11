@@ -65,6 +65,18 @@ abstract class MasterDataController extends Controller
         return null;
     }
 
+    /**
+     * ข้อมูลเพิ่มเติมที่หน้าจอต้องใช้ตอนเปิดหน้า — ตัวเลือกใน dropdown, เพดานขนาดไฟล์ ฯลฯ
+     *
+     * แถวข้อมูลไม่ต้องส่งมาที่นี่ หน้าจอไปดึงเองผ่าน dataService
+     *
+     * @return array<string, mixed>
+     */
+    protected function viewData(): array
+    {
+        return [];
+    }
+
     /** ความสัมพันธ์แบบหลายต่อหลายหรือตารางลูก ที่ต้องเขียนตามหลังบันทึกแถวหลัก */
     protected function syncRelations(Model $record, array $data): void
     {
@@ -81,13 +93,16 @@ abstract class MasterDataController extends Controller
      */
     public function index(Request $request): JsonResponse|View
     {
+        $rows = $this->query()->get()->map(fn (Model $r) => $this->toRow($r))->values();
+
         if (! $request->expectsJson()) {
-            return view($this->view());
+            /* ฝังแถวชุดแรกไปกับหน้าเลย หน้าจอจะได้ไม่ต้องยิงคำขอซ้ำทันทีที่เปิด
+               dev server ของ PHP รับได้ทีละคำขอ การเปิดหน้าแล้วยิง XHR ตาม
+               ทำให้ทุกหน้ารู้สึกหน่วงหนึ่งจังหวะ */
+            return view($this->view(), $this->viewData() + ['seedRows' => $rows]);
         }
 
-        return response()->json([
-            'rows' => $this->query()->get()->map(fn (Model $r) => $this->toRow($r))->values(),
-        ]);
+        return response()->json(['rows' => $rows]);
     }
 
     public function store(Request $request): JsonResponse
@@ -167,13 +182,24 @@ abstract class MasterDataController extends Controller
      */
     protected function nextCode(): string
     {
-        $prefix = $this->codePrefix() . '-';
+        return static::runningCode($this->model(), $this->codePrefix());
+    }
 
-        $last = $this->model()::where('code', 'like', $prefix . '%')
+    /**
+     * @param  class-string<Model>  $model
+     */
+    public static function runningCode(string $model, string $prefix): string
+    {
+        $prefix .= '-';
+
+        /* หาเลขสูงสุดจาก "ตัวเลขท้ายรหัส" ไม่ใช่ max() ของข้อความ
+           เพราะข้อมูลตั้งต้นบางตารางใช้เลขไม่เติมศูนย์ (FRT-1) ปนกับรหัสที่ระบบออกให้ (FRT-005)
+           การเทียบแบบข้อความจะบอกว่า FRT-4 มากกว่า FRT-005 แล้วออกรหัสซ้ำเดิมทุกครั้ง */
+        $codes = $model::where('code', 'like', $prefix . '%')
             ->lockForUpdate()
-            ->max('code');
+            ->pluck('code');
 
-        $running = $last ? (int) Str::afterLast($last, '-') : 0;
+        $running = $codes->map(fn (string $code) => (int) Str::afterLast($code, '-'))->max() ?? 0;
 
         return $prefix . str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
     }

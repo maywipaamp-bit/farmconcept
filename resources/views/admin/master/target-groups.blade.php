@@ -8,20 +8,15 @@
   </nav>
   <div class="page-header" id="target-group-page-header"></div>
 
-  <div class="list-toolbar">
-    <button type="button" class="filter-chip" id="target-group-filter-chip">
-      <span id="target-group-filter-chip-label">แสดงทั้งหมด</span>
-    </button>
-    <span class="toolbar-divider"></span>
-    <button type="button" class="icon-btn-sm" id="target-group-export" aria-label="ส่งออก Excel" title="ส่งออก Excel">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
-    </button>
-    <div class="ml-auto" id="target-group-search-popover"></div>
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  <div class="list-filter-bar">
+    <div class="status-pills" id="target-group-counts"></div>
+    <div id="target-group-search-popover"></div>
   </div>
 
   <div class="table-wrapper mb-4">
     <div class="table-scroll">
-      <table class="data-table is-header-filled">
+      <table class="data-table is-header-filled is-dense">
         <thead>
           <tr>
             <th class="col-no">#</th>
@@ -52,7 +47,6 @@
     {{-- ไม่มี data-mock-submit แล้ว — ฟอร์มนี้บันทึกลงฐานข้อมูลจริง
          ข้อความสำเร็จมาจากคำตอบของเซิร์ฟเวอร์ ไม่ใช่ข้อความสำเร็จรูปฝั่งหน้าจอ --}}
     <form id="tg-form">
-      <p class="form-hint mb-3">ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก</p>
       <div class="modal-body">
         <div class="form-row mb-3">
           <div class="form-group mb-0">
@@ -102,17 +96,25 @@
 @push('scripts')
 {{-- statusTextHTML กับ exportTableCsv อยู่ในไฟล์นี้ ไม่ได้อยู่ใน bundle กลางของ layout --}}
 <script src="{{ asset('assets/js/activity-module.js') }}"></script>
+<script src="{{ asset('assets/js/master-list.js') }}"></script>
 <script>
 /* บอก dataService ว่า entity นี้ต่อฐานข้อมูลจริงแล้ว — อ่านตอนเรียก dataService() ในสคริปต์ของหน้า */
 window.TFC_API = window.TFC_API || {};
 window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
+
+/* แถวชุดแรกฝังมากับหน้า หน้าจอจึงวาดตารางได้ทันทีโดยไม่ต้องรอคำขอเพิ่ม
+   หลังบันทึกหรือลบ dataService จะไปเอาของจริงจากเซิร์ฟเวอร์เองตามปกติ */
+window.TFC_SEED = window.TFC_SEED || {};
+window.TFC_SEED.targetGroups = @json($seedRows);
 </script>
 @endpush
 
 @push('page-script')
 <script>
 (function () {
-  var pageState = { page: 1, pageSize: 10 };
+  /* จำนวนแถวคิดจากพื้นที่ที่เหลือจริงบนจอ ไม่ใช่เลข 10 ตายตัว
+     statusKey = สถานะที่เลือกจากแถบนับจำนวน ('' = ทั้งหมด) */
+  var pageState = { page: 1, pageSize: 10, statusKey: '' };
   var svc = window.TFC.dataService('targetGroups');
   var mock = window.TFC_MOCK || {};
   var rows = [];
@@ -222,13 +224,36 @@ window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
 
   /* ---------- ตาราง ---------- */
 
+  /* แถบนับจำนวนมุมซ้ายบนของตาราง — กดเพื่อกรอง */
+  var BUCKETS = [
+    { key: '', label: 'ทั้งหมด' },
+    { key: 'on', label: 'ใช้งาน', match: function (r) { return r.active !== false; } },
+    { key: 'off', label: 'ไม่ใช้งาน', match: function (r) { return r.active === false; } }
+  ];
+
+  function matchesStatus(row) {
+    if (!pageState.statusKey) return true;
+
+    var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
+    return !bucket || !bucket.match || bucket.match(row);
+  }
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
 
+      window.TFC.renderStatusCounts('target-group-counts', rows, {
+        active: pageState.statusKey,
+        buckets: BUCKETS,
+        onPick: function (key) {
+          pageState.statusKey = key === pageState.statusKey ? '' : key;
+          pageState.page = 1;
+          renderTable();
+        }
+      });
+
       var keyword = (($('target-group-search') || {}).value || '').trim().toLowerCase();
       var filtered = rows.filter(function (g) {
-        return !keyword || g.name.toLowerCase().indexOf(keyword) !== -1;
+        return matchesStatus(g) && (!keyword || g.name.toLowerCase().indexOf(keyword) !== -1);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -239,7 +264,8 @@ window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
       $('target-group-table-body').innerHTML = pageRows.map(function (g, i) {
         return '<tr>' +
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
-          '<td>' + window.TFC.escapeHtml(g.name) + '</td>' +
+          '<td><button type="button" class="cell-title-link font-medium" data-action-key="tg-edit-' + window.TFC.escapeHtml(g.id) + '" data-open-modal="target-group-create-modal">' +
+          window.TFC.escapeHtml(g.name) + '</button></td>' +
           '<td>' + Number(g.targetCount || 0).toLocaleString('th-TH') + '</td>' +
           '<td>' + Number(g.activityCount || 0).toLocaleString('th-TH') + '</td>' +
           '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
@@ -256,7 +282,7 @@ window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
-        pageSizeOptions: [10, 20, 50],
+        pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
         footer: true,
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
@@ -266,18 +292,17 @@ window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
     });
   }
 
-  window.TFC.attachListToolbar({
-    chipId: 'target-group-filter-chip',
-    chipLabelId: 'target-group-filter-chip-label',
-    popoverId: 'target-group-search-popover',
+  window.TFC.searchPopover('target-group-search-popover', {
     search: { id: 'target-group-search', placeholder: 'ค้นหาชื่อกลุ่มเป้าหมาย' },
-    onApply: function (values, done) {
+    onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
   });
 
+  /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่
+     ฟังก์ชัน exportTableCsv ยังอยู่ครบ ถ้าจะเอาปุ่มกลับมาก็เพิ่ม element id เดิมได้ทันที */
   var exportBtn = $('target-group-export');
   if (exportBtn) {
     exportBtn.addEventListener('click', function () {
@@ -285,7 +310,24 @@ window.TFC_API.targetGroups = @json(route('admin.master.target-groups.index'));
     });
   }
 
+  /* ต้องวัดหลัง DOM ของตารางอยู่ในหน้าแล้ว จึงคำนวณตรงนี้ ไม่ใช่ตอนประกาศ pageState */
+  pageState.pageSize = window.TFC.fitPageSize('target-group-table-body', 52);
+
   renderTable();
+
+  /* ย่อ/ขยายหน้าต่างแล้วจำนวนแถวต้องขยับตาม ไม่ใช่ค้างที่ค่าตอนเปิดหน้า
+     หน่วงไว้กันการวาดตารางใหม่ทุกพิกเซลระหว่างลากขอบหน้าต่าง */
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var next = window.TFC.fitPageSize('target-group-table-body', 52);
+      if (next === pageState.pageSize) return;
+      pageState.pageSize = next;
+      pageState.page = 1;
+      renderTable();
+    }, 200);
+  });
 })();
 </script>
 @endpush

@@ -21,5 +21,9 @@
   /* TFC.hasPermission() อ่านสิทธิ์จาก TFC_MOCK.roles โดยจับคู่กับ currentUser.roleCode
      ส่งมาเฉพาะบทบาทของผู้ใช้คนนี้ ไม่ส่งบทบาทอื่นทั้งระบบมาให้เบราว์เซอร์ */
   window.TFC_MOCK.roles = [ctx.role];
+
+  /* ท้ายแผงเมนูแสดงเวอร์ชันกับปีตามสเปก — มาจากเซิร์ฟเวอร์ ไม่ใช่ค่าที่เขียนไว้ในไฟล์ JS
+     ปีเป็น พ.ศ. เพราะทั้งระบบใช้ พ.ศ. */
+  window.TFC_APP = { version: @json(config('app.version', '1.0.0')), year: @json(now()->year + 543) };
 })();
 </script>

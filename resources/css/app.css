@@ -20,6 +20,15 @@
 @import '../../public/assets/css/utilities.css';
 @import '../../public/assets/css/responsive.css';
 
+/* สเปก typography (design_handoff_typography) — ขนาด น้ำหนัก สี line-height ของทุกหน้าจอ
+   ต้องมาหลัง components.css เพราะต้องชนะกฎเดิมที่เจาะจงกว่าคลาสเดี่ยว
+   แต่มาก่อน dashboard.css เพราะหน้าแดชบอร์ดมีสเกลของตัวเองที่ละเอียดกว่า */
+@import '../../public/assets/css/typography-spec.css';
+
+/* เมนูด้านข้างสองชั้น — โครง layout shell ที่ห่อทุกหน้า
+   ต้องมาหลัง layout.css เพราะเขียนทับโครง .app-shell / .sidebar เดิม */
+@import '../../public/assets/css/sidebar-shell.css';
+
 /* สไตล์เฉพาะหน้าแดชบอร์ดภาพรวม — ต้องอยู่ท้ายสุด เพราะต้องชนะกฎกลางบางข้อ
    ที่เจาะจงกว่าคลาสเดี่ยว (เช่น `.content h1` ที่บังคับขนาด/สีชื่อหน้าให้ทุกหน้า)
    ทุกกฎในไฟล์นั้นอยู่ใต้ .dbo จึงไม่รั่วไปหน้าอื่น */

@@ -19,6 +19,9 @@ window.TFC = window.TFC || {};
 /* ทะเบียน endpoint ของ entity ที่ต่อฐานข้อมูลจริงแล้ว — หน้า Blade เติมเข้ามาก่อนไฟล์นี้ทำงาน */
 window.TFC_API = window.TFC_API || {};
 
+/* แถวชุดแรกที่ฝังมากับหน้า ใช้แทนคำขอแรกเพื่อไม่ให้ต้องรอ round-trip ตอนเปิดหน้า */
+window.TFC_SEED = window.TFC_SEED || {};
+
 window.TFC.dataService = function (entityKey, idField) {
   idField = idField || 'id';
   var LATENCY = 250;
@@ -69,6 +72,17 @@ window.TFC.dataService = function (entityKey, idField) {
 
   var remote = {
     list: function () {
+      /* แถวชุดแรกถูกฝังมากับหน้าแล้ว (window.TFC_SEED) ใช้ทันทีโดยไม่ต้องยิงคำขอซ้ำ
+         dev server ของ PHP บน Windows รับได้ทีละคำขอ การเปิดหน้าแล้วยิง XHR ตามทันที
+         ทำให้ทุกหน้ารู้สึกหน่วงหนึ่งจังหวะ — ตัดคำขอนี้ทิ้งไปเลย
+         ใช้ได้ครั้งเดียว ครั้งต่อไป (หลังบันทึก/ลบ) ต้องไปเอาของจริงจากเซิร์ฟเวอร์ */
+      var seed = window.TFC_SEED && window.TFC_SEED[entityKey];
+
+      if (seed) {
+        delete window.TFC_SEED[entityKey];
+        return Promise.resolve(syncMock(seed));
+      }
+
       return call('', 'GET').then(function (data) { return syncMock(data.rows || []); });
     },
 

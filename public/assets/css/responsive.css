@@ -6,19 +6,19 @@
 /* ---------- Tablet (768–1023px): sidebar behaves like Desktop (sticky + collapsible via arrow toggle), only grid density changes ---------- */
 @media (max-width: 1023px) and (min-width: 768px) {
   .summary-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .stat-list {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .activity-card-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -101,12 +101,12 @@
   .dashboard-grid,
   .report-link-grid,
   .activity-card-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* Stat card group collapses to a 2-column grid (not 1) on small screens, per Standard Index Page Layout spec */
   .summary-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .register-summary {
@@ -127,7 +127,7 @@
   }
 
   .bar-chart-row {
-    grid-template-columns: 100px 1fr 48px;
+    grid-template-columns: 100px minmax(0, 1fr) 48px;
   }
 
   .modal {
@@ -207,7 +207,7 @@
 @media (max-width: 1199px) {
   /* จอแคบกว่านี้ mobile preview จะบีบฟอร์มจนกรอกยาก -> วางเรียงลงมาแทน */
   .form-split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .form-split-side {
@@ -224,11 +224,11 @@
 @media (max-width: 767px) {
   .chart-grid-2,
   .chart-grid-3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .schedule-fields {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   /* หัวตารางรอบกิจกรรมใช้ไม่ได้บนจอเล็ก -> ซ่อนแล้วอาศัย placeholder ในช่องกรอกแทน */
@@ -287,7 +287,7 @@
 
 /* ---------- ฟอร์มกิจกรรม v2 ---------- */
 @media (max-width: 767px) {
-  .round-fields { grid-template-columns: 1fr 1fr; }
+  .round-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .form-actions { flex-wrap: wrap; }
   .form-actions .btn { flex: 1; }
 }

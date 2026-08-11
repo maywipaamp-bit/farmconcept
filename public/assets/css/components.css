@@ -190,13 +190,13 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
 .form-row-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
@@ -592,11 +592,11 @@ dd { margin: 0; }
 
 .field-view-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-4) var(--space-5);
 }
 /* ใช้เมื่อพื้นที่แคบและอยากได้คอลัมน์เดียวตั้งแต่แรก */
-.field-view-grid.is-single { grid-template-columns: 1fr; }
+.field-view-grid.is-single { grid-template-columns: minmax(0, 1fr); }
 
 .field-view {
   display: flex;
@@ -637,7 +637,7 @@ dd { margin: 0; }
 .field-view-group:first-child { padding-top: 0; border-top: 0; }
 
 @media (max-width: 640px) {
-  .field-view-grid { grid-template-columns: 1fr; }
+  .field-view-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ==========================================================================
@@ -699,7 +699,7 @@ dd { margin: 0; }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
 }
@@ -955,7 +955,7 @@ dd { margin: 0; }
 /* Stat */
 .stat-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
@@ -981,7 +981,7 @@ dd { margin: 0; }
 /* Description List */
 .description-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4) var(--space-5);
 }
 
@@ -1509,7 +1509,7 @@ dd { margin: 0; }
 /* ---------- Public Activity Cards ---------- */
 .activity-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-5);
 }
 
@@ -1712,7 +1712,7 @@ dd { margin: 0; }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -1726,7 +1726,7 @@ dd { margin: 0; }
 
 .bar-chart-row {
   display: grid;
-  grid-template-columns: 160px 1fr 64px;
+  grid-template-columns: 160px minmax(0, 1fr) 64px;
   align-items: center;
   gap: var(--space-3);
 }
@@ -1759,7 +1759,7 @@ dd { margin: 0; }
 /* ---------- Report Link Grid ---------- */
 .report-link-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
@@ -2513,7 +2513,7 @@ dd { margin: 0; }
 
 .schedule-fields {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-2);
 }
 
@@ -2567,7 +2567,7 @@ dd { margin: 0; }
 
 .chart-legend-item {
   display: grid;
-  grid-template-columns: 10px 1fr auto auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-small);
@@ -3684,7 +3684,7 @@ dd { margin: 0; }
 
 .thai-date-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2px;
 }
 
@@ -4141,7 +4141,7 @@ dd { margin: 0; }
 
 .round-fields {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-2);
 }
 
@@ -5033,8 +5033,7 @@ button.multiselect:focus-visible {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .rg-picker-item {
   display: flex;
@@ -5655,8 +5654,7 @@ button.multiselect:focus-visible {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .act-picker-item {
   display: flex;
@@ -7539,8 +7537,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ad-round-seats {
   font-size: var(--font-size-small);
@@ -7655,8 +7652,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ad-segmented {
   display: inline-flex;
@@ -8352,8 +8348,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ec-audience { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
 
@@ -9325,7 +9320,6 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   line-height: var(--lh-page-title);
   font-weight: var(--fw-semibold);
   color: var(--text-strong);
-  white-space: nowrap;
 }
 
 .sat-subline {
@@ -9440,7 +9434,6 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   line-height: var(--lh-card-title);
   font-weight: var(--fw-medium);
   color: var(--text-primary);
-  white-space: nowrap;
 }
 
 .sat-panel-hint {
@@ -10333,7 +10326,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 
 .co-due-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 44px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-2) var(--space-3);
@@ -10349,7 +10342,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   white-space: nowrap;
 }
 
-.co-due-name { font-size: var(--font-size-small); color: var(--color-text-body); white-space: nowrap; }
+.co-due-name { font-size: var(--font-size-small); color: var(--color-text-body); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .co-due-date { font-size: var(--font-size-small); color: var(--color-text-primary); white-space: nowrap; }
 .co-due-input { box-sizing: border-box; width: 100%; min-width: 0; }
 .co-due-action { display: flex; justify-content: flex-end; }
@@ -10402,7 +10395,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 }
 
 @media (max-width: 560px) {
-  .co-form-grid { grid-template-columns: 1fr; }
+  .co-form-grid { grid-template-columns: minmax(0, 1fr); }
   .co-header-actions { width: 100%; }
   .co-header-actions .btn { flex: 1; justify-content: center; }
 }
@@ -10536,8 +10529,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .cd-step-state { font-size: var(--font-size-caption); white-space: nowrap; color: var(--color-text-secondary); }
 .cd-step.is-done .cd-step-state { color: var(--color-primary-dark); }
@@ -10591,8 +10583,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .cd-segmented {
   display: inline-flex;
@@ -10857,7 +10848,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 
 .cd-order-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-4);
 }
 .cd-order-grid .co-field.is-full { grid-column: 1 / -1; }
@@ -10867,7 +10858,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 
 /* ---------- จอแคบ ---------- */
 @media (max-width: 700px) {
-  .cd-order-grid { grid-template-columns: 1fr; }
+  .cd-order-grid { grid-template-columns: minmax(0, 1fr); }
   .cd-header-actions { width: 100%; }
   .cd-note-kind { width: 100%; flex: 1 1 140px; }
 }
@@ -11467,8 +11458,7 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
   font-weight: var(--font-weight-medium);
   color: var(--color-text-strong);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .dtp-btn {
   flex: none;
@@ -11526,7 +11516,7 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 .dtp-week,
 .dtp-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--space-1);
 }
 
@@ -11605,15 +11595,13 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   color: var(--color-text-strong);
-  white-space: nowrap;
 }
 
 .frt-card-note {
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .frt-hint {
   font-size: var(--font-size-small);
@@ -12080,7 +12068,6 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   line-height: var(--lh-page-title);
   font-weight: var(--fw-semibold);
   color: var(--text-strong);
-  white-space: nowrap;
 }
 
 .rl-head .btn { white-space: nowrap; flex: none; }
@@ -12405,8 +12392,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   width: 172px;
   font-size: var(--font-size-small);
   color: var(--color-text-primary);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ac-window-range { display: flex; align-items: center; gap: var(--space-2); flex-wrap: nowrap; min-width: 0; }
 
@@ -12463,7 +12449,6 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   line-height: var(--lh-page-title);
   font-weight: var(--fw-semibold);
   color: var(--text-strong);
-  white-space: nowrap;
 }
 
 .ar-head .btn { white-space: nowrap; flex: none; }
@@ -12480,8 +12465,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--text-body);
-  white-space: nowrap;
-}
+  white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ar-act-code {
   font-size: var(--fs-caption);
@@ -12872,7 +12856,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   justify-content: space-between;
   gap: var(--space-3);
 }
-.dash-card-head .card-title { margin-bottom: 0; white-space: nowrap; }
+.dash-card-head .card-title { margin-bottom: 0; }
 
 .dash-card-note {
   font-size: var(--font-size-caption);
@@ -13584,13 +13568,13 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
    ประเภทเป็น select ที่มีแค่สองค่า จึงแคบกว่าอีกสองช่องที่เป็น combobox เลือกหลายค่า */
 .ac-field-row-classify {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-4);
   align-items: start;
 }
 
 @media (max-width: 900px) {
-  .ac-field-row-classify { grid-template-columns: 1fr; }
+  .ac-field-row-classify { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ค่าเดียวที่เลือกไว้ในคอมโบ — ข้อความธรรมดา ไม่ใช่แท็ก เพราะเอาออกไม่ได้อยู่แล้ว
@@ -13601,4 +13585,63 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ==========================================================================
+   เมนู "พื้นฐาน" — ส่วนที่ทั้งห้าหน้าใช้ร่วมกัน
+   ========================================================================== */
+
+/* ตารางแน่นขึ้น เห็นข้อมูลต่อจอมากขึ้น
+   ประกาศทับกฎกลางที่ใช้ padding 12px + ตัวแปรที่ไม่มีอยู่จริง (--sp-3 / --row-h) */
+.data-table.is-dense th,
+.data-table.is-dense td {
+  padding: var(--space-2) var(--space-3);
+  height: auto;
+}
+
+.data-table.is-dense td { line-height: 1.45; }
+
+/* บรรทัดรองในเซลล์ (เบอร์โทร เขต/จังหวัด วันที่) ชิดบรรทัดหลักขึ้น */
+.data-table.is-dense .cell-updated-at,
+.data-table.is-dense .caption { margin-top: 1px; }
+
+.data-table.is-dense .cell-bullets { padding-left: var(--space-3); }
+.data-table.is-dense .cell-bullets li { line-height: 1.4; }
+
+/* รูปวงกลมหน้าชื่อในตาราง — ใช้ทั้งรูปวิทยากรและไอคอนหมวดหมู่ */
+.master-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.master-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary-soft-border);
+}
+
+.master-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.master-avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ชื่อย่อสำหรับวิทยากรที่ยังไม่มีรูป */
+.master-avatar-initial {
+  font-size: var(--font-size-small);
+  color: var(--color-primary-dark);
 }

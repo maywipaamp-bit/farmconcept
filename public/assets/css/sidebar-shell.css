@@ -1,0 +1,449 @@
+/* ==========================================================================
+   เมนูด้านข้างสองชั้น (icon rail + submenu panel)
+   อ้างอิง: design_handoff_sidebar/README.md — hi-fi สี ระยะ ขนาดเป็นค่าสุดท้าย
+
+   โครงนี้เป็น layout shell ที่ห่อทุกหน้า — ทั้งหน้า Blade และหน้า HTML เดิม
+   ใช้มาร์กอัปชุดเดียวกัน สร้างจาก window.TFC_MENU ที่ผ่านการกรองสิทธิ์มาแล้ว
+
+   ค่าสีของสเปกชุดนี้เป็นของเมนูโดยเฉพาะ ไม่มีที่ใช้ซ้ำในระบบ จึงประกาศเป็นตัวแปร
+   ของตัวเองไว้ที่นี่ที่เดียว แทนการกระจาย hex ไปทั่วไฟล์
+   ========================================================================== */
+
+:root {
+  --rail-w: 64px;
+  --subnav-w: 236px;
+
+  --rail-bg: #2f6b36;
+  --rail-icon: rgba(255, 255, 255, .72);
+  --rail-icon-strong: rgba(255, 255, 255, .82);
+  --rail-hover: rgba(255, 255, 255, .16);
+  --rail-active: rgba(255, 255, 255, .2);
+
+  --subnav-border: #e7ebe4;
+  --subnav-divider: #f0f3ee;
+  --subnav-item: #4a564a;
+  --subnav-item-icon: #9aa599;
+  --subnav-hover: #f2f6f1;
+  --subnav-active-bg: #eaf3e9;
+  --subnav-active-fg: #2f6b36;
+
+  --shell-danger: #c0504f;
+  --shell-danger-soft: #fdf0ef;
+  --shell-badge: #e8a33d;
+
+  --shell-t: .15s;
+}
+
+/* ==========================================================================
+   โครงรวม
+   ========================================================================== */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   1. แถบไอคอน
+   ========================================================================== */
+
+.rail {
+  flex: none;
+  width: var(--rail-w);
+  background: var(--rail-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 14px;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 40;
+}
+
+.rail-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--rail-icon);
+  transition: background var(--shell-t), color var(--shell-t);
+}
+
+.rail-btn:hover { background: var(--rail-hover); }
+
+.rail-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
+}
+
+.rail-btn.is-active {
+  background: var(--rail-active);
+  color: #ffffff;
+}
+
+/* ขีดขาวชิดขอบซ้ายของ rail — เห็นเฉพาะหมวดที่เลือกอยู่ */
+.rail-btn::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 11px;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background var(--shell-t);
+}
+
+.rail-btn.is-active::before { background: #ffffff; }
+
+.rail-btn svg { width: 21px; height: 21px; }
+
+.rail-spacer { flex: 1; }
+
+.rail-btn.is-system { color: var(--rail-icon-strong); }
+.rail-btn.is-system svg { width: 20px; height: 20px; }
+
+/* จุดแจ้งเตือน — ขอบสีเดียวกับพื้น rail เพื่อให้จุดลอยออกมาจากไอคอน */
+.rail-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--shell-badge);
+  border: 1.5px solid var(--rail-bg);
+}
+
+/* ---------- รูปโปรไฟล์ + เมนูผู้ใช้ ---------- */
+
+.rail-user {
+  position: relative;
+  margin-top: 6px;
+}
+
+.rail-avatar {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, .2);
+  border-radius: 50%;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--shell-t);
+}
+
+.rail-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.rail-avatar[aria-expanded="true"] { border-color: #ffffff; }
+
+.rail-menu {
+  position: absolute;
+  left: 46px;
+  bottom: 0;
+  z-index: 60;
+  width: 208px;
+  background: #ffffff;
+  border: 1px solid var(--subnav-border);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px -14px rgba(30, 60, 30, .34);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-menu[hidden] { display: none; }
+
+.rail-menu-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px;
+}
+
+.rail-menu-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+.rail-menu-mail {
+  font-size: 11.5px;
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+.rail-menu-divider {
+  height: 1px;
+  background: var(--subnav-divider);
+  margin: 0 4px 4px;
+}
+
+.rail-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--subnav-item);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--shell-t);
+}
+
+.rail-menu-item:hover { background: var(--subnav-hover); }
+.rail-menu-item svg { flex: none; width: 16px; height: 16px; }
+
+.rail-menu-item.is-danger { color: var(--shell-danger); }
+.rail-menu-item.is-danger:hover { background: var(--shell-danger-soft); }
+
+/* ==========================================================================
+   2. แผงเมนูย่อย
+   ========================================================================== */
+
+.subnav {
+  flex: none;
+  width: var(--subnav-w);
+  background: #ffffff;
+  border-right: 1px solid var(--subnav-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 30;
+}
+
+.subnav-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 16px 14px 14px 16px;
+  border-bottom: 1px solid var(--subnav-divider);
+}
+
+.subnav-logo {
+  width: 158px;
+  height: auto;
+  /* สเปกใช้ mix-blend-mode: multiply เพราะไฟล์ต้นแบบเป็น JPG พื้นขาว
+     โปรเจกต์นี้มี logo-farm.png พื้นโปร่งใสอยู่แล้ว จึงไม่ต้องใช้ */
+}
+
+.subnav-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  margin-top: -13px;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4eae1;
+  background: #ffffff;
+  border-radius: 50%;
+  color: #6f7d6e;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--shell-t), border-color var(--shell-t), color var(--shell-t);
+}
+
+.subnav-toggle:hover {
+  background: var(--subnav-hover);
+  border-color: #9dc79f;
+  color: var(--subnav-active-fg);
+}
+
+.subnav-title {
+  padding: 18px 18px 10px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--color-text-strong, var(--text-strong));
+}
+
+.subnav-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+}
+
+.subnav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid var(--subnav-divider);
+}
+
+/* กลุ่มแรกไม่มีเส้นคั่น */
+.subnav-group:first-child { border-top: 0; }
+
+.subnav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  color: var(--subnav-item);
+  transition: background var(--shell-t), color var(--shell-t);
+}
+
+.subnav-item:hover { background: var(--subnav-hover); }
+
+.subnav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 3px rgba(22, 163, 74, .2));
+}
+
+.subnav-item svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--subnav-item-icon);
+  transition: color var(--shell-t);
+}
+
+.subnav-item-label {
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subnav-item.is-active {
+  background: var(--subnav-active-bg);
+  color: var(--subnav-active-fg);
+}
+
+.subnav-item.is-active svg { color: var(--subnav-active-fg); }
+.subnav-item.is-active .subnav-item-label { font-weight: 600; }
+
+.subnav-foot {
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--subnav-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subnav-foot-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--subnav-item);
+  text-decoration: none;
+  transition: color var(--shell-t);
+}
+
+.subnav-foot-link:hover { color: var(--subnav-active-fg); text-decoration: none; }
+.subnav-foot-link svg { flex: none; width: 15px; height: 15px; color: #6f7d6e; }
+
+.subnav-foot-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subnav-foot-meta span {
+  font-size: 11.5px;
+  color: var(--color-text-muted, var(--text-muted));
+}
+
+/* ---------- ย่อแผง ---------- */
+
+.app-shell.is-subnav-collapsed .subnav { display: none; }
+
+.subnav-reopen {
+  flex: none;
+  width: 26px;
+  padding-top: 22px;
+  display: none;
+  justify-content: center;
+}
+
+.app-shell.is-subnav-collapsed .subnav-reopen { display: flex; }
+
+/* ==========================================================================
+   3. พื้นที่เนื้อหา
+   ========================================================================== */
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   4. จอแคบ — แผงกลายเป็น drawer ทับเนื้อหา ไม่เบียดพื้นที่
+   ========================================================================== */
+
+@media (max-width: 1023px) {
+  .subnav {
+    position: fixed;
+    left: var(--rail-w);
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform var(--shell-t) ease-out;
+    box-shadow: 0 0 0 100vmax rgba(31, 44, 32, 0);
+  }
+
+  .app-shell.is-drawer-open .subnav {
+    transform: translateX(0);
+    box-shadow: 0 24px 60px -20px rgba(30, 60, 30, .38);
+  }
+
+  /* ฉากหลังกดปิด — อยู่ใต้แผงแต่เหนือเนื้อหา */
+  .drawer-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(31, 44, 32, .45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--shell-t);
+  }
+
+  .app-shell.is-drawer-open .drawer-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* บนจอแคบใช้ปุ่มในแถบไอคอนเปิด/ปิดแทน ปุ่มย่อของเดสก์ท็อปจึงไม่ต้องแสดง */
+  .subnav-reopen { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subnav { transition: none; }
+}
