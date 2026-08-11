@@ -120,13 +120,33 @@
     }
   });
 
-  /* Nav submenu expand/collapse (also used by the sidebar's 2-level accordion, rendered above) */
-  document.querySelectorAll('[data-nav-submenu-toggle]').forEach(function (btn) {
+  /* Nav submenu expand/collapse (also used by the sidebar's 2-level accordion, rendered above)
+     เปิดได้ทีละหมวดเท่านั้น — เปิดหมวดใหม่แล้วหมวดที่ค้างอยู่จะปิดเอง
+     ถ้าปล่อยให้กางค้างได้หลายหมวด รายการจะยาวจนต้องเลื่อนหาเมนูที่ต้องการ
+     ซึ่งเสียประโยชน์ของการจัดกลุ่มไปทั้งหมด */
+  var submenuToggles = [].slice.call(document.querySelectorAll('[data-nav-submenu-toggle]'));
+
+  function closeSubmenu(btn) {
+    var menu = document.getElementById(btn.getAttribute('data-nav-submenu-toggle'));
+    if (menu) menu.classList.add('hidden');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  submenuToggles.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var submenu = document.getElementById(btn.getAttribute('data-nav-submenu-toggle'));
       if (!submenu) return;
-      var nowHidden = submenu.classList.toggle('hidden');
-      btn.setAttribute('aria-expanded', String(!nowHidden));
+      var willOpen = submenu.classList.contains('hidden');
+
+      /* ปิดหมวดอื่นก่อนเสมอ ทำเฉพาะตอนกำลังจะเปิด การกดปิดตัวเองไม่ต้องไปยุ่งกับใคร */
+      if (willOpen) {
+        submenuToggles.forEach(function (other) {
+          if (other !== btn) closeSubmenu(other);
+        });
+      }
+
+      submenu.classList.toggle('hidden', !willOpen);
+      btn.setAttribute('aria-expanded', String(willOpen));
     });
   });
 

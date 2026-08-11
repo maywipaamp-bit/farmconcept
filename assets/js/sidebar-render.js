@@ -87,4 +87,42 @@
       item.children.map(leafLinkHtml).join('') +
       '</div></div>';
   }).join('');
+
+  /* ---------- โปรไฟล์ผู้ใช้ท้ายแถบซ้าย ----------
+     ย้ายลงมาจากมุมขวาบน เพื่อคืนความกว้างทั้งแถวให้แถบบนไว้ใช้กับ breadcrumb และค้นหา
+     สร้างจาก JS ที่เดียวเหมือนเมนู แทนที่จะเขียนซ้ำในทุกหน้า (ของเดิมซ้ำอยู่ 25 หน้า
+     และชื่อที่เขียนไว้ก็ไม่ตรงกับ currentUser จริง ต้องอาศัย JS มาเขียนทับทีหลัง)
+     ชื่อคลาสตรงกับที่ profile-modal.js ใช้อัปเดตหลังแก้โปรไฟล์ */
+  var sidebar = mount.closest('.sidebar');
+  var user = (window.TFC_MOCK && window.TFC_MOCK.currentUser) || {};
+  if (sidebar && !sidebar.querySelector('.sidebar-profile')) {
+    var esc = window.TFC.escapeHtml;
+    var avatarImg = user.avatar
+      ? '<img src="' + esc(user.avatar) + '" alt="" onerror="this.remove()">'
+      : '<img src="' + base + 'assets/images/avatar-default.png" alt="" onerror="this.remove()">';
+
+    var box = document.createElement('div');
+    box.className = 'sidebar-foot dropdown';
+    box.innerHTML =
+      '<button type="button" class="sidebar-profile" data-dropdown-toggle aria-label="เมนูผู้ใช้งาน">' +
+        '<span class="avatar avatar-sm">' + esc(user.initials || '') + avatarImg + '</span>' +
+        '<span class="sidebar-profile-info">' +
+          '<span class="sidebar-profile-name">' + esc(user.name || '') + '</span>' +
+          '<span class="sidebar-profile-role">' + esc(user.role || '') + '</span>' +
+        '</span>' +
+        '<svg class="sidebar-profile-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="dropdown-menu">' +
+        '<a class="dropdown-item" href="' + base + 'admin/profile.html">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>' +
+          'โปรไฟล์ของฉัน' +
+        '</a>' +
+        '<div class="dropdown-divider"></div>' +
+        '<a class="dropdown-item is-danger" href="' + base + 'login.html">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>' +
+          'ออกจากระบบ' +
+        '</a>' +
+      '</div>';
+    sidebar.appendChild(box);
+  }
 })();

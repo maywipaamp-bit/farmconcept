@@ -122,9 +122,9 @@
           var img = document.querySelector('#profile-avatar-preview img');
           if (img) u.avatar = img.src;
 
-          /* อัปเดตชื่อบน topbar ทันที ไม่ต้องรีเฟรชหน้า */
-          var topbarName = document.querySelector('.topbar-profile-name');
-          if (topbarName) topbarName.textContent = u.name;
+          /* อัปเดตชื่อบนแถบซ้ายทันที ไม่ต้องรีเฟรชหน้า */
+          var sidebarName = document.querySelector('.sidebar-profile-name');
+          if (sidebarName) sidebarName.textContent = u.name;
 
           save.disabled = false;
           save.textContent = 'บันทึก';
@@ -154,16 +154,16 @@
      ที่นี่จึงบังคับให้ทุกหน้าเหลือโครงเดียวกันคือ breadcrumb (ซ้าย) + โปรไฟล์ (ขวา)
      ตามหน้าอ้างอิงที่ผ่านการตรวจแล้ว และดึงข้อมูลผู้ใช้จากแหล่งเดียว
      ========================================================================== */
-  function syncTopbar() {
+  function syncSidebarProfile() {
     var u = currentUser();
 
-    var nameEl = document.querySelector('.topbar-profile-name');
+    var nameEl = document.querySelector('.sidebar-profile-name');
     if (nameEl) nameEl.textContent = u.name || '';
 
-    var roleEl = document.querySelector('.topbar-profile-role');
+    var roleEl = document.querySelector('.sidebar-profile-role');
     if (roleEl) roleEl.textContent = u.role || '';
 
-    var avatar = document.querySelector('.topbar-profile .avatar');
+    var avatar = document.querySelector('.sidebar-profile .avatar');
     if (avatar) {
       var img = avatar.querySelector('img');
       /* เขียนตัวย่อใหม่โดยไม่ลบ <img> ที่อยู่ข้างใน */
@@ -188,7 +188,7 @@
   function init() {
     buildModal();
     attachTrigger();
-    syncTopbar();
+    syncSidebarProfile();
   }
 
   if (document.readyState === 'loading') {

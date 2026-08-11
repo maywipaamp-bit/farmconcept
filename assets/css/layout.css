@@ -29,14 +29,14 @@
   width: var(--sidebar-width-collapsed);
 }
 
-/* ขอบบนล่าง 8px (ไม่ใช่ 16px) เพราะแถบนี้สูงเท่า topbar คือ 56px
-   ถ้าเว้น 16px รอบด้าน จะเหลือที่ให้โลโก้แค่ 24px ซึ่งเตี้ยกว่าตัวโลโก้เอง
+/* ขอบบนล่างบางเป็นพิเศษ เพราะแถบนี้สูงเท่า topbar คือ 56px
+   ถ้าเว้นตามปกติ จะเหลือที่ให้โลโก้ไม่ถึงความสูงของตัวโลโก้เอง
    ผลคือ overflow: hidden ตัดหัวท้ายโลโก้ทิ้ง */
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-1) var(--space-4);
   height: var(--topbar-height);
   border-bottom: 1px solid var(--color-border);
   overflow: hidden;
@@ -82,10 +82,12 @@
   display: none;
 }
 
+/* ไม่มีระยะขอบซ้าย/ขวา เพื่อให้แถบไฮไลต์ของเมนูกินเต็มความกว้าง
+   ระยะขอบของเนื้อหาไปอยู่ที่ .nav-item แทน */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-3);
+  padding: var(--space-3) 0;
 }
 
 .nav-section-title {
@@ -100,10 +102,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3);
-  /* ทรงแคปซูล — แถบซ้ายเป็นรายการที่ไฮไลต์ทีละอัน ทรงมนสนิทจึงอ่านนุ่มกว่า
-     กล่องมุม 8px ที่ซ้อนกันลงมาเป็นตับ */
-  border-radius: var(--radius-full);
+  padding: var(--space-3) var(--space-4);
+  /* มุมฉาก — ไฮไลต์กินเต็มความกว้างแถบ อ่านเป็นแถบเดียวต่อเนื่องกับขอบซ้าย
+     ไม่ใช่ก้อนลอยที่มีขอบมนอยู่กลางแถบ */
+  border-radius: 0;
   color: var(--color-text-primary);
   cursor: pointer;
   transition: background var(--transition-fast);
@@ -135,7 +137,9 @@
   min-width: 0;
 }
 
-.nav-submenu {
+/* เมนูย่อยเยื้องด้วย padding ของตัว .nav-item เอง ไม่ใช่ padding ของกล่องครอบ
+   ไฮไลต์ของเมนูย่อยจึงยังกินเต็มความกว้างเหมือนเมนูหลัก */
+.nav-submenu .nav-item {
   padding-left: var(--space-6);
 }
 
@@ -298,11 +302,6 @@
   max-width: 40vw;
 }
 
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
 
 .topbar-icon-btn {
   position: relative;
@@ -329,34 +328,90 @@
   right: 8px;
 }
 
-.topbar-profile {
+/* ---------- โปรไฟล์ผู้ใช้ท้ายแถบซ้าย (sidebar-render.js เป็นคนสร้าง) ----------
+   ย้ายลงมาจากมุมขวาบน แถบบนจึงเหลือความกว้างทั้งแถวให้ breadcrumb กับช่องค้นหา */
+.sidebar-foot {
+  display: block;
+  position: relative;
+  flex: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar-profile {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
 }
 
-.topbar-profile:hover {
-  background: var(--color-background);
+.sidebar-profile:hover {
+  background: var(--color-primary-soft);
 }
 
-.topbar-profile-info {
+.sidebar-profile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.sidebar-profile-info {
   display: flex;
   flex-direction: column;
   line-height: 1.3;
   text-align: left;
+  flex: 1;
+  min-width: 0;
 }
 
-.topbar-profile-name {
+.sidebar-profile-name {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.topbar-profile-role {
+.sidebar-profile-role {
   font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-caret { flex: none; color: var(--color-text-secondary); }
+
+/* เมนูย่อยต้องเปิดขึ้นบน เพราะปุ่มอยู่ติดขอบล่างจอ ถ้าเปิดลงจะตกออกนอกจอทันที
+   และกางเต็มความกว้างแถบ ไม่ให้ล้นออกไปทับเนื้อหา */
+.sidebar-foot .dropdown-menu {
+  top: auto;
+  bottom: calc(100% + var(--space-1));
+  left: var(--space-2);
+  right: var(--space-2);
+  min-width: 0;
+}
+
+/* พับแถบแล้วเหลือแค่รูป จัดกึ่งกลางรางให้ตรงกับไอคอนเมนู */
+.app-shell.is-sidebar-collapsed .sidebar-profile-info,
+.app-shell.is-sidebar-collapsed .sidebar-profile-caret { display: none; }
+
+.app-shell.is-sidebar-collapsed .sidebar-profile {
+  justify-content: center;
+  padding: var(--space-3) var(--space-2);
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-foot .dropdown-menu {
+  left: 0;
+  right: auto;
+  min-width: 200px;
 }
 
 /* ---------- Content ---------- */
@@ -554,17 +609,22 @@
    ไฟล์ต้นฉบับ 2048x670 จึงคมชัดเต็มที่ ไม่ได้ขยายเกินขนาดไฟล์
    object-position ชิดซ้าย เพื่อให้โลโก้เกาะมุมซ้ายตรงกับเมนูด้านล่าง ไม่ลอยกลางแถบ */
 img.sidebar-logo {
-  width: auto;
   /* ไฟล์โลโก้มีขอบขาวเปล่าในตัว บน/ล่างด้านละ 11% ซ้าย/ขวาด้านละ 4%
      ตัวอักษรจริงจึงสูงแค่ 79% ของกล่อง ต่อให้ขยายกล่องก็ยังดูเล็กและลอย
-     วิธีแก้: ตั้งกล่องให้สูง 51px แล้ว clip ขอบขาวทิ้ง เหลือตัวอักษรสูง 40px เต็มที่ว่างพอดี
-     ส่วน margin ติดลบคือการดึงพื้นที่ที่ clip ไปแล้วคืน ไม่ให้กินที่ในเลย์เอาต์ */
-  height: 51px;
+     วิธีแก้: clip ขอบขาวทิ้ง แล้ว margin ติดลบดึงพื้นที่ที่ clip ไปแล้วคืน
+     ไม่ให้กินที่ในเลย์เอาต์
+
+     ความกว้างยึดกับที่ว่างจริงของแถบ (ไม่ใช่ตั้งความสูงตายตัวแล้วปล่อยความกว้าง
+     ตามอัตราส่วน) โลโก้จึงเต็มช่องที่มีอยู่ ไม่เหลือที่ว่างค้างทางขวา
+     ผลที่ได้บนแถบกว้าง 244px: ตัวอักษรที่เห็นเริ่มที่ x=16.7px ซึ่งเสมอกับ
+     ไอคอนของเมนูด้านล่างที่ x=16px และสูงขึ้นจาก 40px เป็น 44px */
+  width: 100%;
+  height: auto;
   max-width: none;
   border-radius: 0;
   background: none;
   clip-path: inset(10.7% 3.9%);
-  margin: -6px -6px -6px -6px;
+  margin: -6px;
 }
 
 /* ย่อเมนู: ซ่อนลูกศรกาง/ยุบเมนูย่อย
@@ -608,13 +668,4 @@ img.sidebar-logo {
   object-fit: contain;
 }
 
-/* ปุ่มโปรไฟล์มุมขวาบน: เป็น <button> จึงติดกรอบมาตรฐานของเบราว์เซอร์ -> เอาออก */
-.topbar-profile {
-  border: none;
-  background: none;
-}
 
-.topbar-profile:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}

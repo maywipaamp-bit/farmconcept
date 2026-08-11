@@ -4325,11 +4325,14 @@ dd { margin: 0; }
   margin-bottom: var(--sp-6);
 }
 
+/* ชื่อหน้าเป็นป้ายบอกตำแหน่ง ไม่ใช่พาดหัว — ใช้ขนาดเท่าหัวข้อย่อย น้ำหนักปกติ
+   แล้วให้ "สี" เขียวเป็นตัวบอกว่านี่คือชื่อหน้า ตามหลักของระบบที่สื่อความสำคัญ
+   ด้วยสีก่อนน้ำหนัก ตัวใหญ่หนาสีเข้มกินพื้นที่บนสุดของทุกหน้าโดยไม่ได้ให้ข้อมูลเพิ่ม */
 .page-header-text h1 {
-  font-size: var(--font-size-page-title);
-  line-height: var(--lh-page-title);
-  font-weight: var(--fw-semibold);
-  color: var(--text-strong);
+  font-size: var(--font-size-section-title);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-primary-dark);
   margin-bottom: var(--sp-1);
 }
 
