@@ -33,11 +33,11 @@ window.TFC_MENU = [
       { key: 'activities-list', label: 'รายการกิจกรรม', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', href: 'admin/activities/list.html' },
       { key: 'activities-registrants', label: 'ผู้ลงทะเบียน', icon: '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>', href: 'admin/activities/registrants.html' },
       { key: 'activities-checkin', label: 'Check-in', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>', href: 'admin/activities/checkin.html' },
-      /* ตอบประเมินหลังกิจกรรม — รายการคำตอบรายชุด อ่านอย่างเดียว ไม่มีหน้ารายละเอียด
+      /* ประเมินกิจกรรม — รายการคำตอบรายชุด อ่านอย่างเดียว ไม่มีหน้ารายละเอียด
          คำตอบเก็บแบบไม่ระบุตัวตน หน้านี้จึงแสดงได้แค่ลำดับผู้ตอบ
          หน้า "ความพึงพอใจ" ที่เป็นภาพรวมเชิงสถิติถูกถอดออกจากระบบแล้ว
          แต่ satisfaction-service.js กับข้อมูลความพึงพอใจยังอยู่ เพราะหน้านี้อ่านผ่านมัน */
-      { key: 'activities-responses', label: 'ตอบประเมินหลังกิจกรรม', icon: '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>', href: 'admin/activities/responses.html' }
+      { key: 'activities-responses', label: 'ประเมินกิจกรรม', icon: '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>', href: 'admin/activities/responses.html' }
     ]
   },
   /* เมนู 'รายงาน' และหน้าจอ pages/reports/* ถูกลบออกจากระบบแล้ว

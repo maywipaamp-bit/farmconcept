@@ -181,4 +181,42 @@
       });
     });
   });
+
+  /* ---------- ย้าย Breadcrumb จากแถบบนลงมาไว้ใต้ชื่อหน้า ----------
+     แถบบนกับชื่อหน้าเคยบอกตำแหน่งเดียวกันซ้ำกันสองที่ ย้ายลงมาต่อท้ายชื่อหน้า
+     แถบบนจึงว่างลง และตำแหน่งที่อยู่ก็อ่านติดกับชื่อหน้าในสายตาเดียว
+
+     ทำที่นี่ทีเดียวแทนการแก้ markup ทั้ง 25 หน้า เพราะ breadcrumb ของแต่ละหน้า
+     มีเนื้อหาไม่เหมือนกัน ย้าย element เดิมทั้งก้อนจึงได้ของถูกหน้าเสมอ
+
+     รอ DOMContentLoaded เพราะหลายหน้าสร้างหัวหน้าด้วย TFC.renderPageHeader
+     ในสคริปต์ท้ายไฟล์ ซึ่งรันหลัง navigation.js ตอนนี้ h1 ยังไม่มีตัวตน */
+  function moveBreadcrumb() {
+    var slot = document.querySelector('.topbar-breadcrumb');
+    var crumb = slot && slot.querySelector('.breadcrumb');
+    if (!crumb) return true;
+
+    var main = document.querySelector('.content');
+    var title = main && main.querySelector('h1');
+    if (!title) return false;
+
+    crumb.classList.add('breadcrumb-sub');
+    title.insertAdjacentElement('afterend', crumb);
+    slot.remove();
+    return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (moveBreadcrumb()) return;
+
+    /* บางหน้าวาดหัวหน้าหลังโหลดข้อมูลเสร็จ h1 จึงมาช้ากว่านี้ — รอจนกว่าจะโผล่
+       แล้วค่อยย้าย ตัดการเฝ้าดูทิ้งเมื่อย้ายได้ หรือเมื่อครบ 5 วินาทีก็เลิกรอ */
+    var main = document.querySelector('.content');
+    if (!main) return;
+    var observer = new MutationObserver(function () {
+      if (moveBreadcrumb()) observer.disconnect();
+    });
+    observer.observe(main, { childList: true, subtree: true });
+    setTimeout(function () { observer.disconnect(); }, 5000);
+  });
 })();

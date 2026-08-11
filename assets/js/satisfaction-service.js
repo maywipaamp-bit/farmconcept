@@ -20,7 +20,7 @@
      svc.activities().then(function (list) { ... });                 // สำหรับ popover เปลี่ยนกิจกรรม
      svc.summary(activityId).then(function (s) { ... });             // การ์ดสรุป + รายหัวข้อ + การกระจาย
      svc.responses(activityId, { limit, offset }).then(function (p) { p.rows / p.total });
-     svc.responseList(activityId, { band, keyword, limit, offset })        // ตารางหน้า "ตอบประเมินหลังกิจกรรม"
+     svc.responseList(activityId, { band, keyword, limit, offset })        // ตารางหน้า "ประเมินกิจกรรม"
         .then(function (p) { p.rows / p.total });                          // band: all | praise | mid | improve
      svc.comments(activityId, { filter }).then(function (list) { ... });   // filter: all | praise | improve
 */
@@ -123,7 +123,7 @@ window.TFC.satisfactionService = (function () {
   }
 
   /* GET /activities/:id/satisfaction/response-list?band=&keyword=&limit=&offset=
-     ตารางรายคำตอบของหน้า "ตอบประเมินหลังกิจกรรม"
+     ตารางรายคำตอบของหน้า "ประเมินกิจกรรม"
 
      ข้อบังคับที่ห้ามหย่อน: ไม่มี user_id ชื่อ หรือเบอร์โทรออกจากฟังก์ชันนี้
      สิ่งเดียวที่ระบุ "คนตอบ" ได้คือ seq ซึ่งเป็นลำดับภายในกิจกรรมนั้นเท่านั้น

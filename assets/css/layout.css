@@ -269,8 +269,12 @@
   flex-direction: column;
 }
 
-/* ---------- Topbar ---------- */
+/* ---------- Topbar ----------
+   พอ breadcrumb ย้ายลงไปอยู่ใต้ชื่อหน้าแล้ว แถบนี้เหลือแค่ปุ่มเปิดเมนูของมือถือ
+   บนจอตั้งแต่ 768px ขึ้นไปปุ่มนั้นถูกซ่อน แถบจึงว่างเปล่า เหลือแต่ช่องสูง 56px
+   กินที่ฟรี — ซ่อนทิ้งไปเลย แล้วไปเปิดคืนที่ responsive.css เฉพาะจอมือถือ */
 .topbar {
+  display: none;
   height: var(--topbar-height);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);

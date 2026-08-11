@@ -1,4 +1,4 @@
-/* TheFarmConcept — หน้าตอบประเมินหลังกิจกรรม (admin/activities/responses.html)
+/* TheFarmConcept — หน้าประเมินกิจกรรม (admin/activities/responses.html)
    รายการคำตอบแบบประเมินหลังกิจกรรมรายชุด — อ่านอย่างเดียว ไม่มีหน้ารายละเอียด
 
    คอนเซ็ปต์เดียวกับหน้า "ตอบแบบประเมิน" ฝั่งประเมินสุขภาพ ต่างกันที่แหล่งข้อมูล
@@ -228,7 +228,7 @@
     svc.responseList(state.activity.id, { band: state.band, keyword: state.keyword })
       .then(function (result) {
         window.TFC.exportCsv(
-          'ตอบประเมินหลังกิจกรรม-' + state.activity.id + '.csv',
+          'ประเมินกิจกรรม-' + state.activity.id + '.csv',
           ['ลำดับ', 'ผู้ตอบ', 'คะแนนรวม', 'รอบที่เข้าร่วม', 'ความเห็นเพิ่มเติม', 'วันเวลาที่ตอบ'],
           result.rows.map(function (row) {
             return [row.seq, 'ผู้ตอบ #' + row.seq, row.score + '/5', row.round,

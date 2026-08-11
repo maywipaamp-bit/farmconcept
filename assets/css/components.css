@@ -1082,6 +1082,19 @@ dd { margin: 0; }
   font-weight: var(--font-weight-medium);
 }
 
+/* Breadcrumb ที่ย้ายลงมาอยู่ใต้ชื่อหน้า (navigation.js เป็นคนย้าย)
+   เล็กลงหนึ่งขั้นและจางลง เพราะอยู่ใต้ชื่อหน้าแล้ว หน้าที่เหลือคือบอกทางกลับ
+   ไม่ใช่แข่งความเด่นกับชื่อหน้าที่อยู่บรรทัดบน */
+.breadcrumb-sub {
+  margin-top: 2px;
+  font-size: var(--font-size-caption);
+}
+
+.breadcrumb-sub .is-current {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-regular);
+}
+
 .tabs {
   display: flex;
   gap: var(--space-5);
@@ -13086,4 +13099,268 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   /* ซ่อนตัวเลขบนแท่งแทนการย่อให้เล็กกว่า 12px (มาตรฐานห้าม) — ตัวเลขยังดูได้จาก tooltip */
   .dash-bar-value { display: none; }
   .dash-donut-wrap { justify-content: center; }
+}
+
+/* ==========================================================================
+   สร้างแบบประเมิน — การ์ดคำถามแบบ Google Form (assets/js/evaluation-create.js)
+   ใบที่กำลังแก้ขยายออกและมีแถบสีซ้าย ใบอื่นยุบเป็นตัวอย่างอย่างเดียว
+   เหตุผล: ชุดหนึ่งมีได้หลายสิบข้อ ถ้าเปิดช่องกรอกทุกใบพร้อมกันจะเลื่อนหาไม่เจอ
+   ========================================================================== */
+
+.ec-items { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.ec-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 6px solid transparent;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ec-card:hover { border-color: var(--color-primary-soft-border); }
+
+/* ใบที่กำลังแก้ — แถบซ้ายบอกตำแหน่งที่กำลังทำงานอยู่ */
+.ec-card.is-active {
+  border-color: var(--color-border);
+  border-left-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  cursor: default;
+}
+
+/* คำถามที่อยู่ในหัวข้อส่วน เยื้องเข้าให้เห็นลำดับชั้น */
+.ec-card.is-nested { margin-left: var(--space-5); }
+
+.ec-card-body { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; min-width: 0; }
+
+/* ที่จับลากอยู่กลางบนของการ์ด แบบเดียวกับ Google Form — เห็นเมื่อชี้หรือกำลังแก้ */
+.ec-grip {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 16px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-border);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+.ec-card:hover .ec-grip,
+.ec-card.is-active .ec-grip,
+.ec-grip:focus-visible { opacity: 1; }
+.ec-grip:hover { color: var(--color-text-secondary); }
+.ec-grip:active { cursor: grabbing; }
+
+/* ---------- โหมดแก้ไข ---------- */
+.ec-q-head { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+
+.ec-card-no {
+  flex: none;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ช่องคำถามเป็นเส้นใต้เส้นเดียว ไม่ใช่กล่อง — ให้ความรู้สึกเหมือนพิมพ์ลงกระดาษ ไม่ใช่กรอกฟอร์ม */
+.ec-title-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: var(--color-surface-muted);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.ec-title-input:focus {
+  border-bottom-color: var(--color-primary);
+  box-shadow: none;
+  background: var(--color-surface);
+}
+
+.ec-type { flex: none; width: 168px; min-width: 0; box-sizing: border-box; }
+
+/* ---------- ตัวเลือก ---------- */
+.ec-choices { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.ec-choice { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+
+.ec-choice-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: none;
+}
+.ec-choice-input:hover { border-bottom-color: var(--color-border); }
+.ec-choice-input:focus { border-bottom-color: var(--color-primary); box-shadow: none; }
+
+.ec-choice-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+.ec-choice:hover .ec-choice-remove,
+.ec-choice-remove:focus-visible { opacity: 1; }
+.ec-choice-remove:hover { background: var(--color-danger-soft); color: var(--color-danger-text); }
+
+/* แถวสุดท้าย: เพิ่มตัวเลือก หรือ เพิ่ม "อื่น ๆ" */
+.ec-choice-add .ec-mark { opacity: .5; }
+
+.ec-add-choice,
+.ec-add-other {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ec-add-choice { color: var(--color-text-secondary); }
+.ec-add-choice:hover { color: var(--color-text-primary); }
+.ec-add-other { color: var(--color-primary-dark); }
+.ec-add-other:hover { text-decoration: underline; }
+
+.ec-choice-or {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* ---------- แถบล่างของการ์ด ---------- */
+.ec-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.ec-foot-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-action);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.ec-foot-btn:hover { background: var(--color-surface-muted); color: var(--color-text-primary); }
+.ec-foot-btn:active { transform: scale(.985); }
+
+.ec-foot-sep { width: 1px; height: 24px; flex: none; background: var(--color-border); margin: 0 var(--space-1); }
+
+.ec-req-toggle { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.ec-req-toggle span:first-child {
+  font-size: var(--font-size-small);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* ---------- โหมดยุบ (แสดงอย่างเดียว) ---------- */
+.ec-view-head { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+
+.ec-view-title {
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  min-width: 0;
+}
+
+.ec-view-req { color: var(--color-danger-text); flex: none; }
+
+.ec-view-choices { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.ec-view-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-small);
+  color: var(--color-text-body);
+}
+
+.ec-view-text {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  border-bottom: 1px dashed var(--color-border);
+  padding-bottom: var(--space-1);
+}
+
+/* ---------- แถบเครื่องมือลอยข้างการ์ด ---------- */
+.ec-tools {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(100% + var(--space-2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  z-index: var(--z-dropdown);
+}
+
+.ec-tool {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-action);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.ec-tool:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.ec-tool:active { transform: scale(.985); }
+
+/* ---------- หัวข้อส่วน ---------- */
+.ec-card-section { background: var(--color-surface-muted); }
+.ec-card-section.is-active { background: var(--color-surface); }
+
+.ec-section-line { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+
+/* จอที่ไม่มีที่ว่างข้างการ์ด ให้แถบเครื่องมือมาอยู่ในแนวนอนใต้การ์ดแทน
+   ไม่งั้นแถบจะทับแผงขวาหรือหลุดออกนอกจอ */
+@media (max-width: 1280px) {
+  .ec-tools {
+    position: static;
+    flex-direction: row;
+    align-self: flex-start;
+    box-shadow: none;
+    margin-left: auto;
+  }
+  .ec-card.is-active { flex-wrap: wrap; }
 }
