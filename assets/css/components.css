@@ -775,9 +775,11 @@ dd { margin: 0; }
   border-collapse: collapse;
 }
 
+/* แถวกระชับ — ระยะบน/ล่างบางลงหนึ่งขั้น เห็นข้อมูลได้มากขึ้นต่อหนึ่งจอ
+   โดยที่แถวยังสูงพอให้กวาดตาแยกออกจากกันได้ */
 .data-table th,
 .data-table td {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-3);
   text-align: left;
   font-size: var(--font-size-small);
   border-bottom: 1px solid var(--color-border);
@@ -4340,7 +4342,12 @@ dd { margin: 0; }
 
 /* ชื่อหน้าเป็นป้ายบอกตำแหน่ง ไม่ใช่พาดหัว — ใช้ขนาดเท่าหัวข้อย่อย น้ำหนักปกติ
    แล้วให้ "สี" เขียวเป็นตัวบอกว่านี่คือชื่อหน้า ตามหลักของระบบที่สื่อความสำคัญ
-   ด้วยสีก่อนน้ำหนัก ตัวใหญ่หนาสีเข้มกินพื้นที่บนสุดของทุกหน้าโดยไม่ได้ให้ข้อมูลเพิ่ม */
+   ด้วยสีก่อนน้ำหนัก ตัวใหญ่หนาสีเข้มกินพื้นที่บนสุดของทุกหน้าโดยไม่ได้ให้ข้อมูลเพิ่ม
+
+   จับที่ `.content h1` ไม่ใช่ชื่อคลาสของแต่ละหน้า เพราะหลายหน้ามีหัวเฉพาะของตัวเอง
+   (.ci-title .rg-title .fb-title ...) ถ้าไล่เขียนทีละคลาสจะตกหล่นทุกครั้งที่มีหน้าใหม่
+   ตัวเลือกนี้เจาะจงกว่าคลาสเดี่ยว จึงชนะได้โดยไม่ต้องพึ่งลำดับในไฟล์ */
+.content h1,
 .page-header-text h1 {
   font-size: var(--font-size-section-title);
   line-height: var(--line-height-tight);
@@ -4812,7 +4819,7 @@ button.multiselect:focus-visible {
 }
 
 .grid-head {
-  padding: 13px 20px;
+  padding: 9px 20px;
   background: #FCFDFC;
   border-bottom: 1px solid var(--color-border);
   font-size: var(--font-size-small);
@@ -4821,7 +4828,7 @@ button.multiselect:focus-visible {
 }
 
 .grid-row {
-  padding: 14px 20px;
+  padding: 9px 20px;
   border-bottom: 1px solid var(--color-background);
   transition: background var(--transition-fast);
 }
@@ -8498,7 +8505,9 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   font-variant-numeric: tabular-nums;
 }
 
-.ec-scale-hint { font-size: var(--font-size-caption); color: var(--color-text-faint); white-space: nowrap; }
+/* คำอธิบายสเกลบอกว่า 1 กับ 5 หมายถึงอะไร เป็นข้อมูลที่มีความหมาย
+   จึงห้ามใช้ --color-text-faint (#C7CDD4) ตามมาตรฐาน */
+.ec-scale-hint { font-size: var(--font-size-caption); color: var(--color-text-secondary); white-space: nowrap; }
 
 .ec-text-hint {
   border: 1px dashed var(--color-border);
@@ -12683,6 +12692,11 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 /* หัวหน้ากับแถว KPI ห่างขึ้นหนึ่งขั้น ให้ชื่อหน้าได้หายใจ ไม่อัดติดกับการ์ด */
 .dash-content .page-header { margin-bottom: var(--space-5); }
+
+/* ลิงก์ในหน้านี้เป็นการ์ดและแถวทั้งก้อน ไม่ใช่ข้อความในประโยค กฎกลางที่ขีดเส้นใต้
+   ตอนเอาเมาส์ชี้จึงไม่เข้ากับของแบบนี้ — การ์ดมีพื้นหลัง เงา และลูกศรที่เปลี่ยนสี
+   บอกอยู่แล้วว่ากดได้ ไม่ต้องมีเส้นใต้ลากพาดข้อความข้างในอีก */
+.dash-content a:hover { text-decoration: none; }
 
 /* การ์ดในหน้านี้ใช้มุมมนชุดเดียวกันทั้งหมด รวมถึงการ์ดกราฟและการ์ดรายการ */
 .dash-content .card { border-radius: var(--dash-radius); }

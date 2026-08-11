@@ -3,13 +3,6 @@
    Desktop: >=1024px (Default) / Tablet: 768–1023px / Mobile: <768px (min 375px)
    ========================================================================== */
 
-/* ---------- Tablet & Mobile (<1024px): narrower topbar ---------- */
-@media (max-width: 1023px) {
-  .topbar-search {
-    display: none;
-  }
-}
-
 /* ---------- Tablet (768–1023px): sidebar behaves like Desktop (sticky + collapsible via arrow toggle), only grid density changes ---------- */
 @media (max-width: 1023px) and (min-width: 768px) {
   .summary-cards {
@@ -31,13 +24,17 @@
 
 /* ---------- Mobile (<768px): Sidebar becomes a Drawer (Desktop/Tablet keep the persistent collapsible sidebar) ---------- */
 @media (max-width: 767px) {
-  /* จอนี้ยังต้องมีปุ่มเปิดลิ้นชักเมนู แถบบนจึงกลับมาแสดง (ปกติซ่อนไว้ใน layout.css) */
-  .topbar {
+  /* จอนี้เมนูเป็นลิ้นชัก จึงต้องมีปุ่มเปิด — เป็นปุ่มลอยที่ navigation.js สร้างให้ */
+  .drawer-btn {
     display: flex;
   }
 
-  .topbar-menu-btn {
-    display: flex;
+  /* แผงเนื้อหาชิดขอบจอ ไม่เว้นช่องว่างรอบด้าน เพราะจอแคบเสียพื้นที่ไม่ได้
+     และไม่มีแถบเมนูอยู่ข้าง ๆ ให้ต้องแยกตัวออกมาแล้ว */
+  .app-main {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
   }
 
   .sidebar {
@@ -77,8 +74,11 @@
     display: none;
   }
 
+  /* ขอบบนเผื่อไว้ให้ปุ่มเปิดเมนูแบบลอย (สูง 40px วางห่างขอบ 12px)
+     ไม่งั้นปุ่มจะทับชื่อหน้าที่อยู่บรรทัดแรกพอดี */
   .content {
     padding: var(--space-4);
+    padding-top: 64px;
   }
 
   .page-header {
@@ -196,10 +196,6 @@
 
   .auth-card {
     padding: var(--space-5);
-  }
-
-  .topbar {
-    padding: 0 var(--space-3);
   }
 
   .hidden-mobile {

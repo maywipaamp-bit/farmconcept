@@ -40,21 +40,12 @@
   <script src="../../assets/js/sidebar-render.js"></script>
 
   <div class="app-main">
-    <header class="topbar">
-      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-      </button>
-
-      <div class="topbar-breadcrumb">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
-          <span>พื้นฐาน</span> <span>/</span>
-          <span class="is-current">ตั้งค่ารอบติดตาม</span>
-        </nav>
-      </div>
-    </header>
-
     <main class="content frt-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
+        <span>พื้นฐาน</span> <span>/</span>
+        <span class="is-current">ตั้งค่ารอบติดตาม</span>
+      </nav>
       <!-- ชื่อหน้า 28px/600 + ปุ่มหลัก "เพิ่มรอบ" มุมขวา -->
       <div class="page-header" id="frt-page-header"></div>
 
@@ -156,7 +147,6 @@
   /* ---------- 1. หัวหน้า ---------- */
   window.TFC.renderPageHeader('frt-page-header', {
     title: 'ตั้งค่ารอบติดตาม',
-    description: 'กำหนดว่าหลังเข้ากลุ่มตัวอย่างกี่วันจะให้ทำแบบติดตามผล ระบบใช้ค่านี้คำนวณวันครบกำหนดของผู้เข้าร่วมแต่ละคน',
     actions: [
       { label: 'เพิ่มรอบ', variant: 'primary',
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',

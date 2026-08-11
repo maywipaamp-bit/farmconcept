@@ -53,19 +53,10 @@
   <script src="../../assets/js/sidebar-render.js"></script>
 
   <div class="app-main">
-    <header class="topbar">
-      <button type="button" class="topbar-menu-btn" data-sidebar-open aria-label="เปิดเมนู">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-      </button>
-
-      <div class="topbar-breadcrumb">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">พื้นที่ดำเนินงาน</span>
-        </nav>
-      </div>
-    </header>
-
     <main class="content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">พื้นที่ดำเนินงาน</span>
+      </nav>
       <!-- ถอด is-tight ออกเพื่อให้ชื่อหน้าเป็น 28px ตามมาตรฐาน (is-tight บังคับเป็นขนาดหัวข้อรอง 20px) -->
       <div class="page-header" id="area-page-header"></div>
 
@@ -351,7 +342,6 @@
 
   window.TFC.renderPageHeader('area-page-header', {
     title: 'พื้นที่ดำเนินงาน',
-    description: 'ทั้งหมด ' + areaList.length + ' พื้นที่ · จัดกิจกรรมแล้ว ' + totalActivityCount + ' ครั้ง',
     actions: [
       {
         label: 'เพิ่มพื้นที่ดำเนินงาน',

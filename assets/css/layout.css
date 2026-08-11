@@ -3,19 +3,23 @@
    Backoffice Shell (Sidebar + Topbar + Content) และ Public Layout
    ========================================================================== */
 
-/* ---------- App Shell ---------- */
+/* ---------- App Shell ----------
+   พื้นของ shell เป็นเทาอ่อนที่สุดที่มี ไม่ใช่ขาว เพื่อให้ "แผงเนื้อหา" ที่เป็น
+   สี่เหลี่ยมมนสีขาวลอยแยกออกจากแถบเมนูได้ ถ้าพื้นเป็นขาวล้วน มุมมนจะมองไม่เห็นเลย
+   ต่างกันแค่ระดับที่ตาแทบไม่รู้สึกว่าเป็นสีเทา แต่พอให้เห็นขอบแผง */
 .app-shell {
   display: flex;
   min-height: 100vh;
-  background: var(--color-canvas);
+  background: var(--color-surface-muted);
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar ----------
+   ไม่มีเส้นขอบขวาแล้ว เพราะช่องว่างระหว่างเมนูกับแผงเนื้อหาทำหน้าที่คั่นแทน
+   มีทั้งเส้นและช่องว่างพร้อมกันจะกลายเป็นสองเส้นแบ่งซ้อนกัน */
 .sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: transparent;
   display: flex;
   flex-direction: column;
   transition: width var(--transition-base);
@@ -261,75 +265,46 @@
   z-index: var(--z-drawer);
 }
 
-/* ---------- App Main ---------- */
+/* ---------- App Main ----------
+   พื้นที่หน้าจอเป็นแผงสีขาวมุมมน แยกตัวออกจากแถบเมนูด้วยช่องว่างรอบด้าน
+   ไม่ใช่พื้นผืนเดียวกันที่ไหลชนขอบจอ ทำให้เห็นได้ทันทีว่าตรงไหนคือเมนู
+   ตรงไหนคือเนื้อหา โดยไม่ต้องมีเส้นแบ่งมาขีดคั่น
+
+   ยึดหัวไว้กับจอ (sticky ที่ระยะ margin) แล้วให้เนื้อในเลื่อนเอง แผงจึงยังเห็น
+   มุมมนอยู่ตลอดเวลาที่เลื่อนหน้า ไม่ใช่มนแค่ตอนอยู่บนสุด */
 .app-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-/* ---------- Topbar ----------
-   พอ breadcrumb ย้ายลงไปอยู่ใต้ชื่อหน้าแล้ว แถบนี้เหลือแค่ปุ่มเปิดเมนูของมือถือ
-   บนจอตั้งแต่ 768px ขึ้นไปปุ่มนั้นถูกซ่อน แถบจึงว่างเปล่า เหลือแต่ช่องสูง 56px
-   กินที่ฟรี — ซ่อนทิ้งไปเลย แล้วไปเปิดคืนที่ responsive.css เฉพาะจอมือถือ */
-.topbar {
-  display: none;
-  height: var(--topbar-height);
+  margin: var(--space-3);
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: 0 var(--space-5);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-modal);
+  /* ตัดเนื้อหาที่ล้นให้เข้ารูปมุมมนของแผง ไม่ให้โผล่พ้นมุมออกมา */
+  overflow: hidden;
 }
 
-.topbar-menu-btn {
+/* ---------- ปุ่มเปิดลิ้นชักเมนู (มือถือ) ----------
+   แถบบนถูกถอดออกทั้งระบบแล้ว ปุ่มนี้จึงลอยอยู่มุมซ้ายบนแทน
+   navigation.js เป็นคนสร้าง element ให้ ที่นี่คุมแค่หน้าตากับการซ่อน/แสดง
+   ซ่อนเป็นค่าตั้งต้น แล้วเปิดคืนเฉพาะจอมือถือที่ responsive.css */
+.drawer-btn {
   display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-primary);
-  padding: var(--space-1);
-}
-
-.topbar-breadcrumb {
-  flex: 1;
-  min-width: 0;
-}
-
-.topbar-search {
-  width: 260px;
-  max-width: 40vw;
-}
-
-
-.topbar-icon-btn {
-  position: relative;
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-sticky);
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: none;
-  cursor: pointer;
-  display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
-  transition: background var(--transition-fast);
-}
-
-.topbar-icon-btn:hover {
-  background: var(--color-background);
-}
-
-.topbar-icon-btn .badge-dot {
-  position: absolute;
-  top: 6px;
-  right: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
 }
 
 /* ---------- โปรไฟล์ผู้ใช้ท้ายแถบซ้าย (sidebar-render.js เป็นคนสร้าง) ----------

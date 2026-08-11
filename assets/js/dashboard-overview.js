@@ -34,9 +34,12 @@
       '</div>';
   }
 
-  /* ---------- A. หัวหน้า ---------- */
+  /* ---------- A. หัวหน้า ----------
+     บรรทัด "ข้อมูล ณ ..." ถูกถอดออกจากหน้าแล้ว ตามกติกาที่ว่าใต้ชื่อหน้าไม่มีคำอธิบาย
+     เขียนต่อเมื่อยังมีที่ให้เขียน จะได้ใส่กลับได้ทันทีถ้าเอาบรรทัดนั้นคืนมา */
   function renderHead(data) {
-    $('dash-updated').textContent = 'ข้อมูล ณ ' + thaiDateTime(data.generated_at);
+    var updated = $('dash-updated');
+    if (updated) updated.textContent = 'ข้อมูล ณ ' + thaiDateTime(data.generated_at);
   }
 
   /* ---------- B. KPI 4 ใบ ---------- */

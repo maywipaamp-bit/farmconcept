@@ -6,8 +6,21 @@
 
   if (appShell) {
     var sidebarToggle = document.querySelector('[data-sidebar-collapse-toggle]');
-    var menuBtn = document.querySelector('[data-sidebar-open]');
     var overlay = document.querySelector('.sidebar-overlay');
+
+    /* ปุ่มเปิดลิ้นชักเมนูของมือถือ — เดิมอยู่ในแถบบนซึ่งถูกถอดออกทั้งระบบแล้ว
+       จึงสร้างเป็นปุ่มลอยแทน แสดงเฉพาะจอมือถือ (คุมด้วย CSS ใน responsive.css)
+       สร้างจากที่นี่ที่เดียว ไม่ต้องไปเติม markup ซ้ำในทุกหน้า */
+    var menuBtn = document.querySelector('[data-sidebar-open]');
+    if (!menuBtn) {
+      menuBtn = document.createElement('button');
+      menuBtn.type = 'button';
+      menuBtn.className = 'drawer-btn';
+      menuBtn.setAttribute('data-sidebar-open', '');
+      menuBtn.setAttribute('aria-label', 'เปิดเมนู');
+      menuBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>';
+      appShell.appendChild(menuBtn);
+    }
 
     var openMobileSidebar = function () {
       appShell.classList.add('is-sidebar-open');
@@ -182,27 +195,36 @@
     });
   });
 
-  /* ---------- ย้าย Breadcrumb จากแถบบนลงมาไว้ใต้ชื่อหน้า ----------
-     แถบบนกับชื่อหน้าเคยบอกตำแหน่งเดียวกันซ้ำกันสองที่ ย้ายลงมาต่อท้ายชื่อหน้า
-     แถบบนจึงว่างลง และตำแหน่งที่อยู่ก็อ่านติดกับชื่อหน้าในสายตาเดียว
-
-     ทำที่นี่ทีเดียวแทนการแก้ markup ทั้ง 25 หน้า เพราะ breadcrumb ของแต่ละหน้า
-     มีเนื้อหาไม่เหมือนกัน ย้าย element เดิมทั้งก้อนจึงได้ของถูกหน้าเสมอ
+  /* ---------- ย้าย Breadcrumb ลงมาไว้ใต้ชื่อหน้า ----------
+     ในหน้า breadcrumb เขียนไว้เป็นตัวแรกของ .content เพราะเป็นตำแหน่งเดียวที่
+     ทุกหน้าเหมือนกัน (โครงหัวหน้าของแต่ละหน้าต่างกันหมด) แล้วย้ายมาไว้ใต้ชื่อหน้า
+     ตอนรัน ที่นี่ทีเดียว แทนที่จะไปหาจุดแทรกเองในทั้ง 25 หน้า
 
      รอ DOMContentLoaded เพราะหลายหน้าสร้างหัวหน้าด้วย TFC.renderPageHeader
      ในสคริปต์ท้ายไฟล์ ซึ่งรันหลัง navigation.js ตอนนี้ h1 ยังไม่มีตัวตน */
   function moveBreadcrumb() {
-    var slot = document.querySelector('.topbar-breadcrumb');
-    var crumb = slot && slot.querySelector('.breadcrumb');
-    if (!crumb) return true;
-
     var main = document.querySelector('.content');
-    var title = main && main.querySelector('h1');
+    var crumb = main && main.querySelector('.breadcrumb');
+    if (!crumb || crumb.classList.contains('breadcrumb-sub')) return true;
+
+    var title = main.querySelector('h1');
     if (!title) return false;
 
+    /* วางต่อจากชื่อหน้าได้ก็ต่อเมื่อกล่องที่ครอบชื่ออยู่เรียงลงมาเป็นแนวตั้ง
+       บางหน้าเอาชื่อหน้าไว้ในแถวเดียวกับปุ่ม (flex แนวนอน) ถ้าแทรกตรงนั้น
+       breadcrumb จะไปยืนข้างปุ่มแทนที่จะอยู่ใต้ชื่อ — กรณีนั้นวางใต้ทั้งแถวหัวแทน */
+    var parent = title.parentElement;
+    var style = window.getComputedStyle(parent);
+    var isRow = style.display.indexOf('flex') > -1 && style.flexDirection.indexOf('column') === -1;
+
+    var anchor = title;
+    if (isRow) {
+      anchor = parent;
+      while (anchor.parentElement && anchor.parentElement !== main) anchor = anchor.parentElement;
+    }
+
     crumb.classList.add('breadcrumb-sub');
-    title.insertAdjacentElement('afterend', crumb);
-    slot.remove();
+    anchor.insertAdjacentElement('afterend', crumb);
     return true;
   }
 
