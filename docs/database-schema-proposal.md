@@ -632,8 +632,27 @@ DB_PASSWORD="รหัสที่มี#อยู่ข้างใน"
 Migration ที่ล้มกลางคันจะทิ้งตารางที่สร้างไปแล้วค้างไว้ โดยไม่บันทึกลงตาราง `migrations`
 ตอนพัฒนาที่ยังไม่มีข้อมูลจริงให้ใช้ `migrate:fresh` ล้างแล้วรันใหม่ — **ห้ามใช้กับฐานที่มีข้อมูลจริงเด็ดขาด**
 
+### Seeder — ✅ เสร็จแล้ว
+
+| ไฟล์ | เนื้อหา |
+|---|---|
+| `database/seeders/MasterDataSeeder.php` | `mst_options` 35 · `mst_districts` 16 · `mst_areas` 3 · `mst_target_groups` 4 · `mst_programs` 4 + `mst_courses` 16 · `mst_instructors` 5 + ความเชี่ยวชาญ 10 + หลักสูตรที่สอน 10 · `mst_activity_formats` 5 · `mst_follow_up_round_templates` 4 |
+| `database/seeders/RoleAndUserSeeder.php` | `usr_roles` 4 · `usr_role_menu_permissions` 84 (4 บทบาท × 21 เมนู) · `users` 5 · `usr_role_user` 6 |
+
+รวม **211 แถว** · ทุกตารางใช้ `updateOrInsert` อ้าง `code` จึง **รันซ้ำได้โดยไม่เกิดข้อมูลซ้ำ** (ทดสอบแล้ว รันสองครั้งได้ 211 เท่าเดิม)
+
+```bash
+php artisan db:seed
+```
+
+**ผู้ใช้เดโมทุกคนใช้รหัสผ่าน `password`** — `RoleAndUserSeeder` มี guard โยน exception ถ้ารันบน production ห้ามถอด guard นี้ออก
+
+`usr_role_menu_permissions` เขียนเป็น deny-list ในโค้ด แล้วแปลงเป็นแถว allow/deny ครบทุกคีย์ตอน seed — คีย์ทั้ง 21 ต้องตรงกับ `assets/js/menu-config.js` เพิ่มเมนูที่นั่นแล้วต้องมาเพิ่มใน `RoleAndUserSeeder::MENU_KEYS` ด้วย
+
+**หมายเหตุ occupation** — seed เป็นชุดรวม 8 ค่า (7 ค่าของ `registrationOptions.occupations` + `รับจ้างทั่วไป` ที่มีเฉพาะใน `cohort.JOBS`) รอทีมธุรกิจชี้ขาดตามปม F.5 แก้ที่ `MasterDataSeeder::seedOptions()` ที่เดียวแล้วรันซ้ำ
+
 ### งานถัดไป
 
-1. Seeder จากข้อมูลจำลอง — master data (พื้นที่ · โปรแกรม · วิทยากร · รูปแบบกิจกรรม · รอบติดตาม · `mst_options`)
-2. Model + ความสัมพันธ์ พร้อม Eager Loading ตั้งแต่ต้น
-3. `layouts/admin.blade.php` + ย้ายหน้านำร่อง `activities/list`
+1. Model + ความสัมพันธ์ พร้อม Eager Loading ตั้งแต่ต้น
+2. `layouts/admin.blade.php` + ย้ายหน้านำร่อง `activities/list`
+3. Seeder ของข้อมูลธุรกรรม (กิจกรรม · ผู้ลงทะเบียน · กลุ่มตัวอย่าง) — ทำหลังมี Model แล้วจะสั้นกว่ามาก
