@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -51,6 +52,17 @@ class AppServiceProvider extends ServiceProvider
             ServeCommand::$passthroughVariables[] = 'TEMP';
         }
 
+        /*
+         * @assetv('assets/js/app.js') — เหมือน asset() แต่ต่อ ?v=<เวลาที่แก้ไฟล์> ให้
+         *
+         * JS/CSS ที่ไม่ได้ผ่าน Vite ถูกเสิร์ฟด้วยชื่อคงที่และไม่มี Cache-Control/ETag/Last-Modified
+         * เบราว์เซอร์จึงเก็บของเก่าไว้ แก้ไฟล์แล้วหน้าจอไม่เปลี่ยนจนกว่าจะ hard refresh
+         * ผูกเลขเวอร์ชันกับเวลาที่แก้ไฟล์ URL จึงเปลี่ยนเองทุกครั้งที่แก้จริง
+         */
+        Blade::directive('assetv', function (string $expression): string {
+            return "<?php echo \App\Providers\AppServiceProvider::versionedAsset({$expression}); ?>";
+        });
+
         /* บริบทฝั่งหน้าจอประกอบที่เดียว ใช้ร่วมกันทั้งหน้า Blade และหน้า static เดิม
            eager load ไว้ครบ ไม่งั้นการวนเช็คสิทธิ์ทีละเมนูจะยิง query ต่อเมนู */
         View::composer('partials.client-context', function (ViewContract $view): void {
@@ -60,5 +72,16 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('clientContext', app(MenuService::class)->clientContextFor($user));
             }
         });
+    }
+    /**
+     * URL ของไฟล์ static พร้อมเลขเวอร์ชันจากเวลาที่แก้ไฟล์
+     *
+     * ไฟล์ที่ไม่มีอยู่จริงคืน asset() ตามปกติ ไม่ให้หน้าพังเพราะพิมพ์ path ผิด
+     */
+    public static function versionedAsset(string $path): string
+    {
+        $file = public_path($path);
+
+        return is_file($file) ? asset($path) . '?v=' . filemtime($file) : asset($path);
     }
 }

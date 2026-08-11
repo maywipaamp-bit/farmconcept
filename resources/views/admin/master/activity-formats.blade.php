@@ -89,8 +89,8 @@
 
 @push('scripts')
 {{-- statusTextHTML กับ exportTableCsv อยู่ในไฟล์นี้ ไม่ได้อยู่ใน bundle กลางของ layout --}}
-<script src="{{ asset('assets/js/activity-module.js') }}"></script>
-<script src="{{ asset('assets/js/master-list.js') }}"></script>
+<script src="@assetv('assets/js/activity-module.js')"></script>
+<script src="@assetv('assets/js/master-list.js')"></script>
 <script>
 window.TFC_API = window.TFC_API || {};
 window.TFC_API.activityFormats = @json(route('admin.master.activity-formats.index'));

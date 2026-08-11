@@ -3,7 +3,7 @@
 
    ค่าสี ฟอนต์ ระยะ และเงาในไฟล์นี้มาจาก handoff ของหน้านี้โดยเฉพาะ
    ซึ่งเป็นชุดที่ต่างจาก token กลางของระบบ (เขียว #4f9455 ไม่ใช่ #16A34A ·
-   พื้น #eef2ec ไม่ใช่ #F6F8F6 · IBM Plex Sans Thai ไม่ใช่ Noto Sans Thai)
+   พื้น #eef2ec ไม่ใช่ #F6F8F6)
    จึงประกาศเป็นตัวแปรชุดของตัวเองไว้ใต้ .dbo แล้วอ้างอิงตัวแปรทุกจุด
    ไม่มีค่าสีลอย ๆ นอกบล็อกตัวแปร และไม่มีในไฟล์ Blade เลย — แก้สีทั้งหน้าที่บล็อก .dbo ที่เดียว
 
@@ -11,7 +11,7 @@
    คลาสของหน้านี้ใช้คำนำหน้า dbo- ทุกตัว ไม่ทับกับ .dash-* ของแดชบอร์ดชุดเดิม
    ========================================================================== */
 
-/* ฟอนต์ของ handoff (IBM Plex Sans Thai 400/500/600 + IBM Plex Sans 500/600)
+/* ฟอนต์ของระบบ (Noto Sans Thai 400/500/600 — ใช้ตัวเดียวทั้งข้อความและตัวเลข)
    โหลดด้วย <link> ใน resources/views/admin/dashboard.blade.php ไม่ใช่ @import ที่นี่
    เพราะไฟล์นี้ถูก Vite รวมเข้ากลางก้อน CSS — @import ที่ไม่ได้อยู่บนสุดของก้อนจะถูกทิ้ง
    และ <link> ในหน้ายังเริ่มโหลดฟอนต์ได้เร็วกว่าโดยไม่ต้องรอ CSS มาถึงก่อน */
@@ -72,9 +72,9 @@
   --dbo-warn-strong: #c4703c;
   --dbo-danger: #c95252;
 
-  /* ---- ฟอนต์ — ตัวเลขทุกตัวใช้ IBM Plex Sans (ไม่ใช่ตัว Thai) ตาม handoff ---- */
-  --dbo-font: 'IBM Plex Sans Thai', 'Noto Sans Thai', system-ui, sans-serif;
-  --dbo-font-num: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+  /* ---- ฟอนต์ — ตัวเลขใช้ฟอนต์เดียวกับข้อความ ต่างกันที่ tabular-nums ---- */
+  --dbo-font: 'Noto Sans Thai', system-ui, sans-serif;
+  --dbo-font-num: 'Noto Sans Thai', system-ui, sans-serif;
 
   /* ---- ขนาดตัวอักษร ----
      ปรับความใหญ่ของทั้งหน้าที่บล็อกนี้จุดเดียว ไม่ต้องไล่แก้ทีละกฎ

@@ -141,9 +141,9 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/activity-module.js') }}"></script>
-<script src="{{ asset('assets/js/master-list.js') }}"></script>
-<script src="{{ asset('assets/js/field-widgets.js') }}"></script>
+<script src="@assetv('assets/js/activity-module.js')"></script>
+<script src="@assetv('assets/js/master-list.js')"></script>
+<script src="@assetv('assets/js/field-widgets.js')"></script>
 {{-- ต้องมาหลัง app.js เหมือนหน้ากิจกรรม จึงประกาศใน page-script ไม่ใช่ที่นี่ --}}
 <script>
 window.TFC_API = window.TFC_API || {};
@@ -167,7 +167,7 @@ window.TFC_AREA = {
 @push('page-script')
 {{-- ลำดับต้องตรงกับหน้ากิจกรรม: app.js → datetime-picker.js → สคริปต์ของหน้า
      ถ้าโหลดก่อน app.js ปฏิทินจะผูก event ไม่ติดและกดเลือกวันไม่ได้ --}}
-<script src="{{ asset('assets/js/datetime-picker.js') }}"></script>
+<script src="@assetv('assets/js/datetime-picker.js')"></script>
 <script>
 (function () {
   /* จำนวนแถวคิดจากพื้นที่ที่เหลือจริงบนจอ ไม่ใช่เลข 10 ตายตัว

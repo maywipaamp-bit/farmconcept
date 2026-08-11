@@ -9501,8 +9501,10 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* ตัวเลขใหญ่สงวนไว้ให้ KPI บนแดชบอร์ดเท่านั้น (T7 = 30px)
+   หน้านี้ไม่ใช่แดชบอร์ด จึงใช้ระดับตัวเลขเด่นรอง N-lg แทน 44px ที่หลุดสเกล */
 .sat-dist-value {
-  font-size: 44px;
+  font-size: var(--font-size-n-lg);
   line-height: 1.1;
   font-weight: var(--fw-semibold);
   color: var(--text-strong);
@@ -11620,10 +11622,10 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .frt-row {
   display: grid;
-  grid-template-columns: 44px minmax(200px, 1.6fr) 148px minmax(180px, 1.2fr) 108px 44px;
+  grid-template-columns: 44px minmax(200px, 1.6fr) 148px 108px;
   gap: var(--space-3);
   align-items: center;
-  min-width: 860px;
+  min-width: 560px;
 }
 
 /* หัวตาราง 13px/500/secondary — ไม่ใช่ตัวหนา ไม่ใช่สีเข้ม ตามมาตรฐานข้อ 5 */
@@ -13645,3 +13647,66 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-size: var(--font-size-small);
   color: var(--color-primary-dark);
 }
+
+/* ==========================================================================
+   ตั้งค่ารอบติดตาม — จอแคบ
+   ตารางเหลือ 4 คอลัมน์แล้ว จึงพอลงจอมือถือได้โดยไม่ต้องเลื่อนแนวนอน
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .frt-row {
+    grid-template-columns: 28px minmax(0, 1fr) 96px 56px;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .frt-scroll { overflow-x: visible; }
+
+  /* แถบปุ่มล่างซ้อนกันแทนที่จะเบียดกันจนปุ่มแคบเกินกด */
+  .frt-bottombar-inner {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .frt-bottombar-actions { width: 100%; }
+  .frt-bottombar-actions .btn { flex: 1; }
+}
+
+/* สองการ์ดของหน้าตั้งค่ารอบติดตามวางคู่กัน — ตารางรอบกว้างกว่าเพราะมี 4 คอลัมน์
+   align-items: start กันไม่ให้การ์ดที่เตี้ยกว่าถูกยืดตามการ์ดที่สูงกว่า */
+.frt-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .frt-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* แถวปุ่มในการ์ดตั้งค่ารอบติดตาม — แทนแถบลอยล่างจอแบบเดิม */
+.frt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.frt-actions-btns { display: flex; gap: var(--space-2); flex: none; }
+
+/* ไทม์ไลน์ทดลองคำนวณต้องแสดงครบทุกรอบในกรอบเดียว ไม่เลื่อนแนวนอน
+   ของเดิมล็อก min-width ไว้ 152px ต่อรอบ พอมี 4 รอบจึงกว้างเกินการ์ดที่แคบลงครึ่งหนึ่ง */
+.frt-timeline { min-width: 0; }
+.frt-timeline .frt-node { min-width: 0; padding-left: var(--space-1); padding-right: var(--space-1); }
+.frt-card .frt-scroll { overflow-x: visible; }
+
+@media (max-width: 640px) {
+  .frt-actions-btns { width: 100%; }
+  .frt-actions-btns .btn { flex: 1; }
+}
+

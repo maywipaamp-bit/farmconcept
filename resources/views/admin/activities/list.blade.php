@@ -39,7 +39,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/activity-module.js') }}"></script>
+<script src="@assetv('assets/js/activity-module.js')"></script>
 @endpush
 
 @push('page-script')

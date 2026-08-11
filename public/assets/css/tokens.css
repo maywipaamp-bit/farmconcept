@@ -30,7 +30,7 @@
      ห้ามใช้สีเข้มกว่า --color-text-strong (#1f2c20) กับข้อความ และห้ามใช้ #000
      ค่าเหล่านี้ต้องตรงกับ --text-* ใน standard/tokens.css เสมอ */
   --color-text-strong: #1f2c20;     /* ชื่อหน้า, หัวการ์ด, ข้อความในช่องกรอก */
-  --color-text-primary: #33422f;    /* คอลัมน์หลักของตาราง, label ฟอร์ม */
+  --color-text-primary: #55624f;    /* คอลัมน์หลักของตาราง, label ฟอร์ม */
   --color-text-body: #4a564a;       /* เนื้อหาทั่วไป, ค่าในตาราง */
   --color-text-secondary: #7d8a7c;  /* คำอธิบาย, caption */
   --color-text-muted: #9aa599;      /* หัวคอลัมน์, meta, หน่วย, placeholder ในกราฟ */
@@ -87,27 +87,48 @@
   /* ---------- Font ----------
      ต้องตรงกับ --font-sans ใน assets/css/standard/tokens.css เสมอ
      (ไฟล์นั้นเป็นที่ @import ตัวฟอนต์ ถ้าแก้ที่นี่อย่างเดียวจะได้ฟอนต์สำรองแทน) */
-  --font-family-base: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+  --font-family-base: 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
 
-  /* ตัวเลขล้วนเท่านั้น (KPI, จำนวน, %, วันที่แบบเลข) — ตัวเลขที่ปนในประโยคไทยใช้ฟอนต์ไทย */
-  --font-family-numeric: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+  /* ตัวเลขใช้ฟอนต์เดียวกับข้อความ — ตัวแปรนี้คงไว้เพราะมีกฎอ้างอยู่หลายจุด
+  --font-family-numeric: 'Noto Sans Thai', system-ui, sans-serif;
 
-  /* Type scale ตามสเปก typography — เล็กสุด 10.5px และ 10.5–11px ใช้เฉพาะป้ายในกราฟ */
-  --font-size-page-title: 25px;
-  --font-size-section-title: 20px;
-  --font-size-card-title: 15px;
-  --font-size-body: 15px;
-  --font-size-small: 13px;
-  --font-size-caption: 12.5px;
-  --font-size-micro: 11.5px;      /* footer, หน่วย, tick */
-  --font-size-chart-tick: 11px;   /* ป้ายในกราฟเท่านั้น */
-  --font-size-input: 15px;
-  --font-size-form-label: 13px;
-  --font-size-button: 15.5px;
-  --font-size-button-secondary: 15px;
-  /* ตัวเลขตัวชี้วัดเดียวของหน้าจอ (เช่น "เช็คอินแล้ว 12 จาก 32 คน" บนหน้า Check-in)
-     ใช้ได้หน้าละหนึ่งจุดเท่านั้น — ตัวเลขอื่นใช้ --font-size-section-title */
-  --font-size-metric: 32px;
+  /* ---------- สเกลมาตรฐาน 7 ระดับ ----------
+     สเกลแคบแบบระบบงานข้อมูล — ตัวอักษรส่วนใหญ่อยู่ที่ 13–14px
+     แยกความสำคัญด้วยสีและน้ำหนักเป็นหลัก ใช้ขนาดเฉพาะเมื่อจำเป็น
+     ห้ามสร้างระดับใหม่ ถ้าต้องเน้นให้เปลี่ยนน้ำหนัก (400 → 600) หรือสี ไม่ใช่เพิ่มขนาด
+     ขั้นต่ำ 11px — ต่ำกว่านี้ห้ามใช้ */
+  --font-size-t1: 22px;       --line-height-t1: 1.3;    /* ชื่อหน้า */
+  --font-size-t2: 16px;       --line-height-t2: 1.35;   /* หัวการ์ด · หัวแผง */
+  --font-size-t3: 13.5px;     --line-height-t3: 1.55;   /* เนื้อหา · เนื้อตาราง · รายการเมนู */
+  --font-size-t4: 13px;       --line-height-t4: 1.4;    /* label ฟอร์ม · หัวคอลัมน์ */
+  --font-size-t5: 12px;       --line-height-t5: 1.45;   /* บรรทัดรอง · คำอธิบาย · หน่วย */
+  --font-size-t6: 11px;       --line-height-t6: 1.4;    /* footer · tick · ป้ายในกราฟ */
+  --font-size-t7: 30px;       --line-height-t7: 1;      /* ตัวเลข KPI บนแดชบอร์ดเท่านั้น */
+
+  /* ---------- ระดับเสริม (ใช้เท่าที่สเปกระบุ) ---------- */
+  --font-size-n-lg: 20px;     /* ตัวเลขเด่นรอง — ยอดกลางโดนัท · ค่าเฉลี่ยในการ์ด */
+  --font-size-n-md: 15px;     /* ตัวเลขเด่นในแผงย่อย */
+  --font-size-n-sm: 13px;     /* ตัวเลขในตารางและท้ายแท่งกราฟ */
+  --font-size-btn: 14px;      /* ปุ่มทุกชนิด */
+  --font-size-input: 14px;    /* ช่องกรอก */
+  --font-size-overline: 12px; /* THEFARMCONCEPT · ADMIN */
+  --font-size-badge: 12px;    /* ป้ายสถานะ · ชิปตัวกรอง */
+
+  /* ---------- นามแฝงของชื่อเดิม ----------
+     กฎเดิมหลายร้อยจุดอ้างชื่อเหล่านี้อยู่ ชี้ไประดับที่ถูกต้องแทนการไล่เปลี่ยนชื่อทั้งระบบ */
+  --font-size-page-title: var(--font-size-t1);
+  --font-size-section-title: var(--font-size-t2);
+  --font-size-card-title: var(--font-size-t2);
+  --font-size-body: var(--font-size-t3);
+  --font-size-small: var(--font-size-t3);
+  --font-size-caption: var(--font-size-t5);
+  --font-size-micro: var(--font-size-t6);
+  --font-size-chart-tick: var(--font-size-t6);
+  --font-size-form-label: var(--font-size-t4);
+  --font-size-button: var(--font-size-btn);
+  --font-size-button-secondary: var(--font-size-btn);
+  --font-size-numeric-table: var(--font-size-n-sm);
+  --font-size-metric: var(--font-size-t7);
 
   /* 400 เป็นค่าเริ่มต้น · 500 เฉพาะที่ต้องเน้น · 600 เฉพาะหัวข้อ
      ไม่มี --font-weight-bold (700) เพราะมาตรฐานห้ามใช้ */
@@ -117,9 +138,9 @@
 
   /* สเปก: หัวข้อ 1.2–1.35 · เนื้อความ 1.5–1.65 · ป้ายในกราฟ 1.3–1.4
      เนื้อความไทยใช้ 1.6 ซึ่งอยู่ในช่วงของสเปกและไม่ต่ำกว่าที่ CLAUDE.md กำหนด */
-  --line-height-base: 1.6;
-  --line-height-tight: 1.3;   /* หัวข้อ */
-  --line-height-chart: 1.35;  /* ป้ายในกราฟ */
+  --line-height-base: var(--line-height-t3);
+  --line-height-tight: var(--line-height-t1);
+  --line-height-chart: var(--line-height-t6);
 
   /* ---------- Spacing Scale ---------- */
   --space-1: 4px;

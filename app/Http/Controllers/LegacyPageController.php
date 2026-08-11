@@ -22,12 +22,40 @@ class LegacyPageController extends Controller
     {
         $file = $this->resolve($path);
 
-        $html = $this->injectAuthContext(file_get_contents($file), $request);
+        $html = $this->versionAssets($this->injectAuthContext(file_get_contents($file), $request));
 
         return response($html)
             ->header('Content-Type', 'text/html; charset=UTF-8')
             /* หน้าหลังบ้านมีข้อมูลส่วนบุคคล ห้ามให้ proxy หรือเบราว์เซอร์เก็บไว้ */
             ->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * ต่อ ?v=<เวลาที่แก้ไฟล์> ท้าย URL ของ CSS/JS ที่หน้าเดิมโหลดตรง ๆ
+     *
+     * ไฟล์เหล่านี้ชื่อคงที่และเสิร์ฟโดยไม่มี Cache-Control/ETag/Last-Modified เลย
+     * เบราว์เซอร์จึงใช้ heuristic caching เก็บของเก่าไว้ แก้ CSS แล้วหน้าจอไม่เปลี่ยน
+     * จนกว่าจะกด Ctrl+Shift+R — ซึ่งไม่ควรเป็นสิ่งที่ต้องจำ
+     *
+     * ใช้เวลาที่แก้ไฟล์เป็นเลขเวอร์ชัน แก้ไฟล์เมื่อไหร่ URL เปลี่ยนเอง
+     * ไฟล์ที่ไม่มีอยู่จริงปล่อยผ่านไปตามเดิม ไม่ทำให้หน้าพัง
+     */
+    private function versionAssets(string $html): string
+    {
+        return preg_replace_callback(
+            '#(href|src)="((?:\.\./)*assets/[^"?]+\.(?:css|js))"#',
+            function (array $m): string {
+                $relative = preg_replace('#^(\.\./)+#', '', $m[2]);
+                $file = public_path($relative);
+
+                if (! is_file($file)) {
+                    return $m[0];
+                }
+
+                return $m[1] . '="' . $m[2] . '?v=' . filemtime($file) . '"';
+            },
+            $html
+        );
     }
 
     /**

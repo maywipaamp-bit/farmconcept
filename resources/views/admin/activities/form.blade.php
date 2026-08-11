@@ -359,15 +359,15 @@
   window.TFC_ACTIVITY_CURRENT = @json($current);
 })();
 </script>
-<script src="{{ asset('assets/js/activity-module.js') }}"></script>
+<script src="@assetv('assets/js/activity-module.js')"></script>
 @endpush
 
 @push('page-script')
 {{-- ลำดับต้องตรงกับหน้า static เดิมเป๊ะ: app.js → datetime-picker.js → activity-create.js
      app.js ถูกวางไว้ใน layout ก่อน @stack('page-script') อยู่แล้ว
      สลับลำดับเมื่อไหร่ ช่องวันที่จะไม่ถูกแปลงเป็นปฏิทินแบบ popup --}}
-<script src="{{ asset('assets/js/datetime-picker.js') }}"></script>
-<script src="{{ asset('assets/js/activity-create.js') }}"></script>
+<script src="@assetv('assets/js/datetime-picker.js')"></script>
+<script src="@assetv('assets/js/activity-create.js')"></script>
 <script>
 (function () {
   var form = window.TFC.activityForm;

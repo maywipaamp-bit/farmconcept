@@ -4,22 +4,22 @@
    Import ไฟล์นี้ก่อน stylesheet อื่นทั้งหมด
    ============================================================ */
 
-/* IBM Plex Sans Thai สำหรับข้อความไทยทุกตัว · IBM Plex Sans เฉพาะตัวเลข
+/* Noto Sans Thai ทั้งข้อความและตัวเลข — ทีมกำหนดให้ใช้ฟอนต์เดียวทั้งระบบ
    (KPI, จำนวน, %, วันที่แบบเลข) — ตัวเลขที่ปนอยู่ในประโยคไทยใช้ฟอนต์ไทยตามปกติ
    Production ควรย้ายมา self-host ตามสเปก
 
    URL นี้ซ้ำกับ <link> ใน resources/views/layouts/admin.blade.php และหน้า static เดิม
    แก้ที่ไหนต้องแก้ให้ตรงกันทุกที่ (เบราว์เซอร์ยุบเป็นคำขอเดียวเมื่อ URL ตรงกัน) */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap');
 
 :root {
   /* ---- Font ----
      เปลี่ยนฟอนต์ทั้งระบบที่บรรทัดนี้จุดเดียว (คู่กับ --font-family-base ใน assets/css/tokens.css) */
-  --font-sans: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
 
   /* ตัวเลขล้วนเท่านั้น — KPI, จำนวนในตาราง, %, วันที่แบบเลข
      ใช้ผ่านคลาส .num หรือ font-family: var(--font-numeric) ไม่ใช้กับประโยคไทย */
-  --font-numeric: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --font-numeric: 'Noto Sans Thai', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --fw-light: 300;
@@ -28,36 +28,46 @@
   --fw-semibold: 600;  /* หัวข้อเท่านั้น */
   /* ห้ามใช้ 700 ในหน้าจอระบบ */
 
-  /* ---- Type scale : size / line-height ----
-     ตามสเปก typography: หัวข้อ line-height 1.2–1.35 · เนื้อความ 1.5–1.65 · ป้ายในกราฟ 1.3–1.4
-     เนื้อความไทยใช้ 1.6 ซึ่งอยู่ในช่วงของสเปกและไม่ต่ำกว่าที่ CLAUDE.md กำหนด */
-  --fs-page-title: 25px;      --lh-page-title: 1.25;
-  --fs-section-title: 20px;   --lh-section-title: 1.3;
-  --fs-card-title: 15px;      --lh-card-title: 1.35;
-  --fs-body: 15px;            --lh-body: 1.6;
-  --fs-secondary: 13px;       --lh-secondary: 1.55;
-  --fs-caption: 12.5px;       --lh-caption: 1.5;
+  /* ---- สเกลมาตรฐาน 7 ระดับ ----
+     ต้องตรงกับ --font-size-t* ใน assets/css/tokens.css เสมอ
+     ห้ามสร้างระดับใหม่ ถ้าต้องเน้นให้เปลี่ยนน้ำหนักหรือสี ไม่ใช่เพิ่มขนาด
+     ขั้นต่ำ 11px */
+  --fs-t1: 22px;    --lh-t1: 1.3;     /* ชื่อหน้า */
+  --fs-t2: 16px;    --lh-t2: 1.35;    /* หัวการ์ด · หัวแผง */
+  --fs-t3: 13.5px;  --lh-t3: 1.55;    /* เนื้อหา · เนื้อตาราง */
+  --fs-t4: 13px;    --lh-t4: 1.4;     /* label · หัวคอลัมน์ */
+  --fs-t5: 12px;    --lh-t5: 1.45;    /* บรรทัดรอง · คำอธิบาย */
+  --fs-t6: 11px;    --lh-t6: 1.4;     /* footer · tick */
+  --fs-t7: 30px;    --lh-t7: 1;       /* KPI บนแดชบอร์ดเท่านั้น */
 
-  /* footer · หน่วย · tick ในกราฟ — เล็กสุดที่สเปกอนุญาตคือ 10.5px
-     และ 10.5–11px ใช้ได้เฉพาะป้ายในกราฟเท่านั้น */
-  --fs-micro: 11.5px;         --lh-micro: 1.35;
-  --fs-chart-tick: 11px;      --lh-chart-tick: 1.3;
+  /* ---- ระดับเสริม ---- */
+  --fs-n-lg: 20px;
+  --fs-n-md: 15px;
+  --fs-n-sm: 13px;
+  --fs-btn: 14px;
+  --fs-input: 14px;
+  --fs-overline: 12px;
+  --fs-badge: 12px;
 
-  /* ช่องกรอกและปุ่มมีสเกลของตัวเอง ไม่ผูกกับ --fs-body */
-  --fs-input: 15px;
-  --fs-form-label: 13px;
-  --fs-button: 15.5px;
-  --fs-button-secondary: 15px;
-
-  /* ตัวเลข */
-  --fs-kpi: 32px;             --lh-kpi: 1.15;
-  --fs-numeric-table: 13px;
-
+  /* ---- นามแฝงของชื่อเดิม ---- */
+  --fs-page-title: var(--fs-t1);      --lh-page-title: var(--lh-t1);
+  --fs-section-title: var(--fs-t2);   --lh-section-title: var(--lh-t2);
+  --fs-card-title: var(--fs-t2);      --lh-card-title: var(--lh-t2);
+  --fs-body: var(--fs-t3);            --lh-body: var(--lh-t3);
+  --fs-secondary: var(--fs-t3);       --lh-secondary: var(--lh-t3);
+  --fs-caption: var(--fs-t5);         --lh-caption: var(--lh-t5);
+  --fs-micro: var(--fs-t6);           --lh-micro: var(--lh-t6);
+  --fs-chart-tick: var(--fs-t6);      --lh-chart-tick: var(--lh-t6);
+  --fs-form-label: var(--fs-t4);
+  --fs-button: var(--fs-btn);
+  --fs-button-secondary: var(--fs-btn);
+  --fs-numeric-table: var(--fs-n-sm);
+  --fs-kpi: var(--fs-t7);             --lh-kpi: var(--lh-t7);
   /* ---- Text colors ----
      ชุดเขียวอมเทาตามสเปก typography — ความสำคัญสื่อด้วยสีก่อน แล้วจึงเป็นน้ำหนัก
      เข้มสุดคือ --text-strong (#1f2c20) ห้ามใช้สีเข้มกว่านี้และห้ามใช้ #000 */
   --text-strong: #1f2c20;     /* ชื่อหน้า, หัวการ์ด, ข้อความในช่องกรอก, ตัวเลข */
-  --text-primary: #33422f;    /* label ฟอร์ม, คอลัมน์หลัก */
+  --text-primary: #55624f;    /* label ฟอร์ม, คอลัมน์หลัก */
   --text-body: #4a564a;       /* เนื้อความทั่วไป, ปุ่มรอง */
   --text-secondary: #7d8a7c;  /* คำอธิบาย, caption */
   --text-muted: #9aa599;      /* meta, หน่วย, tick, หัวคอลัมน์ */

@@ -95,8 +95,8 @@
 
 @push('scripts')
 {{-- statusTextHTML กับ exportTableCsv อยู่ในไฟล์นี้ ไม่ได้อยู่ใน bundle กลางของ layout --}}
-<script src="{{ asset('assets/js/activity-module.js') }}"></script>
-<script src="{{ asset('assets/js/master-list.js') }}"></script>
+<script src="@assetv('assets/js/activity-module.js')"></script>
+<script src="@assetv('assets/js/master-list.js')"></script>
 <script>
 /* บอก dataService ว่า entity นี้ต่อฐานข้อมูลจริงแล้ว — อ่านตอนเรียก dataService() ในสคริปต์ของหน้า */
 window.TFC_API = window.TFC_API || {};

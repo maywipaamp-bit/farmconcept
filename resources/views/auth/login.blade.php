@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {{-- URL เดียวกับใน standard/tokens.css และ layouts/admin.blade.php --}}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap">
 <!-- หน้านี้ยึดมาตรฐานเป็นหลักตามสเปก จึงโหลดเฉพาะ assets/css/standard/*
      (base.css มี .btn .input :focus-visible และ keyframes om-pop-in ให้แล้ว) -->
-<link rel="stylesheet" href="{{ asset('assets/css/standard/tokens.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/standard/base.css') }}">
+<link rel="stylesheet" href="@assetv('assets/css/standard/tokens.css')">
+<link rel="stylesheet" href="@assetv('assets/css/standard/base.css')">
 {{-- สเปก typography ของทุกหน้าจอ — ต้องมาหลัง standard/* เพราะเป็นชั้นที่กำหนดขนาด/สี/line-height สุดท้าย
      ไฟล์นั้นเขียนตัวแปรแบบมีค่าสำรอง จึงทำงานได้แม้หน้านี้จะไม่ได้โหลด assets/css/tokens.css --}}
-<link rel="stylesheet" href="{{ asset('assets/css/typography-spec.css') }}">
+<link rel="stylesheet" href="@assetv('assets/css/typography-spec.css')">
 <style>
   /* ---------- โครงหน้า ---------- */
   html, body {
@@ -61,9 +61,8 @@
   .login-tagline {
     margin: 0;
     text-align: center;
-    /* 14.5px เป็นค่าเฉพาะของหน้านี้ตามสเปก ไม่มีที่ใช้ซ้ำ จึงไม่ตั้งเป็นตัวแปร */
-    font-size: 14.5px;
-    line-height: 1.55;
+    font-size: var(--fs-t3);
+    line-height: var(--lh-t3);
     font-weight: var(--fw-regular);
     color: var(--text-secondary);
   }
@@ -76,9 +75,9 @@
   .field { display: flex; flex-direction: column; gap: var(--sp-1); }
 
   .label {
-    font-size: var(--fs-form-label);
+    font-size: var(--fs-t4);
     line-height: var(--lh-secondary);
-    font-weight: var(--fw-medium);
+    font-weight: var(--fw-semibold);
     letter-spacing: .02em;
     /* หน้านี้ใช้ label โทนอ่อนกว่าฟอร์มในระบบหลัง ตามสเปกของหน้าเข้าสู่ระบบ */
     color: var(--text-label-soft);
@@ -120,7 +119,7 @@
     padding: 0;
     cursor: pointer;
     font: var(--fw-regular) var(--fs-secondary)/1.4 var(--font-sans);
-    font-size: var(--fs-secondary);
+    font-size: var(--fs-t5);
     font-weight: var(--fw-regular);
     color: var(--text-secondary);
   }
@@ -136,10 +135,11 @@
     background: #FEF2F2;
     border: 1px solid #FECACA;
     border-radius: var(--r-md);
-    font-size: var(--fs-secondary);
-    line-height: var(--lh-secondary);
+    /* ข้อความ error = T5 สี #c0504f ตามสเปก */
+    font-size: var(--fs-t5);
+    line-height: var(--lh-t5);
     font-weight: var(--fw-regular);
-    color: #B91C1C;
+    color: #c0504f;
     animation: om-slide-in var(--dur-slow) var(--ease-out) both;
   }
   .login-error[hidden] { display: none; }
@@ -170,7 +170,7 @@
     /* 11px (ไม่ใช่ 10px) เพราะ .btn ใช้ line-height 1.4 ส่วนช่องกรอกใช้ 1.6
        ต้องชดเชยส่วนต่างนี้ ปุ่มถึงจะสูง 43px เท่าช่องกรอกพอดี */
     padding: 11px 20px;
-    font-size: var(--fs-button);
+    font-size: var(--fs-btn);
   }
 
   /* ปุ่มหลักเท่านั้นที่เน้นด้วยน้ำหนัก 500 ปุ่มรองเป็น 400 ตามค่าเริ่มต้นของ .btn */
@@ -209,7 +209,7 @@
      ปุ่มจึงยังสูงเท่าปุ่มหลักและช่องกรอก */
   a.btn-block {
     padding: 10px 20px;
-    font-size: var(--fs-button-secondary);
+    font-size: var(--fs-btn);
     font-weight: var(--fw-medium);
   }
 
@@ -229,8 +229,9 @@
   .login-footer {
     margin: 0;
     text-align: center;
-    font-size: var(--fs-caption);
-    line-height: var(--lh-caption);
+    /* ท้ายหน้า (เวอร์ชัน, ลิขสิทธิ์) = T6 ตามสเปก */
+    font-size: var(--fs-t6);
+    line-height: var(--lh-t6);
     font-weight: var(--fw-regular);
     color: var(--text-muted);
   }

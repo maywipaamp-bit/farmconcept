@@ -8,7 +8,7 @@
 {{-- ฟอนต์ของแดชบอร์ด — โหลดเฉพาะหน้านี้ ไม่แตะฟอนต์กลางของระบบ
      ใช้ <link> ไม่ใช่ @import ใน CSS ด้วยเหตุผลเดียวกับที่ layout อธิบายไว้
      คือกันคำขอต่อแถวสองชั้นที่ทำให้เห็นฟอนต์สำรองแวบหนึ่งตอนเปิดหน้า --}}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap">
 @endpush
 
 @section('content')

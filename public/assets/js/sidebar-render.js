@@ -111,8 +111,6 @@
   }
 
   var ICON = {
-    bell: '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
-    grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
     cog: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.79 1.05 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1"/>',
     doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -122,26 +120,28 @@
 
   /* ---------- แถบไอคอน ---------- */
 
+  /* "พื้นฐาน" ย้ายลงไปอยู่ใต้ไอคอนตั้งค่าท้ายแถบ ไม่ปนกับหมวดงานประจำวันด้านบน
+     เก็บ index เดิมไว้ เพราะ shownIndex/activeIndex อ้างตำแหน่งใน categories */
+  var SETTINGS_KEY = 'master-data';
+  var settingsIndex = categories.findIndex(function (cat) { return cat.key === SETTINGS_KEY; });
+
+  function railBtnHtml(cat, i, extraClass, iconOverride) {
+    return '<button type="button" class="rail-btn' + (extraClass || '') + (i === shownIndex ? ' is-active' : '') + '"' +
+      ' data-rail="' + i + '" title="' + esc(cat.label) + '" aria-label="' + esc(cat.label) + '"' +
+      ' aria-current="' + (i === activeIndex ? 'true' : 'false') + '">' +
+      railIcon(iconOverride || cat.icon) + '</button>';
+  }
+
   function railHtml() {
     var main = categories.map(function (cat, i) {
-      return '<button type="button" class="rail-btn' + (i === shownIndex ? ' is-active' : '') + '"' +
-        ' data-rail="' + i + '" title="' + esc(cat.label) + '" aria-label="' + esc(cat.label) + '"' +
-        ' aria-current="' + (i === activeIndex ? 'true' : 'false') + '">' +
-        railIcon(cat.icon) + '</button>';
+      return i === settingsIndex ? '' : railBtnHtml(cat, i);
     }).join('');
 
-    /* ปุ่มระบบยังไม่มีหน้าปลายทางในโปรเจกต์ จึงใส่ไว้ตามสเปกแต่ยังไม่ผูกลิงก์
-       ทำเป็นปุ่มที่กดแล้วไม่มีอะไรเกิดขึ้นดีกว่าซ่อนไว้ เพราะโครงเมนูต้องตรงกับที่ออกแบบ */
-    var system =
-      '<button type="button" class="rail-btn is-system" title="การแจ้งเตือน" aria-label="การแจ้งเตือน" data-rail-system="notifications">' +
-        railIcon(ICON.bell) +
-      '</button>' +
-      '<button type="button" class="rail-btn is-system" title="แอปทั้งหมด" aria-label="แอปทั้งหมด" data-rail-system="apps">' +
-        railIcon(ICON.grid) +
-      '</button>' +
-      '<button type="button" class="rail-btn is-system" title="ตั้งค่า" aria-label="ตั้งค่า" data-rail-system="settings">' +
-        railIcon(ICON.cog) +
-      '</button>';
+    /* ท้ายแถบเหลือเฉพาะไอคอนตั้งค่า ซึ่งเปิดหมวด "พื้นฐาน"
+       กระดิ่งกับแอปทั้งหมดถูกถอดออกตามที่ทีมสั่ง — ยังไม่มีหน้าปลายทางอยู่แล้ว */
+    var system = settingsIndex === -1
+      ? ''
+      : railBtnHtml(categories[settingsIndex], settingsIndex, ' is-system', ICON.cog);
 
     var avatar = user.avatar
       ? '<img src="' + esc(user.avatar) + '" alt="" onerror="this.remove()">'
@@ -171,7 +171,10 @@
         '<span class="rail-menu-mail">' + esc(user.email || user.role || '') + '</span>' +
       '</div>' +
       '<div class="rail-menu-divider"></div>' +
-      '<a class="rail-menu-item" role="menuitem" href="' + base + 'admin/profile.html">' +
+      /* เปิด popup โปรไฟล์ตรง ๆ ไม่พาไปหน้าอื่น
+         profile-modal.js มีตัวไล่เปลี่ยนลิงก์ .../profile.html ให้อยู่แล้ว แต่แผงนี้ถูกวาดใหม่
+         ทุกครั้งที่สลับหมวด แอตทริบิวต์ที่มันเขียนไว้จึงหายไป — ประกาศที่นี่เลยจะไม่มีทางหลุด */
+      '<a class="rail-menu-item" role="menuitem" href="#" data-open-modal="profile-modal">' +
         itemIcon(ICON.user) + '<span>โปรไฟล์</span>' +
       '</a>' +
       '<form method="POST" action="' + base + 'logout">' +
@@ -259,12 +262,6 @@
     if (avatar) {
       toggleUserMenu(avatar.getAttribute('aria-expanded') !== 'true');
       return;
-    }
-
-    /* ปุ่มระบบยังไม่มีหน้าปลายทาง — บอกให้รู้ว่ายังไม่เปิดใช้ ดีกว่ากดแล้วเงียบ */
-    var sys = e.target.closest('[data-rail-system]');
-    if (sys && window.TFC.showToast) {
-      window.TFC.showToast('ส่วนนี้ยังไม่เปิดใช้งาน', 'info');
     }
   });
 

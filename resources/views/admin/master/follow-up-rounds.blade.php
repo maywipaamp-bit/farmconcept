@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('title', 'ตั้งค่ารอบติดตาม')
-@section('main-class', 'frt-content')
 
 @section('content')
       <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -12,6 +11,8 @@
       {{-- ชื่อหน้า 28px/600 + ปุ่มหลัก "เพิ่มรอบ" มุมขวา --}}
       <div class="page-header" id="frt-page-header"></div>
 
+      {{-- สองการ์ดวางคู่กันเพื่อกระชับพื้นที่ — จอแคบซ้อนกันเองด้วย grid --}}
+      <div class="frt-grid">
       <!-- ---------- ตารางรอบ ---------- -->
       <section class="card frt-card" aria-labelledby="frt-table-title">
         <div class="frt-card-head">
@@ -26,19 +27,27 @@
               <span class="frt-th">#</span>
               <span class="frt-th">ชื่อรอบ</span>
               <span class="frt-th frt-th-center">จำนวนวัน</span>
-              <span class="frt-th">ตัวอย่างวันครบกำหนด</span>
               <span class="frt-th frt-th-center">ใช้งาน</span>
-              <span class="frt-th"></span>
             </div>
             <div id="frt-rows"></div>
           </div>
         </div>
 
         <p class="frt-hint" id="frt-error" hidden></p>
+
+        {{-- ปุ่มอยู่ในการ์ดเดียวกับตารางที่แก้ ไม่ใช่แถบลอยล่างจอ
+             ผู้ใช้จึงเห็นสิ่งที่แก้กับปุ่มบันทึกอยู่ในสายตาเดียวกัน --}}
+        <div class="frt-actions">
+          <span class="frt-summary" id="frt-summary"></span>
+          <div class="frt-actions-btns">
+            <button type="button" class="btn btn-outline" id="frt-reset">คืนค่าเริ่มต้น</button>
+            <button type="button" class="btn btn-primary" id="frt-save" disabled>บันทึกการตั้งค่า</button>
+          </div>
+        </div>
       </section>
 
       <!-- ---------- ทดลองคำนวณ ---------- -->
-      <section class="card frt-card mt-4" aria-labelledby="frt-sim-title">
+      <section class="card frt-card" aria-labelledby="frt-sim-title">
         <div class="frt-card-head">
           <span class="frt-card-title" id="frt-sim-title">ทดลองคำนวณ</span>
           <label class="frt-sim-field">
@@ -53,19 +62,7 @@
           <div class="frt-timeline" id="frt-timeline"></div>
         </div>
       </section>
-@endsection
-
-@section('after-content')
-    <!-- ---------- แถบล่าง ---------- -->
-    <div class="frt-bottombar">
-      <div class="frt-bottombar-inner">
-        <span class="frt-summary" id="frt-summary"></span>
-        <div class="frt-bottombar-actions">
-          <button type="button" class="btn btn-outline" id="frt-reset">คืนค่าเริ่มต้น</button>
-          <button type="button" class="btn btn-primary" id="frt-save" disabled>บันทึกการตั้งค่า</button>
-        </div>
       </div>
-    </div>
 @endsection
 
 @push('scripts')
@@ -74,12 +71,12 @@
 window.TFC_CONFIG = window.TFC_CONFIG || {};
 window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-rounds.index'));
 </script>
-<script src="{{ asset('assets/js/followup-template-service.js') }}"></script>
+<script src="@assetv('assets/js/followup-template-service.js')"></script>
 @endpush
 
 @push('page-script')
 {{-- ลำดับต้องตรงกับหน้าเดิม: app.js -> datetime-picker.js -> สคริปต์ของหน้า --}}
-<script src="{{ asset('assets/js/datetime-picker.js') }}"></script>
+<script src="@assetv('assets/js/datetime-picker.js')"></script>
 <script>
 (function () {
   var esc = window.TFC.escapeHtml;
@@ -110,26 +107,11 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
   function dirty() { return JSON.stringify(state.rows) !== JSON.stringify(state.saved); }
 
   /* ---------- 1. หัวหน้า ---------- */
-  window.TFC.renderPageHeader('frt-page-header', {
-    title: 'ตั้งค่ารอบติดตาม',
-    actions: [
-      { label: 'เพิ่มรอบ', variant: 'primary',
-        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
-        attrs: { id: 'frt-add' } }
-    ]
-  });
+  /* ไม่มีปุ่มเพิ่มรอบแล้ว — ชุดรอบเป็นค่าคงที่ของระบบ ปรับได้แต่ชื่อ จำนวนวัน และเปิด/ปิด */
+  window.TFC.renderPageHeader('frt-page-header', { title: 'ตั้งค่ารอบติดตาม' });
 
   /* ---------- 2. ตาราง ---------- */
-  function rowHtml(row, index, canRemoveLast) {
-    var used = svc.usageCount(row.id);
-    /* ลบได้เฉพาะรอบที่ยังไม่เคยสร้าง record ให้ใคร และต้องเหลืออย่างน้อยหนึ่งแถวเสมอ
-       เซิร์ฟเวอร์ตรวจซ้ำตอน DELETE — ปุ่มที่ปิดไว้กันได้แค่การกดพลาด */
-    var deletable = svc.canDelete(row) && canRemoveLast;
-    var why = !canRemoveLast ? 'ต้องเหลืออย่างน้อย 1 รอบ'
-      : (used ? 'มีข้อมูลผู้เข้าร่วม ' + used + ' รายการที่ใช้รอบนี้แล้ว — ปิดใช้งานแทนการลบ' : 'ลบรอบนี้');
-
-    var due = svc.dueDate(state.entry, row.offsetDays);
-    var approx = svc.approxLabel(row.offsetDays);
+  function rowHtml(row, index) {
     var no = index + 1;
 
     return '<div class="frt-row frt-item' + (row.isActive ? '' : ' is-off') + '" data-id="' + esc(row.id) + '">' +
@@ -144,11 +126,6 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
         '<span class="frt-unit">วัน</span>' +
       '</span>' +
 
-      '<span class="frt-due">' +
-        '<span class="frt-due-date">' + esc(thaiShort(due)) + '</span>' +
-        '<span class="frt-due-approx">' + esc(approx) + '</span>' +
-      '</span>' +
-
       '<span class="frt-active">' +
         '<label class="switch switch-sm" title="เปิด/ปิดใช้งานรอบนี้">' +
           '<input type="checkbox" data-field="isActive"' + (row.isActive ? ' checked' : '') +
@@ -156,11 +133,6 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
           '<span class="switch-track"></span>' +
         '</label>' +
       '</span>' +
-
-      '<button type="button" class="frt-remove" data-remove="' + esc(row.id) + '"' + (deletable ? '' : ' disabled') +
-        ' title="' + esc(why) + '" aria-label="' + esc(why) + '">' +
-        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5.5h5V7M7 7l.8 12h8.4L17 7"/></svg>' +
-      '</button>' +
       '</div>';
   }
 
@@ -168,19 +140,12 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
      ระหว่างที่ผู้ใช้พิมพ์ในแถวให้ใช้ updateRow() แทน ไม่งั้นช่องที่โฟกัสอยู่จะหลุด
      (การแทน innerHTML ทิ้ง element ที่กำลังพิมพ์ ตัวอักษรถัดไปจะหายไปเฉย ๆ) */
   function renderRows() {
-    var canRemoveLast = state.rows.length > 1;
-    byId('frt-rows').innerHTML = state.rows.map(function (r, i) {
-      return rowHtml(r, i, canRemoveLast);
-    }).join('');
+    byId('frt-rows').innerHTML = state.rows.map(rowHtml).join('');
   }
 
-  /* อัปเดตเฉพาะส่วนที่คำนวณได้ของแถวเดียว ไม่แตะ input ที่ผู้ใช้กำลังพิมพ์ */
+  /* เหลือแค่สถานะเปิด/ปิดของแถว — คอลัมน์ที่ต้องคำนวณถูกตัดออกแล้ว */
   function updateRow(rowEl, row) {
     rowEl.classList.toggle('is-off', !row.isActive);
-    var date = rowEl.querySelector('.frt-due-date');
-    var approx = rowEl.querySelector('.frt-due-approx');
-    if (date) date.textContent = thaiShort(svc.dueDate(state.entry, row.offsetDays));
-    if (approx) approx.textContent = svc.approxLabel(row.offsetDays);
   }
 
   function updateAllRows() {
@@ -285,27 +250,7 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
     renderDownstream();
   }
 
-  byId('frt-rows').addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-remove]');
-    if (!btn || btn.disabled) return;
-    var id = btn.getAttribute('data-remove');
-    var row = findRow(id);
-    state.rows = state.rows.filter(function (r) { return r.id !== id; });
-    renderAll();
-    toast('ลบรอบ "' + (row ? row.name : '') + '" แล้ว · ยังไม่บันทึกจนกว่าจะกดบันทึกการตั้งค่า', 'info');
-  });
-
-  document.addEventListener('click', function (e) {
-    if (!e.target.closest('#frt-add')) return;
-    state.seq += 1;
-    state.rows.push({ id: 'FRT-NEW-' + state.seq, name: '', offsetDays: '', isActive: true, sortOrder: state.rows.length + 1 });
-    renderAll();
-    /* โฟกัสช่องชื่อของแถวที่เพิ่งเพิ่ม เพื่อให้พิมพ์ต่อได้ทันที */
-    var names = byId('frt-rows').querySelectorAll('.frt-name');
-    if (names.length) names[names.length - 1].focus();
-  });
-
-  /* เปลี่ยนวันที่ตั้งต้น — ทั้งคอลัมน์ตัวอย่างและไทม์ไลน์ต้องขยับทันที */
+  /* เปลี่ยนวันที่ตั้งต้น — ไทม์ไลน์ต้องขยับทันที */
   byId('frt-entry').addEventListener('input', function () {
     state.entry = this.getAttribute('data-iso') || '';
     updateAllRows();

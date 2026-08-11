@@ -11,7 +11,8 @@
 
 :root {
   --rail-w: 64px;
-  --subnav-w: 236px;
+  /* ลดจาก 236px ตามที่ทีมขอ — คืนความกว้างให้พื้นที่เนื้อหา 32px */
+  --subnav-w: 204px;
 
   --rail-bg: #2f6b36;
   --rail-icon: rgba(255, 255, 255, .72);
@@ -41,6 +42,32 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+  /* พื้นหน้าเป็นขาวล้วน — สเปกเมนูกำหนด #eef2ec ไว้ แต่ทีมเลือกพื้นขาวแบบตัวอย่างที่ส่งมา
+     แถบไอคอนสีเขียวกับเส้นขวาของแผงเป็นตัวคั่นเมนูออกจากเนื้อหาอยู่แล้ว ไม่ต้องพึ่งพื้นเทา */
+  background: var(--color-canvas, #ffffff);
+}
+
+/* กล่องที่ JS วาดเมนูลงไป — ต้องเป็น flex row เอง ไม่งั้นแถบไอคอนกับแผงจะเรียงลงมาเป็นสองชั้น
+   แทนที่จะอยู่ข้างกัน (เป็น <div> ธรรมดา ลูกจึงไหลแบบ block) */
+#sidebar-shell {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+}
+
+/* โครงเดิมทำ .app-main เป็นการ์ดขาวมุมมนที่มีมาร์จินรอบตัว เพราะแถบเมนูเดิมพื้นโปร่ง
+   โครงใหม่แถบไอคอนกับแผงชิดขอบจอเต็มความสูง การ์ดที่ลอยอยู่จึงเหลือช่องว่างแปลก ๆ
+   คั่นระหว่างแผงกับเนื้อหา — คืนให้เป็นพื้นที่ธรรมดา ไม่ใช่การ์ด */
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
 }
 
 /* ==========================================================================
@@ -240,22 +267,23 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 16px 14px 14px 16px;
+  /* ล็อกความสูงไว้ เพื่อให้ปุ่มย่อกับปุ่มขยาย (ที่อยู่คนละ element) ตรงตำแหน่งกันพอดี */
+  height: 56px;
+  padding: 0 12px 0 14px;
   border-bottom: 1px solid var(--subnav-divider);
 }
 
 .subnav-logo {
-  width: 158px;
+  width: 132px;
   height: auto;
+  /* base.css ตั้ง :where(img, video) { background: var(--bg-subtle) } ไว้เป็น placeholder ตอนโหลด
+     โลโก้เป็น PNG พื้นโปร่งใส พื้นเทานั้นจึงทะลุขึ้นมาเป็นกล่องหลังโลโก้ */
+  background: transparent;
   /* สเปกใช้ mix-blend-mode: multiply เพราะไฟล์ต้นแบบเป็น JPG พื้นขาว
      โปรเจกต์นี้มี logo-farm.png พื้นโปร่งใสอยู่แล้ว จึงไม่ต้องใช้ */
 }
 
 .subnav-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  margin-top: -13px;
   width: 26px;
   height: 26px;
   flex: none;
@@ -270,6 +298,14 @@
   font-size: 13px;
   cursor: pointer;
   transition: background var(--shell-t), border-color var(--shell-t), color var(--shell-t);
+}
+
+/* ตัวที่อยู่ในหัวแผงเท่านั้นที่ลอยชิดขวา ตัวในแถบขยายวางตามปกติ */
+.subnav-head .subnav-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  margin-top: -13px;
 }
 
 .subnav-toggle:hover {
@@ -389,7 +425,9 @@
 .subnav-reopen {
   flex: none;
   width: 26px;
-  padding-top: 22px;
+  /* (56 - 26) / 2 = 15px — ปุ่มขยายจึงอยู่กึ่งกลางแนวตั้งของหัวแผงเท่ากับปุ่มย่อพอดี
+     ย่อแล้วกดขยาย ปุ่มไม่กระโดดไปที่อื่น */
+  padding-top: 15px;
   display: none;
   justify-content: center;
 }
@@ -444,6 +482,35 @@
   .subnav-reopen { display: none !important; }
 }
 
+/* ปุ่มลอย "เปิดเมนู" ของโครงเดิมไม่ต้องใช้แล้ว — แถบไอคอนแสดงอยู่ทุกขนาดจอ
+   กดหมวดในแถบก็เปิดแผงให้เอง ปุ่มลอยจึงเหลือเป็นแค่ปุ่มทับเนื้อหา */
+.drawer-btn { display: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   .subnav { transition: none; }
+}
+
+/* ==========================================================================
+   ลิงก์และปุ่ม — ไม่ขีดเส้นใต้ทุกสถานะ
+   base.css ตั้ง a:hover { text-decoration: underline } ไว้เป็นค่ากลาง
+   ซึ่งทำให้ปุ่มที่เป็น <a> และรายการเมนูขีดเส้นใต้ตอนชี้/กด
+   ========================================================================== */
+
+a,
+a:hover,
+a:focus,
+a:active,
+.btn,
+.btn:hover,
+.btn:focus,
+.btn:active,
+.subnav-item,
+.subnav-item:hover,
+.rail-menu-item,
+.rail-menu-item:hover,
+.subnav-foot-link,
+.subnav-foot-link:hover,
+.cell-title-link,
+.cell-title-link:hover {
+  text-decoration: none;
 }
