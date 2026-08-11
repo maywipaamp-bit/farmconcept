@@ -608,9 +608,9 @@ Service `mysql` ของ XAMPP หยุดอยู่ — client ของ XA
 | เชื่อมต่อ MySQL Local สำเร็จ · `migrate:status` ผ่าน | ✅ ผ่าน — 10 migration แสดงสถานะ Ran ครบ |
 | `migrate` สร้างตารางครบ | ✅ 53 ตาราง (44 ของโปรเจกต์ + 9 แกน Laravel) |
 | `migrate:rollback` ถอยกลับได้จริง | ✅ ผ่าน — จาก 53 ตารางเหลือ 1 แล้ว migrate กลับคืนได้ |
-| ป้องกัน N+1 · Index ครบ | ⏳ ตรวจได้เมื่อมี Controller/Query จริง |
-| Build asset ผ่าน Vite | ⏳ ยังไม่ได้ทำ |
-| `docs/coding-standards.md` | ⏳ ยังไม่ได้ทำ |
+| ป้องกัน N+1 · Index ครบ | ✅ ผ่าน — 6 query คงที่สำหรับหน้ารายการกิจกรรม |
+| Build asset ผ่าน Vite | ✅ ผ่าน — `npm run build` สำเร็จ ไม่มี error · CSS 293 kB (gzip 38.5) · JS 46.7 kB (gzip 12.3) |
+| `docs/coding-standards.md` | ✅ เสร็จแล้ว |
 
 ### ปัญหาที่เจอระหว่างติดตั้งและวิธีแก้
 
@@ -651,8 +651,150 @@ php artisan db:seed
 
 **หมายเหตุ occupation** — seed เป็นชุดรวม 8 ค่า (7 ค่าของ `registrationOptions.occupations` + `รับจ้างทั่วไป` ที่มีเฉพาะใน `cohort.JOBS`) รอทีมธุรกิจชี้ขาดตามปม F.5 แก้ที่ `MasterDataSeeder::seedOptions()` ที่เดียวแล้วรันซ้ำ
 
+### Model + ความสัมพันธ์ — ✅ เสร็จแล้ว
+
+**38 Model** ใน `app/Models/` (flat namespace ตามมาตรฐาน Laravel) · ทุกตัวประกาศ `$table` เพราะชื่อตารางมี prefix
+
+**กติกาที่บังคับไว้ในชั้น Model**
+
+| เรื่อง | ทำอย่างไร |
+|---|---|
+| กัน N+1 | `Model::preventLazyLoading()` เปิดนอก production ใน `AppServiceProvider` — lazy load เมื่อไหร่ throw ทันทีตอนพัฒนา ไม่ใช่ไปเจอตอนขึ้นจริง |
+| Eager load ที่หน้าจอต้องใช้ | scope `forList()` บน `Activity` และ `Registration` รวม relation ที่คอลัมน์ในตารางต้องใช้ไว้ที่เดียว |
+| `registered` ที่ไม่มีคอลัมน์เก็บ | `scopeForList()` ใส่ `withCount('registrations')` · `seatsLeft()` อ่านจาก count ที่โหลดมาแล้ว |
+| สถานะรอบติดตาม | `FollowUpRound::state()` คำนวณจาก `due_date` + config ทุกครั้ง ไม่มีคอลัมน์เก็บ |
+| ช่วงอายุ | `Participant::ageBand()` คำนวณจาก `birth_year` + `config('farmconcept.age_bands')` |
+| ความนิรนามของแบบประเมิน | `SatisfactionResponse` ไม่มี relation ใดชี้ไปยังคน · `SatisfactionReceipt` ไม่มี relation ไปยัง response — บังคับด้วยโครงสร้าง ไม่ใช่วินัย |
+| polymorphic ของ `evl_answers` | `Relation::enforceMorphMap` แปลง `satisfaction` / `survey` เป็นคลาส — ฐานข้อมูลไม่เก็บชื่อคลาสเต็ม ย้าย namespace ได้โดยข้อมูลไม่พัง |
+
+**ผลทดสอบความสัมพันธ์บนข้อมูลจริง**
+
+```
+USR-002 วีระ ศรีสมบัติ · บทบาท [ผู้ดูแลโครงการ, เจ้าหน้าที่โครงการ] · เข้าเมนู users-roles ได้
+USR-001 สุนิสา แก้วมณี (staff)                                    · เข้าเมนู users-roles ไม่ได้
+คุณปกรณ์ชัย ใจดี · สอน 2 หลักสูตร ข้ามโปรแกรม (ปลูกกินเอง + Food Literacy)
+เกิด 1994 → อายุ 32 → ช่วง "30-44 ปี"   ·   เกิด 1960 → อายุ 66 → ช่วง "60 ปีขึ้นไป"
+รวม 16 query · ไม่มี lazy load หลุด
+```
+
+### หน้านำร่อง — ✅ เสร็จแล้ว
+
+**`/admin/activities/list`** ทำงานบนข้อมูลจริงจาก MySQL แล้ว
+
+| ไฟล์ | บทบาท |
+|---|---|
+| `resources/views/layouts/admin.blade.php` | โครงหน้าจอกลาง — markup เดิมทุกบรรทัด รวมสคริปต์กันเมนูกระพริบ |
+| `resources/views/admin/activities/list.blade.php` | เนื้อหาหน้า + สคริปต์เดิม เปลี่ยนเฉพาะแหล่งข้อมูล |
+| `app/Http/Controllers/Admin/ActivityController.php` | Controller บาง — query ผ่าน scope ของ Model |
+| `database/seeders/ActivitySeeder.php` | กิจกรรม 5 · รอบ 6 · ผู้ลงทะเบียน 122 · QR 14 |
+
+**การย้ายไฟล์ static** — `assets/` และหน้า HTML เดิมทั้งหมดย้ายเข้า `public/` ด้วย `git mv`
+path สัมพัทธ์ `../../assets/` ของ 55 หน้าเดิมยังชี้ถูกทั้งหมด เพราะย้ายทั้งคู่พร้อมกัน
+`index.html` เปลี่ยนชื่อเป็น `home.html` — **ห้ามมี `public/index.html`** เพราะเว็บเซิร์ฟเวอร์ส่วนใหญ่เลือกก่อน `index.php` แล้ว routing ของ Laravel จะตายทั้งระบบ (แก้ลิงก์ที่ชี้มา 25 จุด)
+
+**URL ต้องเป็น `/admin/activities/list` ไม่ใช่ `/admin/activities`** — โฟลเดอร์ `public/admin/activities/` ที่ยังเก็บหน้า static เดิมอยู่จะบัง URL นั้น เว็บเซิร์ฟเวอร์เห็นเป็นไดเรกทอรีแล้วไม่ส่งต่อให้ Laravel
+เมื่อย้ายหน้าในโฟลเดอร์นั้นครบและลบทิ้งแล้ว ค่อยเปลี่ยนกลับ
+
+**ผลทดสอบ**
+
+```
+/admin/activities/list  -> 200 · asset ทุกไฟล์ 200 · ไม่มี error ใน console
+ตาราง 5 แถวจากฐานจริง · ชิปสถานะ 5 ชิป · ตัวกรองวิทยากร 4 · พื้นที่ 3 · ประเภท 2
+N+1: 5 กิจกรรม + 5 relation + withCount = 6 query คงที่ไม่ว่าจะกี่แถว
+```
+
+### Authentication — ✅ เสร็จแล้ว
+
+| ไฟล์ | บทบาท |
+|---|---|
+| `app/Http/Controllers/Auth/AuthController.php` | แสดงหน้าล็อกอิน · ยืนยันตัวตน · ออกจากระบบ |
+| `app/Http/Requests/LoginRequest.php` | validate + `Auth::attempt` + จำกัดจำนวนครั้งที่กรอกผิด |
+| `resources/views/auth/login.blade.php` | หน้าล็อกอิน — ดีไซน์เดิมทุกบรรทัด เปลี่ยนเฉพาะฟอร์มกับสคริปต์ |
+| `app/Http/Controllers/LegacyPageController.php` | เสิร์ฟหน้า HTML เดิม 26 หน้าหลังผ่านการตรวจสิทธิ์ |
+
+**ช่องโหว่ที่ปิดไป: หน้า static เดิมเข้าถึงได้โดยไม่ต้องล็อกอิน**
+ตราบใดที่ไฟล์อยู่ใน `public/` เว็บเซิร์ฟเวอร์จะส่งให้ตรง ๆ โดยไม่ผ่าน Laravel เลย ใครก็เปิดหน้าหลังบ้านได้
+จึงย้าย `public/admin/` → `resources/legacy/admin/` แล้วเสิร์ฟผ่าน route ที่มี middleware `auth`
+**URL เหมือนเดิมทุกตัวอักษร** path สัมพัทธ์ `../../assets/` ในไฟล์จึงยังชี้ถูก
+
+**ผู้ใช้จริงแทนที่ผู้ใช้จำลอง** — เซิร์ฟเวอร์ฉีด `window.TFC_MOCK.currentUser` ทับ **ทันทีหลัง** `mock-data.js`
+ต้องตรงตำแหน่งนั้นเพราะ `sidebar-render.js` อ่านค่าไปวาดโปรไฟล์ตั้งแต่ก่อนจบ `<body>`
+`User::toClientPayload()` ใช้ร่วมกันทั้งฝั่ง Blade และหน้า legacy จึงไม่มีสองสูตร
+
+**ข้อกำหนดความปลอดภัยที่ทำไว้**
+
+| เรื่อง | วิธีทำ |
+|---|---|
+| ไม่บอกว่าบัญชีไหนมีอยู่จริง | ชื่อผู้ใช้ผิด · รหัสผ่านผิด · บัญชีถูกระงับ → ข้อความเดียวกันหมด |
+| บัญชีที่ถูกระงับล็อกอินไม่ได้ | ใส่ `status = ใช้งานอยู่` เป็นเงื่อนไขใน `Auth::attempt` |
+| Session fixation | `session()->regenerate()` หลังล็อกอินสำเร็จ |
+| เดารหัสผ่านรัว ๆ | `RateLimiter` 5 ครั้ง นับแยกตาม **ชื่อผู้ใช้ + IP** เพื่อไม่ให้ใครล็อกบัญชีคนอื่นได้ |
+| CSRF ตอนออกจากระบบ | `POST /logout` พร้อม token — ไม่ใช่ลิงก์ธรรมดาที่เว็บอื่นฝัง `<img src="/logout">` เตะผู้ใช้ออกได้ |
+| Path traversal | กรองด้วย regex แล้วยืนยันซ้ำด้วย `realpath` ว่าอยู่ใต้โฟลเดอร์ที่อนุญาต |
+| หน้าหลังบ้านถูก cache | `Cache-Control: no-store, private` |
+
+**ผลทดสอบ**
+
+```
+/admin/activities/list (ไม่ล็อกอิน)  -> 302 /login
+/admin/dashboard.html  (ไม่ล็อกอิน)  -> 302 /login      ← หน้า static ก็ถูกกันแล้ว
+รหัสผ่านผิด          -> "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง"
+บัญชีถูกระงับ         -> ข้อความเดียวกัน (ไม่บอกว่าบัญชีมีอยู่)
+ล็อกอินสำเร็จ         -> 302 กลับไปหน้าที่ตั้งใจเปิด
+ออกจากระบบ           -> 302 /login · เข้าหลังบ้านซ้ำถูกเด้งกลับ
+/admin/../../.env    -> 404 (ทั้งแบบดิบและแบบ URL-encode)
+```
+
+ข้อกำหนดใน `AGENTS.md` บรรทัด 83-86 (ตรวจ session ก่อน render · ห้ามเห็นหน้า login แวบก่อน redirect · refresh แล้วไม่ flicker) **ได้มาฟรีจากการย้ายมาตรวจฝั่งเซิร์ฟเวอร์** เพราะเซิร์ฟเวอร์ตัดสินก่อนส่ง HTML ออกไป ไม่มีจังหวะให้หน้าจอกระพริบ
+
+### สิทธิ์ระดับเมนู — ✅ เสร็จแล้ว
+
+| ไฟล์ | บทบาท |
+|---|---|
+| `config/menu.php` | **แหล่งความจริงเดียวของโครงเมนู** — ย้ายมาจาก `assets/js/menu-config.js` (ลบไฟล์นั้นแล้ว) |
+| `app/Services/MenuService.php` | กรองเมนูตามสิทธิ์ · แปลง URL → menu_key · คำนวณสิทธิ์แบบกว้าง |
+| `app/Http/Middleware/EnsureMenuAccess.php` | ตรวจสิทธิ์ก่อน render |
+| `resources/views/partials/client-context.blade.php` | ก้อนข้อมูลที่ฉีดให้ฝั่งหน้าจอ ใช้ร่วมกันทั้งหน้า Blade และหน้า static |
+
+**ทำไมต้องย้ายเมนูมาไว้ที่ PHP** — เซิร์ฟเวอร์ต้องรู้โครงเมนูเพื่อสองอย่าง คือกรองเมนูที่ผู้ใช้ไม่มีสิทธิ์ออกก่อนส่ง และแปลง URL ที่ขอมาเป็น `menu_key` เพื่อตรวจสิทธิ์
+ถ้าเก็บไว้สองที่จะหลุดจากกันแน่นอน — และ `menu-config.js` เขียนกำกับไว้เองว่าห้ามเขียนรายการเมนูซ้ำที่อื่น
+ตอนนี้แก้ที่ `config/menu.php` ที่เดียว หน้าจอรับโครงที่กรองแล้วผ่าน `window.TFC_MENU` ที่เซิร์ฟเวอร์ฉีดให้
+
+**เมนูที่ไม่มีสิทธิ์ไม่ถูกส่งมาเลย** ไม่ใช่ส่งมาแล้วซ่อนด้วย CSS — เปิดดู source ก็ไม่เห็นชื่อเมนูที่ตัวเองเข้าไม่ได้
+หัวข้อกลุ่มที่ลูกถูกตัดหมดจะหายตามไปด้วย ไม่เหลือหัวข้อว่างที่กดแล้วไม่มีอะไร
+
+**path ที่ไม่รู้จัก = ปฏิเสธ** — หน้าที่ไม่ตรงกับ `href`/`alsoMatch` ของเมนูใด และไม่อยู่ใน `extra_paths` จะได้ 404
+เพิ่มหน้าใหม่แล้วลืมลงทะเบียนจะเจอทันทีตอนทดสอบ ดีกว่าเผลอเปิดหน้าที่ยังไม่มีใครกำหนดสิทธิ์ให้
+
+**ผลทดสอบ**
+
+| หน้า | ผู้ดูแลระบบสูงสุด | เจ้าหน้าที่โครงการ |
+|---|---|---|
+| `/admin/activities/list` | 200 | 200 |
+| `/admin/activities/checkin.html` | 200 | 200 |
+| `/admin/cohort/list.html` | 200 | 200 |
+| `/admin/users/list.html` | 200 | **403** |
+| `/admin/users/roles.html` | 200 | **403** |
+| `/admin/areas/list.html` | 200 | **403** |
+| `/admin/basic/programs.html` | 200 | **403** |
+| `/admin/nope.html` | 404 | 404 |
+
+```
+เมนูที่ส่งให้เจ้าหน้าที่: แดชบอร์ด · กิจกรรม(4) · ประเมินสุขภาพ(3) · แบบประเมิน
+                        (ไม่มี "พื้นฐาน" และ "ผู้ใช้งาน")
+สิทธิ์แบบกว้าง: users=false · areas=false · master_data=false · activities=true · evaluations=true
+หน้า static เดิมได้เมนูชุดเดียวกัน · ไม่มี menu-config.js เหลือในผลลัพธ์
+```
+
+### ที่ยังไม่ได้ทำ
+
+1. **กรอง/เรียง/แบ่งหน้ายังทำที่ฝั่งหน้าจอ** — ต้องย้ายไป `WHERE`/`ORDER BY`/`LIMIT` ที่เซิร์ฟเวอร์ตามข้อ 4.5
+2. **ปุ่มลบยังลบแค่ในหน่วยความจำ** — ต้องทำ `DELETE /admin/activities/{code}`
+3. `create.html` / `detail.html` ยังอ่านข้อมูลจำลอง (แต่เข้าถึงได้เฉพาะคนที่มีสิทธิ์แล้ว)
+4. **สิทธิ์คุมได้แค่ระดับ "เข้าหน้าได้/ไม่ได้"** ยังไม่มีระดับ "ดูได้แต่แก้ไม่ได้" — ปุ่มในตารางยังอาศัย `TFC.hasPermission()` ฝั่งเบราว์เซอร์ ซึ่งกันการกดพลาดได้ แต่กันคนตั้งใจไม่ได้ ต้องตรวจซ้ำที่เซิร์ฟเวอร์ตอนทำ endpoint เขียนข้อมูล
+
 ### งานถัดไป
 
-1. Model + ความสัมพันธ์ พร้อม Eager Loading ตั้งแต่ต้น
-2. `layouts/admin.blade.php` + ย้ายหน้านำร่อง `activities/list`
-3. Seeder ของข้อมูลธุรกรรม (กิจกรรม · ผู้ลงทะเบียน · กลุ่มตัวอย่าง) — ทำหลังมี Model แล้วจะสั้นกว่ามาก
+1. ย้าย filter/sort/paginate ไปฝั่งเซิร์ฟเวอร์
+2. ย้าย `create` / `detail` เป็น Blade แล้วลบไฟล์ static ของโมดูลกิจกรรม
+3. `docs/coding-standards.md` (ข้อ 4.6 ของ prompt เดิม) — โครงจริงนิ่งพอจะเขียนได้แล้ว

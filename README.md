@@ -13,8 +13,9 @@ thefarmconcept/
     ├── design-system.md
     ├── component-library.md
     ├── screen-template.md
-    ├── coding-standard.md
+    ├── coding-standards.md
     ├── database-standard.md
+    ├── database-schema-proposal.md
     └── codex-prompts.md
 ```
 
