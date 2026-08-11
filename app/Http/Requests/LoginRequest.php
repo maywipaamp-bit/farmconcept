@@ -52,8 +52,11 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $loginInput = $this->string('username')->trim()->value();
+        $loginField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
         $credentials = [
-            'username' => $this->string('username')->trim()->value(),
+            $loginField => $loginInput,
             'password' => $this->string('password')->value(),
             'status' => 'ใช้งานอยู่',
         ];

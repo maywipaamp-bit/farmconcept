@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MasterData;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +140,25 @@ Route::middleware('auth')->group(function () {
                     Route::get('/', [MasterData\FollowUpRoundTemplateController::class, 'index'])->name('index');
                     Route::put('/', [MasterData\FollowUpRoundTemplateController::class, 'bulkSave'])->name('save');
                 });
+        });
+
+        Route::redirect('/users/list.html', '/admin/users');
+
+        Route::prefix('users')->name('users.')->middleware('menu:users-list')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::put('/{user}', [UserController::class, 'update'])->name('update');
+            Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::redirect('/users/roles.html', '/admin/users/roles');
+
+        Route::prefix('users/roles')->name('users.roles.')->middleware('menu:users-roles')->group(function () {
+            Route::get('/', [RoleController::class, 'index'])->name('index');
+            Route::post('/', [RoleController::class, 'store'])->name('store');
+            Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+            Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
         });
     });
 
