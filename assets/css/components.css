@@ -1092,6 +1092,35 @@ dd { margin: 0; }
   font-size: var(--font-size-caption);
 }
 
+/* ---------- ระยะของหัวหน้า: ให้เท่ากันทุกหน้า ----------
+   ยึดหน้า "จัดการกิจกรรม" เป็นมาตรฐาน — ชื่อหน้าห่างจาก breadcrumb 4px
+   แล้วเว้นใต้ breadcrumb อีก 20px ก่อนเข้าเนื้อหา
+
+   หน้าที่ใช้ .page-header มาตรฐานได้ระยะนี้อยู่แล้ว ส่วนหน้าที่มีหัวเฉพาะของตัวเอง
+   (.ci-head .fb-header .co-header ...) แต่ละหน้าตั้งระยะเองไว้คนละค่า จึงบังคับที่
+   ระดับ .content เพื่อกลบค่าเฉพาะหน้าเหล่านั้น — ตัวเลือกสองชั้นชนะคลาสเดี่ยวได้
+   โดยไม่ต้องใช้ !important */
+.content h1 {
+  margin-bottom: var(--space-1);
+}
+
+/* กล่องชื่อหน้า + breadcrumb ที่ navigation.js ห่อให้ — ระยะภายในคุมจากที่นี่ที่เดียว
+   จึงเท่ากันทุกหน้า ไม่ว่ากล่องข้างนอกของแต่ละหน้าจะตั้ง gap ไว้เท่าไหร่ */
+.page-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.page-title-block h1 { margin-bottom: var(--space-1); }
+.page-title-block .breadcrumb-sub { margin-top: 0; }
+
+/* หัวหน้าที่วางชื่อไว้แถวเดียวกับปุ่มต้องชิดขอบบนของแถว ไม่ใช่จัดกึ่งกลาง
+   ไม่งั้นชื่อหน้าจะถูกดันลงตามความสูงของปุ่ม แล้วเริ่มไม่ตรงกับหน้าอื่น
+   (โครงเดียวกับ .page-header มาตรฐานซึ่งใช้ flex-start อยู่แล้ว) */
+.content .page-title-block { align-self: flex-start; }
+
 .breadcrumb-sub .is-current {
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-regular);
@@ -3074,11 +3103,14 @@ dd { margin: 0; }
 }
 
 /* ---------- เซลล์ข้อมูลแบบเรียงลงมา (ชื่อ + วันเวลา + สถานที่ + วิทยากร + ราคา) ---------- */
+/* บรรทัดรองในเซลล์ชิดกับบรรทัดหลัก — ความสูงของแถวถูกกำหนดโดยเซลล์ที่มีสองบรรทัด
+   ไม่ใช่ padding ของแถว การบีบช่องไฟตรงนี้จึงเป็นตัวที่ทำให้ตารางกระชับขึ้นจริง
+   ความสูงบรรทัดยังคง 1.6 ตามกติกาของเนื้อหาไทย ไม่ไปบีบตรงนั้น */
 .cell-meta-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-top: var(--space-1);
+  gap: 0;
+  margin-top: 0;
 }
 
 .cell-meta {
@@ -4819,7 +4851,7 @@ button.multiselect:focus-visible {
 }
 
 .grid-head {
-  padding: 9px 20px;
+  padding: 7px 20px;
   background: #FCFDFC;
   border-bottom: 1px solid var(--color-border);
   font-size: var(--font-size-small);
@@ -4828,7 +4860,7 @@ button.multiselect:focus-visible {
 }
 
 .grid-row {
-  padding: 9px 20px;
+  padding: 6px 20px;
   border-bottom: 1px solid var(--color-background);
   transition: background var(--transition-fast);
 }
@@ -8492,22 +8524,7 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 /* ---------- มาตรวัด 1–5 ---------- */
 .ec-scale { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 
-.ec-scale-box {
-  width: 30px; height: 30px;
-  flex: none;
-  border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-variant-numeric: tabular-nums;
-}
 
-/* คำอธิบายสเกลบอกว่า 1 กับ 5 หมายถึงอะไร เป็นข้อมูลที่มีความหมาย
-   จึงห้ามใช้ --color-text-faint (#C7CDD4) ตามมาตรฐาน */
-.ec-scale-hint { font-size: var(--font-size-caption); color: var(--color-text-secondary); white-space: nowrap; }
 
 .ec-text-hint {
   border: 1px dashed var(--color-border);
@@ -13378,3 +13395,44 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   }
   .ec-card.is-active { flex-wrap: wrap; }
 }
+
+/* ---------- สเกล 1–5 แบบหน้ายิ้ม (assets/js/evaluation-create.js) ----------
+   เลือกจากความรู้สึกได้เร็วกว่ากดตัวเลขเปล่า ๆ และผู้ตอบไม่ต้องเดาว่า 1 กับ 5 ฝั่งไหนคือดี
+   ค่าที่ระบบเก็บยังเป็น 1–5 เหมือนเดิม รูปเป็นแค่หน้าตาของตัวเลือก */
+.ec-scale { align-items: flex-start; }
+
+.ec-face {
+  /* 26px ไม่มีใน type scale เพราะเป็นขนาดของรูป ไม่ใช่ข้อความ ประกาศครั้งเดียวตรงนี้ */
+  --ec-face-size: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  min-width: 62px;
+  padding: var(--space-2) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+.ec-face:hover {
+  border-color: var(--color-primary-soft-border);
+  background: var(--color-primary-soft);
+  transform: translateY(-1px);
+}
+
+.ec-face-emoji { font-size: var(--ec-face-size); line-height: 1.25; }
+
+.ec-face-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.ec-face:hover .ec-face-label { color: var(--color-primary-dark); }
+
+/* ในแผงตัวอย่างด้านขวาพื้นที่แคบกว่า ย่อลงหนึ่งขั้นให้ครบ 5 หน้าโดยไม่ตกบรรทัด */
+.ec-preview-list .ec-face { min-width: 0; padding: var(--space-1); }
+.ec-preview-list .ec-face { --ec-face-size: 20px; }
+.ec-preview-list .ec-face-label { display: none; }

@@ -244,10 +244,25 @@
       '</div>';
   }
 
+  /* สเกล 1–5 แสดงเป็นหน้ายิ้ม — ผู้ตอบเลือกจากความรู้สึกได้ทันที ไม่ต้องแปลตัวเลขเป็นความหมายเอง
+     ค่าที่ระบบเก็บยังเป็น 1–5 เหมือนเดิม รายงานและคะแนนเฉลี่ยจึงไม่กระทบ
+     เก็บชุดนี้ไว้ที่เดียว ทั้งฝั่งแก้ไขและฝั่งตัวอย่างใช้ตัวเดียวกัน จะได้ไม่มีทางเพี้ยนจากกัน */
+  var RATING_FACES = [
+    { score: 1, emoji: '😞', label: 'น้อยที่สุด' },
+    { score: 2, emoji: '🙁', label: 'น้อย' },
+    { score: 3, emoji: '😐', label: 'ปานกลาง' },
+    { score: 4, emoji: '🙂', label: 'มาก' },
+    { score: 5, emoji: '😍', label: 'มากที่สุด' }
+  ];
+
   function ratingHtml() {
     return '<div class="ec-scale">' +
-      [1, 2, 3, 4, 5].map(function (s) { return '<span class="ec-scale-box">' + s + '</span>'; }).join('') +
-      '<span class="ec-scale-hint">1 = น้อยที่สุด · 5 = มากที่สุด</span>' +
+      RATING_FACES.map(function (f) {
+        return '<span class="ec-face" title="' + esc(f.score + ' = ' + f.label) + '">' +
+          '<span class="ec-face-emoji" role="img" aria-label="' + esc(f.label) + '">' + f.emoji + '</span>' +
+          '<span class="ec-face-label">' + esc(f.label) + '</span>' +
+          '</span>';
+      }).join('') +
       '</div>';
   }
 
@@ -272,7 +287,7 @@
       return '<div class="ec-pv-q' + (n.inSection ? ' is-nested' : '') + '">' +
         '<span class="ec-pv-title">' + esc(n.no + '. ' + (q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
         (q.kind === 'rating'
-          ? '<div class="ec-scale">' + [1, 2, 3, 4, 5].map(function (s) { return '<span class="ec-scale-box">' + s + '</span>'; }).join('') + '</div>'
+          ? ratingHtml()
           : '') +
         (q.kind === 'dropdown'
           ? '<div class="ec-pv-select">' +
@@ -607,9 +622,14 @@
   function saveDraft(manual) {
     state.dirty = false;
     var now = new Date();
-    $('ec-autosave').hidden = false;
-    $('ec-autosave-text').textContent = 'บันทึกร่างล่าสุด ' +
-      String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' น.';
+    /* ป้ายบอกเวลาบันทึกร่างอยู่บน topbar ซึ่งบางหน้าไม่ได้ใส่ไว้
+       เช็กก่อนใช้ ไม่งั้นทั้งฟังก์ชันพังและ toast แจ้งผลก็ไม่ทำงานตามไปด้วย */
+    var badge = $('ec-autosave'), badgeText = $('ec-autosave-text');
+    if (badge) badge.hidden = false;
+    if (badgeText) {
+      badgeText.textContent = 'บันทึกร่างล่าสุด ' +
+        String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' น.';
+    }
     if (manual && window.TFC.showToast) window.TFC.showToast('บันทึกฉบับร่างเรียบร้อย', 'success');
   }
 

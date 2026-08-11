@@ -146,8 +146,8 @@
 
   /* ---------- Layout ---------- */
   --layout-max-width: 1280px;
-  --sidebar-width: 244px;
-  --sidebar-width-collapsed: 76px;
+  --sidebar-width: 208px;
+  --sidebar-width-collapsed: 60px;
   --topbar-height: 56px;
 
   /* ---------- Breakpoints (reference only, use in media queries directly) ---------- */

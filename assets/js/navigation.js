@@ -210,21 +210,21 @@
     var title = main.querySelector('h1');
     if (!title) return false;
 
-    /* วางต่อจากชื่อหน้าได้ก็ต่อเมื่อกล่องที่ครอบชื่ออยู่เรียงลงมาเป็นแนวตั้ง
-       บางหน้าเอาชื่อหน้าไว้ในแถวเดียวกับปุ่ม (flex แนวนอน) ถ้าแทรกตรงนั้น
-       breadcrumb จะไปยืนข้างปุ่มแทนที่จะอยู่ใต้ชื่อ — กรณีนั้นวางใต้ทั้งแถวหัวแทน */
-    var parent = title.parentElement;
-    var style = window.getComputedStyle(parent);
-    var isRow = style.display.indexOf('flex') > -1 && style.flexDirection.indexOf('column') === -1;
+    /* ห่อชื่อหน้ากับ breadcrumb ไว้ด้วยกันเป็นบล็อกเดียว แล้ววางไว้ตรงที่ชื่อหน้าเคยอยู่
+       ไม่ใช่วางเป็นพี่น้องกันเฉย ๆ เพราะกล่องที่ครอบของแต่ละหน้าตั้ง gap และ
+       align-items ไว้ไม่เหมือนกัน ระยะระหว่างชื่อกับ breadcrumb จึงเพี้ยนตามไปด้วย
+       พอห่อเองแล้ว ระยะนี้ถูกคุมจาก .page-title-block ที่เดียวและเท่ากันทุกหน้า
 
-    var anchor = title;
-    if (isRow) {
-      anchor = parent;
-      while (anchor.parentElement && anchor.parentElement !== main) anchor = anchor.parentElement;
-    }
-
+       วิธีนี้ใช้ได้ทั้งกับหน้าที่ชื่ออยู่ในกล่องแนวตั้ง และหน้าที่ชื่ออยู่ในแถวเดียวกับ
+       ปุ่ม — กรณีหลังบล็อกนี้จะกลายเป็นสมาชิกของแถวแทนตัว h1 ซึ่งเป็นโครงเดียวกับ
+       .page-header มาตรฐาน (กล่องข้อความคอลัมน์หนึ่งใบ + ปุ่มอีกใบ) */
     crumb.classList.add('breadcrumb-sub');
-    anchor.insertAdjacentElement('afterend', crumb);
+
+    var box = document.createElement('div');
+    box.className = 'page-title-block';
+    title.insertAdjacentElement('beforebegin', box);
+    box.appendChild(title);
+    box.appendChild(crumb);
     return true;
   }
 

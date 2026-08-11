@@ -39,8 +39,10 @@
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-1) var(--space-4);
+  /* ช่องไฟและขอบบางที่สุดเท่าที่ยังอ่านออก เพราะที่ว่างในหัวแถบทุก px
+     ถูกแบ่งไปให้โลโก้ ยิ่งเหลือที่ว่างข้างโลโก้มาก โลโก้ยิ่งดูเล็กเทียบกับแถบ */
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   height: var(--topbar-height);
   border-bottom: 1px solid var(--color-border);
   overflow: hidden;
@@ -213,13 +215,14 @@
 
 .sidebar-toggle {
   margin-left: auto;
+  flex: none;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
-  padding: var(--space-1);
+  padding: 2px;
   border-radius: var(--radius-sm);
   transition: transform var(--transition-base), color var(--transition-fast), background var(--transition-fast);
 }
@@ -604,6 +607,11 @@ img.sidebar-logo {
   background: none;
   clip-path: inset(10.7% 3.9%);
   margin: -6px;
+  /* ไฟล์โลโก้เป็น JPG จึงไม่มีช่องโปร่งใสในตัว พื้นขาวของภาพเลยเป็นสี่เหลี่ยม
+     ทับพื้นเทาอ่อนของแถบเมนูให้เห็นชัด multiply คูณสีภาพกับพื้นข้างหลัง
+     ขาว (1.0) จึงกลายเป็นสีพื้นพอดี ส่วนตัวอักษรที่เข้มยังคงเดิม
+     ใช้ได้เพราะพื้นหลังเป็นสีอ่อน ถ้าวันหนึ่งพื้นเป็นสีเข้มต้องเปลี่ยนไปใช้ไฟล์ PNG แทน */
+  mix-blend-mode: multiply;
 }
 
 /* ย่อเมนู: ซ่อนลูกศรกาง/ยุบเมนูย่อย
@@ -615,13 +623,41 @@ img.sidebar-logo {
 }
 
 /* ---------- ย่อเมนู ----------
-   แถบกว้างแค่ 76px แต่ padding 16x2 + ปุ่มย่อ 28 + gap 12 กินไป 72px
-   เหลือให้โลโก้ 4px ตัวโลโก้จึงถูก max-width: 100% บีบจนแบนเป็นเส้น (ของเดิมก็เป็น)
-   แก้ด้วยการบีบขอบและช่องไฟลง แล้วให้โลโก้เป็นขนาดคงที่ไม่ถูกยืดหด
-   8 + 26 + 4 + 28 + 8 = 74px พอดีใน 76px */
+   ย่อแล้วเป็นแถบสีเขียวของระบบ ไม่ใช่แถบขาวที่กลืนไปกับพื้น เพราะตอนย่อเหลือแต่
+   ไอคอน ไม่มีข้อความช่วยบอกขอบเขต พื้นสีทึบจึงทำหน้าที่บอกว่าตรงนี้คือแถบเมนู
+   ไอคอนกลับเป็นสีขาวทั้งแถบ ตัวที่เปิดอยู่ใช้พื้นเขียวเข้มขึ้นแทนพื้นเขียวจาง */
+.app-shell.is-sidebar-collapsed .sidebar {
+  background: var(--color-primary);
+}
+
+.app-shell.is-sidebar-collapsed .nav-item,
+.app-shell.is-sidebar-collapsed .sidebar-toggle,
+.app-shell.is-sidebar-collapsed .sidebar-profile {
+  color: var(--color-text-inverse);
+}
+
+.app-shell.is-sidebar-collapsed .nav-item:hover,
+.app-shell.is-sidebar-collapsed .sidebar-toggle:hover,
+.app-shell.is-sidebar-collapsed .sidebar-profile:hover,
+.app-shell.is-sidebar-collapsed .nav-item.is-active {
+  background: var(--color-primary-hover);
+  color: var(--color-text-inverse);
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-header,
+.app-shell.is-sidebar-collapsed .sidebar-foot {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* แถบแคบเหลือ 60px — ขอบ 6px สองข้าง + ไอคอน 26px + ปุ่มย่อ 22px คือ 60px พอดี
+   ปุ่มย่อจึงต้องเล็กลงด้วย ไม่งั้นจะดันโลโก้ตกขอบ */
 .app-shell.is-sidebar-collapsed .sidebar-header {
-  padding: var(--space-2);
-  gap: var(--space-1);
+  padding: var(--space-1);
+  gap: 0;
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-toggle {
+  padding: 2px;
 }
 
 .app-shell.is-sidebar-collapsed .sidebar-brand { flex: none; }
