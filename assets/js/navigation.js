@@ -202,6 +202,51 @@
 
      รอ DOMContentLoaded เพราะหลายหน้าสร้างหัวหน้าด้วย TFC.renderPageHeader
      ในสคริปต์ท้ายไฟล์ ซึ่งรันหลัง navigation.js ตอนนี้ h1 ยังไม่มีตัวตน */
+  /* สร้างเนื้อใน breadcrumb ใหม่จากโครงเมนู (TFC.navTrail ที่ sidebar-render.js เก็บไว้)
+     แทนของที่เขียนมือไว้ในหน้า เพราะของเขียนมือค้างเป็นโครงเก่าทุกครั้งที่เมนูเปลี่ยน
+     — ตอนย้าย "แบบประเมิน" ออกจากกลุ่มประเมินสุขภาพ มีหน้าที่เพี้ยนพร้อมกันสิบกว่าหน้า
+
+     ชั้นสุดท้ายที่หน้าเขียนไว้เอง (เช่น "สร้างแบบประเมิน" "รายละเอียด") จะถูกเก็บไว้
+     ต่อท้าย เพราะเป็นหน้าย่อยที่ไม่มีเมนูของตัวเอง เมนูจึงไม่รู้จัก
+     ส่วนหน้าที่ไม่ตรงกับเมนูใดเลย ปล่อยของเดิมไว้ ไม่ไปยุ่ง */
+  function rebuildBreadcrumb(crumb) {
+    var trail = window.TFC && window.TFC.navTrail;
+    if (!trail || !trail.length) return;
+
+    var mount = document.getElementById('sidebar-nav');
+    var base = (mount && mount.getAttribute('data-nav-base')) || '';
+    var esc = window.TFC.escapeHtml;
+
+    /* ชั้นสุดท้ายที่หน้าเขียนไว้เอง เก็บไว้ต่อเมื่อกำลังอยู่ที่ "หน้าย่อย" ของเมนูนั้น
+       ถ้าอยู่ที่หน้าของเมนูเองก็ไม่ต้องมี — บางหน้าตั้งชื่อไม่ตรงกับชื่อในเมนู
+       (เมนูว่า "รายการกิจกรรม" หน้าว่า "จัดการกิจกรรม") ถ้าไม่แยกตรงนี้จะได้สองชั้นซ้ำ */
+    var last = trail[trail.length - 1];
+    var currentEl = crumb.querySelector('.is-current');
+    var leaf = (!last.isCurrent && currentEl) ? currentEl.textContent.trim() : '';
+    if (leaf === last.label) leaf = '';
+
+    var parts = [];
+
+    /* แดชบอร์ดเป็นรากของทุกเส้นทาง ยกเว้นตอนที่เราอยู่ที่หน้าแดชบอร์ดเอง
+       ซึ่งเมนูของมันจะเป็นขั้นแรกของ trail อยู่แล้ว ถ้าเติมอีกจะซ้ำเป็นสองชั้น */
+    var dashHref = base + 'admin/dashboard.html';
+    var startsAtDashboard = trail[0].href === dashHref;
+    if (!startsAtDashboard) parts.push('<a href="' + dashHref + '">แดชบอร์ด</a>');
+
+    trail.forEach(function (step, i) {
+      var isLastMenuStep = i === trail.length - 1;
+      /* หัวกลุ่มไม่มีหน้าของตัวเอง จึงเป็นข้อความเปล่า ไม่ใช่ลิงก์ */
+      if (!step.href) { parts.push('<span>' + esc(step.label) + '</span>'); return; }
+      parts.push(isLastMenuStep && !leaf
+        ? '<span class="is-current">' + esc(step.label) + '</span>'
+        : '<a href="' + step.href + '">' + esc(step.label) + '</a>');
+    });
+
+    if (leaf) parts.push('<span class="is-current">' + esc(leaf) + '</span>');
+
+    crumb.innerHTML = parts.join(' <span>/</span> ');
+  }
+
   function moveBreadcrumb() {
     var main = document.querySelector('.content');
     var crumb = main && main.querySelector('.breadcrumb');
@@ -209,6 +254,8 @@
 
     var title = main.querySelector('h1');
     if (!title) return false;
+
+    rebuildBreadcrumb(crumb);
 
     /* ห่อชื่อหน้ากับ breadcrumb ไว้ด้วยกันเป็นบล็อกเดียว แล้ววางไว้ตรงที่ชื่อหน้าเคยอยู่
        ไม่ใช่วางเป็นพี่น้องกันเฉย ๆ เพราะกล่องที่ครอบของแต่ละหน้าตั้ง gap และ

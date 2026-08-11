@@ -140,13 +140,19 @@
       '<div class="dash-donut-wrap">' +
         '<div class="dash-donut" style="background: conic-gradient(' + stops + ')" role="img"' +
           ' aria-label="สัดส่วนผู้เข้าร่วมตามกลุ่มเป้าหมาย รวม ' + num(data.total) + ' คน">' +
-          '<span class="dash-donut-hole"><span class="dash-donut-total">100 %</span></span>' +
+          /* กลางวงบอกยอดรวมเป็นจำนวนคน คู่กับ 100% — เปอร์เซ็นต์อย่างเดียวตอบไม่ได้ว่า
+             20% นั้นคือกี่คน ซึ่งเป็นตัวเลขที่ใช้วางแผนงานจริง */
+          '<span class="dash-donut-hole">' +
+            '<span class="dash-donut-total">' + num(data.total) + '</span>' +
+            '<span class="dash-donut-unit">คน · 100%</span>' +
+          '</span>' +
         '</div>' +
         '<div class="dash-legend">' +
           data.rows.map(function (r, i) {
             return '<span class="dash-legend-row">' +
               '<span class="dash-legend-dot" style="background: var(--dash-slice-' + ((i % 4) + 1) + ')"></span>' +
               '<span class="dash-legend-label">' + esc(r.label) + '</span>' +
+              '<span class="dash-legend-count">' + num(r.count) + ' คน</span>' +
               '<span class="dash-legend-pct">' + r.pct + '%</span>' +
               '</span>';
           }).join('') +

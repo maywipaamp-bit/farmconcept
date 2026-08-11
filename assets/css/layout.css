@@ -623,33 +623,7 @@ img.sidebar-logo {
 }
 
 /* ---------- ย่อเมนู ----------
-   ย่อแล้วเป็นแถบสีเขียวของระบบ ไม่ใช่แถบขาวที่กลืนไปกับพื้น เพราะตอนย่อเหลือแต่
-   ไอคอน ไม่มีข้อความช่วยบอกขอบเขต พื้นสีทึบจึงทำหน้าที่บอกว่าตรงนี้คือแถบเมนู
-   ไอคอนกลับเป็นสีขาวทั้งแถบ ตัวที่เปิดอยู่ใช้พื้นเขียวเข้มขึ้นแทนพื้นเขียวจาง */
-.app-shell.is-sidebar-collapsed .sidebar {
-  background: var(--color-primary);
-}
-
-.app-shell.is-sidebar-collapsed .nav-item,
-.app-shell.is-sidebar-collapsed .sidebar-toggle,
-.app-shell.is-sidebar-collapsed .sidebar-profile {
-  color: var(--color-text-inverse);
-}
-
-.app-shell.is-sidebar-collapsed .nav-item:hover,
-.app-shell.is-sidebar-collapsed .sidebar-toggle:hover,
-.app-shell.is-sidebar-collapsed .sidebar-profile:hover,
-.app-shell.is-sidebar-collapsed .nav-item.is-active {
-  background: var(--color-primary-hover);
-  color: var(--color-text-inverse);
-}
-
-.app-shell.is-sidebar-collapsed .sidebar-header,
-.app-shell.is-sidebar-collapsed .sidebar-foot {
-  border-color: rgba(255, 255, 255, 0.22);
-}
-
-/* แถบแคบเหลือ 60px — ขอบ 6px สองข้าง + ไอคอน 26px + ปุ่มย่อ 22px คือ 60px พอดี
+   แถบแคบเหลือ 60px — ขอบ 6px สองข้าง + ไอคอน 26px + ปุ่มย่อ 22px คือ 60px พอดี
    ปุ่มย่อจึงต้องเล็กลงด้วย ไม่งั้นจะดันโลโก้ตกขอบ */
 .app-shell.is-sidebar-collapsed .sidebar-header {
   padding: var(--space-1);

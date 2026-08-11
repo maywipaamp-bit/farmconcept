@@ -7,14 +7,19 @@
   var esc = window.TFC.escapeHtml;
   var $ = function (id) { return document.getElementById(id); };
 
+  /* chips เลือกได้หลายข้อเหมือน multi แต่คนละชนิดกันโดยตั้งใจ
+     multi = รายการติ๊กแนวตั้ง เหมาะกับตัวเลือกที่ข้อความยาวหรือมีเยอะ อ่านทีละบรรทัด
+     chips = ป้ายเรียงต่อกัน เหมาะกับคำสั้น ๆ ที่กดเล่นได้เร็ว เห็นครบในสายตาเดียว
+     ถ้ารวมเป็นชนิดเดียวแล้วให้เลือกหน้าตาทีหลัง จะกลายเป็นสองคำถามในที่เดียว */
   var KIND_LABELS = {
     rating: 'ให้คะแนน 1–5',
     single: 'เลือก 1 ข้อ',
     multi: 'เลือกหลายข้อ',
+    chips: 'เลือกแบบป้าย (หลายข้อ)',
     dropdown: 'เลือกจากรายการ',
     text: 'ข้อความ'
   };
-  var KIND_ORDER = ['rating', 'single', 'multi', 'dropdown', 'text'];
+  var KIND_ORDER = ['rating', 'single', 'multi', 'chips', 'dropdown', 'text'];
 
   var STAGES = [
     { label: 'ตอนลงทะเบียน', hint: 'ผู้เข้าร่วมกรอกตอนจองที่นั่ง' },
@@ -47,11 +52,18 @@
   function isStandalone() { return state.stage === STANDALONE; }
   function itemById(id) { return state.items.filter(function (i) { return String(i.id) === String(id); })[0]; }
   /* เลือกจากรายการใช้ชุดตัวเลือกเหมือนแบบเลือก 1 ข้อ ต่างแค่วิธีแสดงให้ผู้ตอบ */
-  function hasChoices(kind) { return kind === 'single' || kind === 'multi' || kind === 'dropdown'; }
+  function hasChoices(kind) {
+    return kind === 'single' || kind === 'multi' || kind === 'chips' || kind === 'dropdown';
+  }
 
-  /* วงกลม = เลือก 1 ข้อ · สี่เหลี่ยม = เลือกหลายข้อ · สี่เหลี่ยมเทา = เลือกจากรายการ */
+  /* เลือกได้หลายข้อไหม — ใช้ตัดสินทั้งเครื่องหมายในตัวแก้ไขและคำกำกับที่ผู้ตอบเห็น */
+  function isMulti(kind) { return kind === 'multi' || kind === 'chips'; }
+
+  /* วงกลม = เลือก 1 ข้อ · สี่เหลี่ยม = เลือกหลายข้อ · แคปซูล = แบบป้าย · สี่เหลี่ยมเทา = เลือกจากรายการ */
   function markHtml(kind) {
-    var cls = kind === 'multi' ? ' is-box' : (kind === 'dropdown' ? ' is-box is-muted' : '');
+    var cls = kind === 'multi' ? ' is-box'
+      : (kind === 'chips' ? ' is-pill'
+      : (kind === 'dropdown' ? ' is-box is-muted' : ''));
     return '<span class="ec-mark' + cls + '"></span>';
   }
 
@@ -213,13 +225,39 @@
         '<span class="ec-view-title">' + esc(q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + '</span>' +
         (q.required ? '<span class="ec-view-req">*</span>' : '') +
       '</div>' +
-      (hasChoices(q.kind)
-        ? '<div class="ec-view-choices">' + q.choices.map(function (c) {
-            return '<span class="ec-view-choice">' + markHtml(q.kind) + esc(c) + '</span>';
-          }).join('') + '</div>'
-        : '') +
-      (q.kind === 'rating' ? ratingHtml() : '') +
+      multiHint(q.kind) +
+      answerHtml(q, 'ec-view') +
       (q.kind === 'text' ? '<div class="ec-view-text">พิมพ์คำตอบ…</div>' : '');
+  }
+
+  /* ชนิดที่ตอบได้หลายข้อต้องบอกให้ชัด โดยเฉพาะแบบป้ายที่ไม่มีช่องติ๊กให้เดาจากรูป */
+  function multiHint(kind) {
+    return isMulti(kind) ? '<span class="ec-multi-hint">เลือกได้มากกว่า 1 ข้อ</span>' : '';
+  }
+
+  /* หน้าตาคำตอบที่ผู้ตอบเห็น — ใช้ทั้งการ์ดที่ยุบและแผงตัวอย่างขวา
+     prefix คุมแค่ขนาด/ระยะของแต่ละที่ ส่วนโครงและตรรกะเป็นชุดเดียวกัน จะได้ไม่เพี้ยนจากกัน */
+  function answerHtml(q, prefix) {
+    if (q.kind === 'rating') return ratingHtml();
+    if (!hasChoices(q.kind)) return '';
+
+    if (q.kind === 'dropdown') {
+      return '<div class="ec-pv-select">' +
+        '<span>' + esc((q.choices[0] || '').trim() || 'เลือกคำตอบ') + '</span>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</div>';
+    }
+
+    /* แบบป้าย: ตัวเลือกเป็นแคปซูลเรียงต่อกัน กดได้ทั้งใบ ไม่มีช่องติ๊กแยก */
+    if (q.kind === 'chips') {
+      return '<div class="ec-chip-answers">' + q.choices.map(function (c) {
+        return '<span class="ec-chip-answer">' + esc(c) + '</span>';
+      }).join('') + '</div>';
+    }
+
+    return '<div class="' + prefix + '-choices">' + q.choices.map(function (c) {
+      return '<span class="' + prefix + '-choice">' + markHtml(q.kind) + esc(c) + '</span>';
+    }).join('') + '</div>';
   }
 
   function choicesHtml(q) {
@@ -286,20 +324,8 @@
       }
       return '<div class="ec-pv-q' + (n.inSection ? ' is-nested' : '') + '">' +
         '<span class="ec-pv-title">' + esc(n.no + '. ' + (q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
-        (q.kind === 'rating'
-          ? ratingHtml()
-          : '') +
-        (q.kind === 'dropdown'
-          ? '<div class="ec-pv-select">' +
-              '<span>' + esc((q.choices[0] || '').trim() || 'เลือกคำตอบ') + '</span>' +
-              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>' +
-            '</div>'
-          : '') +
-        (hasChoices(q.kind) && q.kind !== 'dropdown'
-          ? '<div class="ec-pv-choices">' + q.choices.map(function (c) {
-              return '<span class="ec-pv-choice">' + markHtml(q.kind) + esc(c) + '</span>';
-            }).join('') + '</div>'
-          : '') +
+        multiHint(q.kind) +
+        answerHtml(q, 'ec-pv') +
         (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') +
         '</div>';
     }).join('');

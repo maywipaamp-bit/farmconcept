@@ -13436,3 +13436,81 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 .ec-preview-list .ec-face { min-width: 0; padding: var(--space-1); }
 .ec-preview-list .ec-face { --ec-face-size: 20px; }
 .ec-preview-list .ec-face-label { display: none; }
+
+/* ---------- ชนิดคำถาม "เลือกแบบป้าย" (assets/js/evaluation-create.js) ----------
+   คนละชนิดกับ "เลือกหลายข้อ" ที่เป็นรายการติ๊กแนวตั้ง
+   แบบป้ายเหมาะกับคำสั้น ๆ ที่กดเล่นได้เร็ว เห็นตัวเลือกครบในสายตาเดียว */
+.ec-chip-answers { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.ec-chip-answer {
+  padding: 6px var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  font-size: var(--font-size-small);
+  color: var(--color-text-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.ec-chip-answer:hover {
+  border-color: var(--color-primary-soft-border);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+/* แผงตัวอย่างขวาแคบกว่า ย่อป้ายลงหนึ่งขั้นให้ยังอ่านออกและไม่ตกบรรทัดเกินจำเป็น */
+.ec-preview-list .ec-chip-answer { padding: 4px var(--space-3); font-size: var(--font-size-caption); }
+
+/* เครื่องหมายรูปแคปซูลในตัวแก้ไข — บอกว่าตัวเลือกนี้จะออกมาเป็นป้าย ไม่ใช่ช่องติ๊ก */
+.ec-mark.is-pill {
+  width: 22px;
+  border-radius: var(--radius-full);
+  border-color: var(--color-border);
+}
+
+/* ชนิดที่ตอบได้หลายข้อต้องบอกให้ชัด แบบป้ายไม่มีช่องติ๊กให้เดาจากรูป */
+.ec-multi-hint {
+  display: block;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* ---------- โดนัทกลุ่มเป้าหมาย: เพิ่มจำนวนคน ----------
+   เดิมมีแต่เปอร์เซ็นต์ ซึ่งตอบไม่ได้ว่า 20% คือกี่คน — ตัวเลขคนคือสิ่งที่ใช้วางแผนงานจริง
+   กลางวงจึงเป็นยอดรวมเป็นคน แล้วบอก 100% กำกับไว้บรรทัดล่าง */
+.dash-donut-hole { flex-direction: column; gap: 0; }
+
+.dash-donut-total {
+  font-size: var(--font-size-section-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dash-donut-unit {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* จำนวนคนชิดขวาก่อน แล้วเปอร์เซ็นต์ต่อท้ายด้วยความกว้างคงที่
+   ทั้งสองคอลัมน์จึงเรียงตรงกันทุกแถว อ่านเทียบกลุ่มกันได้ */
+.dash-legend-count {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--font-size-small);
+  color: var(--color-text-body);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dash-legend-pct {
+  margin-left: 0;
+  min-width: 38px;
+  text-align: right;
+}

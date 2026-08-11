@@ -57,16 +57,43 @@
       '</a>';
   }
 
+  /* เส้นทางของหน้าปัจจุบันในโครงเมนู — navigation.js เอาไปสร้าง breadcrumb ต่อ
+     เก็บจากที่นี่เพราะที่นี่คือที่เดียวที่รู้ว่าเมนูไหน "ตรงกับหน้านี้" อยู่แล้ว
+     ของเดิม breadcrumb เขียนมือไว้ในทุกหน้า พอโครงเมนูเปลี่ยนก็ค้างเป็นของเก่า
+     ทั้งหมด (เคยเช็คแล้วเพี้ยนสิบกว่าหน้าพร้อมกัน) */
+  window.TFC.navTrail = null;
+
+  function recordTrail(group, item) {
+    if (window.TFC.navTrail) return;
+    var trail = [];
+    if (group) trail.push({ label: group.label });
+    trail.push({
+      label: item.label,
+      href: resolvedHref(item.href),
+      /* ตรงกับ href ของเมนูเป๊ะ = เรากำลังอยู่ที่หน้าของเมนูนั้นเอง
+         ถ้าตรงผ่าน alsoMatch = อยู่ที่หน้าย่อยซึ่งไม่มีเมนูของตัวเอง
+         ตัวนี้เป็นตัวบอกว่า breadcrumb ต้องมีชั้นสุดท้ายที่หน้าเขียนไว้เองต่อท้ายไหม */
+      isCurrent: isCurrentHref(item.href)
+    });
+    window.TFC.navTrail = trail;
+  }
+
   var chevron = '<svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
 
   mount.innerHTML = window.TFC_MENU.map(function (item) {
     if (!item.children || !item.children.length) {
+      if (isActiveItem(item)) recordTrail(null, item);
       return leafLinkHtml(item);
     }
 
     var submenuId = 'nav-submenu-' + item.key;
     var childrenActive = item.children.some(isActiveItem);
     var selfActive = isActiveItem(item);
+
+    item.children.forEach(function (child) {
+      if (isActiveItem(child)) recordTrail(item, child);
+    });
+    if (selfActive) recordTrail(null, item);
     var expanded = childrenActive; // auto-expand only the group containing the current page
 
     var headerHtml = item.href
