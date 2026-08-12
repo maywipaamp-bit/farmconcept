@@ -55,21 +55,25 @@
             </div>
           @endif
 
-          <p class="review-project-note">
-            <strong class="review-project-note-label">คำชี้แจง :</strong>
-            สถานะ <strong>ตรวจได้</strong> เปิดดูและคอมเมนต์ได้เลยค่ะ ·
-            <strong>รอพัฒนา</strong> ยังไม่ต้องตรวจ · คอมเมนต์ได้หลายครั้งต่อหน้า ระบบเก็บประวัติไว้ทั้งหมด
-          </p>
+          {{-- คำชี้แจงกับลิงก์ระบบอยู่ในบล็อกเดียวกัน เป็นชุดข้อมูลที่ผู้ตรวจต้องอ่านก่อนเริ่ม
+               ถ้าแยกเป็นสองบล็อก ระยะห่างของ flex จะดันให้ดูเหมือนคนละเรื่อง --}}
+          <div class="review-project-guide">
+            <p class="review-project-note">
+              <strong class="review-project-note-label">คำชี้แจง :</strong>
+              สถานะ <strong>ตรวจได้</strong> เปิดดูและคอมเมนต์ได้เลยค่ะ ·
+              <strong>รอพัฒนา</strong> ยังไม่ต้องตรวจ · คอมเมนต์ได้หลายครั้งต่อหน้า ระบบเก็บประวัติไว้ทั้งหมด
+            </p>
 
-          @if ($round->system_url)
-            <div class="review-system">
-              <span class="review-project-label">ลิงก์ระบบ</span>
-              <a class="review-system-link" href="{{ $round->system_url }}" target="_blank" rel="noopener noreferrer">{{ $round->system_url }}</a>
-              @if ($round->login_hint)
-                <span class="review-system-login">บัญชีทดลอง {{ $round->login_hint }}</span>
-              @endif
-            </div>
-          @endif
+            @if ($round->system_url)
+              <div class="review-system">
+                <span class="review-project-label">ลิงก์ระบบ</span>
+                <a class="review-system-link" href="{{ $round->system_url }}" target="_blank" rel="noopener noreferrer">{{ $round->system_url }}</a>
+                @if ($round->login_hint)
+                  <span class="review-system-login">บัญชีทดลอง {{ $round->login_hint }}</span>
+                @endif
+              </div>
+            @endif
+          </div>
         </div>
 
         @if ($round->action_plan_url)
@@ -376,12 +380,14 @@
       : days === 0 ? 'ครบกำหนดวันนี้'
       : 'เลยกำหนด ' + Math.abs(days) + ' วัน';
 
-    return '<div class="review-due-note' + (days <= 2 ? ' is-urgent' : '') + '">' + text + '</div>';
+    return '<span class="review-due-note' + (days <= 2 ? ' is-urgent' : '') + '">' + text + '</span>';
   }
 
+  /* วันที่กับจำนวนวันที่เหลืออยู่บรรทัดเดียวกัน แถวจึงเตี้ยลงและตารางกวาดตาได้เร็วขึ้น */
   function dueCell(r) {
-    return '<input type="date" class="input review-due" data-due-for="' + r.id + '" value="' + (r.dueDate || '') + '"' +
-      ' aria-label="วันครบกำหนดของ ' + window.TFC.escapeHtml(r.menuLabel) + '">' + dueWarning(r);
+    return '<span class="review-due-cell">' +
+      '<input type="date" class="input review-due" data-due-for="' + r.id + '" value="' + (r.dueDate || '') + '"' +
+      ' aria-label="วันครบกำหนดของ ' + window.TFC.escapeHtml(r.menuLabel) + '">' + dueWarning(r) + '</span>';
   }
 
   function itemOf(id) {

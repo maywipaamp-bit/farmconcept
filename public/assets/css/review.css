@@ -155,10 +155,14 @@
 
 /* คำอธิบายวิธีใช้ — อยู่ในการ์ดโครงการ ไม่แยกเป็นแถบเหลืองอีกกล่อง
    ผู้ตรวจส่วนใหญ่เปิดครั้งแรกและไม่มีใครสอน จึงต้องมี แต่ไม่ต้องเด่นเท่าข้อมูลโครงการ */
-.review-project-note {
-  margin-top: var(--space-1);
+/* เส้นคั่นอยู่ที่กล่องรวม ไม่ใช่ที่ตัวข้อความ — ลิงก์ระบบจึงอยู่ในกรอบเดียวกับคำชี้แจง */
+.review-project-guide {
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
+}
+
+.review-project-note {
+  margin: 0;
   font-size: var(--font-size-caption);
   line-height: 1.6;
   color: var(--color-text-muted);
@@ -166,13 +170,13 @@
 
 .review-project-note-label { color: var(--color-text-secondary); }
 
-/* ลิงก์ระบบทดสอบ + บัญชีทดลอง — อยู่ใต้คำชี้แจง ผู้ตรวจจึงเข้าระบบได้จากหน้านี้เลย */
+/* ลิงก์ระบบทดสอบ + บัญชีทดลอง — ต่อจากคำชี้แจงทันที เป็นข้อมูลชุดเดียวกันที่ผู้ตรวจต้องใช้ก่อนเริ่ม */
 .review-system {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   font-size: var(--font-size-caption);
 }
 
@@ -221,7 +225,17 @@
   color: var(--color-text-secondary);
 }
 
-/* ---------- ตาราง ---------- */
+/* ---------- ตาราง ----------
+   กำหนดความกว้างของคอลัมน์ที่มีของขนาดคงที่ (ช่องกรอก ปุ่ม ตัวเลข)
+   แล้วปล่อยสองคอลัมน์ที่เป็นข้อความยาว — หน้าจอกับคอมเมนต์ — แบ่งที่เหลือกันเอง
+   ถ้าไม่กำหนด เบราว์เซอร์จะเฉลี่ยตามความยาวข้อความ แล้วช่องวันที่กับปุ่มถูกบีบจนตกบรรทัด */
+.review-page .data-table { table-layout: fixed; }
+
+.review-page .data-table .col-no { width: 44px; }
+.review-page .data-table th:nth-child(2) { width: 168px; }
+.review-page .data-table th:nth-child(4) { width: 132px; }
+.review-page .data-table th:nth-child(5) { width: 210px; }
+.review-page .data-table .col-actions { width: 148px; }
 
 /* คอลัมน์เมนู — เมนูย่อยย่อหน้าเข้าไป เห็นลำดับชั้นเดียวกับเมนูจริงของระบบ */
 .review-menu {
@@ -269,11 +283,10 @@
   white-space: normal;
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
-  max-width: 340px;
 }
 
 /* คอมเมนต์ล่าสุดตัดที่สองบรรทัด ไม่ให้แถวสูงไม่เท่ากันตามความยาวข้อความ */
-.review-last { white-space: normal; max-width: 360px; }
+.review-last { white-space: normal; }
 
 .review-last-body {
   display: -webkit-box;
@@ -335,17 +348,24 @@
 .review-status.is-info    { background-color: var(--color-info-soft); color: var(--color-info-text); border-color: var(--color-info-soft); }
 .review-status.is-primary { background-color: var(--color-primary-soft); color: var(--color-primary-dark); border-color: var(--color-primary-soft-border); }
 
+/* วันที่กับจำนวนวันที่เหลืออยู่บรรทัดเดียวกัน */
+.review-due-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
 .review-due {
-  width: 132px;
+  width: 126px;
   height: 26px;
   min-height: 26px;
   padding: 0 var(--space-2);
   font-size: var(--font-size-caption);
 }
 
-/* บรรทัดบอกจำนวนวันที่เหลือ — อยู่ใต้ช่องวันที่ ตัวเล็กสีเทา ไม่แย่งสายตาจากวันที่จริง */
+/* จำนวนวันที่เหลือ — ต่อท้ายช่องวันที่ ตัวเล็กสีเทา ไม่แย่งสายตาจากวันที่จริง */
 .review-due-note {
-  margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-muted);
   white-space: nowrap;

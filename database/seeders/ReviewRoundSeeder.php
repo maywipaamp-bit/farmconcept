@@ -69,7 +69,7 @@ class ReviewRoundSeeder extends Seeder
             'project_end' => '2026-08-20',
             'action_plan_url' => 'https://docs.google.com/spreadsheets/d/1LktQcZ1Mk0_d3stfqh7hMASJ25vO9wrLlRLVzrWFnGs/edit?usp=sharing',
             'system_url' => 'http://157.85.104.53/login',
-            'login_hint' => 'admin / 1234',
+            'login_hint' => 'admin01 / 1234',
             'sent_at' => now()->toDateString(),
             'due_at' => now()->addDays(7)->toDateString(),
             'is_open' => true,
