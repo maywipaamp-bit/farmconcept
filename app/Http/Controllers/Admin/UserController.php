@@ -51,9 +51,14 @@ class UserController extends Controller
             $avatarPath = null;
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                if ($file->isValid()) {
+                if ($file->isValid() && !empty($file->getRealPath())) {
                     $avatarPath = $file->store('avatars', 'public');
                     $avatarPath = Storage::url($avatarPath);
+                } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ: ' . $file->getErrorMessage() . ' (Error Code: ' . $file->getError() . ')',
+                    ], 422);
                 }
             }
 
@@ -100,9 +105,14 @@ class UserController extends Controller
 
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                if ($file->isValid()) {
+                if ($file->isValid() && !empty($file->getRealPath())) {
                     $avatarPath = $file->store('avatars', 'public');
                     $updateData['avatar_path'] = Storage::url($avatarPath);
+                } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ: ' . $file->getErrorMessage() . ' (Error Code: ' . $file->getError() . ')',
+                    ], 422);
                 }
             }
 
