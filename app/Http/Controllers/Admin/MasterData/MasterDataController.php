@@ -122,7 +122,7 @@ abstract class MasterDataController extends Controller
         });
 
         return response()->json([
-            'message' => 'เพิ่ม' . $this->label() . 'แล้ว',
+            'message' => 'เพิ่ม'.$this->label().'แล้ว',
             'row' => $this->toRow($this->query()->where('code', $record->code)->firstOrFail()),
         ], 201);
     }
@@ -140,26 +140,36 @@ abstract class MasterDataController extends Controller
         });
 
         return response()->json([
-            'message' => 'บันทึก' . $this->label() . 'แล้ว',
+            'message' => 'บันทึก'.$this->label().'แล้ว',
             'row' => $this->toRow($this->query()->where('code', $code)->firstOrFail()),
         ]);
     }
 
     public function destroy(string $code): JsonResponse
     {
-        $record = $this->find($code);
+        $blocked = null;
 
-        if ($reason = $this->blockedFromDelete($record)) {
-            return response()->json(['message' => $reason], 403);
-        }
+        DB::transaction(function () use ($code, &$blocked): void {
+            /* ล็อกแถวหลักก่อนตรวจจำนวนใช้งาน เพื่อไม่ให้มีรายการใหม่มาอ้างอิง
+               แทรกระหว่างตรวจแล้วลบ ซึ่งจะทำให้ข้อมูลที่เพิ่งบันทึกหายตาม cascade */
+            $record = $this->model()::where('code', $code)->lockForUpdate()->firstOrFail();
 
-        DB::transaction(function () use ($record): void {
+            if ($reason = $this->blockedFromDelete($record)) {
+                $blocked = $reason;
+
+                return;
+            }
+
             /* บันทึก log ก่อนลบ เพราะหลังลบแล้วอ่านค่าจากแถวไม่ได้อีก */
             $this->log($record, 'deleted', 'ลบ');
             $record->delete();
         });
 
-        return response()->json(['message' => 'ลบ' . $this->label() . 'แล้ว']);
+        if ($blocked !== null) {
+            return response()->json(['message' => $blocked], 403);
+        }
+
+        return response()->json(['message' => 'ลบ'.$this->label().'แล้ว']);
     }
 
     /* ================= ตัวช่วยภายใน ================= */
@@ -195,13 +205,13 @@ abstract class MasterDataController extends Controller
         /* หาเลขสูงสุดจาก "ตัวเลขท้ายรหัส" ไม่ใช่ max() ของข้อความ
            เพราะข้อมูลตั้งต้นบางตารางใช้เลขไม่เติมศูนย์ (FRT-1) ปนกับรหัสที่ระบบออกให้ (FRT-005)
            การเทียบแบบข้อความจะบอกว่า FRT-4 มากกว่า FRT-005 แล้วออกรหัสซ้ำเดิมทุกครั้ง */
-        $codes = $model::where('code', 'like', $prefix . '%')
+        $codes = $model::where('code', 'like', $prefix.'%')
             ->lockForUpdate()
             ->pluck('code');
 
         $running = $codes->map(fn (string $code) => (int) Str::afterLast($code, '-'))->max() ?? 0;
 
-        return $prefix . str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -214,8 +224,8 @@ abstract class MasterDataController extends Controller
     {
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'action' => 'master.' . Str::snake(class_basename($this->model())) . '.' . $action,
-            'detail' => $verb . $this->label() . ' ' . $record->code . ' — ' . $record->name,
+            'action' => 'master.'.Str::snake(class_basename($this->model())).'.'.$action,
+            'detail' => $verb.$this->label().' '.$record->code.' — '.$record->name,
         ]);
     }
 }

@@ -200,11 +200,15 @@ window.TFC = window.TFC || {};
      ตัวเลือกด้านหน้าตา — ทุกตัวมีค่าเริ่มต้นเท่าพฤติกรรมเดิม หน้าที่ใช้อยู่แล้วจึงไม่กระทบ:
      - unit: คำนับท้ายข้อความสรุป (ค่าเริ่มต้น 'รายการ' เช่น 'ชุด' สำหรับชุดคำตอบ)
      - edges: false -> ซ่อนปุ่มหน้าแรก/หน้าสุดท้าย (« ») เหลือแค่ ก่อนหน้า/เลขหน้า/ถัดไป
-     - sizeWithInfo: true -> ย้ายตัวเลือก "รายการต่อหน้า" ไปอยู่ข้างข้อความสรุปทางซ้าย */
+     - sizeWithInfo: false -> ย้ายตัวเลือกจำนวนต่อหน้าไปอยู่ในกลุ่มปุ่มเลขหน้า (ค่าเริ่มต้นคืออยู่ข้างข้อความสรุป)
+     - infoTarget / controlsTarget -> วางข้อความสรุปกับปุ่มเลขหน้าคนละที่ (ใช้กับ tfoot ที่ต้องให้ผลรวมตรงคอลัมน์)
+       ใส่แล้วไม่ต้องส่ง target หลัก */
   window.TFC.renderPagination = function (target, opts) {
-    var el = mountEl(target);
-    if (!el) return;
     opts = opts || {};
+
+    /* โหมดแยกช่องไม่มี target เดียว — ตรวจ mount ทีหลังตอนใช้จริง */
+    var el = mountEl(target);
+    if (!el && !opts.infoTarget && !opts.controlsTarget) return;
 
     var total = opts.total || 0;
     var pageSize = opts.pageSize || 10;
@@ -219,47 +223,77 @@ window.TFC = window.TFC || {};
         '" data-page="' + i + '">' + i + '</button>';
     }
 
+    /* "แสดง [8] รายการ" — คำอ่านต่อจากข้อความสรุปที่อยู่ติดกันทางซ้ายได้เป็นประโยคเดียว */
     var sizeHtml = '';
     if (opts.pageSizeOptions && opts.pageSizeOptions.length) {
-      sizeHtml = '<label class="pagination-size">รายการต่อหน้า' +
+      sizeHtml = '<label class="pagination-size">แสดง' +
         '<select class="select" data-page-size>' +
         opts.pageSizeOptions.map(function (size) {
           return '<option value="' + size + '"' + (size === pageSize ? ' selected' : '') + '>' + size + '</option>';
         }).join('') +
-        '</select></label>';
+        'รายการ</label>';
     }
+
+    /* ตัวเลือกจำนวนต่อหน้าอยู่ข้างข้อความสรุปเป็นค่าเริ่มต้น — หน้าที่ต้องการให้ไปอยู่กับปุ่มเลขหน้า
+       ส่ง sizeWithInfo: false มาได้ */
+    var sizeWithInfo = opts.sizeWithInfo !== false;
 
     var edgesHtml = opts.edges === false ? { first: '', last: '' } : {
       first: '<button type="button" class="pagination-btn" data-page="1"' + (page === 1 ? ' disabled' : '') + ' aria-label="หน้าแรก">«</button>',
       last: '<button type="button" class="pagination-btn" data-page="' + pageCount + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="หน้าสุดท้าย">»</button>'
     };
 
-    el.innerHTML = '<div class="pagination' + (opts.footer ? ' is-footer' : '') + '">' +
-      '<div class="pagination-info">แสดง ' + from + '-' + to + ' จาก ' + total + ' ' + (opts.unit || 'รายการ') +
-      (opts.sizeWithInfo ? sizeHtml : '') + '</div>' +
+    /* มีหน้าเดียวก็ไม่ต้องมีปุ่มเปลี่ยนหน้า — ปุ่มที่กดแล้วไม่เกิดอะไรขึ้นเป็นเพียงสิ่งรบกวนสายตา
+       ยกเว้นหน้าที่วางตัวเลือกจำนวนต่อหน้าไว้ในกลุ่มปุ่ม ซึ่งซ่อนแล้วจะหายไปด้วย */
+    var controlsHtml = (pageCount <= 1 && sizeWithInfo) ? '' :
       '<div class="pagination-controls">' +
       edgesHtml.first +
       '<button type="button" class="pagination-btn" data-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + ' aria-label="ก่อนหน้า">‹</button>' +
       numbersHtml +
       '<button type="button" class="pagination-btn" data-page="' + (page + 1) + '"' + (page === pageCount ? ' disabled' : '') + ' aria-label="ถัดไป">›</button>' +
       edgesHtml.last +
-      (opts.sizeWithInfo ? '' : sizeHtml) +
-      '</div></div>';
+      (sizeWithInfo ? '' : sizeHtml) +
+      '</div>';
 
-    if (typeof opts.onChange === 'function') {
-      el.querySelectorAll('[data-page]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var next = Number(btn.getAttribute('data-page'));
-          if (next >= 1 && next <= pageCount && next !== page) opts.onChange(next);
+    var infoHtml = '<div class="pagination-info">' +
+      '<span class="pagination-summary">แสดง ' + from + '–' + to + ' จาก ' + total + ' ' + (opts.unit || 'รายการ') + '</span>' +
+      (sizeWithInfo && sizeHtml ? '<span class="pagination-divider" aria-hidden="true">|</span>' + sizeHtml : '') +
+      '</div>';
+
+    /* โหมดแยกช่อง — ใช้เมื่อแถบท้ายเป็น "แถวหนึ่งในตาราง" (tfoot) เพื่อให้ผลรวมตรงคอลัมน์
+       ข้อความสรุปกับปุ่มเลขหน้าอยู่คนละ <td> แต่ยังเป็นแถวเดียวกัน ตรรกะการแบ่งหน้าจึงยังอยู่ที่เดียว */
+    var split = opts.infoTarget || opts.controlsTarget;
+    var hosts;
+
+    if (split) {
+      var infoEl = mountEl(opts.infoTarget);
+      var controlsEl = mountEl(opts.controlsTarget);
+
+      if (infoEl) infoEl.innerHTML = infoHtml;
+      if (controlsEl) controlsEl.innerHTML = controlsHtml;
+      hosts = [infoEl, controlsEl].filter(Boolean);
+    } else {
+      el.innerHTML = '<div class="pagination' + (opts.footer ? ' is-footer' : '') + '">' +
+        infoHtml + controlsHtml + '</div>';
+      hosts = [el];
+    }
+
+    hosts.forEach(function (host) {
+      if (typeof opts.onChange === 'function') {
+        host.querySelectorAll('[data-page]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var next = Number(btn.getAttribute('data-page'));
+            if (next >= 1 && next <= pageCount && next !== page) opts.onChange(next);
+          });
         });
-      });
-    }
+      }
 
-    var sizeSelect = el.querySelector('[data-page-size]');
-    if (sizeSelect && typeof opts.onPageSizeChange === 'function') {
-      sizeSelect.addEventListener('change', function () {
-        opts.onPageSizeChange(Number(sizeSelect.value));
-      });
-    }
+      var sizeSelect = host.querySelector('[data-page-size]');
+      if (sizeSelect && typeof opts.onPageSizeChange === 'function') {
+        sizeSelect.addEventListener('change', function () {
+          opts.onPageSizeChange(Number(sizeSelect.value));
+        });
+      }
+    });
   };
 })();

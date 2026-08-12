@@ -2,20 +2,33 @@
 
 @section('title', 'รายการกิจกรรม')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">จัดการกิจกรรม</span>
   </nav>
   <div class="page-header" id="activity-page-header"></div>
 
+  {{-- โครงมาตรฐานของหน้ารายการ: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="activity-status-pills"></div>
-    <div id="activity-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="activity-search"
+             placeholder="ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่" aria-label="ค้นหากิจกรรม">
+      <div id="activity-search-popover"></div>
+    </div>
   </div>
 
-  <div class="activity-list" id="activity-list"></div>
-
-  <div id="activity-pagination"></div>
+  {{-- แถบแบ่งหน้าอยู่ในกรอบเดียวกับรายการ ให้อ่านเป็นบรรทัดท้ายของตาราง --}}
+  <div class="table-wrapper mb-4">
+    <div class="table-scroll">
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+    <div id="activity-pagination"></div>
+  </div>
 @endsection
 
 @section('modals')
@@ -59,7 +72,8 @@
 
   var activities = mock.activities;
   var PAGE_SIZES = [10, 20, 50];
-  var state = { status: '', search: '', type: '', instructor: '', area: '', sort: 'updatedAt', page: 1, pageSize: PAGE_SIZES[0] };
+  /* sort ว่าง = เรียงตามที่เซิร์ฟเวอร์ส่งมา ซึ่งคือใหม่สุดอยู่บนและไม่ขยับเมื่อแก้ข้อมูล */
+  var state = { status: '', search: '', type: '', instructor: '', area: '', sort: '', page: 1, pageSize: PAGE_SIZES[0] };
   var deleteTargetId = null;
 
   window.TFC.renderPageHeader('activity-page-header', {
@@ -137,16 +151,21 @@
       return [a.name, a.id].concat(responsible(a), areasOf(a)).join(' ').toLowerCase().indexOf(term) !== -1;
     });
 
+    /* ไม่เลือกการเรียง = ใช้ลำดับที่เซิร์ฟเวอร์ส่งมา (ใหม่สุดอยู่บน แก้แล้วไม่ขยับ)
+       เดิมค่าเริ่มต้นเรียงตาม updatedAt ซึ่งดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง */
+    if (!state.sort) return rows;
+
     return rows.sort(function (a, b) {
       if (state.sort === 'registered') return b.registered - a.registered;
-      if (state.sort === 'updatedAt') return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
       if (state.sort === 'startDate') return String(a.startDate).localeCompare(String(b.startDate));
       return String(a.name).localeCompare(String(b.name), 'th');
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('activity-search-popover', {
-    search: { id: 'activity-search', placeholder: 'ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่' },
+    search: false,
+    icon: 'filter',
     filters: [
       { id: 'type', label: 'ประเภท', placeholder: 'ทั้งหมด', options: optionsFrom(function (a) { return a.type; }) },
       { id: 'instructor', label: 'วิทยากร', placeholder: 'ทั้งหมด', options: optionsFrom(responsible) },
@@ -154,7 +173,7 @@
       {
         id: 'sort',
         label: 'เรียงลำดับ',
-        placeholder: 'แก้ไขล่าสุด',
+        placeholder: 'เพิ่มล่าสุด',
         options: [
           { value: 'startDate', label: 'วันที่จัดกิจกรรม' },
           { value: 'name', label: 'ชื่อกิจกรรม' },
@@ -163,42 +182,74 @@
       }
     ],
     onSearch: function (values, done) {
-      state.search = values.keyword;
       state.type = values.filters.type || '';
       state.instructor = values.filters.instructor || '';
       state.area = values.filters.area || '';
-      state.sort = values.filters.sort || 'updatedAt';
+      state.sort = values.filters.sort || '';
       state.page = 1;
       render();
       done();
     },
     onClear: function () {
-      state.search = '';
       state.type = '';
       state.instructor = '';
       state.area = '';
-      state.sort = 'updatedAt';
+      state.sort = '';
       state.page = 1;
       render();
     }
   });
 
-  /* ---------- มุมมองตาราง ---------- */
-  var TABLE_COLS = ['รหัส', 'ชื่อกิจกรรม', 'วันและเวลา', 'สถานที่', 'ผู้ลงทะเบียน', 'เข้าร่วม', 'แบบประเมิน', 'สถานะ', ''];
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดรายการใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    document.getElementById('activity-search').addEventListener(evt, function () {
+      var value = this.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        state.search = value;
+        state.page = 1;
+        render();
+      }, 200);
+    });
+  });
 
-  function rowHtml(activity) {
+  /* ---------- มุมมองตาราง ---------- */
+  /* center: true = หัวคอลัมน์กับเนื้อจัดกลางเหมือนกัน (คอลัมน์ตัวเลขและสถานะตามมาตรฐาน) */
+  var TABLE_COLS = [
+    { label: '#', center: true },
+    { label: 'ชื่อกิจกรรม' },
+    { label: 'วันและเวลา' },
+    { label: 'สถานที่' },
+    { label: 'ผู้ลงทะเบียน', center: true },
+    { label: 'เข้าร่วม', center: true },
+    { label: 'แบบประเมิน', center: true },
+    { label: 'สถานะ', center: true },
+    { label: 'ปรับปรุงล่าสุด', center: true },
+    { label: '' }
+  ];
+
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(activity) {
+    if (!activity.updatedDate) return '-';
+
+    var date = window.TFC.formatThaiDate(activity.updatedDate).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(activity.updatedTime ? date + ' | ' + activity.updatedTime : date);
+  }
+
+  /* order = ลำดับที่ในหน้าปัจจุบัน นับต่อจากแถวแรกของหน้า ไม่ใช่นับใหม่ทุกหน้า */
+  function rowHtml(activity, order) {
     var schedules = window.TFC.activity.schedules(activity);
     var timeText = schedules.length && schedules[0].timeStart
       ? schedules[0].timeStart + '–' + schedules[0].timeEnd + ' น.'
       : '';
     var cap = activity.capacity || 0;
     var reg = activity.registered || 0;
-    var percent = cap ? Math.min(100, Math.round((reg / cap) * 100)) : 0;
-    var tone = window.TFC.badgeClassOf(mock.activityStatuses, activity.status).replace('badge-', 'is-');
     var dash = '<span class="grid-dash">—</span>';
 
     return '<div class="grid-row" data-id="' + activity.id + '">' +
-      '<div class="grid-code">' + window.TFC.escapeHtml(activity.id) + '</div>' +
+      '<div class="grid-code grid-center">' + order + '</div>' +
 
       /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
       '<div>' +
@@ -211,12 +262,16 @@
 
       '<div class="grid-soft">' + window.TFC.escapeHtml(areasOf(activity).join(' · ') || '-') + '</div>' +
 
-      '<div><div class="grid-strong">' + reg + '/' + cap + '</div>' +
-      '<div class="grid-bar"><span class="' + tone + '" style="width:' + percent + '%"></span></div></div>' +
+      '<div class="grid-center grid-strong">' + reg + '/' + cap + '</div>' +
 
-      '<div class="grid-num">' + dash + '</div>' +
-      '<div class="grid-num">' + dash + '</div>' +
-      '<div>' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
+      '<div class="grid-num grid-center">' + dash + '</div>' +
+      '<div class="grid-num grid-center">' + dash + '</div>' +
+      '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
+
+      /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าอื่นในระบบ */
+      '<div class="grid-center"><div>' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +
+      '<div class="grid-sub nowrap">' + updatedStamp(activity) + '</div></div>' +
+
       '<div class="grid-actions">' + window.TFC.actionMenuTrigger(menuItems(activity)) + '</div>' +
       '</div>';
   }
@@ -238,12 +293,12 @@
     return items;
   }
 
-  function tableHtml(rows) {
+  function tableHtml(rows, start) {
     return '<div class="grid-table">' +
       '<div class="grid-head">' + TABLE_COLS.map(function (c) {
-        return '<div>' + window.TFC.escapeHtml(c) + '</div>';
+        return '<div' + (c.center ? ' class="grid-center"' : '') + '>' + window.TFC.escapeHtml(c.label) + '</div>';
       }).join('') + '</div>' +
-      rows.map(rowHtml).join('') +
+      rows.map(function (row, i) { return rowHtml(row, start + i + 1); }).join('') +
       '</div>';
   }
 
@@ -261,7 +316,7 @@
     var start = (state.page - 1) * state.pageSize;
 
     var pageRows = rows.slice(start, start + state.pageSize);
-    listEl.innerHTML = rows.length ? tableHtml(pageRows) : EMPTY_HTML;
+    listEl.innerHTML = rows.length ? tableHtml(pageRows, start) : EMPTY_HTML;
 
     window.TFC.renderPagination('activity-pagination', {
       page: state.page,

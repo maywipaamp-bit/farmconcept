@@ -29,13 +29,19 @@ class TargetGroupController extends MasterDataController
     }
 
     /**
-     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
-     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     * เรียงจากรายการที่เพิ่มล่าสุดลงมา — ของใหม่อยู่บนสุดเสมอ
+     *
+     * ใช้ id ไม่ใช่ updated_at เพราะสองอย่างนี้ให้ผลต่างกันตอนแก้ไข
+     * id คงที่ตลอดอายุของแถว แก้ข้อมูลแล้วลำดับจึงไม่ขยับ คนที่ไล่แก้ทีละแถวไม่เสียตำแหน่ง
+     * ส่วน updated_at จะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง
      */
     protected function query()
     {
         /* หน้าจอแสดงจำนวนกิจกรรมที่ใช้กลุ่มนี้ — นับด้วย withCount ไม่งั้นจะยิง query ต่อแถว */
-        return TargetGroup::query()->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
+        return TargetGroup::query()
+            ->with('updatedBy:id,name')
+            ->withCount(['activities', 'participants', 'registrations'])
+            ->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array
@@ -58,6 +64,7 @@ class TargetGroupController extends MasterDataController
             'name' => $data['name'],
             'target_count' => $data['targetCount'],
             'is_active' => $data['active'],
+            'updated_by' => auth()->id(),
         ];
     }
 
@@ -69,8 +76,13 @@ class TargetGroupController extends MasterDataController
             'ageRange' => $record->age_range,
             'targetCount' => $record->target_count,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count + $record->participants_count + $record->registrations_count,
             'active' => $record->is_active,
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $record->updatedBy?->name,
             'updatedAt' => $record->updated_at?->toDateString(),
+            'updatedTime' => $record->updated_at?->format('H.i'),
         ];
     }
 
@@ -84,16 +96,24 @@ class TargetGroupController extends MasterDataController
     {
         $activities = $record->activities()->count();
         $participants = $record->participants()->count();
+        $registrations = $record->registrations()->count();
 
-        if ($activities === 0 && $participants === 0) {
+        if ($activities === 0 && $participants === 0 && $registrations === 0) {
             return null;
         }
 
         $used = [];
-        if ($activities) $used[] = 'กิจกรรม ' . $activities . ' รายการ';
-        if ($participants) $used[] = 'ผู้เข้าร่วม ' . $participants . ' คน';
+        if ($activities) {
+            $used[] = 'กิจกรรม '.$activities.' รายการ';
+        }
+        if ($participants) {
+            $used[] = 'ผู้เข้าร่วม '.$participants.' คน';
+        }
+        if ($registrations) {
+            $used[] = 'ใบลงทะเบียน '.$registrations.' รายการ';
+        }
 
-        return 'กลุ่มเป้าหมายนี้ถูกใช้อยู่กับ' . implode(' และ ', $used)
-            . ' ลบไม่ได้ ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
+        return 'กลุ่มเป้าหมายนี้ถูกใช้อยู่กับ'.implode(' และ ', $used)
+            .' ลบไม่ได้ ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
     }
 }

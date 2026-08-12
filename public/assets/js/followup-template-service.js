@@ -218,7 +218,7 @@ window.TFC.followUpTemplateService = (function () {
     return JSON.parse(JSON.stringify(store));
   }
 
-  /* PUT /follow-up/round-templates
+  /* PUT /follow-up/round-templates (ส่งผ่าน POST + method override เพื่อรองรับ IIS)
      sort_order คิดจากลำดับแถวบนจอ ผู้ใช้ไม่ต้องกรอกเลขลำดับเอง */
   function save(templates) {
     var payload = (templates || []).map(function (t, i) {
@@ -235,7 +235,10 @@ window.TFC.followUpTemplateService = (function () {
       };
     });
     if (API_BASE) {
-      return request('', { method: 'PUT', body: JSON.stringify({ rows: payload }) }).then(function (data) {
+      return request('', {
+        method: 'POST',
+        body: JSON.stringify({ _method: 'PUT', rows: payload })
+      }).then(function (data) {
         store = data.rows || [];
         if (data.usage) USAGE = data.usage;
         return JSON.parse(JSON.stringify(store));

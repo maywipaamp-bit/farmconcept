@@ -40,6 +40,20 @@ window.TFC.datetimePicker = (function () {
 
   function daysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
 
+  /* ---------- ช่วงวันที่ที่เลือกได้ ----------
+     ใส่ data-min-iso / data-max-iso ให้ input แล้วปฏิทินจะปิดวันที่นอกช่วงให้เอง
+     เทียบด้วยข้อความได้ตรง ๆ เพราะ YYYY-MM-DD เรียงตามลำดับเวลาอยู่แล้ว */
+  function limitsOf(input) {
+    return {
+      min: input.getAttribute('data-min-iso') || '',
+      max: input.getAttribute('data-max-iso') || ''
+    };
+  }
+
+  function outOfRange(iso, lim) {
+    return (lim.min && iso < lim.min) || (lim.max && iso > lim.max);
+  }
+
   /* วันที่อ้างอิงตอนยังไม่มีค่า — ใช้ของเซิร์ฟเวอร์ถ้ามี ไม่งั้นค่อยใช้นาฬิกาเครื่อง
      หน้าที่ไม่ได้โหลด service ไว้จะตกมาที่นาฬิกาเครื่องเอง จึงไม่ต้องบังคับให้ทุกหน้าโหลด */
   function today() {
@@ -109,17 +123,20 @@ window.TFC.datetimePicker = (function () {
 
   /* ตารางวัน — ช่องว่างต้นเดือนเป็น <span> ที่กดไม่ได้ ส่วนวันจริงเป็น <button>
      จะได้ Tab เข้าไปเลือกด้วยคีย์บอร์ดได้โดยไม่ต้องเขียน keydown เพิ่ม */
-  function buildGrid(sel) {
+  function buildGrid(sel, lim) {
     var t = today();
     var first = new Date(sel.y, sel.m - 1, 1).getDay();
     var total = daysInMonth(sel.y, sel.m);
+    lim = lim || { min: '', max: '' };
 
     var cells = '';
     for (var i = 0; i < first; i++) cells += '<span class="dtp-day is-blank" aria-hidden="true"></span>';
     for (var d = 1; d <= total; d++) {
       var isSel = d === sel.d;
       var isToday = sel.y === t.y && sel.m === t.m && d === t.d;
-      cells += '<button type="button" class="dtp-day' + (isSel ? ' is-on' : '') + (isToday ? ' is-today' : '') + '"' +
+      var blocked = outOfRange(sel.y + '-' + pad(sel.m) + '-' + pad(d), lim);
+      cells += '<button type="button" class="dtp-day' + (isSel ? ' is-on' : '') + (isToday ? ' is-today' : '') +
+        (blocked ? ' is-disabled' : '') + '"' + (blocked ? ' disabled' : '') +
         ' data-dtp-day="' + d + '" aria-pressed="' + isSel + '"' +
         ' aria-label="' + d + ' ' + MONTHS_FULL[sel.m - 1] + ' ' + (sel.y + 543) + '">' + d + '</button>';
     }
@@ -130,14 +147,14 @@ window.TFC.datetimePicker = (function () {
       '<div class="dtp-grid" role="grid">' + cells + '</div>';
   }
 
-  function buildDate(sel) {
-    return '<div class="dtp-cal" data-dtp-cal>' + buildGrid(sel) + '</div>';
+  function buildDate(sel, lim) {
+    return '<div class="dtp-cal" data-dtp-cal>' + buildGrid(sel, lim) + '</div>';
   }
 
   /* วาดเฉพาะตารางวันใหม่ ไม่แตะแถบ dropdown ที่ผู้ใช้เพิ่งเลือกอยู่ */
   function redrawGrid() {
     if (!open) return;
-    open.root.querySelector('[data-dtp-cal]').innerHTML = buildGrid(open.sel);
+    open.root.querySelector('[data-dtp-cal]').innerHTML = buildGrid(open.sel, open.lim);
   }
 
   /* เปลี่ยนเดือน/ปีแล้ววันที่เลือกไว้อาจไม่มีอยู่จริง (เช่น 31 ก.พ.) ต้องหดลงมาที่วันสุดท้าย */
@@ -236,11 +253,19 @@ window.TFC.datetimePicker = (function () {
     close(false);
 
     var iso = input.getAttribute('data-iso') || '';
+    var lim = limitsOf(input);
     var p = iso.split('-');
     var t = today();
     var sel = p.length === 3
       ? { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) }
       : { y: t.y, m: t.m, d: t.d };
+
+    /* ยังไม่มีค่า แล้ววันนี้อยู่นอกช่วงที่เลือกได้ — เปิดที่วันแรกที่เลือกได้แทน
+       ไม่งั้นผู้ใช้จะเจอเดือนที่กดอะไรไม่ได้เลยแล้วต้องเดาว่าต้องเลื่อนไปทางไหน */
+    if (p.length !== 3 && lim.min && outOfRange(sel.y + '-' + pad(sel.m) + '-' + pad(sel.d), lim)) {
+      var mp = lim.min.split('-');
+      sel = { y: Number(mp[0]), m: Number(mp[1]), d: Number(mp[2]) };
+    }
 
     var root = document.createElement('div');
     root.className = 'dtp';
@@ -254,12 +279,12 @@ window.TFC.datetimePicker = (function () {
           '<button type="button" class="dtp-btn" data-dtp-cancel>ยกเลิก</button>' +
           buildNav(sel) +
         '</div>' +
-        buildDate(sel) +
+        buildDate(sel, lim) +
       '</div>';
     document.body.appendChild(root);
     anchorTo(root.querySelector('.dtp-sheet'), input);
 
-    open = { input: input, root: root, sel: sel };
+    open = { input: input, root: root, sel: sel, lim: lim };
     document.addEventListener('keydown', onKey, true);
     /* โฟกัสวันที่เลือกอยู่ ผู้ใช้คีย์บอร์ดจะได้เริ่มจากตำแหน่งที่มีความหมาย */
     var cur = root.querySelector('.dtp-day.is-on') || root.querySelector('.dtp-day:not(.is-blank)');

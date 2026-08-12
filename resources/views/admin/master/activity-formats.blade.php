@@ -2,16 +2,24 @@
 
 @section('title', 'หมวดหมู่กิจกรรม')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">หมวดหมู่กิจกรรม</span>
   </nav>
   <div class="page-header" id="fmt-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="fmt-counts"></div>
-    <div id="fmt-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="fmt-search"
+             placeholder="ค้นหาชื่อหมวดหมู่" aria-label="ค้นหาหมวดหมู่กิจกรรม">
+      <div id="fmt-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -21,22 +29,23 @@
           <tr>
             <th class="col-no">#</th>
             <th>ชื่อหมวดหมู่</th>
-            <th>ใช้กับกิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-count">จำนวนจัดกิจกรรม</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="fmt-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="fmt-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="fmt-pagination"></div>
 @endsection
 
 @section('modals')
 <div class="modal-overlay" id="fmt-form-modal">
-  <div class="modal">
+  <div class="modal activity-format-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="fmt-form-title">เพิ่มหมวดหมู่กิจกรรม</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -45,20 +54,28 @@
     </div>
     <form id="fmt-form">
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
-          <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <span class="form-label">ไอคอนหมวดหมู่<span class="form-required">*</span></span>
-          <div class="icon-picker" id="fmt-icon-picker" role="radiogroup" aria-label="ไอคอนหมวดหมู่"></div>
-          <div class="form-helper">ใช้ไอคอนนี้แสดงคู่กับชื่อหมวดหมู่ในฟอร์มกิจกรรม</div>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="fmt-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="fmt-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="fmt-active-label">ใช้งาน</span>
+        <div class="activity-format-fields">
+          <div class="activity-format-main-fields">
+            <div class="form-group mb-0">
+              <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
+              <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label" for="fmt-icon-trigger">ไอคอนหมวดหมู่<span class="form-required">*</span></label>
+              <input type="hidden" id="fmt-icon">
+              <button type="button" class="input activity-icon-trigger" id="fmt-icon-trigger"
+                      aria-haspopup="listbox" aria-expanded="false">
+                <span class="activity-icon-trigger-value" id="fmt-icon-trigger-value"></span>
+                <svg class="activity-icon-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="fmt-active">สถานะ<span class="form-required">*</span></label>
+            <div class="flex items-center gap-2" style="height:42px;">
+              <label class="switch"><input type="checkbox" id="fmt-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="fmt-active-label">ใช้งาน</span>
+            </div>
           </div>
         </div>
       </div>
@@ -128,25 +145,76 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + found.path + '</svg>';
   }
 
-  var iconPicker = $('fmt-icon-picker');
-  iconPicker.innerHTML = iconList.map(function (ic) {
-    return '<button type="button" class="icon-picker-option" role="radio" aria-checked="false"' +
-      ' data-icon="' + ic.value + '" title="' + window.TFC.escapeHtml(ic.label) + '"' +
-      ' aria-label="' + window.TFC.escapeHtml(ic.label) + '">' + iconSvg(ic.value) + '</button>';
+  var iconInput = $('fmt-icon');
+  var iconTrigger = $('fmt-icon-trigger');
+  var iconTriggerValue = $('fmt-icon-trigger-value');
+  var iconPanel = document.createElement('div');
+  iconPanel.className = 'activity-icon-panel';
+  iconPanel.id = 'fmt-icon-panel';
+  iconPanel.setAttribute('role', 'listbox');
+  iconPanel.hidden = true;
+  iconPanel.innerHTML = iconList.map(function (ic) {
+    return '<button type="button" class="activity-icon-option" role="option" aria-selected="false"' +
+      ' data-icon="' + window.TFC.escapeHtml(ic.value) + '">' +
+      '<span class="activity-icon-option-image">' + iconSvg(ic.value) + '</span>' +
+      '<span>' + window.TFC.escapeHtml(ic.label) + '</span></button>';
   }).join('');
+  document.body.appendChild(iconPanel);
+
+  function selectedIconData(value) {
+    return iconList.filter(function (ic) { return ic.value === value; })[0] || iconList[0];
+  }
 
   function setSelectedIcon(value) {
     selectedIcon = value || defaultIcon;
-    Array.prototype.forEach.call(iconPicker.querySelectorAll('.icon-picker-option'), function (btn) {
-      var on = btn.getAttribute('data-icon') === selectedIcon;
-      btn.classList.toggle('is-active', on);
-      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    iconInput.value = selectedIcon;
+    var selected = selectedIconData(selectedIcon);
+    iconTriggerValue.innerHTML = selected
+      ? '<span class="activity-icon-option-image">' + iconSvg(selectedIcon) + '</span><span>' + window.TFC.escapeHtml(selected.label) + '</span>'
+      : '';
+    Array.prototype.forEach.call(iconPanel.querySelectorAll('.activity-icon-option'), function (option) {
+      var active = option.getAttribute('data-icon') === selectedIcon;
+      option.classList.toggle('is-active', active);
+      option.setAttribute('aria-selected', active ? 'true' : 'false');
     });
   }
 
-  iconPicker.addEventListener('click', function (e) {
-    var btn = e.target.closest('.icon-picker-option');
-    if (btn) setSelectedIcon(btn.getAttribute('data-icon'));
+  function closeIconPanel() {
+    iconPanel.hidden = true;
+    iconTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openIconPanel() {
+    var rect = iconTrigger.getBoundingClientRect();
+    iconPanel.style.left = Math.round(rect.left) + 'px';
+    iconPanel.style.top = Math.round(rect.bottom + 6) + 'px';
+    iconPanel.style.width = Math.max(296, Math.round(rect.width)) + 'px';
+    iconPanel.hidden = false;
+    iconTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  iconTrigger.addEventListener('click', function () {
+    if (iconPanel.hidden) openIconPanel(); else closeIconPanel();
+  });
+
+  iconPanel.addEventListener('click', function (e) {
+    var option = e.target.closest('.activity-icon-option');
+    if (!option) return;
+    setSelectedIcon(option.getAttribute('data-icon'));
+    closeIconPanel();
+    iconTrigger.focus();
+  });
+
+  document.addEventListener('click', function (e) {
+    if (iconPanel.hidden || iconTrigger.contains(e.target) || iconPanel.contains(e.target)) return;
+    closeIconPanel();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !iconPanel.hidden) {
+      closeIconPanel();
+      iconTrigger.focus();
+    }
   });
   setSelectedIcon(defaultIcon);
 
@@ -206,6 +274,9 @@ window.TFC_SEED.activityFormats = @json($seedRows);
       .then(function () {
         window.TFC.closeModal('fmt-form-modal');
         window.TFC.showToast(editingId ? 'บันทึกหมวดหมู่แล้ว' : 'เพิ่มหมวดหมู่แล้ว', 'success');
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
+           การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -223,10 +294,12 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     var item = e.target.closest('[data-action-key^="fmt-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('fmt-delete-', ''));
-    $('fmt-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('fmt-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'fmt-delete-modal', messageId: 'fmt-delete-message', confirmId: 'fmt-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('fmt-delete-confirm').addEventListener('click', function () {
@@ -261,6 +334,14 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
     return !bucket || !bucket.match || bucket.match(row);
   }
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(row) {
+    if (!row.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(row.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(row.updatedTime ? date + ' | ' + row.updatedTime : date);
+  }
+
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
@@ -276,8 +357,15 @@ window.TFC_SEED.activityFormats = @json($seedRows);
       });
 
       var keyword = (($('fmt-search') || {}).value || '').trim().toLowerCase();
+      var statusFilter = (($('fmt-filter-status') || {}).value || '');
+
+      /* ชิปด้านบนกับตัวกรองในแผงเป็นคนละชั้น ใช้ร่วมกันได้ ต้องผ่านทั้งคู่ */
       var filtered = rows.filter(function (f) {
-        return matchesStatus(f) && (!keyword || f.name.toLowerCase().indexOf(keyword) !== -1);
+        var statusLabel = f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน';
+
+        return matchesStatus(f) &&
+          (!keyword || f.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!statusFilter || statusLabel === statusFilter);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -291,23 +379,34 @@ window.TFC_SEED.activityFormats = @json($seedRows);
           '<td><span class="master-avatar-cell"><span class="master-avatar">' + iconSvg(f.icon) + '</span>' +
           '<button type="button" class="cell-title-link font-medium" data-action-key="fmt-edit-' + window.TFC.escapeHtml(f.id) + '" data-open-modal="fmt-form-modal">' +
           window.TFC.escapeHtml(f.name) + '</button></span></td>' +
-          '<td>' + Number(f.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
-          '<td><div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
+          '<td class="cell-count">' + Number(f.activityCount || 0).toLocaleString('th-TH') + '</td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าพื้นที่ดำเนินงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(f) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },
-            { key: 'fmt-delete-' + f.id, label: 'ลบหมวดหมู่กิจกรรม', icon: 'delete', modal: 'fmt-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'fmt-delete-' + f.id, label: 'ลบหมวดหมู่กิจกรรม', modal: 'fmt-delete-modal', perm: 'master_data', usageCount: f.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');
 
-      window.TFC.renderPagination('fmt-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_activityCount = filtered.reduce(function (acc, row) { return acc + Number(row.activityCount || 0); }, 0);
+      $('fmt-table-foot').innerHTML =
+        '<td colspan="2" id="fmt-foot-info"></td>' +
+        '<td class="cell-count">' + sum_activityCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="fmt-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'fmt-foot-info',
+        controlsTarget: 'fmt-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -316,13 +415,32 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('fmt-search-popover', {
-    search: { id: 'fmt-search', placeholder: 'ค้นหาชื่อหมวดหมู่' },
+    search: false,
+    icon: 'filter',
+    filters: [
+      { id: 'status', inputId: 'fmt-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
+        options: (mock.masterActiveStatuses || []).map(function (o) { return { label: o.value }; }) }
+    ],
     onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('fmt-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่

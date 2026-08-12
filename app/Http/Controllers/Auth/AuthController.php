@@ -26,8 +26,11 @@ class AuthController extends Controller
         $request->user()->forceFill(['last_login_at' => now()])->save();
 
         /* intended() พากลับไปหน้าที่ตั้งใจเปิดก่อนถูกเด้งมาล็อกอิน
-           ผู้ใช้จึงไม่ต้องไล่คลิกเมนูกลับไปเองหลังล็อกอิน */
-        return redirect()->intended(route('admin.activities.index'));
+           ผู้ใช้จึงไม่ต้องไล่คลิกเมนูกลับไปเองหลังล็อกอิน
+
+           ปลายทางเริ่มต้นเป็นแดชบอร์ดตามที่ handoff ของหน้าเข้าสู่ระบบระบุไว้
+           (เดิมเป็นรายการกิจกรรม เพราะตอนนั้นแดชบอร์ดยังเป็นหน้า static ที่ยังไม่ได้ย้าย) */
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse

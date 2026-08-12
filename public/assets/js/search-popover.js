@@ -12,7 +12,9 @@
      note: 'แสดงผลไม่เกิน 250 รายการ',              // optional — ข้อความหมายเหตุมุมขวาบน
      searchLabel: 'ค้นหา:',                          // optional
      filterLabel: 'รายการค้นหา:',                    // optional
+     icon: 'filter',                                 // optional — 'filter' = กรวย (ค่าเริ่มต้นคือแว่นขยาย)
      search: { placeholder: 'ค้นหาจากชื่อ, รหัส...' },
+     search: false,                                  // ช่องค้นหาอยู่นอกแผงแล้ว เหลือแค่ตัวกรอง
      filters: [
        { id: 'status', label: 'สถานะเอกสาร', placeholder: 'ทั้งหมด',
          options: [{ value: 'open', label: 'เปิดรับสมัคร' }] }   // value ไม่ใส่ = ใช้ label
@@ -29,6 +31,10 @@ window.TFC = window.TFC || {};
 
 (function () {
   var SEARCH_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>';
+
+  /* หน้าที่มีช่องค้นหาแยกอยู่ข้างนอกแล้ว ปุ่มนี้เหลือหน้าที่เดียวคือตัวกรอง
+     ใช้ไอคอนกรวยจึงตรงกับสิ่งที่กดแล้วได้ ไม่ใช่แว่นขยายที่ซ้ำกับช่องข้าง ๆ */
+  var FILTER_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>';
   var PANEL_WIDTH = 340;
   var openPanels = [];
 
@@ -48,37 +54,46 @@ window.TFC = window.TFC || {};
       }).join('');
       return '<div class="search-popover-field">' +
         '<label class="form-label" for="' + esc(filter.inputId || ('sp-filter-' + filter.id)) + '">' + esc(filter.label) + '</label>' +
-        '<select class="select" id="' + esc(filter.inputId || ('sp-filter-' + filter.id)) + '" data-filter-id="' + esc(filter.id) + '">' +
+        /* data-smart-select = ใช้ dropdown ของระบบ ไม่ใช่ของเบราว์เซอร์
+           ไม่งั้นตัวกรองจะหน้าตาคนละแบบกับ dropdown ชื่อเดียวกันในฟอร์ม popup */
+        '<select class="select" data-smart-select id="' + esc(filter.inputId || ('sp-filter-' + filter.id)) + '" data-filter-id="' + esc(filter.id) + '">' +
         '<option value="">' + esc(filter.placeholder || 'ทั้งหมด') + '</option>' + options +
         '</select></div>';
     }).join('');
 
+    /* search: false = ช่องค้นหาอยู่นอกแผงแล้ว แผงนี้เหลือแค่ตัวกรอง */
+    var hasKeyword = config.search !== false;
+    var title = config.searchLabel || (hasKeyword ? 'ค้นหา:' : 'ตัวกรอง:');
+
     mount.classList.add('search-popover');
     mount.innerHTML =
       '<button type="button" class="search-popover-trigger" data-sp-trigger' +
-      ' aria-haspopup="dialog" aria-expanded="false" aria-label="' + esc(config.triggerLabel || 'ค้นหาและกรองข้อมูล') + '">' +
-      SEARCH_ICON +
+      ' aria-haspopup="dialog" aria-expanded="false" aria-label="' + esc(config.triggerLabel || (hasKeyword ? 'ค้นหาและกรองข้อมูล' : 'กรองข้อมูล')) + '">' +
+      (config.icon === 'filter' ? FILTER_ICON : SEARCH_ICON) +
       '<span class="search-popover-badge hidden" data-sp-badge></span>' +
       '</button>' +
 
       '<div class="search-popover-panel" data-sp-panel role="dialog" aria-modal="false"' +
-      ' aria-label="' + esc(config.triggerLabel || 'ค้นหาและกรองข้อมูล') + '">' +
+      ' aria-label="' + esc(config.triggerLabel || (hasKeyword ? 'ค้นหาและกรองข้อมูล' : 'กรองข้อมูล')) + '">' +
 
       '<div class="search-popover-head">' +
-      '<span class="search-popover-title">' + esc(config.searchLabel || 'ค้นหา:') + '</span>' +
+      '<span class="search-popover-title">' + esc(title) + '</span>' +
       (config.note ? '<span class="search-popover-note">(' + esc(config.note) + ')</span>' : '') +
       '</div>' +
 
-      '<div class="search-popover-field">' +
-      '<div class="search-input">' +
-      '<span class="search-input-icon">' + SEARCH_ICON + '</span>' +
-      '<input type="search" class="input" data-sp-keyword' +
-      ((config.search && config.search.id) ? ' id="' + esc(config.search.id) + '"' : '') +
-      ' placeholder="' + esc((config.search && config.search.placeholder) || 'ค้นหา...') + '">' +
-      '</div></div>' +
+      (hasKeyword
+        ? '<div class="search-popover-field">' +
+          '<div class="search-input">' +
+          '<span class="search-input-icon">' + SEARCH_ICON + '</span>' +
+          '<input type="search" class="input" data-sp-keyword' +
+          ((config.search && config.search.id) ? ' id="' + esc(config.search.id) + '"' : '') +
+          ' placeholder="' + esc((config.search && config.search.placeholder) || 'ค้นหา...') + '">' +
+          '</div></div>'
+        : '') +
 
       (filters.length
-        ? '<div class="search-popover-subtitle">' + esc(config.filterLabel || 'รายการค้นหา:') + '</div>' +
+        /* หัวแผงบอกไปแล้วว่านี่คือตัวกรอง ถ้าไม่มีช่องค้นหาก็ไม่ต้องมีหัวข้อย่อยซ้ำอีก */
+        ? (hasKeyword ? '<div class="search-popover-subtitle">' + esc(config.filterLabel || 'รายการค้นหา:') + '</div>' : '') +
           '<div class="search-popover-filters">' + filtersHtml + '</div>'
         : '') +
 
@@ -95,9 +110,17 @@ window.TFC = window.TFC || {};
     var clearBtn = mount.querySelector('[data-sp-clear]');
     var selects = Array.prototype.slice.call(mount.querySelectorAll('[data-filter-id]'));
 
+    /* แผงนี้สร้างขึ้นหลัง smart-select ไล่สร้าง widget รอบแรกไปแล้ว จึงต้องสั่งเองอีกครั้ง */
+    if (window.TFC.initSmartSelects) window.TFC.initSmartSelects(mount);
+
+    /* ตั้งค่า select ตรง ๆ ไม่ยิง change ป้ายบนปุ่มจึงค้างค่าเก่า ต้องสั่งซิงก์เอง */
+    function syncSelectLabels() {
+      if (window.TFC.refreshSmartSelects) window.TFC.refreshSmartSelects(mount);
+    }
+
     /* ---------- ค่าปัจจุบันในแผง ---------- */
     function getValues() {
-      var values = { keyword: keywordInput.value.trim(), filters: {}, activeCount: 0 };
+      var values = { keyword: keywordInput ? keywordInput.value.trim() : '', filters: {}, activeCount: 0 };
       selects.forEach(function (select) {
         values.filters[select.getAttribute('data-filter-id')] = select.value;
         if (select.value) values.activeCount++;
@@ -108,13 +131,14 @@ window.TFC = window.TFC || {};
 
     function setValues(next) {
       next = next || {};
-      if (next.keyword != null) keywordInput.value = next.keyword;
+      if (next.keyword != null && keywordInput) keywordInput.value = next.keyword;
       if (next.filters) {
         selects.forEach(function (select) {
           var value = next.filters[select.getAttribute('data-filter-id')];
           if (value != null) select.value = value;
         });
       }
+      syncSelectLabels();
       syncBadge();
     }
 
@@ -155,7 +179,7 @@ window.TFC = window.TFC || {};
       mount.classList.add('is-open');
       trigger.setAttribute('aria-expanded', 'true');
       position();
-      keywordInput.focus();
+      (keywordInput || selects[0] || submitBtn).focus();
     }
 
     function close() {
@@ -194,8 +218,9 @@ window.TFC = window.TFC || {};
     }
 
     function clear() {
-      keywordInput.value = '';
+      if (keywordInput) keywordInput.value = '';
       selects.forEach(function (select) { select.value = ''; });
+      syncSelectLabels();
       syncBadge(0);
       if (typeof config.onClear === 'function') config.onClear();
       else if (typeof config.onSearch === 'function') config.onSearch(getValues(), function () {});
@@ -210,25 +235,34 @@ window.TFC = window.TFC || {};
     submitBtn.addEventListener('click', submit);
     clearBtn.addEventListener('click', clear);
 
-    keywordInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        submit();
-      }
-    });
+    if (keywordInput) {
+      keywordInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submit();
+        }
+      });
+    }
 
     /* คลิกในแผงต้องไม่ปิดแผง */
     panel.addEventListener('click', function (e) { e.stopPropagation(); });
 
+    /* ตอน smart-select กางออก แผงตัวเลือกถูกย้ายไปแขวนที่ <body> (ดูคอมเมนต์ใน smart-select.js)
+       การคลิกเลือกตัวเลือกจึงนับเป็น "คลิกนอกแผงค้นหา" ถ้าไม่ยกเว้นไว้ แผงจะปิดทันทีที่เลือก */
     document.addEventListener('click', function (e) {
-      if (isOpen() && !mount.contains(e.target)) close();
+      if (!isOpen()) return;
+      if (mount.contains(e.target) || e.target.closest('.smart-select-panel')) return;
+      close();
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && isOpen()) {
-        close();
-        trigger.focus();
-      }
+      if (e.key !== 'Escape' || !isOpen()) return;
+
+      /* Esc ครั้งแรกปิด dropdown ที่กางอยู่ ยังไม่ปิดแผงค้นหาทั้งอัน */
+      if (document.querySelector('.smart-select-panel.is-open')) return;
+
+      close();
+      trigger.focus();
     });
 
     window.addEventListener('resize', function () { if (isOpen()) position(); });

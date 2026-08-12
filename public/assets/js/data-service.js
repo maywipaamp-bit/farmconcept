@@ -26,6 +26,8 @@ window.TFC.dataService = function (entityKey, idField) {
   idField = idField || 'id';
   var LATENCY = 250;
   var base = window.TFC_API[entityKey] || null;
+  var masterMutationsViaPost = ['areas', 'targetGroups', 'programs', 'instructors', 'activityFormats']
+    .indexOf(entityKey) !== -1;
 
   /* ---------- โหมดฐานข้อมูลจริง ---------- */
 
@@ -61,6 +63,27 @@ window.TFC.dataService = function (entityKey, idField) {
     }
 
     return fetch(base + path, options).then(readJson);
+  }
+
+  /* บาง production server ปฏิเสธ HTTP DELETE ก่อนคำขอจะถึง Laravel
+     ส่งเป็น POST แบบฟอร์มพร้อม _method=DELETE ซึ่ง Laravel รองรับโดยตรง */
+  function removeCall(path) {
+    return fetch(base + path, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrf(),
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      },
+      credentials: 'same-origin',
+      body: '_method=DELETE'
+    }).then(readJson);
+  }
+
+  /* IIS บางเครื่องปฏิเสธ HTTP PUT เช่นเดียวกับ DELETE ก่อนถึง Laravel
+     ส่ง JSON เดิมผ่าน POST พร้อม _method=PUT เพื่อให้ validation และ payload เดิมไม่เปลี่ยน */
+  function updateCall(path, body) {
+    return call(path, 'POST', Object.assign({}, body || {}, { _method: 'PUT' }));
   }
 
   /* ข้อมูลในหน่วยความจำต้องตามให้ทันด้วย เพราะหลายหน้าอ่าน window.TFC_MOCK ตรง ๆ
@@ -99,11 +122,17 @@ window.TFC.dataService = function (entityKey, idField) {
     },
 
     update: function (id, patch) {
-      return call('/' + encodeURIComponent(id), 'PUT', patch).then(function (data) { return data.row; });
+      var path = '/' + encodeURIComponent(id);
+      var request = masterMutationsViaPost ? updateCall(path, patch) : call(path, 'PUT', patch);
+
+      return request.then(function (data) { return data.row; });
     },
 
     remove: function (id) {
-      return call('/' + encodeURIComponent(id), 'DELETE').then(function () { return true; });
+      var path = '/' + encodeURIComponent(id);
+      var request = masterMutationsViaPost ? removeCall(path) : call(path, 'DELETE');
+
+      return request.then(function () { return true; });
     }
   };
 

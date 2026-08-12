@@ -64,7 +64,7 @@ class DashboardService
             'range' => $range,
             'range_options' => $this->rangeOptions($range),
             'generated_at' => now(),
-            'kpis' => $this->kpis($range, $since, $participants['total'], $cohort['total']),
+            'kpis' => $this->kpis($since, $participants['total'], $cohort['total']),
             'participants' => $participants,
             'cohort' => $cohort,
             'survey_rounds' => $this->surveyRounds($cohort['total']),
@@ -107,14 +107,18 @@ class DashboardService
        ========================================================================== */
 
     /**
-     * ตัวเลขสรุป 4 ใบ พร้อมบรรทัดเปรียบเทียบ
+     * ตัวเลขสรุป 4 ใบ
+     *
+     * มีแค่ป้าย + ตัวเลข + หน่วย ไม่มีบรรทัดเปรียบเทียบใต้การ์ด
+     * (ตัดออกตามที่ทีมสั่ง — บรรทัดนั้นเพิ่มตัวหนังสือสี่บรรทัดโดยไม่ได้ช่วยตัดสินใจอะไร
+     * ตัวเลขเทียบช่วงเวลาดูได้จากตัวกรองช่วงบนหัวหน้าอยู่แล้ว)
      *
      * total ของผู้เข้าร่วมกับกลุ่มตัวอย่างรับมาจากผู้เรียก ไม่ query ซ้ำ
      * เพราะเป็นตัวเลขเดียวกับที่แถว 2 และแถว 3 ใช้ ต้องตรงกันเสมอ
      *
      * @return array<int, array<string, mixed>>
      */
-    private function kpis(string $range, ?Carbon $since, int $participantTotal, int $cohortTotal): array
+    private function kpis(?Carbon $since, int $participantTotal, int $cohortTotal): array
     {
         return [
             [
@@ -123,22 +127,22 @@ class DashboardService
                 'value' => $participantTotal,
                 'unit' => 'คน',
                 'icon' => 'users',
-            ] + $this->participantDelta($range),
-            [
-                'key' => 'activities',
-                'label' => 'จำนวนกิจกรรม',
-                'value' => $this->heldActivities($since)->count(),
-                'unit' => 'ครั้ง',
-                'icon' => 'calendar',
-            ] + $this->activityDelta(),
+            ],
+            /* กลุ่มตัวอย่างอยู่ใบที่สองติดกับผู้เข้าร่วม เพราะเป็น "ส่วนย่อยของ" ตัวเลขใบแรก
+               อ่านคู่กันได้ทันทีว่า 28 จาก 47 คน ไม่ต้องข้ามใบกิจกรรมไปหา */
             [
                 'key' => 'cohort',
                 'label' => 'จำนวนกลุ่มตัวอย่าง',
                 'value' => $cohortTotal,
                 'unit' => 'คน',
                 'icon' => 'check',
-                'delta' => $this->percentText($cohortTotal, $participantTotal),
-                'delta_note' => 'ของผู้เข้าร่วมทั้งหมด',
+            ],
+            [
+                'key' => 'activities',
+                'label' => 'จำนวนกิจกรรม',
+                'value' => $this->heldActivities($since)->count(),
+                'unit' => 'ครั้ง',
+                'icon' => 'calendar',
             ],
             [
                 'key' => 'areas',
@@ -146,87 +150,7 @@ class DashboardService
                 'value' => DB::table('mst_areas')->count(),
                 'unit' => 'พื้นที่',
                 'icon' => 'pin',
-            ] + $this->areaDelta(),
-        ];
-    }
-
-    /**
-     * ผู้เข้าร่วมในช่วงล่าสุดเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน
-     *
-     * ช่วง "ทั้งหมด" ไม่มีช่วงก่อนหน้าให้เทียบ จึงเทียบ 3 เดือนล่าสุดกับ 3 เดือนก่อนนั้น
-     * ตามบรรทัดที่ต้นแบบเขียนไว้ ("เทียบ 3 เดือนก่อน")
-     *
-     * @return array<string, string>
-     */
-    private function participantDelta(string $range): array
-    {
-        /* อ่านจำนวนเดือนจากนิยามของช่วงตรง ๆ ไม่คำนวณย้อนจากวันที่
-           การ diff วันที่กลับให้ค่าติดลบและปัดเป็น 1 เดือน ทำให้บรรทัดเทียบผิดช่วง */
-        $months = self::RANGES[$range]['months'] ?? 3;
-
-        $from = now()->subMonthsNoOverflow($months)->startOfDay();
-        $previousFrom = now()->subMonthsNoOverflow($months * 2)->startOfDay();
-
-        $current = $this->distinctPeople(
-            DB::table('act_registrations')->where('registered_at', '>=', $from)
-        );
-        $previous = $this->distinctPeople(
-            DB::table('act_registrations')
-                ->where('registered_at', '>=', $previousFrom)
-                ->where('registered_at', '<', $from)
-        );
-
-        if ($previous === 0) {
-            /* ไม่มีฐานให้หารเปอร์เซ็นต์ — บอกจำนวนที่เพิ่มมาตรง ๆ ดีกว่าโชว์ +∞% */
-            return [
-                'delta' => '+' . number_format($current) . ' คน',
-                'delta_note' => 'ใน ' . $months . ' เดือนล่าสุด',
-                'delta_tone' => $current > 0 ? 'up' : 'flat',
-            ];
-        }
-
-        $change = (($current - $previous) / $previous) * 100;
-
-        return [
-            'delta' => ($change >= 0 ? '+' : '') . number_format($change, 1) . '%',
-            'delta_note' => 'เทียบ ' . $months . ' เดือนก่อน',
-            'delta_tone' => $change > 0 ? 'up' : ($change < 0 ? 'down' : 'flat'),
-        ];
-    }
-
-    /** @return array<string, string> */
-    private function activityDelta(): array
-    {
-        $recent = $this->heldActivities(now()->subMonthsNoOverflow(3)->startOfDay())->count();
-
-        return [
-            'delta' => '+' . number_format($recent) . ' ครั้ง',
-            'delta_note' => 'ใน 3 เดือนล่าสุด',
-            'delta_tone' => $recent > 0 ? 'up' : 'flat',
-        ];
-    }
-
-    /**
-     * บรรทัดใต้การ์ดพื้นที่ — บอกจังหวัดที่ดำเนินงานอยู่จริง ไม่ใช่ข้อความตายตัว
-     *
-     * @return array<string, string>
-     */
-    private function areaDelta(): array
-    {
-        $provinces = DB::table('mst_areas')
-            ->whereNotNull('province')
-            ->distinct()
-            ->orderBy('province')
-            ->pluck('province');
-
-        if ($provinces->isEmpty()) {
-            return ['delta' => 'ยังไม่ระบุจังหวัด', 'delta_note' => '', 'delta_tone' => 'flat'];
-        }
-
-        return [
-            'delta' => (string) $provinces->first(),
-            'delta_note' => $provinces->count() > 1 ? 'และอีก ' . ($provinces->count() - 1) . ' จังหวัด' : '',
-            'delta_tone' => 'flat',
+            ],
         ];
     }
 
@@ -250,8 +174,54 @@ class DashboardService
             'total' => $total,
             'gender' => $this->genderBreakdown($since, $total),
             'age_bands' => $this->ageBands($since, $total),
+            'occupations' => $this->occupations($since, $total),
             'top_courses' => $this->topCourses($since, $total),
         ];
+    }
+
+    /**
+     * จำแนกตามอาชีพ
+     *
+     * ตัวเลือกอาชีพมาจาก mst_options กลุ่ม occupation ไม่ใช่ข้อความอิสระ
+     * (occupation_raw มีไว้รับค่าที่ผู้ใช้พิมพ์เองเมื่อเลือก "อื่น ๆ" จึงรวบเป็นถังเดียว)
+     * ถ้าเก็บเป็นข้อความอิสระทั้งหมด กิจกรรม A เขียน "เกษตรกร" กิจกรรม B เขียน "ทำนา"
+     * แล้วรวมรายงานข้ามกิจกรรมไม่ได้ ตามเหตุผลใน migration ของ act_activity_reg_fields
+     *
+     * คืนรูปแบบเดียวกับ ageBands() เพราะทั้งคู่วาดด้วยแท่งแนวนอนชุดเดียวกัน
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function occupations(?Carbon $since, int $total): array
+    {
+        $rows = $this->registrations($since)
+            ->leftJoin('mst_options', 'mst_options.id', '=', 'act_registrations.occupation_id')
+            ->where(fn (Builder $q) => $q
+                ->whereNotNull('act_registrations.occupation_id')
+                ->orWhereNotNull('act_registrations.occupation_raw'))
+            ->select(
+                DB::raw("COALESCE(mst_options.label, act_registrations.occupation_raw, 'ไม่ระบุ') as label"),
+                $this->personKey('people')
+            )
+            ->groupBy('mst_options.id', 'mst_options.label', 'act_registrations.occupation_raw')
+            ->orderByDesc('people')
+            ->get();
+
+        $max = $rows->max('people') ?: 1;
+        $last = max($rows->count() - 1, 0);
+
+        return $rows
+            ->values()
+            ->map(fn (object $row, int $index) => [
+                'label' => $row->label,
+                'count' => (int) $row->people,
+                'pct' => $this->percentText((int) $row->people, $total),
+                /* ความยาวแท่งเทียบกับอาชีพที่มากที่สุด ไม่ใช่เทียบยอดรวม
+                   อาชีพที่มากสุดจะได้เต็มราง เห็นความต่างระหว่างอาชีพชัดกว่า */
+                'bar' => round(((int) $row->people / $max) * 100, 2),
+                /* เข้มสุด = มากสุด ไล่อ่อนลงตามอันดับ (ตรงข้ามกับช่วงอายุที่ไล่ตามอายุ) */
+                'rank' => min($index, self::SCALE_STEPS - 1),
+            ])
+            ->all();
     }
 
     /**
@@ -430,7 +400,7 @@ class DashboardService
                     'pct' => $this->percentText((int) $row->people, $total),
                     'rank' => min($index, self::SCALE_STEPS - 1),
                     /* เว้นช่อง 3 หน่วยระหว่างชิ้น ให้เห็นรอยต่อโดยไม่ต้องวาดเส้นขอบ */
-                    'dash' => round(max($length - 3, 0), 2) . ' ' . round($circumference - max($length - 3, 0), 2),
+                    'dash' => round(max($length - 3, 0), 2).' '.round($circumference - max($length - 3, 0), 2),
                     'offset' => round(-$offset, 2),
                 ];
 
@@ -541,8 +511,8 @@ class DashboardService
                 'tone' => $incomplete > 0 ? 'warn' : 'good',
             ],
             [
-                'value' => $lastRound['pct'] . '%',
-                'label' => 'อัตราตอบกลับรอบ ' . $lastRound['label'],
+                'value' => $lastRound['pct'].'%',
+                'label' => 'อัตราตอบกลับรอบ '.$lastRound['label'],
                 'tone' => 'info',
             ],
         ];
@@ -686,11 +656,11 @@ class DashboardService
                 'y' => round($y($percent), 2),
                 'is_base' => $percent === 0,
             ], [0, 25, 50, 75, 100]),
-            'ticks' => array_map(fn (int $percent) => $percent . '%', [100, 75, 50, 25, 0]),
+            'ticks' => array_map(fn (int $percent) => $percent.'%', [100, 75, 50, 25, 0]),
             'series' => array_map(fn (array $line) => [
                 'key' => $line['key'],
                 'points' => implode(' ', array_map(
-                    fn (int $index) => round($x($index), 2) . ',' . round($y((float) $topics[$index][$line['field']]), 2),
+                    fn (int $index) => round($x($index), 2).','.round($y((float) $topics[$index][$line['field']]), 2),
                     array_keys($topics)
                 )),
                 'dots' => array_map(fn (int $index) => [
@@ -722,7 +692,12 @@ class DashboardService
             ->whereNotNull('evl_questions.dimension')
             ->where('ptp_follow_up_rounds.offset_days', $offsetDays)
             ->groupBy('evl_questions.dimension')
-            ->pluck(DB::raw('avg(evl_answers.score)'), 'evl_questions.dimension')
+            /* ต้องตั้ง alias ให้ค่าเฉลี่ยแล้ว pluck จาก alias นั้น
+               ใส่ DB::raw() เป็นชื่อคอลัมน์ของ pluck ตรง ๆ ไม่ได้ — Laravel หา property
+               ชื่อ "avg(evl_answers.score)" ในผลลัพธ์ไม่เจอ แล้วคืน null ทุกแถวเงียบ ๆ
+               ทำให้คะแนนทุกหัวข้อกลายเป็น 0% โดยไม่มี error (เจอตอนมีข้อมูลจริงเข้ามา) */
+            ->select('evl_questions.dimension', DB::raw('avg(evl_answers.score) as average'))
+            ->pluck('average', 'evl_questions.dimension')
             ->map(fn ($average) => max(0, min(100, (((float) $average - 1) / ($scoreMax - 1)) * 100)));
     }
 
@@ -770,24 +745,24 @@ class DashboardService
             [
                 'icon' => 'trend',
                 'tone' => $gap >= 0 ? 'good' : 'warn',
-                'value' => ($gap >= 0 ? '+' : '') . number_format($gap, 1),
+                'value' => ($gap >= 0 ? '+' : '').number_format($gap, 1),
                 'title' => 'จุดโดยเฉลี่ย',
-                'note' => 'ค่าเฉลี่ยทุกหัวข้อเปลี่ยนจาก ' . number_format($avgBefore, 1)
-                    . '% เป็น ' . number_format($avgAfter, 1) . '%'
-                    . ' · ดีขึ้น ' . $collection->where('gain', '>', 0)->count()
-                    . ' จาก ' . $collection->count() . ' หัวข้อ',
+                'note' => 'ค่าเฉลี่ยทุกหัวข้อเปลี่ยนจาก '.number_format($avgBefore, 1)
+                    .'% เป็น '.number_format($avgAfter, 1).'%'
+                    .' · ดีขึ้น '.$collection->where('gain', '>', 0)->count()
+                    .' จาก '.$collection->count().' หัวข้อ',
             ],
             [
                 'icon' => 'star',
                 'tone' => 'good',
-                'value' => ($best['gain'] >= 0 ? '+' : '') . number_format($best['gain'], 1),
+                'value' => ($best['gain'] >= 0 ? '+' : '').number_format($best['gain'], 1),
                 'title' => $best['label'],
                 'note' => 'พัฒนามากที่สุด แนะนำถอดบทเรียนหลักสูตรนี้ไปใช้กับหัวข้ออื่น',
             ],
             [
                 'icon' => 'alert',
                 'tone' => 'warn',
-                'value' => number_format($worst['after'], 1) . '%',
+                'value' => number_format($worst['after'], 1).'%',
                 'title' => $worst['label'],
                 'note' => 'ยังต่ำที่สุดหลังเข้าร่วม ควรเพิ่มกิจกรรมและติดตามกลุ่มนี้เป็นพิเศษ',
             ],
@@ -795,7 +770,7 @@ class DashboardService
                 'icon' => 'clock',
                 'tone' => $pending > 0 ? 'muted' : 'good',
                 'value' => number_format($pending),
-                'title' => 'รายที่ยังไม่ตอบรอบ' . ($lastLabel ? ' ' . $lastLabel : 'สุดท้าย'),
+                'title' => 'รายที่ยังไม่ตอบรอบ'.($lastLabel ? ' '.$lastLabel : 'สุดท้าย'),
                 'note' => $pending > 0
                     ? 'ตามให้ครบจะทำให้แนวโน้มนี้แม่นยำขึ้น'
                     : 'ตอบครบทุกรายแล้ว แนวโน้มนี้ใช้อ้างอิงได้เต็มที่',
@@ -1058,9 +1033,9 @@ class DashboardService
     {
         return DB::raw(
             'count(distinct case'
-            . " when act_registrations.participant_id is null then concat('h', act_registrations.phone)"
-            . " else concat('p', act_registrations.participant_id)"
-            . " end) as {$alias}"
+            ." when act_registrations.participant_id is null then concat('h', act_registrations.phone)"
+            ." else concat('p', act_registrations.participant_id)"
+            ." end) as {$alias}"
         );
     }
 
@@ -1074,6 +1049,6 @@ class DashboardService
     /** เปอร์เซ็นต์แบบข้อความ — ฐานเป็น 0 ต้องได้ขีด ไม่ใช่ 0.0% ที่อ่านเหมือนมีข้อมูลแล้ว */
     private function percentText(int $value, int $total): string
     {
-        return $total > 0 ? number_format(($value / $total) * 100, 1) . '%' : '—';
+        return $total > 0 ? number_format(($value / $total) * 100, 1).'%' : '—';
     }
 }

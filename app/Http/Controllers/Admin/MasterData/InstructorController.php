@@ -38,8 +38,11 @@ class InstructorController extends MasterDataController
     }
 
     /**
-     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
-     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     * เรียงจากรายการที่เพิ่มล่าสุดลงมา — ของใหม่อยู่บนสุดเสมอ
+     *
+     * ใช้ id ไม่ใช่ updated_at เพราะสองอย่างนี้ให้ผลต่างกันตอนแก้ไข
+     * id คงที่ตลอดอายุของแถว แก้ข้อมูลแล้วลำดับจึงไม่ขยับ คนที่ไล่แก้ทีละแถวไม่เสียตำแหน่ง
+     * ส่วน updated_at จะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง
      */
     protected function query()
     {
@@ -47,13 +50,13 @@ class InstructorController extends MasterDataController
             ->with([
                 'expertises:id,instructor_id,name',
                 'courses:id,name',
+                'updatedBy:id,name',
 
                 /* ประวัติการเป็นวิทยากรส่งไปกับแถวเลย จึงต้องโหลดพร้อมกันทั้งชุด
                    ไม่งั้นจะยิง query ต่อวิทยากรหนึ่งคน แล้วต่ออีกครั้งเพื่อนับผู้ลงทะเบียน */
                 'activities' => fn ($query) => $query->withCount('registrations')->orderByDesc('start_date'),
             ])
             ->withCount('activities')
-            ->orderByDesc('updated_at')
             ->orderByDesc('id');
     }
 
@@ -112,6 +115,7 @@ class InstructorController extends MasterDataController
             'phone' => $data['phone'],
             'bio' => $data['bio'] ?? null,
             'is_active' => $data['active'],
+            'updated_by' => auth()->id(),
 
             /* คอลัมน์ expertise เป็นข้อความสรุปที่หน้าอื่นแสดงเป็นบรรทัดเดียว
                ส่วนรายการแยกอยู่ที่ mst_instructor_expertises — เขียนทั้งสองที่ให้ตรงกันเสมอ */
@@ -146,8 +150,13 @@ class InstructorController extends MasterDataController
             'courses' => $record->courses->pluck('name')->values(),
             'bio' => $record->bio,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count,
             'active' => $record->is_active,
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $record->updatedBy?->name,
             'updatedAt' => $record->updated_at?->toDateString(),
+            'updatedTime' => $record->updated_at?->format('H.i'),
 
             /* ประวัติมาจากกิจกรรมจริงในฐาน ไม่ใช่ข้อมูลที่กรอกเอง
                ส่งมากับแถวเลย เพราะโมดัลต้องแสดงทันทีที่เปิด ไม่ควรรอคำขออีกรอบ */
@@ -168,8 +177,8 @@ class InstructorController extends MasterDataController
 
         return $count === 0
             ? null
-            : 'วิทยากรท่านนี้อยู่ในกิจกรรม ' . $count . ' รายการ ลบไม่ได้ '
-              . 'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
+            : 'วิทยากรท่านนี้อยู่ในกิจกรรม '.$count.' รายการ ลบไม่ได้ '
+              .'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
     }
 
     /**
@@ -183,7 +192,7 @@ class InstructorController extends MasterDataController
         $instructor = $this->find($code);
 
         $request->validate(
-            ['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::PHOTO_MAX_KB]],
+            ['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::PHOTO_MAX_KB]],
             [],
             ['photo' => 'รูปวิทยากร']
         );

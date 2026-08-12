@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'ตั้งค่ารอบติดตาม')
+@section('title', 'ตั้งค่ารอบประเมิน')
 
 @section('content')
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span>
         <span>พื้นฐาน</span> <span>/</span>
-        <span class="is-current">ตั้งค่ารอบติดตาม</span>
+        <span class="is-current">ตั้งค่ารอบประเมิน</span>
       </nav>
       {{-- ชื่อหน้า 28px/600 + ปุ่มหลัก "เพิ่มรอบ" มุมขวา --}}
       <div class="page-header" id="frt-page-header"></div>
@@ -16,8 +16,7 @@
       <!-- ---------- ตารางรอบ ---------- -->
       <section class="card frt-card" aria-labelledby="frt-table-title">
         <div class="frt-card-head">
-          <span class="frt-card-title" id="frt-table-title">รอบติดตามทั้งหมด</span>
-          <span class="frt-card-note" id="frt-table-note"></span>
+          <span class="frt-card-title" id="frt-table-title">รอบประเมินสุขภาพกลุ่มตัวอย่าง</span>
         </div>
 
         {{-- wrapper เลื่อนแนวนอนได้ ตัวแถวมีความกว้างขั้นต่ำ กันคอลัมน์ถูกบีบจนอ่านไม่ออก --}}
@@ -108,7 +107,7 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
 
   /* ---------- 1. หัวหน้า ---------- */
   /* ไม่มีปุ่มเพิ่มรอบแล้ว — ชุดรอบเป็นค่าคงที่ของระบบ ปรับได้แต่ชื่อ จำนวนวัน และเปิด/ปิด */
-  window.TFC.renderPageHeader('frt-page-header', { title: 'ตั้งค่ารอบติดตาม' });
+  window.TFC.renderPageHeader('frt-page-header', { title: 'ตั้งค่ารอบประเมิน' });
 
   /* ---------- 2. ตาราง ---------- */
   function rowHtml(row, index) {
@@ -204,8 +203,9 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
     } else if (!check.activeCount) {
       byId('frt-summary').textContent = 'ต้องเปิดใช้งานอย่างน้อย 1 รอบ';
     } else {
-      var names = svc.activeTemplates(withSortOrder()).map(function (t) { return t.name; });
-      byId('frt-summary').textContent = 'เปิดใช้งาน ' + check.activeCount + ' รอบ · ' + names.join(' → ');
+      /* ทุกอย่างถูกต้องแล้วไม่ต้องบอกอะไร — ตารางข้างบนบอกครบอยู่แล้วว่ามีกี่รอบและรอบไหนเปิดอยู่
+         บรรทัดนี้เหลือหน้าที่เดียวคือบอกสิ่งที่ต้องแก้ก่อนบันทึก */
+      byId('frt-summary').textContent = '';
     }
 
     byId('frt-summary').classList.toggle('is-warn', !check.ok);
@@ -218,7 +218,6 @@ window.TFC_CONFIG.followUpTemplateApiBase = @json(route('admin.master.follow-up-
     }
 
     byId('frt-save').disabled = !check.ok;
-    byId('frt-table-note').textContent = 'ทั้งหมด ' + state.rows.length + ' รอบ · เปิดใช้งาน ' + check.activeCount + ' รอบ';
   }
 
   /* ทุกอย่างที่ขึ้นกับค่าในตาราง — เรียกหลังแก้ค่าทุกครั้ง */

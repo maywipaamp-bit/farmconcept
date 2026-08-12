@@ -1,0 +1,526 @@
+/* ==========================================================================
+   หน้าส่งงานให้ลูกค้าตรวจ (/review)
+
+   หน้านี้ไม่มีเมนูด้านข้างและผู้ใช้ไม่ได้ล็อกอิน จึงเป็นหน้าเดี่ยวกึ่งกลางจอ
+   ใช้ token กับ component ชุดเดียวกับหลังบ้าน (.data-table .btn .status-text)
+   มีเฉพาะสิ่งที่หน้านี้มีจริง ๆ อยู่ในไฟล์นี้
+   ========================================================================== */
+
+.review-page {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+}
+
+/* จำกัดความกว้างไว้ — ตารางที่กว้างเต็มจอ 27 นิ้วทำให้สายตาต้องกวาดไกลจนอ่านข้ามบรรทัด
+   เว้นด้านบนมากกว่าด้านข้าง เพราะหน้านี้ไม่มีแถบเมนู หัวเรื่องจึงชนขอบจอถ้าเว้นเท่ากัน */
+.review-shell {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5) var(--space-7);
+}
+
+/* ---------- หัวหน้า ---------- */
+.review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.review-title {
+  font-size: var(--font-size-page-title, 22px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-page-title, var(--color-primary-dark));
+  letter-spacing: -0.015em;
+}
+
+.review-meta {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.review-stats {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* การ์ดตัวเลขสรุป — กดแล้วกรองตารางได้ จึงเป็น <button> ไม่ใช่กล่องเฉย ๆ */
+.review-stat {
+  min-width: 92px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  text-align: center;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.review-stat:hover { border-color: var(--color-primary); }
+
+.review-stat.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.review-stat:active { transform: scale(.985); }
+
+.review-stat-value {
+  display: block;
+  font-size: var(--font-size-n-lg, 20px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong, var(--color-text-primary));
+  font-variant-numeric: tabular-nums;
+}
+
+.review-stat.is-active .review-stat-value { color: var(--color-primary-dark); }
+
+.review-stat-label {
+  display: block;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+/* ---------- แถบข้อมูลโครงการ ---------- */
+.review-project {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.review-project-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.review-project-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.review-project-value {
+  margin-top: 2px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* นับถอยหลัง — ปกติเป็นป้ายเขียวจาง เปลี่ยนสีเมื่อถึงวันสุดท้ายและเมื่อเลยกำหนด */
+.review-countdown {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-countdown.is-urgent {
+  background: var(--color-warning-soft, #FEFCE8);
+  color: var(--color-warning-text, #854D0E);
+}
+
+.review-countdown.is-over {
+  background: var(--color-danger-soft, #FEF2F2);
+  color: var(--color-danger-text, #B91C1C);
+}
+
+.review-plan-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* คำอธิบายวิธีใช้ — อยู่ในการ์ดโครงการ ไม่แยกเป็นแถบเหลืองอีกกล่อง
+   ผู้ตรวจส่วนใหญ่เปิดครั้งแรกและไม่มีใครสอน จึงต้องมี แต่ไม่ต้องเด่นเท่าข้อมูลโครงการ */
+/* เส้นคั่นอยู่ที่กล่องรวม ไม่ใช่ที่ตัวข้อความ — ลิงก์ระบบจึงอยู่ในกรอบเดียวกับคำชี้แจง */
+.review-project-guide {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.review-project-note {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.review-project-note-label { color: var(--color-text-secondary); }
+
+/* ลิงก์ระบบทดสอบ + บัญชีทดลอง — ต่อจากคำชี้แจงทันที เป็นข้อมูลชุดเดียวกันที่ผู้ตรวจต้องใช้ก่อนเริ่ม */
+.review-system {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-caption);
+}
+
+.review-system-link {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.review-system-link:hover { color: var(--color-primary); }
+
+.review-system-login {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ตัวกรองเดียวมุมซ้ายของตาราง */
+.review-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.review-filter-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.review-filter .select {
+  width: 190px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 var(--space-5) 0 var(--space-2);
+  font-size: var(--font-size-caption);
+  background-position: right var(--space-2) center;
+}
+
+.review-empty {
+  padding: var(--space-7);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- ตาราง ----------
+   กำหนดความกว้างของคอลัมน์ที่มีของขนาดคงที่ (ช่องกรอก ปุ่ม ตัวเลข)
+   แล้วปล่อยสองคอลัมน์ที่เป็นข้อความยาว — หน้าจอกับคอมเมนต์ — แบ่งที่เหลือกันเอง
+   ถ้าไม่กำหนด เบราว์เซอร์จะเฉลี่ยตามความยาวข้อความ แล้วช่องวันที่กับปุ่มถูกบีบจนตกบรรทัด */
+.review-page .data-table { table-layout: fixed; }
+
+.review-page .data-table .col-no { width: 44px; }
+.review-page .data-table th:nth-child(2) { width: 168px; }
+.review-page .data-table th:nth-child(4) { width: 132px; }
+.review-page .data-table th:nth-child(5) { width: 210px; }
+.review-page .data-table .col-actions { width: 148px; }
+
+/* คอลัมน์เมนู — เมนูย่อยย่อหน้าเข้าไป เห็นลำดับชั้นเดียวกับเมนูจริงของระบบ */
+.review-menu {
+  white-space: normal;
+  font-size: var(--font-size-small);
+}
+
+/* เมนูหลักกับเมนูย่อยต่างกันที่ย่อหน้าและเส้นนำ ไม่ใช่แค่ขนาดตัวอักษร
+   ระดับที่ต่างกันจึงอ่านออกแม้กวาดตาเร็ว ๆ */
+.review-menu.is-main { font-weight: var(--font-weight-medium); }
+
+.review-menu.is-child { padding-left: var(--space-5); }
+
+.review-menu-branch {
+  margin-right: var(--space-1);
+  color: var(--color-border);
+}
+
+.review-menu-leaf { color: var(--color-text-primary); }
+
+/* ชื่อเมนูกดแล้วไปหน้านั้น — ไม่ขีดเส้นใต้ตามกฎของระบบ บอกว่ากดได้ด้วยสีตอน hover */
+.review-menu-link {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.review-menu-link:hover { color: var(--color-primary-dark); }
+
+/* แถวหัวข้อหมวด — คั่นกลุ่มโดยไม่ต้องมีเส้นหรือหัวตารางซ้อน */
+.review-group td {
+  background: var(--color-background);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.review-group:hover td { background: var(--color-background); }
+
+.review-menu-group {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong, var(--color-text-primary));
+}
+
+.review-screen {
+  white-space: normal;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+/* คอมเมนต์ล่าสุดตัดที่สองบรรทัด ไม่ให้แถวสูงไม่เท่ากันตามความยาวข้อความ */
+.review-last { white-space: normal; }
+
+.review-last-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-size-small);
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+/* ปุ่มของหน้าที่ยังไม่เปิดให้ตรวจ — เห็นว่ามีอยู่แต่กดไม่ได้ */
+.review-actions .is-disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.review-comment-btn { position: relative; }
+
+/* จุดแจ้งเตือนคอมเมนต์ที่ยังไม่ได้เปิดอ่าน — หายเมื่อเปิดแผงคอมเมนต์ของหน้านั้น */
+.review-unread {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger, #DC2626);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ช่องสถานะเล็กและมีสีตามสถานะ — กวาดตาลงมาทั้งคอลัมน์แล้วเห็นภาพรวมได้ทันที
+   สีอยู่บนตัวช่องเอง ไม่ใช่ป้ายแยก จึงไม่กินพื้นที่เพิ่มทั้งที่ยังกดเปลี่ยนได้ */
+.review-status {
+  width: 118px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0 var(--space-5) 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  background-position: right 6px center;
+}
+
+.review-status.is-neutral { background-color: var(--color-background); color: var(--color-text-secondary); border-color: var(--color-border); }
+.review-status.is-success { background-color: var(--color-success-soft); color: var(--color-success-text); border-color: var(--color-success-soft); }
+.review-status.is-warning { background-color: var(--color-warning-soft); color: var(--color-warning-text); border-color: var(--color-warning-soft); }
+.review-status.is-info    { background-color: var(--color-info-soft); color: var(--color-info-text); border-color: var(--color-info-soft); }
+.review-status.is-primary { background-color: var(--color-primary-soft); color: var(--color-primary-dark); border-color: var(--color-primary-soft-border); }
+
+/* วันที่กับจำนวนวันที่เหลืออยู่บรรทัดเดียวกัน */
+.review-due-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.review-due {
+  width: 126px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-caption);
+}
+
+/* จำนวนวันที่เหลือ — ต่อท้ายช่องวันที่ ตัวเล็กสีเทา ไม่แย่งสายตาจากวันที่จริง */
+.review-due-note {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ใกล้ครบกำหนดหรือเลยแล้ว — เปลี่ยนเป็นแดงและหนาขึ้น ให้สะดุดตาเฉพาะที่ต้องรีบ */
+.review-due-note.is-urgent {
+  color: var(--color-danger-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---------- แผงคอมเมนต์ด้านข้าง ---------- */
+.review-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+}
+
+.review-drawer[hidden] { display: none; }
+
+.review-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, .45);
+}
+
+.review-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  box-shadow: 0 8px 12px rgba(16, 24, 40, .06), 0 24px 60px rgba(16, 24, 40, .14);
+  animation: review-drawer-in .26s var(--ease-out, ease-out) both;
+}
+
+@keyframes review-drawer-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-drawer-panel { animation: none; }
+}
+
+.review-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.review-drawer-menu {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.review-drawer-screen {
+  margin: 2px 0 var(--space-2);
+  font-size: var(--font-size-section-title, 16px);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* เนื้อแผงเลื่อนเองได้ หัวกับช่องพิมพ์จึงอยู่กับที่ตลอด */
+.review-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+}
+
+.review-thread-title {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.review-thread-loading {
+  padding: var(--space-5) 0;
+  text-align: center;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+/* ข้อความของสองฝั่งใช้สีพื้นต่างกัน อ่านไล่บทสนทนาได้โดยไม่ต้องอ่านชื่อทุกครั้ง */
+.review-msg {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+}
+
+.review-msg.is-customer { background: var(--color-primary-soft); }
+
+.review-msg-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-caption);
+}
+
+.review-msg-author {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.review-msg-side {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.review-msg-time { color: var(--color-text-muted); }
+
+.review-msg-body {
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  text-wrap: pretty;
+}
+
+.review-msg-resolved {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-success-text, var(--color-primary-dark));
+}
+
+.review-drawer-foot {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.review-drawer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* กันหน้าเลื่อนอยู่ข้างหลังตอนแผงเปิด */
+body.is-drawer-open { overflow: hidden; }
+
+@media (max-width: 767px) {
+  .review-shell { padding: var(--space-4) var(--space-3) var(--space-6); }
+  .review-drawer-panel { width: 100%; }
+  .review-actions { flex-wrap: wrap; }
+}

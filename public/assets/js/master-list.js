@@ -7,6 +7,56 @@
 window.TFC = window.TFC || {};
 
 (function () {
+  /* คำสั่งลบมาตรฐานของข้อมูลพื้นฐาน — แสดงให้กดได้ทุกแถว
+     แถวที่ถูกใช้งานแล้วจะแจ้งเหตุผลในโมดัล และเซิร์ฟเวอร์ตรวจซ้ำอีกชั้น */
+  window.TFC.masterDeleteAction = function (opts) {
+    opts = opts || {};
+
+    return {
+      key: opts.key,
+      label: opts.label,
+      icon: 'delete',
+      modal: opts.modal,
+      perm: opts.perm,
+      danger: true
+    };
+  };
+
+  /* ตั้งค่าโมดัลยืนยันก่อนเปิด — คืน true เฉพาะรายการที่ส่ง DELETE ได้ */
+  window.TFC.prepareMasterDelete = function (opts) {
+    opts = opts || {};
+    var usage = Math.max(0, Number(opts.usageCount) || 0);
+    var blocked = usage > 0;
+    var confirm = document.getElementById(opts.confirmId);
+    var cancel = document.querySelector('#' + opts.modalId + ' [data-close-modal]');
+    var message = document.getElementById(opts.messageId);
+    var title = document.querySelector('#' + opts.modalId + ' .modal-title');
+    var footer = document.querySelector('#' + opts.modalId + ' .modal-footer');
+
+    /* จำหัวข้อยืนยันเดิมไว้ เพื่อคืนค่าเมื่อผู้ใช้เปิดรายการที่ยังลบได้ต่อจากรายการที่ถูกใช้งาน */
+    if (title && !title.getAttribute('data-delete-title')) {
+      title.setAttribute('data-delete-title', title.textContent.trim());
+    }
+
+    if (title) {
+      title.textContent = blocked ? 'ไม่สามารถลบได้' : title.getAttribute('data-delete-title');
+    }
+
+    if (message) {
+      message.textContent = blocked
+        ? 'มีรายการถูกนำไปใช้งานแล้ว ไม่สามารถลบได้ แนะนำให้กำหนดสถานะเป็น “ปิดใช้งาน” แทน'
+        : opts.confirmMessage;
+    }
+    if (confirm) {
+      confirm.hidden = blocked;
+      confirm.style.display = blocked ? 'none' : '';
+    }
+    if (cancel) cancel.textContent = blocked ? 'รับทราบ' : 'ยกเลิก';
+    if (footer) footer.style.justifyContent = blocked ? 'center' : '';
+
+    return !blocked;
+  };
+
   /* ---------- 1. แถบนับจำนวนแยกตามสถานะ ----------
      opts.buckets = [{ key, label, match(row) }]  ·  key '' = ทั้งหมด
      opts.onPick(key) ถูกเรียกเมื่อผู้ใช้กดเปลี่ยนตัวกรอง */

@@ -2,16 +2,24 @@
 
 @section('title', 'โปรแกรมการเรียนรู้')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">โปรแกรมการเรียนรู้</span>
   </nav>
   <div class="page-header" id="program-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="program-counts"></div>
-    <div id="program-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="program-search"
+             placeholder="ค้นหาชื่อโปรแกรม" aria-label="ค้นหาโปรแกรมการเรียนรู้">
+      <div id="program-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -22,22 +30,22 @@
             <th class="col-no">#</th>
             <th>ชื่อโปรแกรมการเรียนรู้</th>
             <th>หลักสูตร</th>
-            <th>ใช้กับกิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="program-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="program-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="program-pagination"></div>
 @endsection
 
 @section('modals')
 <div class="modal-overlay" id="program-create-modal">
-  <div class="modal">
+  <div class="modal program-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="program-form-title">เพิ่มโปรแกรมการเรียนรู้</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -46,8 +54,8 @@
     </div>
     <form id="program-form">
       <div class="modal-body">
-        <div class="form-row-3 mb-3">
-          <div class="form-group form-col-span-2 mb-0">
+        <div class="form-row program-fields-grid mb-3">
+          <div class="form-group mb-0">
             <label class="form-label" for="program-name">ชื่อโปรแกรมการเรียนรู้<span class="form-required">*</span></label>
             <input class="input" id="program-name" data-validate required maxlength="150" autocomplete="off">
           </div>
@@ -55,15 +63,15 @@
             <label class="form-label" for="program-active">สถานะ<span class="form-required">*</span></label>
             <div class="flex items-center gap-2" style="height:38px;">
               <label class="switch"><input type="checkbox" id="program-active" checked><span class="switch-track"></span></label>
-              <span class="small text-secondary" id="program-active-label">ใช้งาน</span>
+              <span class="small text-secondary program-active-label" id="program-active-label">ใช้งาน</span>
             </div>
           </div>
         </div>
-        {{-- is-cols-3: ช่องหลักสูตรกว้างเท่าชื่อโปรแกรมด้านบน ปุ่มลบ/เพิ่มอยู่ตรงคอลัมน์เดียวกับสถานะ --}}
+        {{-- ช่องหลักสูตรกว้างเท่าชื่อโปรแกรมด้านบน ปุ่มลบ/เพิ่มอยู่ตรงคอลัมน์เดียวกับสถานะ --}}
         <div class="form-group mb-0">
           <label class="form-label">หลักสูตร</label>
-          <div class="dynamic-row-list is-cols-3" id="program-courses-list"></div>
-          <button type="button" class="dynamic-row-add is-cols-3" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
+          <div class="dynamic-row-list program-course-grid" id="program-courses-list"></div>
+          <button type="button" class="dynamic-row-add program-course-add" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
           <div class="form-helper">หลักสูตรที่มีกิจกรรมใช้อยู่จะไม่ถูกลบ แม้เอาออกจากรายการนี้</div>
@@ -200,6 +208,9 @@ window.TFC_SEED.programs = @json($seedRows);
       .then(function () {
         window.TFC.closeModal('program-create-modal');
         window.TFC.showToast(editingId ? 'บันทึกโปรแกรมแล้ว' : 'เพิ่มโปรแกรมแล้ว', 'success');
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
+           การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -217,10 +228,12 @@ window.TFC_SEED.programs = @json($seedRows);
     var item = e.target.closest('[data-action-key^="program-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('program-delete-', ''));
-    $('program-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" พร้อมหลักสูตรที่ยังไม่มีใครใช้ ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('program-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'program-delete-modal', messageId: 'program-delete-message', confirmId: 'program-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" พร้อมหลักสูตรที่ยังไม่มีใครใช้ ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('program-delete-confirm').addEventListener('click', function () {
@@ -255,6 +268,14 @@ window.TFC_SEED.programs = @json($seedRows);
     var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
     return !bucket || !bucket.match || bucket.match(row);
   }
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(row) {
+    if (!row.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(row.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(row.updatedTime ? date + ' | ' + row.updatedTime : date);
+  }
+
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
@@ -270,8 +291,15 @@ window.TFC_SEED.programs = @json($seedRows);
       });
 
       var keyword = (($('program-search') || {}).value || '').trim().toLowerCase();
+      var statusFilter = (($('program-filter-status') || {}).value || '');
+
+      /* ชิปด้านบนกับตัวกรองในแผงเป็นคนละชั้น ใช้ร่วมกันได้ ต้องผ่านทั้งคู่ */
       var filtered = rows.filter(function (p) {
-        return matchesStatus(p) && (!keyword || p.name.toLowerCase().indexOf(keyword) !== -1);
+        var statusLabel = p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน';
+
+        return matchesStatus(p) &&
+          (!keyword || p.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!statusFilter || statusLabel === statusFilter);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -294,23 +322,31 @@ window.TFC_SEED.programs = @json($seedRows);
           '<td><button type="button" class="cell-title-link font-medium" data-action-key="program-edit-' + window.TFC.escapeHtml(p.id) + '" data-open-modal="program-create-modal">' +
           window.TFC.escapeHtml(p.name) + '</button></td>' +
           '<td>' + coursesHtml + '</td>' +
-          '<td>' + Number(p.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
-          '<td><div class="cell-updated-at">' + (p.updatedAt ? window.TFC.formatThaiDate(p.updatedAt) : '-') + '</div></td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: p.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าพื้นที่ดำเนินงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(p.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(p) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'program-edit-' + p.id, label: 'แก้ไข', icon: 'edit', modal: 'program-create-modal', perm: 'master_data' },
-            { key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', icon: 'delete', modal: 'program-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', modal: 'program-delete-modal', perm: 'master_data', usageCount: p.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');
 
-      window.TFC.renderPagination('program-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      $('program-table-foot').innerHTML =
+        '<td colspan="3" id="program-foot-info"></td>' +
+        '<td colspan="3" id="program-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'program-foot-info',
+        controlsTarget: 'program-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -319,13 +355,32 @@ window.TFC_SEED.programs = @json($seedRows);
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('program-search-popover', {
-    search: { id: 'program-search', placeholder: 'ค้นหาชื่อโปรแกรม' },
+    search: false,
+    icon: 'filter',
+    filters: [
+      { id: 'status', inputId: 'program-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
+        options: (mock.masterActiveStatuses || []).map(function (o) { return { label: o.value }; }) }
+    ],
     onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('program-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่

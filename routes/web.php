@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +30,20 @@ Route::middleware('guest')->group(function () {
 
 /* ลิงก์เก่าที่ยังชี้ /login.html — ส่งต่อไปหน้าใหม่แทนที่จะ 404 */
 Route::redirect('/login.html', '/login');
+
+/*
+ | หน้าส่งงานให้ลูกค้าตรวจ — อยู่นอก middleware auth โดยตั้งใจ
+ | ลูกค้าเปิดลิงก์แล้วคอมเมนต์ได้เลย ไม่ต้องมีบัญชีในระบบ
+ |
+ | เฉพาะการแก้สถานะ/วันครบกำหนดที่ตรวจสิทธิ์เพิ่มในคอนโทรลเลอร์
+ | เพราะเป็นข้อมูลของทีมพัฒนา ไม่ใช่ของผู้ตรวจ
+ */
+Route::prefix('review')->name('review.')->group(function () {
+    Route::get('/', [ReviewController::class, 'index'])->name('index');
+    Route::get('/items/{item}/comments', [ReviewController::class, 'comments'])->name('comments');
+    Route::post('/items/{item}/comments', [ReviewController::class, 'storeComment'])->name('comments.store');
+    Route::put('/items/{item}', [ReviewController::class, 'updateItem'])->name('items.update');
+});
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
@@ -132,7 +147,7 @@ Route::middleware('auth')->group(function () {
             });
 
             /*
-             | ตั้งค่ารอบติดตามไม่ได้แก้ทีละแถว แต่แก้ทั้งตารางแล้วกดบันทึกครั้งเดียว
+             | ตั้งค่ารอบประเมินไม่ได้แก้ทีละแถว แต่แก้ทั้งตารางแล้วกดบันทึกครั้งเดียว
              | จึงมีแค่ GET กับ PUT ก้อนเดียว ไม่มี POST/DELETE รายแถว
              */
             Route::prefix('follow-up-rounds')->name('follow-up-rounds.')

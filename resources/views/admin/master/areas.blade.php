@@ -2,16 +2,24 @@
 
 @section('title', 'พื้นที่ดำเนินงาน')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">พื้นที่ดำเนินงาน</span>
   </nav>
   <div class="page-header" id="area-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="area-counts"></div>
-    <div id="area-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="area-search"
+             placeholder="ค้นหาชื่อพื้นที่ ผู้ประสานงาน" aria-label="ค้นหาพื้นที่ดำเนินงาน">
+      <div id="area-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -24,17 +32,18 @@
             <th>ประเภทพื้นที่</th>
             <th>กลุ่มพื้นที่</th>
             <th>ผู้ประสานงาน</th>
-            <th>จำนวนจัดกิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-count">จำนวนจัดกิจกรรม</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="area-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="area-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="area-pagination"></div>
 @endsection
 
 @section('modals')
@@ -54,8 +63,8 @@
             <input class="input" id="area-name" data-validate required maxlength="150" autocomplete="off">
           </div>
           <div class="form-group mb-0">
-            <label class="form-label" for="area-type">ประเภทพื้นที่</label>
-            <select class="select" id="area-type" data-smart-select></select>
+            <label class="form-label" for="area-type">ประเภทพื้นที่<span class="form-required">*</span></label>
+            <select class="select" id="area-type" required data-smart-select></select>
           </div>
         </div>
 
@@ -85,7 +94,10 @@
           </div>
           <div class="form-group mb-0">
             <label class="form-label" for="area-partner-org">ร่วมกับหน่วยงาน</label>
-            <input type="hidden" id="area-partner-org" data-tags-input data-tags-placeholder="พิมพ์ชื่อหน่วยงานแล้วกด Enter">
+            {{-- เลือกจากหน่วยงานที่มีอยู่ได้ หรือพิมพ์ชื่อใหม่แล้วระบบสร้างให้ --}}
+            <input type="hidden" id="area-partner-org" data-tags-input
+                   data-tags-placeholder="พิมพ์ชื่อหน่วยงานแล้วกด Enter"
+                   data-tags-options="{{ $partnerOrgs->toJson(JSON_UNESCAPED_UNICODE) }}">
           </div>
         </div>
 
@@ -154,12 +166,14 @@ window.TFC_API.areas = @json(route('admin.master.areas.index'));
 window.TFC_SEED = window.TFC_SEED || {};
 window.TFC_SEED.areas = @json($seedRows);
 
-/* ตัวเลือกมาจาก config ฝั่งเซิร์ฟเวอร์ ชุดเดียวกับที่ใช้ตรวจตอนบันทึก
-   ถ้าปล่อยให้หน้าจออ่านจาก mock-data.js ต่อไป วันหนึ่งสองที่จะไม่ตรงกันแล้วบันทึกไม่ผ่านโดยไม่มีเหตุผลที่เห็นได้ */
+/* ตัวเลือกทั้งหมดมาจากฐานข้อมูล ชุดเดียวกับที่เซิร์ฟเวอร์ใช้ตรวจตอนบันทึก
+   จังหวัด/อำเภอเดิมอ่านจาก mock-data.js ซึ่งเป็นคนละแหล่งกับตาราง mst_districts */
 window.TFC_AREA = {
   types: @json($types),
   groups: @json($groups),
-  statuses: @json($statuses)
+  statuses: @json($statuses),
+  districts: @json($districts),
+  partnerOrgs: @json($partnerOrgs)
 };
 </script>
 @endpush
@@ -192,27 +206,58 @@ window.TFC_AREA = {
     if (window.TFC.datetimePicker) window.TFC.datetimePicker.decorate(el.parentElement);
   }
 
-  function optionsHtml(list, selected) {
+  /* ตัวเลือกที่ค่าเป็น id — value คือ id ส่วนข้อความที่เห็นคือ label */
+  function idOptionsHtml(list, selectedId, blankLabel) {
+    var head = blankLabel ? '<option value="">' + window.TFC.escapeHtml(blankLabel) + '</option>' : '';
+
+    return head + list.map(function (o) {
+      return '<option value="' + o.id + '"' + (String(o.id) === String(selectedId) ? ' selected' : '') + '>' +
+        window.TFC.escapeHtml(o.label || o.name) + '</option>';
+    }).join('');
+  }
+
+  /* ตัวเลือกที่ค่าเป็นข้อความ (สถานะ · จังหวัด) */
+  function textOptionsHtml(list, selected) {
     return list.map(function (v) {
       return '<option value="' + window.TFC.escapeHtml(v) + '"' + (v === selected ? ' selected' : '') + '>' + window.TFC.escapeHtml(v) + '</option>';
     }).join('');
   }
 
   function populateStaticSelects() {
-    $('area-type').innerHTML = optionsHtml(CFG.types);
-    $('area-group').innerHTML = optionsHtml(CFG.groups);
-    $('area-status').innerHTML = optionsHtml(CFG.statuses);
-    $('area-province').innerHTML = optionsHtml(Object.keys(mock.provinceDistricts || {}));
+    $('area-type').innerHTML = idOptionsHtml(CFG.types, '');
+    $('area-group').innerHTML = idOptionsHtml(CFG.groups, '');
+    $('area-status').innerHTML = textOptionsHtml(CFG.statuses);
+    $('area-province').innerHTML = textOptionsHtml(Object.keys(CFG.districts));
   }
 
-  function populateDistricts(province, selectedDistrict) {
-    var districts = (mock.provinceDistricts || {})[province] || [];
-    $('area-district').innerHTML = optionsHtml(districts, selectedDistrict);
+  function populateDistricts(province, selectedDistrictId) {
+    $('area-district').innerHTML = idOptionsHtml(CFG.districts[province] || [], selectedDistrictId);
+
+    /* ค่าที่เก็บเป็น id ทำให้ป้ายที่ค้างอยู่ผิดแบบมองไม่ออก — ต้องซิงก์ป้ายทุกครั้งที่เปลี่ยนรายการ */
+    if (window.TFC.refreshSmartSelects) window.TFC.refreshSmartSelects($('area-form'));
   }
 
   $('area-province').addEventListener('change', function () {
     populateDistricts(this.value, null);
   });
+
+  /* วันที่สิ้นสุดต้องไม่มาก่อนวันที่เริ่ม — ปิดวันก่อนหน้าในปฏิทินไปเลย
+     ห้ามอย่างเดียวตอนกดบันทึกไม่พอ ผู้ใช้เลือกไปแล้วค่อยรู้ว่าเลือกไม่ได้ */
+  function syncEndDateLimit() {
+    var start = $('area-start-date').getAttribute('data-iso') || '';
+    var end = $('area-end-date');
+
+    if (start) end.setAttribute('data-min-iso', start);
+    else end.removeAttribute('data-min-iso');
+
+    /* เลือกวันสิ้นสุดไว้ก่อน แล้วค่อยเลื่อนวันเริ่มไปหลังจากนั้น — ค่าที่ค้างอยู่ใช้ไม่ได้แล้ว */
+    if (start && end.getAttribute('data-iso') && end.getAttribute('data-iso') < start) {
+      setPickerDate('area-end-date', '');
+      window.TFC.showToast('วันที่สิ้นสุดอยู่ก่อนวันที่เริ่มดำเนินการ ระบบล้างค่าให้แล้ว', 'warning');
+    }
+  }
+
+  $('area-start-date').addEventListener('change', syncEndDateLimit);
 
   function resetAreaForm() {
     $('area-form-title').textContent = 'เพิ่มพื้นที่ดำเนินงาน';
@@ -221,6 +266,7 @@ window.TFC_AREA = {
     populateDistricts($('area-province').value, null);
     setPickerDate('area-start-date', '');
     setPickerDate('area-end-date', '');
+    syncEndDateLimit();
     window.TFC.setTagsValue('area-partner-org', '');
     $('area-form').setAttribute('data-editing-id', '');
   }
@@ -229,12 +275,13 @@ window.TFC_AREA = {
     $('area-form-title').textContent = 'แก้ไขพื้นที่ดำเนินงาน';
     populateStaticSelects();
     $('area-name').value = area.name || '';
-    $('area-type').value = area.areaType || '';
-    $('area-group').value = area.areaGroup || '';
+    $('area-type').value = area.areaTypeId || '';
+    $('area-group').value = area.areaGroupId || '';
     $('area-province').value = area.province || '';
-    populateDistricts(area.province, area.district);
+    populateDistricts(area.province, area.districtId);
     setPickerDate('area-start-date', area.startDate);
     setPickerDate('area-end-date', area.endDate);
+    syncEndDateLimit();
     window.TFC.setTagsValue('area-partner-org', area.partnerOrg);
     $('area-coordinator').value = area.coordinator || '';
     $('area-coordinator-phone').value = area.coordinatorPhone || '';
@@ -272,14 +319,15 @@ window.TFC_AREA = {
     var editingId = this.getAttribute('data-editing-id');
     var payload = {
       name: $('area-name').value.trim(),
-      areaType: $('area-type').value,
-      areaGroup: $('area-group').value,
-      province: $('area-province').value,
-      district: $('area-district').value,
+      /* ส่ง id ไม่ใช่ชื่อ — จังหวัดไม่ต้องส่ง เพราะ district_id บอกจังหวัดอยู่แล้ว */
+      areaTypeId: $('area-type').value,
+      areaGroupId: $('area-group').value,
+      districtId: $('area-district').value,
       /* ช่องวันที่ของระบบเก็บค่าจริงไว้ที่ data-iso ไม่ใช่ .value (ซึ่งเป็นข้อความไทยที่คนอ่าน) */
       startDate: $('area-start-date').getAttribute('data-iso') || null,
       endDate: $('area-end-date').getAttribute('data-iso') || null,
-      partnerOrg: $('area-partner-org').value || null,
+      /* tags input เก็บเป็นข้อความคั่นจุลภาค — แยกเป็นรายชื่อก่อนส่ง */
+      partnerOrgs: ($('area-partner-org').value || '').split(',').map(function (v) { return v.trim(); }).filter(Boolean),
       coordinator: $('area-coordinator').value.trim(),
       coordinatorPhone: $('area-coordinator-phone').value.trim(),
       coordinatorPosition: $('area-coordinator-position').value.trim(),
@@ -295,6 +343,9 @@ window.TFC_AREA = {
       .then(function () {
         window.TFC.closeModal('area-form-modal');
         window.TFC.showToast(editingId ? 'บันทึกพื้นที่แล้ว' : 'เพิ่มพื้นที่แล้ว', 'success');
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
+           การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -312,10 +363,12 @@ window.TFC_AREA = {
     var item = e.target.closest('[data-action-key^="area-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('area-delete-', ''));
-    $('area-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('area-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'area-delete-modal', messageId: 'area-delete-message', confirmId: 'area-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('area-delete-confirm').addEventListener('click', function () {
@@ -342,6 +395,38 @@ window.TFC_AREA = {
     return { key: s, label: s, match: function (r) { return r.status === s; } };
   }));
 
+  /* เขต/อำเภอกดแล้วเปิดแผนที่ของพื้นที่นั้น — พื้นที่ที่ยังไม่ได้ใส่ลิงก์เป็นข้อความธรรมดา
+     ไม่ทำปุ่มหรือไอคอนเพิ่ม หน้าตาตอนไม่ได้ชี้เมาส์จึงเหมือนเดิมทุกประการ
+
+     ยอมรับเฉพาะ http/https — ค่าในฐานข้อมูลผ่าน validate url มาแล้ว แต่ข้อมูลเก่าที่ใส่ไว้ก่อนมีกฎนี้
+     อาจเป็นอย่างอื่น ถ้าปล่อยผ่านจะกลายเป็นช่องให้ยิง javascript: ผ่านช่องกรอกได้ */
+  function mapLink(a) {
+    var text = window.TFC.escapeHtml(a.district || '');
+    if (!text || !/^https?:\/\//i.test(a.mapUrl || '')) return text;
+
+    return '<a class="cell-link-plain" href="' + window.TFC.escapeHtml(a.mapUrl) + '"' +
+      ' target="_blank" rel="noopener noreferrer"' +
+      ' aria-label="เปิดแผนที่ของ ' + window.TFC.escapeHtml(a.name) + '">' + text + '</a>';
+  }
+
+  /* เบอร์โทรกดแล้วโทรออก — href ใช้เฉพาะตัวเลข ส่วนที่แสดงคงขีดคั่นไว้ให้อ่านง่ายเหมือนเดิม */
+  function phoneLink(phone) {
+    var digits = String(phone).replace(/[^\d+]/g, '');
+    var text = window.TFC.escapeHtml(phone);
+    if (!digits) return text;
+
+    return '<a class="cell-link-plain" href="tel:' + window.TFC.escapeHtml(digits) + '"' +
+      ' aria-label="โทรหา ' + text + '">' + text + '</a>';
+  }
+
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(a) {
+    if (!a.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(a.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(a.updatedTime ? date + ' | ' + a.updatedTime : date);
+  }
+
   function matchesStatus(row) {
     if (!pageState.statusKey) return true;
 
@@ -367,11 +452,15 @@ window.TFC_AREA = {
       var groupFilter = (($('area-filter-group') || {}).value || '');
       var statusFilter = (($('area-filter-status') || {}).value || '');
 
+      /* ค้นหาครอบคลุมสิ่งที่คนจำได้จริง ไม่ใช่แค่ชื่อพื้นที่
+         ตัวกรองเทียบด้วย id ไม่ใช่ชื่อ — ชื่อเปลี่ยนได้ ถ้าเทียบชื่อจะกรองไม่เจอทันทีที่มีคนแก้คำ */
       var filtered = rows.filter(function (a) {
+        var haystack = [a.name, a.coordinator, a.partnerOrg].join(' ').toLowerCase();
+
         return matchesStatus(a) &&
-          (!keyword || a.name.toLowerCase().indexOf(keyword) !== -1) &&
-          (!typeFilter || a.areaType === typeFilter) &&
-          (!groupFilter || a.areaGroup === groupFilter) &&
+          (!keyword || haystack.indexOf(keyword) !== -1) &&
+          (!typeFilter || String(a.areaTypeId) === typeFilter) &&
+          (!groupFilter || String(a.areaGroupId) === groupFilter) &&
           (!statusFilter || a.status === statusFilter);
       });
 
@@ -388,30 +477,47 @@ window.TFC_AREA = {
           '<td><button type="button" class="cell-title-link font-medium" ' +
           'data-action-key="edit-' + window.TFC.escapeHtml(a.id) + '" data-open-modal="area-form-modal">' +
           window.TFC.escapeHtml(a.name) + '</button>' +
-          '<div class="caption text-secondary">' + window.TFC.escapeHtml(a.district || '') + (a.district ? ' ' : '') + window.TFC.escapeHtml(a.province || '') + '</div></td>' +
+          /* บรรทัดรองแสดงแค่เขต/อำเภอ — จังหวัดซ้ำกันแทบทุกแถว ใส่ไปก็ไม่ได้ช่วยแยกแยะ */
+          '<div class="caption text-secondary">' + mapLink(a) + '</div></td>' +
           '<td>' + window.TFC.escapeHtml(a.areaType || '-') + '</td>' +
           '<td>' + window.TFC.escapeHtml(a.areaGroup || '-') + '</td>' +
           /* ผู้ประสานงาน: ชื่อบรรทัดบน เบอร์โทรบรรทัดล่าง (แพทเทิร์นเดียวกับคอลัมน์ชื่อพื้นที่) */
           '<td><div>' + window.TFC.escapeHtml(a.coordinator || '-') + '</div>' +
-          (a.coordinatorPhone ? '<div class="caption text-secondary">' + window.TFC.escapeHtml(a.coordinatorPhone) + '</div>' : '') + '</td>' +
-          '<td>' + Number(a.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.areaStatusList, value: a.status }) + '</td>' +
-          /* ย่อ พ.ศ. เหลือ 2 หลัก (2569 -> 69) กันบรรทัดตกในคอลัมน์แคบ */
-          '<td><div class="cell-updated-at">' + (a.updatedAt ? window.TFC.formatThaiDate(a.updatedAt).replace(/\d{2}(\d{2})$/, '$1') : '-') + '</div></td>' +
+          (a.coordinatorPhone ? '<div class="caption text-secondary">' + phoneLink(a.coordinatorPhone) + '</div>' : '') + '</td>' +
+          '<td class="cell-count">' + Number(a.activityCount || 0).toLocaleString('th-TH') + '</td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.areaStatusList, value: a.status }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับคอลัมน์ผู้ประสานงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(a.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(a) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
-            { key: 'area-delete-' + a.id, label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
+            window.TFC.masterDeleteAction({ key: 'area-delete-' + a.id, label: 'ลบพื้นที่', modal: 'area-delete-modal', perm: 'areas', usageCount: a.deleteUsageCount })
           ]) +
           '</td></tr>';
-      }).join('');
+      }).join('') ||
+        /* ไม่มีข้อมูลต้องบอกให้รู้ ไม่ใช่ปล่อยตารางว่างจนแยกไม่ออกว่ากรองไม่เจอหรือยังโหลดไม่เสร็จ
+           colspan ต้องเท่าจำนวนหัวคอลัมน์ ไม่งั้นเส้นคั่นจะขาดกลางตาราง */
+        '<tr class="table-empty-row"><td colspan="9">' +
+        '<div class="table-empty">' +
+        (rows.length ? 'ไม่พบข้อมูลตามเงื่อนไขที่เลือก ลองล้างคำค้นหาหรือตัวกรอง' : 'ยังไม่มีพื้นที่ดำเนินงานในระบบ') +
+        '</div></td></tr>';
 
-      window.TFC.renderPagination('area-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_activityCount = filtered.reduce(function (acc, row) { return acc + Number(row.activityCount || 0); }, 0);
+      $('area-table-foot').innerHTML =
+        '<td colspan="5" id="area-foot-info"></td>' +
+        '<td class="cell-count">' + sum_activityCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="area-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'area-foot-info',
+        controlsTarget: 'area-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -420,13 +526,16 @@ window.TFC_AREA = {
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่
+     ตัวเลือกส่ง value เป็น id ให้ตรงกับที่ฐานข้อมูลเก็บ ส่วน label คือชื่อที่ผู้ใช้เห็น */
   window.TFC.searchPopover('area-search-popover', {
-    search: { id: 'area-search', placeholder: 'ค้นหาชื่อพื้นที่' },
+    search: false,
+    icon: 'filter',
     filters: [
       { id: 'type', inputId: 'area-filter-type', label: 'ประเภทพื้นที่', placeholder: 'ประเภทพื้นที่ทั้งหมด',
-        options: CFG.types.map(function (v) { return { label: v }; }) },
+        options: CFG.types.map(function (o) { return { value: o.id, label: o.label }; }) },
       { id: 'group', inputId: 'area-filter-group', label: 'กลุ่มพื้นที่', placeholder: 'กลุ่มพื้นที่ทั้งหมด',
-        options: CFG.groups.map(function (v) { return { label: v }; }) },
+        options: CFG.groups.map(function (o) { return { value: o.id, label: o.label }; }) },
       { id: 'status', inputId: 'area-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
         options: CFG.statuses.map(function (v) { return { label: v }; }) }
     ],
@@ -435,6 +544,19 @@ window.TFC_AREA = {
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('area-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่

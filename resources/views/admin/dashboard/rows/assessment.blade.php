@@ -85,7 +85,8 @@
         <div class="dbo-trend-axis">
           @foreach ($assessment['topics'] as $topic)
             <div class="dbo-trend-axis-item">
-              <span class="dbo-trend-axis-label">{{ $topic['label'] }}</span>
+              {{-- ชื่อถูกตัดที่ 2 บรรทัด — title= ให้ชี้อ่านชื่อเต็มได้ --}}
+              <span class="dbo-trend-axis-label" title="{{ $topic['label'] }}">{{ $topic['label'] }}</span>
               <span class="dbo-trend-gain dbo-num" data-tone="{{ $topic['gain'] >= 0 ? 'up' : 'down' }}">
                 {{ $topic['gain'] >= 0 ? '+' : '' }}{{ number_format($topic['gain'], 1) }} จุด
               </span>

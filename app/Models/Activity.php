@@ -91,6 +91,12 @@ class Activity extends Model
         return $this->belongsTo(ActivityFormat::class, 'format_id');
     }
 
+    /* คนที่แก้ล่าสุด — ตารางรายการแสดงคู่กับวันเวลา จะได้รู้ว่าต้องไปถามใคร */
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
     public function areas(): BelongsToMany
     {
         return $this->belongsToMany(Area::class, 'act_activity_area');

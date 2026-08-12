@@ -30,12 +30,25 @@ class ProgramController extends MasterDataController
     }
 
     /**
-     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
-     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     * เรียงจากรายการที่เพิ่มล่าสุดลงมา — ของใหม่อยู่บนสุดเสมอ
+     *
+     * ใช้ id ไม่ใช่ updated_at เพราะสองอย่างนี้ให้ผลต่างกันตอนแก้ไข
+     * id คงที่ตลอดอายุของแถว แก้ข้อมูลแล้วลำดับจึงไม่ขยับ คนที่ไล่แก้ทีละแถวไม่เสียตำแหน่ง
+     * ส่วน updated_at จะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง
      */
     protected function query()
     {
-        return Program::query()->with('courses:id,program_id,name,sort_order')->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
+        return Program::query()
+            ->with([
+                'courses:id,program_id,name,sort_order',
+                'updatedBy:id,name',
+            ])
+            ->withCount([
+                'activities',
+                'courses as used_courses_count' => fn ($query) => $query
+                    ->where(fn ($course) => $course->has('activities')->orHas('instructors')),
+            ])
+            ->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array
@@ -57,7 +70,7 @@ class ProgramController extends MasterDataController
 
     protected function columns(array $data): array
     {
-        return ['name' => $data['name'], 'is_active' => $data['active']];
+        return ['name' => $data['name'], 'is_active' => $data['active'], 'updated_by' => auth()->id()];
     }
 
     /**
@@ -76,6 +89,7 @@ class ProgramController extends MasterDataController
 
             if ($course) {
                 $course->update(['sort_order' => $order + 1]);
+
                 continue;
             }
 
@@ -102,9 +116,14 @@ class ProgramController extends MasterDataController
             'name' => $record->name,
             'category' => $record->category,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count + $record->used_courses_count,
             'active' => $record->is_active,
             'courses' => $record->courses->map(fn (Course $c) => ['order' => $c->sort_order, 'name' => $c->name])->values(),
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $record->updatedBy?->name,
             'updatedAt' => $record->updated_at?->toDateString(),
+            'updatedTime' => $record->updated_at?->format('H.i'),
         ];
     }
 
@@ -113,8 +132,8 @@ class ProgramController extends MasterDataController
         $activities = $record->activities()->count();
 
         if ($activities > 0) {
-            return 'โปรแกรมนี้ถูกใช้อยู่กับกิจกรรม ' . $activities . ' รายการ ลบไม่ได้ '
-                . 'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
+            return 'โปรแกรมนี้ถูกใช้อยู่กับกิจกรรม '.$activities.' รายการ ลบไม่ได้ '
+                .'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
         }
 
         /* หลักสูตรในโปรแกรมอาจถูกกิจกรรมอ้างอิงอยู่แม้ตัวโปรแกรมจะไม่ถูกอ้าง */
@@ -124,7 +143,7 @@ class ProgramController extends MasterDataController
 
         return $usedCourses === 0
             ? null
-            : 'โปรแกรมนี้มีหลักสูตรที่ถูกใช้อยู่ ' . $usedCourses . ' หลักสูตร ลบไม่ได้ '
-              . 'ให้ย้ายหรือลบหลักสูตรเหล่านั้นก่อน';
+            : 'โปรแกรมนี้มีหลักสูตรที่ถูกใช้อยู่ '.$usedCourses.' หลักสูตร ลบไม่ได้ '
+              .'ให้ย้ายหรือลบหลักสูตรเหล่านั้นก่อน';
     }
 }
