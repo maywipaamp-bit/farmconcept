@@ -70,8 +70,8 @@ return [
                     'key' => 'cohort',
                     'label' => 'กลุ่มตัวอย่าง',
                     'icon' => '<path d="M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11ZM3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2M16 5.2a3 3 0 0 1 0 5.9M17.5 14.9c2 .6 3.3 2.4 3.3 4.6"/>',
-                    'href' => 'admin/cohort/list.html',
-                    'alsoMatch' => ['admin/cohort/detail.html'],
+                    'href' => 'admin/cohort',
+                    'alsoMatch' => ['admin/cohort/list.html', 'admin/cohort/list', 'admin/cohort/detail.html', 'admin/cohort'],
                 ],
                 [
                     'key' => 'evaluations-rounds',

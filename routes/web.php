@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MasterData;
 use App\Http\Controllers\Admin\RoleController;
@@ -159,6 +160,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [RoleController::class, 'store'])->name('store');
             Route::put('/{role}', [RoleController::class, 'update'])->name('update');
             Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::redirect('/cohort/list.html', '/admin/cohort');
+        Route::redirect('/cohort/detail.html', '/admin/cohort');
+
+        Route::prefix('cohort')->name('cohort.')->middleware('menu:cohort')->group(function () {
+            Route::get('/', [CohortController::class, 'index'])->name('index');
+            Route::post('/', [CohortController::class, 'store'])->name('store');
+            Route::get('/{cohortProfile}', [CohortController::class, 'show'])->name('show');
+            Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
         });
     });
 
