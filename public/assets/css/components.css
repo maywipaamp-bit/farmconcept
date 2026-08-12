@@ -794,8 +794,37 @@ dd { margin: 0; }
   top: 0;
 }
 
+/* จัดกลางทั้งหัวและเนื้อ — ต้องระบุทั้ง th และ td เพราะกฎ text-align: left ของตาราง
+   มีน้ำหนักมากกว่าคลาสเดี่ยวอย่าง .text-center */
+.data-table th.cell-center,
+.data-table td.cell-center {
+  text-align: center;
+}
+
+/* คอลัมน์จำนวน — จัดกลาง และตัวเลขความกว้างเท่ากันทุกหลัก
+   จะได้กวาดตาเทียบจำนวนระหว่างแถวได้โดยไม่ต้องอ่านทีละตัว */
+.data-table th.cell-count,
+.data-table td.cell-count {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .data-table tbody tr:hover {
   background: var(--color-primary-soft);
+}
+
+/* ตารางว่าง — ข้อความกลางแถว ไม่มีพื้น hover เพราะกดอะไรไม่ได้ */
+.data-table tbody tr.table-empty-row:hover { background: transparent; }
+
+.data-table .table-empty-row td {
+  padding: var(--space-6) var(--space-3);
+  white-space: normal;
+}
+
+.table-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
 }
 
 .data-table tbody tr:last-child td {
@@ -3776,7 +3805,8 @@ dd { margin: 0; }
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  /* แถบเครื่องมือเป็นของคู่กับตารางที่อยู่ใต้มัน ไม่ใช่กลุ่มแยก จึงชิดกว่าระยะระหว่างกลุ่ม */
+  margin-bottom: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -3836,6 +3866,36 @@ dd { margin: 0; }
 .list-filter-bar .sort-select {
   width: 190px;
   flex-shrink: 0;
+}
+
+/* ช่องค้นหากับปุ่มตัวกรองอยู่ด้วยกันชิดขวา — ชิปสถานะกินพื้นที่ที่เหลือทางซ้าย
+   ต้องมาหลัง .list-filter-bar .search-input ข้างบน จึงจะทับ flex:1 ของกฎนั้นได้ */
+.list-filter-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+/* ช่องค้นหาเป็นตัวช่วย ไม่ใช่ตัวเอกของหน้า — กว้างพอพิมพ์คำค้นสั้น ๆ
+   สูงเท่าปุ่มตัวกรองข้าง ๆ พอดี (30px) ไม่ให้แถบเครื่องมือสูงขึ้นทั้งแถว
+
+   ต้องทับทั้ง min-height และ padding ของ .input — min-height ชนะ height เสมอ
+   ไม่ว่าจะเขียนกฎแคบแค่ไหน ช่องจึงค้างที่ 42px ถ้าตั้งแค่ height */
+.list-filter-bar .list-search-input {
+  flex: 0 0 auto;
+  width: 200px;
+  min-width: 0;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-caption);
+}
+
+/* จอแคบ: ชิปอยู่แถวบน เครื่องมือค้นหาลงมาเต็มแถวล่างแทนการบีบจนพิมพ์ไม่ได้ */
+@media (max-width: 640px) {
+  .list-filter-tools { flex: 1 1 100%; }
+  .list-filter-bar .list-search-input { flex: 1 1 auto; width: auto; }
 }
 
 /* ---------- รายการกิจกรรม ---------- */
@@ -4453,8 +4513,10 @@ dd { margin: 0; }
   color: var(--text-muted);
 }
 
+/* min-height ต้องเท่าปุ่มเลขหน้า ไม่งั้นค่านี้จะไปทับ height: 26px ที่ตั้งไว้ข้างล่าง
+   (min-height ชนะ height เสมอ) แล้วช่องเลือกจะสูงกว่าปุ่มข้าง ๆ อยู่ครึ่งหนึ่ง */
 .pagination-size .select {
-  min-height: 36px;
+  min-height: 26px;
   border-radius: var(--r-md);
   font-size: var(--fs-secondary);
   color: var(--color-text-body);
@@ -11559,6 +11621,16 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 
 /* ช่องว่างก่อนวันที่ 1 — กดไม่ได้และไม่มีเส้นขอบ ไม่ให้ดูเหมือนวันที่เลือกได้ */
 .dtp-day.is-blank { cursor: default; pointer-events: none; }
+
+/* วันที่อยู่นอกช่วงที่อนุญาต — ยังเห็นเลขอยู่ แต่จางและกดไม่ได้
+   ซ่อนไปเลยจะทำให้ตารางวันเลื่อนตำแหน่งจนหาวันที่ไม่เจอ */
+.dtp-day.is-disabled {
+  color: var(--color-text-disabled, var(--color-text-muted));
+  cursor: not-allowed;
+  opacity: .45;
+}
+.dtp-day.is-disabled:hover { background: transparent; }
+.dtp-day.is-disabled:active { transform: none; }
 
 /* วันนี้บอกด้วยเส้นขอบ ส่วนวันที่เลือกใช้พื้นทึบ — สองสถานะนี้ซ้อนกันได้ จึงต้องแยกวิธีบอก */
 .dtp-day.is-today { border-color: var(--color-primary-soft-border); color: var(--color-primary-dark); }

@@ -404,6 +404,10 @@ window.TFC_INSTRUCTOR = {
       .then(function () {
         window.TFC.closeModal('instructor-create-modal');
         window.TFC.showToast(editingId ? 'บันทึกวิทยากรแล้ว' : 'เพิ่มวิทยากรแล้ว', 'success');
+        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
+           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+           การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
+        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })

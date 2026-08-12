@@ -200,6 +200,30 @@ window.TFC = window.TFC || {};
   };
 
   /* ---------- 2) Tags Input ---------- */
+  var suggestSeq = 0;
+
+  /* data-tags-options เป็น JSON array ของข้อความ — ใช้ JSON ไม่ใช่ข้อความคั่นจุลภาค
+     เพราะชื่อหน่วยงานมีจุลภาคอยู่ในตัวได้ */
+  function attachSuggestions(input, field) {
+    var raw = input.getAttribute('data-tags-options');
+    if (!raw) return;
+
+    var list;
+    try { list = JSON.parse(raw); } catch (e) { return; }
+    if (!Array.isArray(list) || !list.length) return;
+
+    var dl = document.createElement('datalist');
+    dl.id = 'tags-suggest-' + (++suggestSeq);
+    list.forEach(function (v) {
+      var opt = document.createElement('option');
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+
+    field.parentNode.appendChild(dl);
+    field.setAttribute('list', dl.id);
+  }
+
   function buildTagsInput(input) {
     input.classList.add('hidden');
 
@@ -211,6 +235,10 @@ window.TFC = window.TFC || {};
 
     input.parentNode.insertBefore(wrap, input.nextSibling);
     var field = wrap.querySelector('.tags-input-field');
+
+    /* รายการที่มีอยู่แล้วในระบบ — ให้เลือกซ้ำได้แทนที่จะพิมพ์เอง
+       ถ้าพิมพ์เองทุกครั้งจะได้ชื่อที่ต่างกันนิดเดียวแต่กลายเป็นคนละรายการ */
+    attachSuggestions(input, field);
 
     function tags() {
       return input.value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);

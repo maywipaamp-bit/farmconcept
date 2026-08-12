@@ -206,6 +206,10 @@ window.TFC_SEED.activityFormats = @json($seedRows);
       .then(function () {
         window.TFC.closeModal('fmt-form-modal');
         window.TFC.showToast(editingId ? 'บันทึกหมวดหมู่แล้ว' : 'เพิ่มหมวดหมู่แล้ว', 'success');
+        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
+           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+           การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
+        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })

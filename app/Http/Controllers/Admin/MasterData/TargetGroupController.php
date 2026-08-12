@@ -29,13 +29,15 @@ class TargetGroupController extends MasterDataController
     }
 
     /**
-     * บันทึกแล้วต้องเห็นแถวนั้นบนสุดทันทีโดยไม่ต้องไปหา
-     * จึงเรียงตามเวลาที่แก้ล่าสุด และใช้ id ตัดสินแถวที่แก้ในวินาทีเดียวกัน
+     * เรียงตามลำดับที่เพิ่มเข้ามา ไม่ใช่ตามเวลาที่แก้ล่าสุด
+     *
+     * ถ้าเรียงตามเวลาแก้ แถวที่เพิ่งบันทึกจะกระโดดไปบนสุด คนที่กำลังไล่แก้ทีละแถว
+     * จะเสียตำแหน่งที่ค้างไว้ทุกครั้งแล้วต้องหาใหม่ว่าทำถึงไหน
      */
     protected function query()
     {
         /* หน้าจอแสดงจำนวนกิจกรรมที่ใช้กลุ่มนี้ — นับด้วย withCount ไม่งั้นจะยิง query ต่อแถว */
-        return TargetGroup::query()->withCount('activities')->orderByDesc('updated_at')->orderByDesc('id');
+        return TargetGroup::query()->withCount('activities')->orderBy('id');
     }
 
     protected function rules(?Model $current): array
