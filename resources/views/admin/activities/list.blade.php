@@ -373,10 +373,11 @@
     setDeleting(true);
 
     fetch('/admin/activities/' + encodeURIComponent(target.id), {
-      method: 'DELETE',
+      method: 'POST',
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': 'DELETE'
       }
     })
       .then(function (res) {

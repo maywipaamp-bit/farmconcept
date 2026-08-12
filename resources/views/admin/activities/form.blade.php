@@ -574,10 +574,11 @@
 @endif
 
     fetch('{{ $isCreate ? '' : route('admin.activities.cover.destroy', $activity->code) }}', {
-      method: 'DELETE',
+      method: 'POST',
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': 'DELETE'
       }
     })
       .then(readJson)
@@ -633,13 +634,19 @@
 
     form.setBusy(true);
 
+    var reqMethod = @json($isCreate ? 'POST' : 'PUT');
+    var reqHeaders = {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+    if (reqMethod !== 'POST') {
+      reqHeaders['X-HTTP-Method-Override'] = reqMethod;
+    }
+
     fetch(@json($isCreate ? route('admin.activities.store') : route('admin.activities.update', $activity->code)), {
-      method: @json($isCreate ? 'POST' : 'PUT'),
-      headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
+      method: 'POST',
+      headers: reqHeaders,
       body: JSON.stringify(body)
     })
       .then(function (res) {

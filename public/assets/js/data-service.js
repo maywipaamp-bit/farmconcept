@@ -66,24 +66,34 @@ window.TFC.dataService = function (entityKey, idField) {
   }
 
   /* บาง production server ปฏิเสธ HTTP DELETE ก่อนคำขอจะถึง Laravel
-     ส่งเป็น POST แบบฟอร์มพร้อม _method=DELETE ซึ่ง Laravel รองรับโดยตรง */
+     ส่งเป็น POST พร้อม X-HTTP-Method-Override=DELETE ซึ่ง Laravel รองรับโดยตรง */
   function removeCall(path) {
     return fetch(base + path, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': csrf(),
         'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        'X-HTTP-Method-Override': 'DELETE'
       },
-      credentials: 'same-origin',
-      body: '_method=DELETE'
+      credentials: 'same-origin'
     }).then(readJson);
   }
 
   /* IIS บางเครื่องปฏิเสธ HTTP PUT เช่นเดียวกับ DELETE ก่อนถึง Laravel
-     ส่ง JSON เดิมผ่าน POST พร้อม _method=PUT เพื่อให้ validation และ payload เดิมไม่เปลี่ยน */
+     ส่ง JSON เดิมผ่าน POST พร้อม X-HTTP-Method-Override=PUT เพื่อให้ validation และ payload เดิมไม่เปลี่ยน */
   function updateCall(path, body) {
-    return call(path, 'POST', Object.assign({}, body || {}, { _method: 'PUT' }));
+    var options = {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrf(),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-HTTP-Method-Override': 'PUT'
+      },
+      credentials: 'same-origin'
+    };
+    if (body) options.body = JSON.stringify(body);
+    return fetch(base + path, options).then(readJson);
   }
 
   /* ข้อมูลในหน่วยความจำต้องตามให้ทันด้วย เพราะหลายหน้าอ่าน window.TFC_MOCK ตรง ๆ

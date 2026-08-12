@@ -109,11 +109,12 @@
       submitBtn.disabled = true;
 
       fetch('{{ route('admin.cohort.stop', $member['db_id']) }}', {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'X-CSRF-TOKEN': csrfToken
+          'X-CSRF-TOKEN': csrfToken,
+          'X-HTTP-Method-Override': 'PATCH'
         },
         body: JSON.stringify({ reason: reason })
       })
