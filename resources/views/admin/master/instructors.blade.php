@@ -433,10 +433,12 @@ window.TFC_INSTRUCTOR = {
     var item = e.target.closest('[data-action-key^="instr-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('instr-delete-', ''));
-    $('instr-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('instr-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'instructor-delete-modal', messageId: 'instr-delete-message', confirmId: 'instr-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('instr-delete-confirm').addEventListener('click', function () {
@@ -546,7 +548,7 @@ window.TFC_INSTRUCTOR = {
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'instr-edit-' + r.id, label: 'แก้ไข', icon: 'edit', modal: 'instructor-create-modal', perm: 'master_data' },
-            { key: 'instr-delete-' + r.id, label: 'ลบวิทยากร', icon: 'delete', modal: 'instructor-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'instr-delete-' + r.id, label: 'ลบวิทยากร', modal: 'instructor-delete-modal', perm: 'master_data', usageCount: r.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');

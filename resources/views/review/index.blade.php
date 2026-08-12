@@ -432,7 +432,14 @@
     var control = select || due;
     var id = control.getAttribute(select ? 'data-status-for' : 'data-due-for');
     var tr = control.closest('tr');
-    if (!tr) return;
+    if (!tr || tr.getAttribute('data-saving') === 'true') return;
+
+    var savedItem = itemOf(id);
+    var previousStatus = savedItem ? savedItem.status : null;
+    tr.setAttribute('data-saving', 'true');
+    Array.prototype.forEach.call(tr.querySelectorAll('.review-status, .review-due'), function (field) {
+      field.disabled = true;
+    });
 
     /* อ่านค่าจากช่องจริงในแถวทั้งสองช่อง ไม่ใช่จากข้อมูลที่จำไว้
        ถ้าอ่านจากข้อมูลที่จำไว้ การแก้สองช่องติดกันเร็ว ๆ จะส่งค่าเก่าของอีกช่องตามไปด้วย
@@ -445,17 +452,35 @@
     fetch('{{ url('/review/items') }}/' + id, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+      credentials: 'same-origin',
       body: JSON.stringify(body)
     })
-      .then(function (res) { return res.json(); })
       .then(function (res) {
-        if (!res.success) return window.TFC.showToast(res.message || 'บันทึกไม่สำเร็จ', 'danger');
+        return res.json().catch(function () { return {}; }).then(function (payload) {
+          if (!res.ok || !payload.success) {
+            var detail = payload.message || (payload.errors ? Object.values(payload.errors).flat().join(' ') : 'บันทึกไม่สำเร็จ');
+            throw new Error(detail);
+          }
 
+          return payload;
+        });
+      })
+      .then(function (res) {
         replaceItem(res.data);
+
+        /* ถ้าเปลี่ยนสถานะจากตัวกรองสถานะเดิม ให้ตามไปยังสถานะใหม่
+           รายการจึงไม่หายจากจอทันทีจนดูเหมือนเลือกแล้วไม่บันทึก */
+        if (select && state.statusKey === previousStatus && res.data.status !== previousStatus) {
+          state.statusKey = res.data.status;
+        }
+
         render();
         window.TFC.showToast(res.message, 'success');
       })
-      .catch(function () { window.TFC.showToast('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ', 'danger'); });
+      .catch(function (error) {
+        render();
+        window.TFC.showToast(error.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ', 'danger');
+      });
   });
 
   /* ---------- แผงคอมเมนต์ ---------- */

@@ -61,4 +61,9 @@ class Area extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
 }

@@ -38,7 +38,17 @@ class ProgramController extends MasterDataController
      */
     protected function query()
     {
-        return Program::query()->with(['courses:id,program_id,name,sort_order', 'updatedBy:id,name'])->withCount('activities')->orderByDesc('id');
+        return Program::query()
+            ->with([
+                'courses:id,program_id,name,sort_order',
+                'updatedBy:id,name',
+            ])
+            ->withCount([
+                'activities',
+                'courses as used_courses_count' => fn ($query) => $query
+                    ->where(fn ($course) => $course->has('activities')->orHas('instructors')),
+            ])
+            ->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array
@@ -106,6 +116,7 @@ class ProgramController extends MasterDataController
             'name' => $record->name,
             'category' => $record->category,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count + $record->used_courses_count,
             'active' => $record->is_active,
             'courses' => $record->courses->map(fn (Course $c) => ['order' => $c->sort_order, 'name' => $c->name])->values(),
             /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้

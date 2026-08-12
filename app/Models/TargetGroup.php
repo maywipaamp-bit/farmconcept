@@ -31,6 +31,11 @@ class TargetGroup extends Model
         return $this->belongsToMany(Activity::class, 'act_activity_target_group');
     }
 
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
+
     /* คนที่แก้ล่าสุด — ตารางรายการแสดงคู่กับวันเวลา จะได้รู้ว่าต้องไปถามใคร */
     public function updatedBy(): BelongsTo
     {

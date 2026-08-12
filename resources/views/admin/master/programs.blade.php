@@ -228,10 +228,12 @@ window.TFC_SEED.programs = @json($seedRows);
     var item = e.target.closest('[data-action-key^="program-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('program-delete-', ''));
-    $('program-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" พร้อมหลักสูตรที่ยังไม่มีใครใช้ ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('program-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'program-delete-modal', messageId: 'program-delete-message', confirmId: 'program-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" พร้อมหลักสูตรที่ยังไม่มีใครใช้ ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('program-delete-confirm').addEventListener('click', function () {
@@ -327,7 +329,7 @@ window.TFC_SEED.programs = @json($seedRows);
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'program-edit-' + p.id, label: 'แก้ไข', icon: 'edit', modal: 'program-create-modal', perm: 'master_data' },
-            { key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', icon: 'delete', modal: 'program-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'program-delete-' + p.id, label: 'ลบโปรแกรม', modal: 'program-delete-modal', perm: 'master_data', usageCount: p.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');

@@ -210,10 +210,12 @@ window.TFC_SEED.targetGroups = @json($seedRows);
     var item = e.target.closest('[data-action-key^="tg-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('tg-delete-', ''));
-    $('tg-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('tg-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'target-group-delete-modal', messageId: 'tg-delete-message', confirmId: 'tg-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('tg-delete-confirm').addEventListener('click', function () {
@@ -300,7 +302,7 @@ window.TFC_SEED.targetGroups = @json($seedRows);
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'tg-edit-' + g.id, label: 'แก้ไข', icon: 'edit', modal: 'target-group-create-modal', perm: 'master_data' },
-            { key: 'tg-delete-' + g.id, label: 'ลบกลุ่มเป้าหมาย', icon: 'delete', modal: 'target-group-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'tg-delete-' + g.id, label: 'ลบกลุ่มเป้าหมาย', modal: 'target-group-delete-modal', perm: 'master_data', usageCount: g.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');

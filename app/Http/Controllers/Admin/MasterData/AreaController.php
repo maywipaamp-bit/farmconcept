@@ -43,7 +43,7 @@ class AreaController extends MasterDataController
         return Area::query()
             ->with(['areaType:id,label', 'areaGroup:id,label', 'district:id,province,name', 'partnerOrgs:id,name',
                 'updatedBy:id,name'])
-            ->withCount('activities')
+            ->withCount(['activities', 'participants', 'users', 'registrations'])
             ->orderByDesc('id');
     }
 
@@ -175,6 +175,8 @@ class AreaController extends MasterDataController
             'mapUrl' => $record->map_url,
             'status' => $record->status,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count + $record->participants_count
+                + $record->users_count + $record->registrations_count,
 
             /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — ส่งเวลามาด้วย ไม่ใช่แค่วันที่
                ข้อมูลชุดแรกที่มาจาก seeder ไม่มีคนแก้ ให้เป็นค่าว่างแล้วหน้าจอแสดงขีดแทน */
@@ -186,11 +188,30 @@ class AreaController extends MasterDataController
 
     protected function blockedFromDelete(Model $record): ?string
     {
-        $count = $record->activities()->count();
+        $activities = $record->activities()->count();
+        $participants = $record->participants()->count();
+        $users = $record->users()->count();
+        $registrations = $record->registrations()->count();
 
-        return $count === 0
-            ? null
-            : 'พื้นที่นี้ถูกใช้อยู่กับกิจกรรม '.$count.' รายการ ลบไม่ได้ '
-              .'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "สิ้นสุดแล้ว" แทน';
+        if ($activities === 0 && $participants === 0 && $users === 0 && $registrations === 0) {
+            return null;
+        }
+
+        $used = [];
+        if ($activities) {
+            $used[] = 'กิจกรรม '.$activities.' รายการ';
+        }
+        if ($participants) {
+            $used[] = 'ผู้เข้าร่วม '.$participants.' คน';
+        }
+        if ($users) {
+            $used[] = 'ผู้ใช้งาน '.$users.' คน';
+        }
+        if ($registrations) {
+            $used[] = 'ใบลงทะเบียน '.$registrations.' รายการ';
+        }
+
+        return 'พื้นที่นี้ถูกใช้อยู่กับ'.implode(' และ ', $used).' ลบไม่ได้ '
+            .'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "สิ้นสุดแล้ว" แทน';
     }
 }

@@ -235,10 +235,12 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     var item = e.target.closest('[data-action-key^="fmt-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('fmt-delete-', ''));
-    $('fmt-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('fmt-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'fmt-delete-modal', messageId: 'fmt-delete-message', confirmId: 'fmt-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('fmt-delete-confirm').addEventListener('click', function () {
@@ -326,7 +328,7 @@ window.TFC_SEED.activityFormats = @json($seedRows);
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },
-            { key: 'fmt-delete-' + f.id, label: 'ลบหมวดหมู่กิจกรรม', icon: 'delete', modal: 'fmt-delete-modal', perm: 'master_data', danger: true }
+            window.TFC.masterDeleteAction({ key: 'fmt-delete-' + f.id, label: 'ลบหมวดหมู่กิจกรรม', modal: 'fmt-delete-modal', perm: 'master_data', usageCount: f.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('');

@@ -363,10 +363,12 @@ window.TFC_AREA = {
     var item = e.target.closest('[data-action-key^="area-delete-"]');
     if (!item) return;
 
-    pendingDelete = rowOf(item.getAttribute('data-action-key').replace('area-delete-', ''));
-    $('area-delete-message').textContent = pendingDelete
-      ? 'ต้องการลบ "' + pendingDelete.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
-      : '';
+    var row = rowOf(item.getAttribute('data-action-key').replace('area-delete-', ''));
+    pendingDelete = row && window.TFC.prepareMasterDelete({
+      modalId: 'area-delete-modal', messageId: 'area-delete-message', confirmId: 'area-delete-confirm',
+      name: row.name, usageCount: row.deleteUsageCount,
+      confirmMessage: 'ต้องการลบ "' + row.name + '" ใช่หรือไม่ การลบนี้ย้อนกลับไม่ได้'
+    }) ? row : null;
   });
 
   $('area-delete-confirm').addEventListener('click', function () {
@@ -490,7 +492,7 @@ window.TFC_AREA = {
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'edit-' + a.id, label: 'แก้ไข', icon: 'edit', modal: 'area-form-modal', perm: 'areas' },
-            { key: 'area-delete-' + a.id, label: 'ลบพื้นที่', icon: 'delete', modal: 'area-delete-modal', perm: 'areas', danger: true }
+            window.TFC.masterDeleteAction({ key: 'area-delete-' + a.id, label: 'ลบพื้นที่', modal: 'area-delete-modal', perm: 'areas', usageCount: a.deleteUsageCount })
           ]) +
           '</td></tr>';
       }).join('') ||

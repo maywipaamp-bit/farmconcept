@@ -147,17 +147,27 @@ abstract class MasterDataController extends Controller
 
     public function destroy(string $code): JsonResponse
     {
-        $record = $this->find($code);
+        $blocked = null;
 
-        if ($reason = $this->blockedFromDelete($record)) {
-            return response()->json(['message' => $reason], 403);
-        }
+        DB::transaction(function () use ($code, &$blocked): void {
+            /* ล็อกแถวหลักก่อนตรวจจำนวนใช้งาน เพื่อไม่ให้มีรายการใหม่มาอ้างอิง
+               แทรกระหว่างตรวจแล้วลบ ซึ่งจะทำให้ข้อมูลที่เพิ่งบันทึกหายตาม cascade */
+            $record = $this->model()::where('code', $code)->lockForUpdate()->firstOrFail();
 
-        DB::transaction(function () use ($record): void {
+            if ($reason = $this->blockedFromDelete($record)) {
+                $blocked = $reason;
+
+                return;
+            }
+
             /* บันทึก log ก่อนลบ เพราะหลังลบแล้วอ่านค่าจากแถวไม่ได้อีก */
             $this->log($record, 'deleted', 'ลบ');
             $record->delete();
         });
+
+        if ($blocked !== null) {
+            return response()->json(['message' => $blocked], 403);
+        }
 
         return response()->json(['message' => 'ลบ'.$this->label().'แล้ว']);
     }

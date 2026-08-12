@@ -73,6 +73,7 @@ class ActivityFormatController extends MasterDataController
             'name' => $record->name,
             'icon' => $record->icon,
             'activityCount' => $record->activities_count,
+            'deleteUsageCount' => $record->activities_count,
             'active' => $record->is_active,
             /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
                จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
