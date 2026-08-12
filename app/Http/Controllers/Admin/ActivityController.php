@@ -16,7 +16,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ActivityController extends Controller
 {
@@ -346,15 +348,30 @@ class ActivityController extends Controller
         $this->authorize('update', $activity);
 
         $request->validate(
-            ['cover' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::COVER_MAX_KB]],
+            ['cover' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::COVER_MAX_KB]],
             [],
             ['cover' => 'รูปภาพปก']
         );
 
+        $file = $request->file('cover');
+        if (! $file || ! $file->isValid()) {
+            return response()->json([
+                'message' => 'ไฟล์รูปภาพไม่ถูกต้อง หรือขนาดใหญ่เกินเพดานที่ PHP บนเซิร์ฟเวอร์รองรับ (upload_max_filesize)',
+                'errors' => ['cover' => ['ไม่สามารถอ่านไฟล์รูปภาพได้ กรุณาตรวจสอบขนาดไฟล์หรือลองใหม่อีกครั้ง']],
+            ], 422);
+        }
+
         /* ลบไฟล์เดิมก่อน ไม่งั้นเปลี่ยนรูปหลายรอบจะเหลือไฟล์กำพร้าสะสมไปเรื่อย ๆ */
         $this->deleteCoverFile($activity);
 
-        $path = $request->file('cover')->store('activity-covers', 'public');
+        $path = $this->storeCoverFile($file);
+
+        if (! $path) {
+            return response()->json([
+                'message' => 'ไม่สามารถบันทึกไฟล์รูปภาพลงในดิสก์ได้',
+                'errors' => ['cover' => ['เกิดข้อผิดพลาดในการบันทึกรูปภาพ']],
+            ], 500);
+        }
 
         $activity->forceFill(['cover_image_path' => $path])->save();
 
@@ -362,9 +379,32 @@ class ActivityController extends Controller
             'message' => 'อัปโหลดรูปปกแล้ว',
             'path' => $path,
             'url' => Storage::disk('public')->url($path),
-            'label' => $request->file('cover')->getClientOriginalName()
-                .' · '.round($request->file('cover')->getSize() / 1048576, 1).'MB',
+            'label' => $file->getClientOriginalName()
+                .' · '.round($file->getSize() / 1048576, 1).'MB',
         ]);
+    }
+
+    private function storeCoverFile(UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $ext = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png';
+        $path = 'activity-covers/'.Str::random(40).'.'.strtolower($ext);
+
+        $tmpPath = $file->getRealPath() ?: $file->getPathname();
+
+        if (! empty($tmpPath) && file_exists($tmpPath)) {
+            $contents = @file_get_contents($tmpPath);
+            if ($contents !== false) {
+                Storage::disk('public')->put($path, $contents);
+
+                return $path;
+            }
+        }
+
+        return $file->store('activity-covers', 'public');
     }
 
     /** ลบรูปปก — ลบทั้งไฟล์และค่าในฐาน ไม่ปล่อยให้ไฟล์ค้าง */

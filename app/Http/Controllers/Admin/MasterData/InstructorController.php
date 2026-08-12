@@ -9,7 +9,9 @@ use App\Models\Program;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class InstructorController extends MasterDataController
@@ -206,18 +208,64 @@ class InstructorController extends MasterDataController
         $instructor = $this->find($code);
 
         $request->validate(
-            ['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::PHOTO_MAX_KB]],
+            ['photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::PHOTO_MAX_KB]],
             [],
             ['photo' => 'รูปวิทยากร']
         );
 
+        $file = $request->file('photo');
+        if (! $file || ! $file->isValid()) {
+            return response()->json([
+                'message' => 'ไฟล์รูปภาพไม่ถูกต้อง หรือขนาดใหญ่เกินเพดานที่ PHP บนเซิร์ฟเวอร์รองรับ (upload_max_filesize)',
+                'errors' => ['photo' => ['ไม่สามารถอ่านไฟล์รูปภาพได้ กรุณาตรวจสอบขนาดไฟล์หรือลองใหม่อีกครั้ง']],
+            ], 422);
+        }
+
         /* ลบไฟล์เดิมก่อน ไม่งั้นเปลี่ยนรูปหลายรอบจะเหลือไฟล์กำพร้าสะสมไปเรื่อย ๆ */
         $this->deletePhotoFile($instructor);
 
-        $path = $request->file('photo')->store('instructor-photos', 'public');
+        $path = $this->storePhotoFile($file);
+
+        if (! $path) {
+            return response()->json([
+                'message' => 'ไม่สามารถบันทึกไฟล์รูปภาพลงในดิสก์ได้',
+                'errors' => ['photo' => ['เกิดข้อผิดพลาดในการบันทึกรูปภาพ']],
+            ], 500);
+        }
+
         $instructor->forceFill(['photo_path' => $path])->save();
 
         return response()->json(['message' => 'อัปโหลดรูปวิทยากรแล้ว', 'url' => Storage::url($path)]);
+    }
+
+    /**
+     * บันทึกไฟล์รูปวิทยากรลงในดิสก์ public อย่างปลอดภัย
+     *
+     * บน Windows IIS / PHP บางสภาพแวดล้อม getRealPath() อาจคืนค่าว่างหรือ false
+     * ส่งผลให้ store() เรียก fopen("") แล้วเกิด ValueError: Path must not be empty
+     * ฟังก์ชันนี้จึงอ่านไฟล์ผ่าน getPathname() หรือ file_get_contents เป็น fallback ก่อน
+     */
+    private function storePhotoFile(UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $ext = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png';
+        $path = 'instructor-photos/'.Str::random(40).'.'.strtolower($ext);
+
+        $tmpPath = $file->getRealPath() ?: $file->getPathname();
+
+        if (! empty($tmpPath) && file_exists($tmpPath)) {
+            $contents = @file_get_contents($tmpPath);
+            if ($contents !== false) {
+                Storage::disk('public')->put($path, $contents);
+
+                return $path;
+            }
+        }
+
+        return $file->store('instructor-photos', 'public');
     }
 
     public function deletePhoto(string $code): JsonResponse
