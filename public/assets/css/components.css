@@ -873,6 +873,7 @@ dd { margin: 0; }
 
 /* Avatar */
 .avatar {
+  position: relative;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -888,9 +889,14 @@ dd { margin: 0; }
 }
 
 .avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  display: block;
 }
 
 .avatar-sm { width: 28px; height: 28px; font-size: var(--font-size-caption); }
