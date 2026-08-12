@@ -233,17 +233,20 @@ window.TFC_INSTRUCTOR = {
      แล้วส่งตามทันทีที่บันทึกครั้งแรกสำเร็จ — แบบเดียวกับรูปปกกิจกรรม */
   var photoSlot = $('instr-photo-slot');
   var photoInput = $('instr-photo');
-  var photoPlaceholder = photoSlot.innerHTML;
   var pendingPhoto = null;
 
   function showPhoto(src) {
-    photoSlot.innerHTML = src ? '<img src="' + src + '" alt="รูปวิทยากร">' : photoPlaceholder;
-
-    /* innerHTML สร้าง input file ตัวใหม่ที่ไม่มี event ผูกอยู่ทุกครั้ง ต้องทิ้งตัวใหม่แล้วเอา
-       ตัวจริงกลับเข้ามา ไม่งั้นหลังกด "เพิ่มวิทยากร" (ซึ่งเรียก showPhoto('')) จะเลือกรูปไม่ได้อีกเลย */
-    var stale = photoSlot.querySelector('input[type="file"]');
-    if (stale) stale.remove();
-    photoSlot.appendChild(photoInput);
+    var img = photoSlot.querySelector('img');
+    if (src) {
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = 'รูปวิทยากร';
+        photoSlot.insertBefore(img, photoSlot.firstChild);
+      }
+      img.src = src;
+    } else if (img) {
+      img.remove();
+    }
   }
 
   photoSlot.addEventListener('click', function () { photoInput.click(); });
@@ -263,7 +266,7 @@ window.TFC_INSTRUCTOR = {
     }
 
     pendingPhoto = file;
-    window.TFC.readImageFile(file, { maxMB: 5 }, showPhoto);
+    window.TFC.readImageFile(file, { maxMB: Math.ceil(CFG.photoMaxBytes / 1048576) || 5 }, showPhoto);
   });
 
   function uploadPendingPhoto(code) {
@@ -282,7 +285,12 @@ window.TFC_INSTRUCTOR = {
       body: data
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (d) {
-        if (!res.ok) throw new Error(d.message || 'อัปโหลดรูปไม่สำเร็จ');
+        if (!res.ok) {
+          var msg = d.errors
+            ? Object.keys(d.errors).map(function (k) { return d.errors[k][0]; }).join(' · ')
+            : (d.message || 'อัปโหลดรูปไม่สำเร็จ');
+          throw new Error(msg);
+        }
         return d;
       });
     }).finally(function () {

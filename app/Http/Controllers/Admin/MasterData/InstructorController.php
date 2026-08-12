@@ -140,11 +140,25 @@ class InstructorController extends MasterDataController
 
     protected function toRow(Model $record): array
     {
+        $photoUrl = '';
+        if ($record->photo_path) {
+            $path = $record->photo_path;
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                $photoUrl = $path;
+            } elseif (str_starts_with($path, '/storage/')) {
+                $photoUrl = $path;
+            } elseif (str_starts_with($path, 'storage/')) {
+                $photoUrl = '/'.$path;
+            } else {
+                $photoUrl = Storage::url($path);
+            }
+        }
+
         return [
             'id' => $record->code,
             'name' => $record->name,
             'phone' => $record->phone,
-            'photo' => $record->photo_path ? Storage::url($record->photo_path) : '',
+            'photo' => $photoUrl,
             'expertise' => $record->expertise,
             'expertiseList' => $record->expertises->pluck('name')->values(),
             'courses' => $record->courses->pluck('name')->values(),
@@ -224,11 +238,20 @@ class InstructorController extends MasterDataController
      */
     private function deletePhotoFile(Instructor $instructor): void
     {
-        if (! $instructor->photo_path || ! str_starts_with($instructor->photo_path, 'instructor-photos/')) {
+        if (! $instructor->photo_path) {
             return;
         }
 
-        Storage::disk('public')->delete($instructor->photo_path);
+        $path = $instructor->photo_path;
+        if (str_starts_with($path, '/storage/')) {
+            $path = substr($path, 9);
+        } elseif (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
+        }
+
+        if (str_starts_with($path, 'instructor-photos/') && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     /** เพดานขนาดรูปที่อัปได้จริงบนเครื่องนี้ — ค่าที่เล็กที่สุดระหว่างกฎแอปกับ php.ini */
