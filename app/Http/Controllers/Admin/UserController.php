@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -51,13 +52,12 @@ class UserController extends Controller
             $avatarPath = null;
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                if ($file->isValid() && !empty($file->getRealPath())) {
-                    $avatarPath = $file->store('avatars', 'public');
-                    $avatarPath = Storage::url($avatarPath);
+                if ($file->isValid()) {
+                    $avatarPath = $this->storeAvatarFile($file);
                 } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ: ' . $file->getErrorMessage() . ' (Error Code: ' . $file->getError() . ')',
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: ' . $file->getError() . ')',
                     ], 422);
                 }
             }
@@ -105,13 +105,15 @@ class UserController extends Controller
 
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                if ($file->isValid() && !empty($file->getRealPath())) {
-                    $avatarPath = $file->store('avatars', 'public');
-                    $updateData['avatar_path'] = Storage::url($avatarPath);
+                if ($file->isValid()) {
+                    $savedPath = $this->storeAvatarFile($file);
+                    if ($savedPath) {
+                        $updateData['avatar_path'] = $savedPath;
+                    }
                 } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ: ' . $file->getErrorMessage() . ' (Error Code: ' . $file->getError() . ')',
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: ' . $file->getError() . ')',
                     ], 422);
                 }
             }
@@ -193,5 +195,27 @@ class UserController extends Controller
             'roleCodes' => $roleCodes,
             'role' => $roleNames[0] ?? '',
         ];
+    }
+
+    private function storeAvatarFile(\Illuminate\Http\UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $ext = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png';
+        $relativeName = 'avatars/' . Str::random(40) . '.' . strtolower($ext);
+
+        $tmpPath = $file->getPathname();
+        if (! empty($tmpPath) && file_exists($tmpPath)) {
+            $contents = @file_get_contents($tmpPath);
+            if ($contents !== false) {
+                Storage::disk('public')->put($relativeName, $contents);
+                return Storage::url($relativeName);
+            }
+        }
+
+        $path = $file->store('avatars', 'public');
+        return Storage::url($path);
     }
 }
