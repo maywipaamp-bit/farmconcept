@@ -44,7 +44,7 @@ window.TFC = window.TFC || {};
 
     if (message) {
       message.textContent = blocked
-        ? 'เนื่องจากข้อมูลถูกนำไปใช้แล้ว ' + usage.toLocaleString('th-TH') + ' รายการ แนะนำให้กำหนดสถานะเป็น “ปิดใช้งาน” แทน'
+        ? 'มีรายการถูกนำไปใช้งานแล้ว ไม่สามารถลบได้ แนะนำให้กำหนดสถานะเป็น “ปิดใช้งาน” แทน'
         : opts.confirmMessage;
     }
     if (confirm) {
