@@ -514,11 +514,13 @@
     confirmBtn.disabled = true;
 
     fetch('{{ url('/admin/users/roles') }}/' + pendingDeleteId, {
-      method: 'DELETE',
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Accept': 'application/json',
         'X-CSRF-TOKEN': csrfToken
-      }
+      },
+      body: '_method=DELETE'
     })
     .then(function (res) { return res.json(); })
     .then(function (res) {

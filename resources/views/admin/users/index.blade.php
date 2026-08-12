@@ -546,12 +546,13 @@
     button.disabled = true;
 
     fetch('{{ url('/admin/users') }}/' + id + '/toggle-status', {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Accept': 'application/json',
         'X-CSRF-TOKEN': csrfToken
-      }
+      },
+      body: '_method=PATCH'
     })
     .then(function (res) { return res.json(); })
     .then(function (res) {
@@ -591,11 +592,13 @@
     confirmBtn.disabled = true;
 
     fetch('{{ url('/admin/users') }}/' + pendingDeleteId, {
-      method: 'DELETE',
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Accept': 'application/json',
         'X-CSRF-TOKEN': csrfToken
-      }
+      },
+      body: '_method=DELETE'
     })
     .then(function (res) { return res.json(); })
     .then(function (res) {
