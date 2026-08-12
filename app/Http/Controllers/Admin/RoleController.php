@@ -16,9 +16,11 @@ class RoleController extends Controller
 {
     public function index(Request $request): View|JsonResponse
     {
+        /* ใหม่สุดอยู่บน และแก้ไขแล้วลำดับไม่ขยับ — ใช้ id ไม่ใช่ updated_at
+           ซึ่งจะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง */
         $roles = Role::withCount('users')
-            ->with('menuPermissions')
-            ->orderBy('id')
+            ->with(['menuPermissions', 'updatedBy:id,name'])
+            ->orderByDesc('id')
             ->get();
 
         $menuStructure = config('menu.items', []);
@@ -46,12 +48,12 @@ class RoleController extends Controller
 
             $baseCode = Str::slug($validated['name'], '_');
             if (empty($baseCode)) {
-                $baseCode = 'role_' . time();
+                $baseCode = 'role_'.time();
             }
             $code = $baseCode;
             $counter = 1;
             while (Role::where('code', $code)->exists()) {
-                $code = $baseCode . '_' . $counter++;
+                $code = $baseCode.'_'.$counter++;
             }
 
             $role = Role::create([
@@ -59,11 +61,12 @@ class RoleController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'is_active' => $validated['is_active'],
+                'updated_by' => auth()->id(),
             ]);
 
             $this->syncMenuPermissions($role, $request->input('permissions', []));
 
-            $role->loadCount('users')->load('menuPermissions');
+            $role->loadCount('users')->load(['menuPermissions', 'updatedBy:id,name']);
 
             return response()->json([
                 'success' => true,
@@ -82,11 +85,12 @@ class RoleController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'is_active' => $validated['is_active'],
+                'updated_by' => auth()->id(),
             ]);
 
             $this->syncMenuPermissions($role, $request->input('permissions', []));
 
-            $role->loadCount('users')->load('menuPermissions');
+            $role->loadCount('users')->load(['menuPermissions', 'updatedBy:id,name']);
 
             return response()->json([
                 'success' => true,
@@ -113,7 +117,7 @@ class RoleController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'ลบบทบาท "' . $roleName . '" เรียบร้อย',
+                'message' => 'ลบบทบาท "'.$roleName.'" เรียบร้อย',
             ]);
         });
     }
@@ -153,6 +157,13 @@ class RoleController extends Controller
             'description' => $role->description ?? '',
             'active' => (bool) $role->is_active,
             'userCount' => $role->users_count ?? $role->users()->count(),
+
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $role->updatedBy?->name,
+            'updatedDate' => $role->updated_at?->toDateString(),
+            'updatedTime' => $role->updated_at?->format('H.i'),
+
             'menuPermissions' => $menuPerms,
         ];
     }

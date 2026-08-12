@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -18,8 +19,9 @@ class UserController extends Controller
 {
     public function index(Request $request): View|JsonResponse
     {
+        /* ใหม่สุดอยู่บน และแก้ไข/ระงับสิทธิ์แล้วลำดับไม่ขยับ — ใช้ id ไม่ใช่ updated_at
+           ซึ่งจะดีดแถวที่เพิ่งแตะขึ้นบนสุดทุกครั้ง จนคนที่ไล่จัดการทีละคนเสียตำแหน่ง */
         $users = User::with(['roles', 'area'])
-            ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->get();
 
@@ -47,7 +49,7 @@ class UserController extends Controller
             $validated = $request->validated();
 
             $nextId = (User::max('id') ?? 0) + 1;
-            $code = 'USR-' . str_pad((string) $nextId, 3, '0', STR_PAD_LEFT);
+            $code = 'USR-'.str_pad((string) $nextId, 3, '0', STR_PAD_LEFT);
 
             $avatarPath = null;
             if ($request->hasFile('avatar')) {
@@ -57,7 +59,7 @@ class UserController extends Controller
                 } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: ' . $file->getError() . ')',
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: '.$file->getError().')',
                     ], 422);
                 }
             }
@@ -66,7 +68,7 @@ class UserController extends Controller
                 'code' => $code,
                 'name' => $validated['name'],
                 'username' => $validated['username'],
-                'email' => !empty($validated['email']) ? $validated['email'] : ($validated['username'] . '@farmconcept.local'),
+                'email' => ! empty($validated['email']) ? $validated['email'] : ($validated['username'].'@farmconcept.local'),
                 'phone' => $validated['phone'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'status' => $validated['status'],
@@ -94,7 +96,7 @@ class UserController extends Controller
             $updateData = [
                 'name' => $validated['name'],
                 'username' => $validated['username'],
-                'email' => !empty($validated['email']) ? $validated['email'] : ($user->email ?? ($validated['username'] . '@farmconcept.local')),
+                'email' => ! empty($validated['email']) ? $validated['email'] : ($user->email ?? ($validated['username'].'@farmconcept.local')),
                 'phone' => $validated['phone'] ?? null,
                 'status' => $validated['status'],
             ];
@@ -113,7 +115,7 @@ class UserController extends Controller
                 } elseif ($file->getError() !== UPLOAD_ERR_NO_FILE) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: ' . $file->getError() . ')',
+                        'message' => 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์รูปภาพ (Error Code: '.$file->getError().')',
                     ], 422);
                 }
             }
@@ -150,7 +152,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $actionText . ' ' . $user->name . ' เรียบร้อย',
+            'message' => $actionText.' '.$user->name.' เรียบร้อย',
             'data' => $this->toUserPayload($user),
         ]);
     }
@@ -170,7 +172,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'ลบผู้ใช้งาน ' . $userName . ' เรียบร้อย',
+            'message' => 'ลบผู้ใช้งาน '.$userName.' เรียบร้อย',
         ]);
     }
 
@@ -189,7 +191,10 @@ class UserController extends Controller
             'phone' => $user->phone ?? '',
             'avatar' => $user->avatar_path ?? '',
             'status' => $user->status ?? 'ใช้งานอยู่',
-            'lastLogin' => $user->last_login_at?->toIso8601String() ?? $user->last_login_at?->toDateString(),
+            /* ตารางแสดง "วันที่ | เวลา" — คนดูแลต้องรู้ว่าเข้ามาช่วงไหนของวัน ไม่ใช่แค่วันไหน */
+            'lastLogin' => $user->last_login_at?->toIso8601String(),
+            'lastLoginDate' => $user->last_login_at?->toDateString(),
+            'lastLoginTime' => $user->last_login_at?->format('H.i'),
             'updatedAt' => $user->updated_at?->toIso8601String() ?? $user->updated_at?->toDateString(),
             'roles' => $roleNames,
             'roleCodes' => $roleCodes,
@@ -197,25 +202,27 @@ class UserController extends Controller
         ];
     }
 
-    private function storeAvatarFile(\Illuminate\Http\UploadedFile $file): ?string
+    private function storeAvatarFile(UploadedFile $file): ?string
     {
         if (! $file->isValid()) {
             return null;
         }
 
         $ext = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png';
-        $relativeName = 'avatars/' . Str::random(40) . '.' . strtolower($ext);
+        $relativeName = 'avatars/'.Str::random(40).'.'.strtolower($ext);
 
         $tmpPath = $file->getPathname();
         if (! empty($tmpPath) && file_exists($tmpPath)) {
             $contents = @file_get_contents($tmpPath);
             if ($contents !== false) {
                 Storage::disk('public')->put($relativeName, $contents);
+
                 return Storage::url($relativeName);
             }
         }
 
         $path = $file->store('avatars', 'public');
+
         return Storage::url($path);
     }
 }

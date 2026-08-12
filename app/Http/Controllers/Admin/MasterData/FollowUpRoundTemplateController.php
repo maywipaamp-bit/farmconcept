@@ -8,11 +8,10 @@ use App\Models\FollowUpRoundTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * ตั้งค่ารอบติดตาม
+ * ตั้งค่ารอบประเมิน
  *
  * หน้านี้ไม่เข้าแม่พิมพ์ของ MasterDataController เพราะไม่ได้แก้ทีละแถวผ่านโมดัล
  * แต่แก้ทั้งตารางบนหน้าจอแล้วกดบันทึกครั้งเดียว — ต้องเป็น PUT ก้อนเดียวใน transaction เดียว
@@ -94,11 +93,11 @@ class FollowUpRoundTemplateController extends Controller
             ActivityLog::create([
                 'user_id' => auth()->id(),
                 'action' => 'master.follow_up_round_template.saved',
-                'detail' => 'บันทึกการตั้งค่ารอบติดตาม ' . count($keptCodes) . ' รอบ — ' . implode(', ', $keptCodes),
+                'detail' => 'บันทึกการตั้งค่ารอบประเมิน '.count($keptCodes).' รอบ — '.implode(', ', $keptCodes),
             ]);
         });
 
-        return response()->json(['message' => 'บันทึกการตั้งค่ารอบติดตามแล้ว'] + $this->rows());
+        return response()->json(['message' => 'บันทึกการตั้งค่ารอบประเมินแล้ว'] + $this->rows());
     }
 
     /**
@@ -119,10 +118,10 @@ class FollowUpRoundTemplateController extends Controller
             return null;
         }
 
-        $names = $used->map(fn (FollowUpRoundTemplate $t) => '"' . $t->name . '" (' . $t->rounds_count . ' รายการ)');
+        $names = $used->map(fn (FollowUpRoundTemplate $t) => '"'.$t->name.'" ('.$t->rounds_count.' รายการ)');
 
-        return 'ลบรอบที่มีข้อมูลผู้เข้าร่วมอยู่แล้วไม่ได้ — ' . $names->join(' · ')
-            . ' ให้ปิดใช้งานแทนการลบ วันครบกำหนดที่คำนวณไว้แล้วจะได้ไม่กลายเป็นรอบที่อ้างอิงไม่ได้';
+        return 'ลบรอบที่มีข้อมูลผู้เข้าร่วมอยู่แล้วไม่ได้ — '.$names->join(' · ')
+            .' ให้ปิดใช้งานแทนการลบ วันครบกำหนดที่คำนวณไว้แล้วจะได้ไม่กลายเป็นรอบที่อ้างอิงไม่ได้';
     }
 
     /**

@@ -43,8 +43,11 @@ class ActivityController extends Controller
             ->with([
                 'rounds:id,activity_id,round_date,time_start,time_end,location,capacity',
                 'parentEvent:id,code,name',
+                'updatedBy:id,name',
             ])
-            ->orderByDesc('updated_at')
+            /* ใหม่สุดอยู่บน และแก้ข้อมูลแล้วลำดับไม่ขยับ — ใช้ id ไม่ใช่ updated_at
+               ซึ่งจะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้งจนคนที่ไล่แก้ทีละแถวเสียตำแหน่ง */
+            ->orderByDesc('id')
             ->get();
 
         return view('admin.activities.list', [
@@ -117,7 +120,7 @@ class ActivityController extends Controller
         $activity = $service->create($request->validated(), $request->user());
 
         return response()->json([
-            'message' => 'สร้าง' . ($activity->isEvent() ? 'อีเวนท์' : 'กิจกรรม') . ' "' . $activity->name . '" แล้ว',
+            'message' => 'สร้าง'.($activity->isEvent() ? 'อีเวนท์' : 'กิจกรรม').' "'.$activity->name.'" แล้ว',
             'code' => $activity->code,
             'redirect' => route('admin.activities.edit', $activity->code),
             'activity' => $this->toListRow($activity->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
@@ -163,6 +166,7 @@ class ActivityController extends Controller
             'coverMaxBytes' => $this->coverMaxBytes(),
         ]);
     }
+
     /**
      * เพดานขนาดรูปปกที่อัปได้จริงบนเครื่องนี้ (ไบต์)
      *
@@ -323,7 +327,7 @@ class ActivityController extends Controller
         $updated = $service->update($activity, $request->validated(), $request->user());
 
         return response()->json([
-            'message' => 'บันทึกกิจกรรม "' . $updated->name . '" แล้ว',
+            'message' => 'บันทึกกิจกรรม "'.$updated->name.'" แล้ว',
             'activity' => $this->toListRow($updated->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
         ]);
     }
@@ -342,7 +346,7 @@ class ActivityController extends Controller
         $this->authorize('update', $activity);
 
         $request->validate(
-            ['cover' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::COVER_MAX_KB]],
+            ['cover' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::COVER_MAX_KB]],
             [],
             ['cover' => 'รูปภาพปก']
         );
@@ -359,7 +363,7 @@ class ActivityController extends Controller
             'path' => $path,
             'url' => Storage::disk('public')->url($path),
             'label' => $request->file('cover')->getClientOriginalName()
-                . ' · ' . round($request->file('cover')->getSize() / 1048576, 1) . 'MB',
+                .' · '.round($request->file('cover')->getSize() / 1048576, 1).'MB',
         ]);
     }
 
@@ -394,7 +398,7 @@ class ActivityController extends Controller
         $service->delete($activity, $request->user());
 
         return response()->json([
-            'message' => 'ลบกิจกรรม "' . $activity->name . '" แล้ว',
+            'message' => 'ลบกิจกรรม "'.$activity->name.'" แล้ว',
         ]);
     }
 
@@ -424,7 +428,13 @@ class ActivityController extends Controller
             'program' => $activity->program?->name,
             'format' => $activity->format?->name,
             'parentEventName' => $activity->parentEvent?->name,
+
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" เหมือนหน้าอื่นในระบบ
+               updatedAt ยังเป็น ISO เต็มเพราะตัวเรียงลำดับฝั่งหน้าจอใช้เทียบข้อความ */
+            'updatedBy' => $activity->updatedBy?->name,
             'updatedAt' => $activity->updated_at?->toIso8601String(),
+            'updatedDate' => $activity->updated_at?->toDateString(),
+            'updatedTime' => $activity->updated_at?->format('H.i'),
         ];
     }
 
@@ -437,7 +447,7 @@ class ActivityController extends Controller
     {
         return $activity->rounds->map(fn ($round) => [
             'date' => $round->round_date->toDateString(),
-            'time' => substr((string) $round->time_start, 0, 5) . ' - ' . substr((string) $round->time_end, 0, 5),
+            'time' => substr((string) $round->time_start, 0, 5).' - '.substr((string) $round->time_end, 0, 5),
             'location' => $round->location,
             'capacity' => $round->capacity,
         ])->all();

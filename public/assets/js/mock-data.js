@@ -311,12 +311,12 @@ window.TFC_MOCK = {
 
   areaTypes: ['เอกชน', 'ชุมชน/หมู่บ้าน', 'โรงเรียน', 'สถานประกอบการเอกชน', 'โรงพยาบาล'],
   areaGroups: ['พื้นที่ต้นแบบ', 'พื้นที่ต้นแบบส่วนขยาย', 'พื้นที่จัดกิจกรรม'],
-  areaStatuses: ['ดำเนินการอยู่', 'ระงับชั่วคราว', 'สิ้นสุดแล้ว'],
+  areaStatuses: ['รอดำเนินงาน', 'ดำเนินการอยู่', 'สิ้นสุดแล้ว'],
 
   /* สถานะพร้อมสี badge สำหรับ Dropdown สถานะในตาราง (ใช้กับ TFC.statusSelectHTML) */
   areaStatusList: [
+    { value: 'รอดำเนินงาน', badge: 'badge-info' },
     { value: 'ดำเนินการอยู่', badge: 'badge-success' },
-    { value: 'ระงับชั่วคราว', badge: 'badge-warning' },
     { value: 'สิ้นสุดแล้ว', badge: 'badge-neutral' }
   ],
 

@@ -15,6 +15,15 @@ window.TFC = window.TFC || {};
   var addModal = null;
   var addModalTarget = null; // { select, widget }
 
+  /* ผูก observer กับ body — ถ้าไฟล์นี้ถูกโหลดใน <head> body ยังไม่มี แล้ว observe จะโยน error
+     ทำให้สคริปต์ทั้งไฟล์ตายตั้งแต่บรรทัดนั้น dropdown ทั้งหน้าจะกลายเป็นของเบราว์เซอร์หมด */
+  function observeBody(callback, options) {
+    var start = function () { new MutationObserver(callback).observe(document.body, options); };
+
+    if (document.body) start();
+    else document.addEventListener('DOMContentLoaded', start);
+  }
+
   function closePanel() {
     if (activePanel) {
       activePanel.classList.remove('is-open');
@@ -77,8 +86,12 @@ window.TFC = window.TFC || {};
     var searchBox = widget.querySelector('.smart-select-search');
     var addBtn = widget.querySelector('.smart-select-add-btn');
     var divider = widget.querySelector('.smart-select-panel .dropdown-divider');
-    var isShort = select.options.length <= 6;
-    searchBox.classList.toggle('hidden', isShort);
+
+    /* ช่องค้นหาแสดงเสมอ ไม่ซ่อนตามจำนวนตัวเลือก
+       ถ้าซ่อนบ้างไม่ซ่อนบ้าง ผู้ใช้จะไม่รู้ว่ากล่องไหนพิมพ์ค้นได้ แล้วเลิกพิมพ์ไปทั้งระบบ
+       รายการที่สั้นก็ไม่เสียหาย เพราะพิมพ์แล้วเลือกยังเร็วกว่ากวาดตาหาอยู่ดี */
+    searchBox.classList.remove('hidden');
+
     var allowAdd = select.hasAttribute('data-new-item-label');
     addBtn.classList.toggle('hidden', !allowAdd);
     if (divider) divider.classList.toggle('hidden', !allowAdd);
@@ -349,10 +362,36 @@ window.TFC = window.TFC || {};
     });
   }
 
+  /* ---------------------------------------------------------------------------
+     มาตรฐานของระบบ: ทุก <select class="select"> เป็น combobox ที่พิมพ์ค้นหาได้
+     ไม่ต้องใส่ data-smart-select รายจุดอีก — ของเดิมที่ใส่ไว้ยังใช้ได้ ไม่ต้องไล่ลบ
+
+     ที่ยกเว้นไว้เป็น select ที่ไม่ใช่ "ช่องกรอกในฟอร์ม" แต่เป็นตัวควบคุมเล็ก ๆ ที่ฝังอยู่กับอย่างอื่น
+     ถ้าแปลงจะเสียพฤติกรรมเดิมหรือกินที่เกินกว่าที่ควร
+       [data-plain-select]  ทางออกสำหรับจุดที่ต้องการ select ของเบราว์เซอร์จริง ๆ
+       [data-page-size]     ตัวเลือกจำนวนแถวในแถบแบ่งหน้า สูงแค่ 22px
+       .status-select       ปุ่มเปลี่ยนสถานะในแถวตาราง มีสีและ handler ของตัวเอง
+       .dtp-select          เดือน/ปี ในปฏิทิน อยู่ในแผงที่เปิดอยู่แล้ว ซ้อนแผงอีกชั้นไม่ได้
+     --------------------------------------------------------------------------- */
+  var SKIP = '[data-plain-select], [data-page-size], .status-select, .dtp-select';
+
+  function shouldEnhance(select) {
+    return select.classList.contains('select') &&
+      !select.classList.contains('hidden') &&   /* แปลงไปแล้ว */
+      !select.matches(SKIP) &&
+      !select.closest('.dtp');
+  }
+
   /* แถวที่สร้างทีหลัง (เช่น แถวหลักสูตรในฟอร์มวิทยากร) เรียกใช้เพื่อแปลง select ที่เพิ่งเพิ่มเข้ามา
      ข้าม select ที่แปลงไปแล้วเพื่อไม่ให้สร้าง widget ซ้ำ */
   window.TFC.initSmartSelects = function (root) {
-    (root || document).querySelectorAll('select[data-smart-select]:not(.hidden)').forEach(function (select) {
+    var scope = root || document;
+    var list = Array.prototype.slice.call(scope.querySelectorAll('select'));
+
+    /* querySelectorAll ไม่รวมตัว root เอง — หน้าที่ส่ง select มาตรง ๆ จึงต้องเติมเข้าไป */
+    if (scope.tagName === 'SELECT') list.push(scope);
+
+    list.filter(shouldEnhance).forEach(function (select) {
       try {
         buildWidget(select);
       } catch (err) {
@@ -362,6 +401,26 @@ window.TFC = window.TFC || {};
   };
 
   window.TFC.initSmartSelects(document);
+
+  /* select ที่สคริปต์หน้าอื่นสร้างขึ้นภายหลังต้องได้ combobox เหมือนกันโดยไม่ต้องเรียก init เอง
+     ไม่งั้นมาตรฐานจะขึ้นกับว่าคนเขียนหน้านั้นจำได้หรือเปล่า ซึ่งสุดท้ายจะไม่เหมือนกันทั้งระบบ
+
+     อีกกรณีที่ต้องดัก: หน้าจอมัก render <select> เปล่าไว้ก่อนแล้วค่อยเติม <option> ทีหลัง
+     ถ้าไม่ซิงก์ป้ายตอนนั้น ปุ่มจะค้างคำว่า "เลือกรายการ" ทั้งที่ค่าข้างในถูกตั้งไว้แล้ว */
+  observeBody(function (records) {
+    records.forEach(function (record) {
+      if (record.target.tagName === 'SELECT') {
+        var sibling = record.target.nextElementSibling;
+        if (sibling && sibling.classList.contains('smart-select')) syncValueLabel(sibling, record.target);
+        return;
+      }
+
+      Array.prototype.forEach.call(record.addedNodes, function (node) {
+        if (node.nodeType !== 1) return;
+        if (node.tagName === 'SELECT' || node.querySelector('select')) window.TFC.initSmartSelects(node);
+      });
+    });
+  }, { subtree: true, childList: true });
 
   document.addEventListener('click', function (e) {
     /* ต้องเช็ค activePanel ด้วย เพราะตอนกางออกแผงถูกย้ายไปอยู่ที่ <body>
@@ -375,12 +434,12 @@ window.TFC = window.TFC || {};
 
   /* ทุกครั้งที่ popup เปิด ให้ซิงก์ป้ายของ Smart Dropdown ข้างในอีกครั้ง
      เพราะหน้าจอมักเติม options แล้ว set value หลังจากสร้าง widget ไปแล้ว (และ set value ตรง ๆ ไม่ยิง change) */
-  new MutationObserver(function (records) {
+  observeBody(function (records) {
     records.forEach(function (record) {
       var el = record.target;
       if (!el.classList || !el.classList.contains('is-open')) return;
       if (!el.classList.contains('modal-overlay') && !el.classList.contains('drawer-overlay')) return;
       setTimeout(function () { window.TFC.refreshSmartSelects(el); }, 0);
     });
-  }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  }, { subtree: true, attributes: true, attributeFilter: ['class'] });
 })();

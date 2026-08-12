@@ -122,7 +122,7 @@ abstract class MasterDataController extends Controller
         });
 
         return response()->json([
-            'message' => 'เพิ่ม' . $this->label() . 'แล้ว',
+            'message' => 'เพิ่ม'.$this->label().'แล้ว',
             'row' => $this->toRow($this->query()->where('code', $record->code)->firstOrFail()),
         ], 201);
     }
@@ -140,7 +140,7 @@ abstract class MasterDataController extends Controller
         });
 
         return response()->json([
-            'message' => 'บันทึก' . $this->label() . 'แล้ว',
+            'message' => 'บันทึก'.$this->label().'แล้ว',
             'row' => $this->toRow($this->query()->where('code', $code)->firstOrFail()),
         ]);
     }
@@ -159,7 +159,7 @@ abstract class MasterDataController extends Controller
             $record->delete();
         });
 
-        return response()->json(['message' => 'ลบ' . $this->label() . 'แล้ว']);
+        return response()->json(['message' => 'ลบ'.$this->label().'แล้ว']);
     }
 
     /* ================= ตัวช่วยภายใน ================= */
@@ -195,13 +195,13 @@ abstract class MasterDataController extends Controller
         /* หาเลขสูงสุดจาก "ตัวเลขท้ายรหัส" ไม่ใช่ max() ของข้อความ
            เพราะข้อมูลตั้งต้นบางตารางใช้เลขไม่เติมศูนย์ (FRT-1) ปนกับรหัสที่ระบบออกให้ (FRT-005)
            การเทียบแบบข้อความจะบอกว่า FRT-4 มากกว่า FRT-005 แล้วออกรหัสซ้ำเดิมทุกครั้ง */
-        $codes = $model::where('code', 'like', $prefix . '%')
+        $codes = $model::where('code', 'like', $prefix.'%')
             ->lockForUpdate()
             ->pluck('code');
 
         $running = $codes->map(fn (string $code) => (int) Str::afterLast($code, '-'))->max() ?? 0;
 
-        return $prefix . str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -214,8 +214,8 @@ abstract class MasterDataController extends Controller
     {
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'action' => 'master.' . Str::snake(class_basename($this->model())) . '.' . $action,
-            'detail' => $verb . $this->label() . ' ' . $record->code . ' — ' . $record->name,
+            'action' => 'master.'.Str::snake(class_basename($this->model())).'.'.$action,
+            'detail' => $verb.$this->label().' '.$record->code.' — '.$record->name,
         ]);
     }
 }

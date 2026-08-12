@@ -14,12 +14,6 @@
           @include('admin.dashboard.icon', ['name' => $kpi['icon']])
         </span>
       </div>
-      <div class="dbo-kpi-foot">
-        <span class="dbo-delta" data-tone="{{ $kpi['delta_tone'] ?? 'flat' }}">{{ $kpi['delta'] }}</span>
-        @if ($kpi['delta_note'] !== '')
-          <span class="dbo-delta-note">{{ $kpi['delta_note'] }}</span>
-        @endif
-      </div>
     </div>
   @endforeach
 </div>

@@ -813,6 +813,26 @@ dd { margin: 0; }
   background: var(--color-primary-soft);
 }
 
+/* ลิงก์ในเซลล์ที่ไม่ต้องการให้ดูเป็นลิงก์ (เขต/อำเภอ → แผนที่ · เบอร์โทร → โทรออก)
+   ตอนไม่ได้ชี้เมาส์ต้องเหมือนข้อความรอบ ๆ ทุกอย่าง — สัญญาณว่ากดได้มีเฉพาะตอน hover/focus
+   ถ้าไม่มีสัญญาณเลย คนจะไม่มีทางรู้ว่ากดได้ และคนที่ใช้คีย์บอร์ดจะหาโฟกัสไม่เจอ */
+.cell-link-plain {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* บอกว่ากดได้ด้วย "สี" ไม่ใช่ขีดเส้นใต้ — ระบบนี้ตั้งกฎไว้ว่าลิงก์ไม่ขีดเส้นใต้ทุกสถานะ */
+.cell-link-plain:hover {
+  color: var(--color-primary-dark);
+}
+
+.cell-link-plain:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 /* ตารางว่าง — ข้อความกลางแถว ไม่มีพื้น hover เพราะกดอะไรไม่ได้ */
 .data-table tbody tr.table-empty-row:hover { background: transparent; }
 
@@ -1821,8 +1841,260 @@ dd { margin: 0; }
   z-index: var(--z-tooltip);
 }
 
-.tooltip:hover::after {
+.tooltip:hover::after,
+.tooltip:focus-visible::after {
   opacity: 1;
+}
+
+/* เครื่องหมาย "?" ท้าย label — ใช้แทนบรรทัดคำอธิบายใต้ช่องกรอก
+   บรรทัดใต้ช่องทำให้ช่องที่วางคู่กันสูงไม่เท่ากัน และกินพื้นที่ทั้งที่คนอ่านครั้งเดียวก็พอ
+
+   ไม่มีพื้นหลัง — เป็นวงกลมเส้นบาง ๆ ให้กลมกลืนไปกับ label ไม่แย่งสายตาจากชื่อช่อง */
+.label-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.label-hint:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+/* ช่องกรอกสองบรรทัดข้างรูป — ระยะระหว่างบรรทัดเท่ากับระยะระหว่างช่องในบรรทัดเดียวกัน */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---------- ฟอร์มผู้ใช้งาน: กริดเดียวสามคอลัมน์ ----------
+   รูปกินคอลัมน์แรกสองแถว · ช่องกรอกเรียงเป็นคู่ในสองคอลัมน์ที่เหลือ
+   ทำเป็นกริดเดียวแทนการซ้อน .form-row หลายชั้น เพราะการซ้อนทำให้แถวล่าง
+   คำนวณความกว้างจากคนละฐาน แล้วช่องไม่ตรงคอลัมน์กัน */
+.user-form-grid {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.user-form-photo {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* บทบาทกินคอลัมน์รูป + คอลัมน์ซ้าย เหลือคอลัมน์ขวาให้สถานะ
+   สถานะจึงอยู่ตรงกับ Password และเบอร์โทรพอดี */
+.user-form-roles { grid-column: 1 / span 2; }
+
+@media (max-width: 767px) {
+  .user-form-grid { grid-template-columns: minmax(0, 1fr); }
+
+  .user-form-photo,
+  .user-form-roles { grid-column: 1; grid-row: auto; }
+}
+
+/* คำอธิบายสั้น ๆ ต่อท้าย label เช่น "เลือกได้มากกว่า 1 บทบาท"
+   ไม่ใช่ดอกจันบังคับกรอก จึงต้องเบากว่าและไม่ใช่สีแดง */
+.form-label-note {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+/* ช่องติ๊กหลายตัวเลือกที่เห็นพร้อมกันทั้งหมด — สองคอลัมน์ จอแคบเหลือคอลัมน์เดียว */
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+@media (max-width: 639px) {
+  .check-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ปุ่มเล็กในช่องกรอก (เช่น แสดง/ซ่อนรหัสผ่าน) — ลอยชิดขวาในกรอบเดียวกับ input */
+.input-with-action {
+  position: relative;
+}
+
+.input-with-action .input {
+  padding-right: 60px;
+}
+
+.input-action {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.input-action:hover { color: var(--color-primary-dark); }
+
+.input-action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* ---------- ฟอร์มบทบาท: ข้อมูลซ้าย · สิทธิ์ขวา ----------
+   คั่นด้วยเส้นเทาเส้นเดียว ไม่ใช้กรอบรอบฝั่งขวา — เส้นบอกขอบเขตพอแล้ว
+   กรอบซ้อนในกรอบ popup อีกชั้นทำให้ดูเป็นกล่องในกล่อง */
+.role-form-split {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.role-form-perms {
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--space-6);
+
+  /* สูงเท่าฝั่งซ้ายเป็นอย่างน้อย เส้นคั่นจึงลากยาวเต็มความสูงของเนื้อหา ไม่ขาดครึ่งทาง */
+  align-self: stretch;
+}
+
+/* หัวฝั่งขวา: ชื่อหัวข้อซ้าย · ปุ่มคุมทั้งชุดขวา */
+.role-perms-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.role-perms-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex: none;
+}
+
+/* รายการสิทธิ์เลื่อนในตัวเอง ฝั่งซ้ายจึงไม่ถูกดันจนต้องเลื่อนทั้ง popup */
+.role-form-perms #role-permission-matrix {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  /* เผื่อที่ให้ scrollbar ไม่ทับขอบการ์ด */
+  padding-right: var(--space-2);
+}
+
+/* การ์ดหนึ่งใบต่อหนึ่งหมวดเมนู — เห็นขอบเขตของแต่ละหมวดชัดโดยไม่ต้องใช้เส้นคั่น */
+.perm-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* หมวดที่เลือกแล้วพื้นเขียวจาง — กวาดตาครั้งเดียวรู้ว่าบทบาทนี้เข้าถึงอะไรได้บ้าง */
+.perm-card.is-checked {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-soft-border);
+}
+
+.perm-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.perm-card-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.perm-card-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ลูกศรหมุนลงเมื่อกางออก บอกทิศทางโดยไม่ต้องเปลี่ยนไอคอน */
+.perm-card-toggle svg {
+  flex: none;
+  transition: transform var(--transition-fast);
+}
+
+.perm-card.is-open .perm-card-toggle svg { transform: rotate(90deg); }
+
+/* หมวดที่ไม่มีเมนูย่อยไม่มีปุ่มกาง ป้าย "เลือกแล้ว" จึงอยู่เดี่ยว ๆ ต้องจัดสีให้เท่ากัน */
+.perm-card-head > .perm-card-count { color: var(--color-text-secondary); }
+
+.perm-card-children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3) var(--space-6);
+}
+
+/* display ที่ตั้งไว้ข้างบนชนะแอตทริบิวต์ hidden — ต้องสั่งซ่อนเองอีกที
+   ไม่งั้นเมนูย่อยจะกางอยู่ตลอดทั้งที่โค้ดใส่ hidden ไว้แล้ว */
+.perm-card-children[hidden] { display: none; }
+
+.perm-child { font-size: var(--font-size-small); }
+
+/* สรุปยอดท้ายฝั่งซ้าย — คั่นด้วยเส้นบางเพื่อแยกจากช่องกรอกด้านบน */
+.role-form-summary {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.role-form-summary-count {
+  font-size: var(--font-size-n-md, 15px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+/* จอแคบ: วางซ้อนกัน เส้นคั่นย้ายมาอยู่ด้านบนแทนด้านซ้าย */
+@media (max-width: 767px) {
+  .role-form-split { grid-template-columns: minmax(0, 1fr); }
+
+  .role-form-perms {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+    padding-left: 0;
+    padding-top: var(--space-4);
+  }
 }
 
 /* Toast */
@@ -3097,6 +3369,73 @@ dd { margin: 0; }
   overflow-y: auto;
 }
 
+/* ==========================================================================
+   หน้ารายการที่ยืดเต็มจอ — ใส่ is-fill ให้ <main class="content"> ผ่าน @section('main-class')
+
+   ตารางยืดลงไปจนสุดขอบล่าง แถบแบ่งหน้าจึงติดขอบเสมอ ไม่ลอยกลางจอตามจำนวนแถว
+   ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว หัวตารางกับแถบแบ่งหน้าอยู่ที่เดิม
+   ========================================================================== */
+
+/* ความสูงคงที่ที่ 100vh ไม่ใช่ flex: 1 — .app-shell เป็น min-height ลูกจึงยืดตามเนื้อหาได้ไม่จำกัด
+   ถ้าไม่ตรึงความสูงไว้ที่นี่ ส่วนที่ต้องเลื่อนข้างในจะไม่มีขอบให้ยันแล้วดันหน้าทั้งหน้ายาวแทน */
+.content.is-fill {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* flex: 0 1 auto — สูงเท่าเนื้อหาจริง แต่หดได้เมื่อเนื้อหาเกินจอ
+   ข้อมูลน้อย: การ์ดสั้น แถบแบ่งหน้าอยู่ติดแถวสุดท้าย ไม่ทิ้งช่องว่างกลางตาราง
+   ข้อมูลเยอะ: การ์ดโตจนชนขอบล่างแล้วหยุด ส่วนแถวเลื่อนแทน แถบแบ่งหน้าจึงอยู่ที่เดิม
+   ถ้าใช้ flex: 1 การ์ดจะยืดเต็มเสมอ แล้วข้อมูลน้อย ๆ จะเหลือช่องว่างขาวคั่นกลาง */
+.content.is-fill > .table-wrapper {
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* min-height: 0 จำเป็นกับลูก flex ที่ต้องเลื่อน — ค่าเริ่มต้น auto ทำให้ยืดตามเนื้อหาแทนที่จะหด */
+.content.is-fill .table-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+}
+
+.content.is-fill .pagination { flex: none; }
+
+/* ---------- แถบท้ายตาราง (tfoot) ----------
+   เป็นแถวจริงในตาราง ผลรวมของคอลัมน์ตัวเลขจึงตรงกับคอลัมน์ข้างบนเสมอ
+   แม้ความกว้างคอลัมน์จะยืดหดตามเนื้อหา
+
+   sticky bottom ทำให้แถวนี้ค้างอยู่ก้นตารางตอนเลื่อนดูข้อมูล
+   ผลรวมกับเลขหน้าจึงอยู่ในสายตาตลอด ไม่ต้องเลื่อนลงไปหา */
+.data-table tfoot td {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 0;
+  white-space: nowrap;
+}
+
+/* ผลรวมเน้นด้วยน้ำหนัก ไม่ใช่ขนาด — คอลัมน์ตัวเลขในตารางยังเป็นตัวเอกอยู่ */
+.data-table tfoot .cell-count {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.data-table tfoot .pagination-controls { justify-content: flex-end; }
+
+/* แถวสุดท้ายของข้อมูลไม่ต้องมีเส้นของตัวเอง — แถวท้ายตารางมีเส้นบนอยู่แล้ว
+   ถ้าใส่ทั้งสองที่ เส้นสองเส้นจะมาชนกันแล้วดูหนาเป็นสองเท่า */
+
 /* คอลัมน์ checkbox เลือกแถว */
 .data-table .col-select {
   width: 36px;
@@ -3964,9 +4303,10 @@ dd { margin: 0; }
 }
 
 /* ---------- ช่องแนบรูปติดบัตรขนาดเล็ก (ใช้ในฟอร์มวิทยากร) ---------- */
+/* คอลัมน์รูปกว้างกว่าตัวรูป เพื่อให้บรรทัดบอกชนิด/ขนาดไฟล์อยู่บรรทัดเดียวไม่ตกลงมาสองบรรทัด */
 .photo-form-row {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: start;
 }
@@ -4477,34 +4817,69 @@ dd { margin: 0; }
    ========================================================================== */
 
 /* ระบุ .is-footer ด้วยเพื่อให้ specificity ชนะกฎ `.pagination.is-footer` ใน components.css
-   ที่ตั้ง padding ไว้ 8px 12px */
+   ที่ตั้ง padding ไว้ 8px 12px
+
+   แถบนี้อยู่ในการ์ดตาราง มีเส้นคั่นบนเส้นเดียวกับเส้นคั่นแถว ให้อ่านเป็นบรรทัดท้ายของตาราง
+   ระยะขอบซ้ายเท่าคอลัมน์แรก ข้อความจึงตรงกับ "#" ที่หัวตาราง */
 .pagination,
 .pagination.is-footer {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--sp-4);
   flex-wrap: wrap;
-  padding: var(--sp-4) var(--sp-6);
-  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
-/* "แสดง 1-3 จาก 3 รายการ" ไม่อยู่ในแบบ — จำนวนรวมแสดงที่บรรทัดใต้ชื่อหน้าแทนแล้ว */
+/* ซ้าย: "แสดง 1–3 จาก 3 รายการ | แสดง [8] รายการ" — ตัวเล็กระดับคำอธิบาย
+   เป็นข้อมูลกำกับตาราง ไม่ใช่เนื้อหา จึงต้องเบากว่าข้อความในแถว
+   margin-right: auto ดันปุ่มเลขหน้าไปชิดขวา และกันไม่ให้กฎ justify-content ของหน้าอื่นมาย้ายตำแหน่ง */
 .pagination-info {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-right: auto;
+  font-size: var(--font-size-caption);
+  line-height: var(--lh-caption, 1.45);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
+.pagination-info .pagination-size { font-size: inherit; }
+
+/* ช่องเลือกจำนวนเตี้ยลงให้เข้ากับตัวอักษรขนาดนี้ */
+/* ช่องเลือกจำนวนเป็นตัวกำหนดความสูงของทั้งแถบ — เตี้ยกว่านี้ตัวเลขจะเริ่มถูกบีบ */
+.pagination-info .pagination-size .select {
+  height: 22px;
+  min-height: 22px;
+  padding: 0 var(--space-5) 0 var(--space-2);
+  font-size: var(--font-size-caption);
+  background-position: right var(--space-2) center;
+}
+
+.pagination-summary { white-space: nowrap; }
+
+.pagination-divider { color: var(--border-default); }
+
+/* ขวา: ปุ่มเลขหน้า — ไม่กินความกว้างทั้งแถว ไม่งั้นจะดันข้อความสรุปขึ้นบรรทัดบน */
 .pagination-controls {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  width: 100%;
+  width: auto;
+  flex: none;
 }
 
-/* "รายการต่อหน้า [10]" ชิดซ้าย · ปุ่มเลขหน้าชิดขวา
-   ตัวเลือกจำนวนแถวถูก render ไว้ท้ายสุดใน .pagination-controls จึงใช้ order ดึงมาไว้หน้าสุด */
-.pagination-size {
+/* "แสดง [8] รายการ" — อยู่ต่อจากข้อความสรุปทางซ้าย
+   หน้าที่ส่ง sizeWithInfo: false จะ render ไว้ท้ายกลุ่มปุ่ม จึงใช้ order ดึงมาไว้หน้าสุดในกรณีนั้น */
+.pagination-controls .pagination-size {
   order: -1;
   margin-right: auto;
+}
+
+.pagination-size {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
@@ -4848,6 +5223,28 @@ button.multiselect:focus-visible {
   color: var(--color-text-primary);
 }
 
+/* ชื่อคนในตารางกดได้ (เปิดฟอร์มแก้ไข) — เป็น <button> จึงต้องล้างสไตล์ปุ่มของเบราว์เซอร์ออกก่อน
+   หน้าตาตอนไม่ได้ชี้เมาส์เหมือนข้อความธรรมดา สัญญาณว่ากดได้บอกด้วยสีตอน hover เท่านั้น */
+.data-table td .cell-person-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.data-table td .cell-person-btn:hover .cell-person-name {
+  color: var(--color-primary-dark);
+}
+
+.data-table td .cell-person-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 /* แท็บในหัว Popup — วางใต้หัวข้อ เหนือเนื้อฟอร์ม */
 .modal-tabs {
   display: flex;
@@ -4912,16 +5309,30 @@ button.multiselect:focus-visible {
 }
 
 /* ความกว้างขั้นต่ำ = ผลรวมคอลัมน์ + gap + padding ซ้ายขวา
-   บังคับไว้เพื่อไม่ให้คอลัมน์ถูกบีบจนอ่านไม่ออกตอนเลื่อน */
+   996 + (9 × 12) + 40 = 1144 — พอดีกับพื้นที่เนื้อหาบนจอโน้ตบุ๊กทั่วไปโดยไม่ต้องเลื่อนข้าง */
 .grid-head,
-.grid-row { min-width: 1128px; }
+.grid-row { min-width: 1144px; }
 
 .grid-head,
 .grid-row {
   display: grid;
-  grid-template-columns: 100px minmax(200px, 1.4fr) 150px minmax(110px, 1fr) 128px 80px 92px 112px 44px;
-  gap: 14px;
+  /* # · ชื่อกิจกรรม · วันและเวลา · สถานที่ · ผู้ลงทะเบียน · เข้าร่วม · แบบประเมิน · สถานะ · ปรับปรุงล่าสุด · เมนู
+     ความกว้างรวมถูกบีบให้พอดีจอ ไม่ต้องเลื่อนแนวนอน — คอลัมน์ที่ยืดได้มีสองอันคือชื่อกับสถานที่ */
+  grid-template-columns: 44px minmax(180px, 1.4fr) 140px minmax(100px, 1fr) 92px 76px 88px 108px 124px 44px;
+  gap: 12px;
   align-items: center;
+}
+
+/* คอลัมน์ตัวเลขและสถานะจัดกลางทั้งหัวและเนื้อ เหมือนตารางหน้าอื่น */
+.grid-head .grid-center,
+.grid-row .grid-center { text-align: center; }
+
+/* รายการกิจกรรมอยู่ในการ์ดของหน้าแล้ว กรอบซ้อนกันสองชั้นจึงต้องถอดชั้นในออก
+   ส่วนการเลื่อนแนวนอนย้ายไปอยู่ที่ .table-scroll ที่ห่อไว้ */
+.table-wrapper .grid-table {
+  border: 0;
+  border-radius: 0;
+  overflow-x: visible;
 }
 
 .grid-head {
@@ -4984,24 +5395,6 @@ button.multiselect:focus-visible {
 .grid-dash { color: var(--color-text-muted); }
 
 /* แถบความคืบหน้าของยอดลงทะเบียน — สีตามสถานะกิจกรรม */
-.grid-bar {
-  margin-top: 6px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--color-surface-muted);
-  overflow: hidden;
-}
-
-.grid-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-primary);
-}
-.grid-bar .is-warning { background: var(--color-warning); }
-.grid-bar .is-danger  { background: var(--color-danger); }
-.grid-bar .is-neutral { background: var(--color-text-muted); }
-
 .grid-actions { display: flex; justify-content: flex-end; }
 
 /* ==========================================================================
@@ -11648,7 +12041,7 @@ input[data-picker] { cursor: pointer; }
 input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 /* ==========================================================================
-   ตั้งค่ารอบติดตาม — admin/basic/follow-up-rounds.html
+   ตั้งค่ารอบประเมิน — admin/basic/follow-up-rounds.html
    master data ของรอบติดตามแบบนับเป็นจำนวนวันจากวันที่เข้ากลุ่มตัวอย่าง
    คนละหน้ากับ .fr-* (admin/evaluations/rounds.html) ที่กำหนดเป็นช่วงวันที่จริง
    ========================================================================== */
@@ -12289,9 +12682,8 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .rl-foot[hidden] { display: none; }
 
-/* มีบล็อกกลางในไฟล์นี้ที่ตั้ง .pagination { border-top } และ .pagination-info { display: none }
-   ไว้แบบไม่ผูกกับหน้าใดหน้าหนึ่ง จึงต้องเขียนทับแบบเจาะจงในขอบเขต .rl-foot
-   (ไม่ไปแก้บล็อกนั้นเพราะหน้าจออื่นอิงพฤติกรรมเดิมอยู่) */
+/* ค่ากลางของ .pagination ให้ผลแบบนี้อยู่แล้ว เหลือไว้เฉพาะระยะขอบที่หน้านี้ต้องการต่างออกไป
+   (ชุดคำตอบอยู่ในการ์ด จึงเว้นซ้าย-ขวาเท่ากับเนื้อหาในการ์ด ไม่ใช่ระยะของแถบใต้ตาราง) */
 .rl-foot .pagination {
   padding: var(--sp-3) var(--sp-6);
   border-top: 0;
@@ -12746,9 +13138,8 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .ar-foot[hidden] { display: none; }
 
-/* มีบล็อกกลางใน components.css ที่ตั้ง .pagination { border-top } และ
-   .pagination-info { display: none } ไว้แบบไม่ผูกกับหน้าใดหน้าหนึ่ง
-   จึงต้องเขียนทับแบบเจาะจงในขอบเขต .ar-foot (ไม่ไปแก้บล็อกนั้นเพราะหน้าอื่นอิงพฤติกรรมเดิม) */
+/* ค่ากลางของ .pagination ให้ผลแบบนี้อยู่แล้ว เหลือไว้เฉพาะระยะขอบที่หน้านี้ต้องการต่างออกไป
+   (แถบนี้อยู่ในการ์ด จึงเว้นซ้าย-ขวาเท่ากับเนื้อหาในการ์ด ไม่ใช่ระยะของแถบใต้ตาราง) */
 .ar-foot .pagination {
   padding: var(--sp-3) var(--sp-6);
   border-top: 0;
@@ -13727,7 +14118,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 }
 
 /* ==========================================================================
-   ตั้งค่ารอบติดตาม — จอแคบ
+   ตั้งค่ารอบประเมิน — จอแคบ
    ตารางเหลือ 4 คอลัมน์แล้ว จึงพอลงจอมือถือได้โดยไม่ต้องเลื่อนแนวนอน
    ========================================================================== */
 
@@ -13750,7 +14141,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   .frt-bottombar-actions .btn { flex: 1; }
 }
 
-/* สองการ์ดของหน้าตั้งค่ารอบติดตามวางคู่กัน — ตารางรอบกว้างกว่าเพราะมี 4 คอลัมน์
+/* สองการ์ดของหน้าตั้งค่ารอบประเมินวางคู่กัน — ตารางรอบกว้างกว่าเพราะมี 4 คอลัมน์
    align-items: start กันไม่ให้การ์ดที่เตี้ยกว่าถูกยืดตามการ์ดที่สูงกว่า */
 .frt-grid {
   display: grid;
@@ -13763,7 +14154,7 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   .frt-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* แถวปุ่มในการ์ดตั้งค่ารอบติดตาม — แทนแถบลอยล่างจอแบบเดิม */
+/* แถวปุ่มในการ์ดตั้งค่ารอบประเมิน — แทนแถบลอยล่างจอแบบเดิม */
 .frt-actions {
   display: flex;
   align-items: center;

@@ -29,14 +29,15 @@ class ActivityFormatController extends MasterDataController
     }
 
     /**
-     * เรียงตามลำดับที่เพิ่มเข้ามา ไม่ใช่ตามเวลาที่แก้ล่าสุด
+     * เรียงจากรายการที่เพิ่มล่าสุดลงมา — ของใหม่อยู่บนสุดเสมอ
      *
-     * ถ้าเรียงตามเวลาแก้ แถวที่เพิ่งบันทึกจะกระโดดไปบนสุด คนที่กำลังไล่แก้ทีละแถว
-     * จะเสียตำแหน่งที่ค้างไว้ทุกครั้งแล้วต้องหาใหม่ว่าทำถึงไหน
+     * ใช้ id ไม่ใช่ updated_at เพราะสองอย่างนี้ให้ผลต่างกันตอนแก้ไข
+     * id คงที่ตลอดอายุของแถว แก้ข้อมูลแล้วลำดับจึงไม่ขยับ คนที่ไล่แก้ทีละแถวไม่เสียตำแหน่ง
+     * ส่วน updated_at จะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง
      */
     protected function query()
     {
-        return ActivityFormat::query()->withCount('activities')->orderBy('id');
+        return ActivityFormat::query()->with('updatedBy:id,name')->withCount('activities')->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array
@@ -61,6 +62,7 @@ class ActivityFormatController extends MasterDataController
             'name' => $data['name'],
             'icon' => $data['icon'],
             'is_active' => $data['active'],
+            'updated_by' => auth()->id(),
         ];
     }
 
@@ -72,7 +74,11 @@ class ActivityFormatController extends MasterDataController
             'icon' => $record->icon,
             'activityCount' => $record->activities_count,
             'active' => $record->is_active,
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $record->updatedBy?->name,
             'updatedAt' => $record->updated_at?->toDateString(),
+            'updatedTime' => $record->updated_at?->format('H.i'),
         ];
     }
 
@@ -82,7 +88,7 @@ class ActivityFormatController extends MasterDataController
 
         return $count === 0
             ? null
-            : 'หมวดหมู่นี้ถูกใช้อยู่กับกิจกรรม ' . $count . ' รายการ ลบไม่ได้ '
-              . 'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
+            : 'หมวดหมู่นี้ถูกใช้อยู่กับกิจกรรม '.$count.' รายการ ลบไม่ได้ '
+              .'ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
     }
 }

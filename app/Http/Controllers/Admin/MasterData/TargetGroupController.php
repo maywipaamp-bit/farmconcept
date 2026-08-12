@@ -29,15 +29,16 @@ class TargetGroupController extends MasterDataController
     }
 
     /**
-     * เรียงตามลำดับที่เพิ่มเข้ามา ไม่ใช่ตามเวลาที่แก้ล่าสุด
+     * เรียงจากรายการที่เพิ่มล่าสุดลงมา — ของใหม่อยู่บนสุดเสมอ
      *
-     * ถ้าเรียงตามเวลาแก้ แถวที่เพิ่งบันทึกจะกระโดดไปบนสุด คนที่กำลังไล่แก้ทีละแถว
-     * จะเสียตำแหน่งที่ค้างไว้ทุกครั้งแล้วต้องหาใหม่ว่าทำถึงไหน
+     * ใช้ id ไม่ใช่ updated_at เพราะสองอย่างนี้ให้ผลต่างกันตอนแก้ไข
+     * id คงที่ตลอดอายุของแถว แก้ข้อมูลแล้วลำดับจึงไม่ขยับ คนที่ไล่แก้ทีละแถวไม่เสียตำแหน่ง
+     * ส่วน updated_at จะดีดแถวที่เพิ่งบันทึกขึ้นบนสุดทุกครั้ง
      */
     protected function query()
     {
         /* หน้าจอแสดงจำนวนกิจกรรมที่ใช้กลุ่มนี้ — นับด้วย withCount ไม่งั้นจะยิง query ต่อแถว */
-        return TargetGroup::query()->withCount('activities')->orderBy('id');
+        return TargetGroup::query()->with('updatedBy:id,name')->withCount('activities')->orderByDesc('id');
     }
 
     protected function rules(?Model $current): array
@@ -60,6 +61,7 @@ class TargetGroupController extends MasterDataController
             'name' => $data['name'],
             'target_count' => $data['targetCount'],
             'is_active' => $data['active'],
+            'updated_by' => auth()->id(),
         ];
     }
 
@@ -72,7 +74,11 @@ class TargetGroupController extends MasterDataController
             'targetCount' => $record->target_count,
             'activityCount' => $record->activities_count,
             'active' => $record->is_active,
+            /* ตารางแสดง "ชื่อคนแก้" กับ "วันที่ | เวลา" — แถวที่มีอยู่ก่อนระบบเก็บข้อมูลนี้
+               จะไม่มีชื่อ หน้าจอแสดงขีดแทนจนกว่าจะมีคนแก้ครั้งถัดไป */
+            'updatedBy' => $record->updatedBy?->name,
             'updatedAt' => $record->updated_at?->toDateString(),
+            'updatedTime' => $record->updated_at?->format('H.i'),
         ];
     }
 
@@ -92,10 +98,14 @@ class TargetGroupController extends MasterDataController
         }
 
         $used = [];
-        if ($activities) $used[] = 'กิจกรรม ' . $activities . ' รายการ';
-        if ($participants) $used[] = 'ผู้เข้าร่วม ' . $participants . ' คน';
+        if ($activities) {
+            $used[] = 'กิจกรรม '.$activities.' รายการ';
+        }
+        if ($participants) {
+            $used[] = 'ผู้เข้าร่วม '.$participants.' คน';
+        }
 
-        return 'กลุ่มเป้าหมายนี้ถูกใช้อยู่กับ' . implode(' และ ', $used)
-            . ' ลบไม่ได้ ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
+        return 'กลุ่มเป้าหมายนี้ถูกใช้อยู่กับ'.implode(' และ ', $used)
+            .' ลบไม่ได้ ถ้าไม่ต้องการให้เลือกได้อีก ให้เปลี่ยนสถานะเป็น "ไม่ใช้งาน" แทน';
     }
 }

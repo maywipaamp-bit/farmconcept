@@ -2,6 +2,9 @@
 
 @section('title', 'พื้นที่ดำเนินงาน')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">พื้นที่ดำเนินงาน</span>
@@ -36,10 +39,11 @@
           </tr>
         </thead>
         <tbody id="area-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="area-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="area-pagination"></div>
 @endsection
 
 @section('modals')
@@ -339,10 +343,9 @@ window.TFC_AREA = {
       .then(function () {
         window.TFC.closeModal('area-form-modal');
         window.TFC.showToast(editingId ? 'บันทึกพื้นที่แล้ว' : 'เพิ่มพื้นที่แล้ว', 'success');
-        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
-           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
            การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
-        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -389,6 +392,30 @@ window.TFC_AREA = {
   var BUCKETS = [{ key: '', label: 'ทั้งหมด' }].concat(CFG.statuses.map(function (s) {
     return { key: s, label: s, match: function (r) { return r.status === s; } };
   }));
+
+  /* เขต/อำเภอกดแล้วเปิดแผนที่ของพื้นที่นั้น — พื้นที่ที่ยังไม่ได้ใส่ลิงก์เป็นข้อความธรรมดา
+     ไม่ทำปุ่มหรือไอคอนเพิ่ม หน้าตาตอนไม่ได้ชี้เมาส์จึงเหมือนเดิมทุกประการ
+
+     ยอมรับเฉพาะ http/https — ค่าในฐานข้อมูลผ่าน validate url มาแล้ว แต่ข้อมูลเก่าที่ใส่ไว้ก่อนมีกฎนี้
+     อาจเป็นอย่างอื่น ถ้าปล่อยผ่านจะกลายเป็นช่องให้ยิง javascript: ผ่านช่องกรอกได้ */
+  function mapLink(a) {
+    var text = window.TFC.escapeHtml(a.district || '');
+    if (!text || !/^https?:\/\//i.test(a.mapUrl || '')) return text;
+
+    return '<a class="cell-link-plain" href="' + window.TFC.escapeHtml(a.mapUrl) + '"' +
+      ' target="_blank" rel="noopener noreferrer"' +
+      ' aria-label="เปิดแผนที่ของ ' + window.TFC.escapeHtml(a.name) + '">' + text + '</a>';
+  }
+
+  /* เบอร์โทรกดแล้วโทรออก — href ใช้เฉพาะตัวเลข ส่วนที่แสดงคงขีดคั่นไว้ให้อ่านง่ายเหมือนเดิม */
+  function phoneLink(phone) {
+    var digits = String(phone).replace(/[^\d+]/g, '');
+    var text = window.TFC.escapeHtml(phone);
+    if (!digits) return text;
+
+    return '<a class="cell-link-plain" href="tel:' + window.TFC.escapeHtml(digits) + '"' +
+      ' aria-label="โทรหา ' + text + '">' + text + '</a>';
+  }
 
   /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
   function updatedStamp(a) {
@@ -448,12 +475,13 @@ window.TFC_AREA = {
           '<td><button type="button" class="cell-title-link font-medium" ' +
           'data-action-key="edit-' + window.TFC.escapeHtml(a.id) + '" data-open-modal="area-form-modal">' +
           window.TFC.escapeHtml(a.name) + '</button>' +
-          '<div class="caption text-secondary">' + window.TFC.escapeHtml(a.district || '') + (a.district ? ' ' : '') + window.TFC.escapeHtml(a.province || '') + '</div></td>' +
+          /* บรรทัดรองแสดงแค่เขต/อำเภอ — จังหวัดซ้ำกันแทบทุกแถว ใส่ไปก็ไม่ได้ช่วยแยกแยะ */
+          '<div class="caption text-secondary">' + mapLink(a) + '</div></td>' +
           '<td>' + window.TFC.escapeHtml(a.areaType || '-') + '</td>' +
           '<td>' + window.TFC.escapeHtml(a.areaGroup || '-') + '</td>' +
           /* ผู้ประสานงาน: ชื่อบรรทัดบน เบอร์โทรบรรทัดล่าง (แพทเทิร์นเดียวกับคอลัมน์ชื่อพื้นที่) */
           '<td><div>' + window.TFC.escapeHtml(a.coordinator || '-') + '</div>' +
-          (a.coordinatorPhone ? '<div class="caption text-secondary">' + window.TFC.escapeHtml(a.coordinatorPhone) + '</div>' : '') + '</td>' +
+          (a.coordinatorPhone ? '<div class="caption text-secondary">' + phoneLink(a.coordinatorPhone) + '</div>' : '') + '</td>' +
           '<td class="cell-count">' + Number(a.activityCount || 0).toLocaleString('th-TH') + '</td>' +
           '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.areaStatusList, value: a.status }) + '</td>' +
           /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับคอลัมน์ผู้ประสานงาน */
@@ -473,12 +501,21 @@ window.TFC_AREA = {
         (rows.length ? 'ไม่พบข้อมูลตามเงื่อนไขที่เลือก ลองล้างคำค้นหาหรือตัวกรอง' : 'ยังไม่มีพื้นที่ดำเนินงานในระบบ') +
         '</div></td></tr>';
 
-      window.TFC.renderPagination('area-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_activityCount = filtered.reduce(function (acc, row) { return acc + Number(row.activityCount || 0); }, 0);
+      $('area-table-foot').innerHTML =
+        '<td colspan="5" id="area-foot-info"></td>' +
+        '<td class="cell-count">' + sum_activityCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="area-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'area-foot-info',
+        controlsTarget: 'area-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });

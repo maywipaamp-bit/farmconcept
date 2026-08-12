@@ -2,16 +2,24 @@
 
 @section('title', 'กลุ่มเป้าหมาย')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">กลุ่มเป้าหมาย</span>
   </nav>
   <div class="page-header" id="target-group-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="target-group-counts"></div>
-    <div id="target-group-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="target-group-search"
+             placeholder="ค้นหาชื่อกลุ่มเป้าหมาย" aria-label="ค้นหากลุ่มเป้าหมาย">
+      <div id="target-group-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -21,18 +29,18 @@
           <tr>
             <th class="col-no">#</th>
             <th>ชื่อกลุ่มเป้าหมาย</th>
-            <th>จำนวนเป้าหมาย (คน)</th>
-            <th>ใช้กับกิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-count">จำนวนเป้าหมาย (คน)</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="target-group-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="target-group-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="target-group-pagination"></div>
 @endsection
 
 @section('modals')
@@ -182,10 +190,9 @@ window.TFC_SEED.targetGroups = @json($seedRows);
       .then(function () {
         window.TFC.closeModal('target-group-create-modal');
         window.TFC.showToast(editingId ? 'บันทึกกลุ่มเป้าหมายแล้ว' : 'เพิ่มกลุ่มเป้าหมายแล้ว', 'success');
-        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
-           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
            การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
-        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -241,6 +248,14 @@ window.TFC_SEED.targetGroups = @json($seedRows);
     var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
     return !bucket || !bucket.match || bucket.match(row);
   }
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(row) {
+    if (!row.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(row.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(row.updatedTime ? date + ' | ' + row.updatedTime : date);
+  }
+
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
@@ -256,8 +271,15 @@ window.TFC_SEED.targetGroups = @json($seedRows);
       });
 
       var keyword = (($('target-group-search') || {}).value || '').trim().toLowerCase();
+      var statusFilter = (($('target-group-filter-status') || {}).value || '');
+
+      /* ชิปด้านบนกับตัวกรองในแผงเป็นคนละชั้น ใช้ร่วมกันได้ ต้องผ่านทั้งคู่ */
       var filtered = rows.filter(function (g) {
-        return matchesStatus(g) && (!keyword || g.name.toLowerCase().indexOf(keyword) !== -1);
+        var statusLabel = g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน';
+
+        return matchesStatus(g) &&
+          (!keyword || g.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!statusFilter || statusLabel === statusFilter);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -270,10 +292,11 @@ window.TFC_SEED.targetGroups = @json($seedRows);
           '<td class="col-no nowrap">' + (start + i + 1) + '</td>' +
           '<td><button type="button" class="cell-title-link font-medium" data-action-key="tg-edit-' + window.TFC.escapeHtml(g.id) + '" data-open-modal="target-group-create-modal">' +
           window.TFC.escapeHtml(g.name) + '</button></td>' +
-          '<td>' + Number(g.targetCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td>' + Number(g.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
-          '<td><div class="cell-updated-at">' + (g.updatedAt ? window.TFC.formatThaiDate(g.updatedAt) : '-') + '</div></td>' +
+          '<td class="cell-count">' + Number(g.targetCount || 0).toLocaleString('th-TH') + '</td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: g.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าพื้นที่ดำเนินงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(g.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(g) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'tg-edit-' + g.id, label: 'แก้ไข', icon: 'edit', modal: 'target-group-create-modal', perm: 'master_data' },
@@ -282,12 +305,21 @@ window.TFC_SEED.targetGroups = @json($seedRows);
           '</td></tr>';
       }).join('');
 
-      window.TFC.renderPagination('target-group-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_targetCount = filtered.reduce(function (acc, row) { return acc + Number(row.targetCount || 0); }, 0);
+      $('target-group-table-foot').innerHTML =
+        '<td colspan="2" id="target-group-foot-info"></td>' +
+        '<td class="cell-count">' + sum_targetCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="target-group-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'target-group-foot-info',
+        controlsTarget: 'target-group-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -296,13 +328,32 @@ window.TFC_SEED.targetGroups = @json($seedRows);
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('target-group-search-popover', {
-    search: { id: 'target-group-search', placeholder: 'ค้นหาชื่อกลุ่มเป้าหมาย' },
+    search: false,
+    icon: 'filter',
+    filters: [
+      { id: 'status', inputId: 'target-group-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
+        options: (mock.masterActiveStatuses || []).map(function (o) { return { label: o.value }; }) }
+    ],
     onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('target-group-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่

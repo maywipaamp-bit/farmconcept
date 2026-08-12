@@ -68,6 +68,11 @@
   --dbo-pill-border: #e0e6dd;
   --dbo-pill-border-hover: #9dc79f;
 
+  /* แถบเลื่อนของกราฟที่รายการยาวเกินกรอบ — เทาอ่อน ไม่ใช่เขียว
+     เพราะเป็นตัวควบคุมหน้าจอ ไม่ใช่ข้อมูล จึงต้องไม่แย่งสายตาจากแท่งกราฟ */
+  --dbo-scrollbar: #d5ddd2;
+  --dbo-scrollbar-hover: #bdc8b9;
+
   /* เตือนแบบเข้ม (ตัวเลขที่ต้องตามต่อ) และค่าที่ลดลง — คนละระดับกับ --dbo-warn ที่ใช้กับ "ก่อนเข้าร่วม" */
   --dbo-warn-strong: #c4703c;
   --dbo-danger: #c95252;
@@ -241,11 +246,13 @@
   background: var(--dbo-card);
   border: 1px solid var(--dbo-card-border);
   border-radius: var(--dbo-radius);
-  padding: 22px 26px 24px;
+  padding: 20px 24px 20px;
   box-shadow: var(--dbo-shadow);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  /* ระยะหัวการ์ด -> เนื้อหา · 14px พอให้แยกกลุ่มได้โดยไม่เหลือช่องว่างลอย
+     (เดิม 20px ทำให้หัวการ์ดดูหลุดออกจากกราฟที่มันกำกับอยู่) */
+  gap: 14px;
 }
 
 .dbo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
@@ -414,11 +421,7 @@
   color: var(--dbo-g0);
 }
 
-.dbo-kpi-foot { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-.dbo-delta { font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-medium); color: var(--dbo-g0); }
-.dbo-delta[data-tone="down"] { color: var(--dbo-warn); }
-.dbo-delta[data-tone="flat"] { color: var(--dbo-text-3); }
-.dbo-delta-note { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
+/* การ์ด KPI ไม่มีบรรทัดเปรียบเทียบใต้ตัวเลขแล้ว (.dbo-kpi-foot / .dbo-delta ถูกถอดออก) */
 
 /* ==========================================================================
    แถว 2 — ผู้เข้าร่วมกิจกรรมทั้งหมด
@@ -441,28 +444,34 @@
 .dbo-total-side-label { font-size: var(--dbo-fs-body); color: var(--dbo-text-3); }
 .dbo-total-side .dbo-num { font-size: var(--dbo-fs-stat); font-weight: var(--dbo-fw-num); color: var(--dbo-brand); }
 
-.dbo-panels { display: flex; flex-wrap: wrap; gap: 26px 0; align-items: stretch; }
+/* บรรทัดประกอบในหัวการ์ด — เล็กและจางกว่ายอดรวมชัดเจน
+   ตัวเลขในบรรทัดนี้ใช้ขนาดเท่าข้อความ ไม่ขยายเป็นตัวเลขนำ ไม่งั้นจะมีตัวเลขสองตัวแข่งกัน */
+.dbo-total-note {
+  font-size: var(--dbo-fs-small);
+  color: var(--dbo-text-3);
+  padding-left: 14px;
+  border-left: 1px solid var(--dbo-divider);
+}
 
-.dbo-panel { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.dbo-total-note .dbo-num { font-weight: var(--dbo-fw-num); color: var(--dbo-brand); }
+
+.dbo-panels { display: flex; flex-wrap: wrap; gap: 20px 0; align-items: stretch; }
+
+/* ระยะหัวแผง -> กราฟของแผงนั้น
+   ต้องเท่ากันทุกแผง (รวม .dbo-courses-chart ที่มีหัวแผงของตัวเอง)
+   ไม่งั้นรายการช่วงอายุกับกราฟแท่งจะเริ่มไม่พร้อมกัน แล้วเส้นฐานเหลื่อมกัน */
+.dbo-panel { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 
 /* เส้นคั่นระหว่างแผงมีเฉพาะตอนที่แผงยังอยู่บรรทัดเดียวกัน
    จอแคบที่แผงตกบรรทัดจะเห็นเส้นลอยกลางอากาศ จึงถอดออกใน media query ท้ายไฟล์
 
-   น้ำหนักการโตต่างกัน (0 : 1 : 3) ไม่ใช่เท่ากันทั้งสามแผง
-   แผงเพศมีเนื้อหาคงที่แค่สามบรรทัด ให้พื้นที่เพิ่มไปเท่าไหร่ก็เหลือว่าง
-   ถ้าแบ่งเท่ากัน แผงหลักสูตรจะถูกบีบจนตารางอันดับตกไปอยู่ใต้กราฟทั้งที่การ์ดยังมีที่ว่าง */
-.dbo-panel--gender { flex: 0 1 190px; padding-right: 26px; border-right: 1px solid var(--dbo-divider); }
-.dbo-panel--age { flex: 1 1 250px; gap: 14px; padding: 0 26px; border-right: 1px solid var(--dbo-divider); }
-
-.dbo-panel--courses {
-  flex: 3 1 470px;
-  flex-direction: row;
-  flex-wrap: wrap;
-  /* ชิดบนไว้ ถ้าจอแคบจนตารางต้องตกบรรทัดจริง จะได้ไม่ลอยห่างจากกราฟ */
-  align-items: flex-start;
-  gap: 24px;
-  padding-left: 26px;
-}
+   น้ำหนักการโตไม่เท่ากันทั้งสี่แผง — แผงเพศมีเนื้อหาคงที่แค่สามบรรทัด
+   ให้พื้นที่เพิ่มไปเท่าไหร่ก็เหลือว่าง จึงไม่ให้โตเลย (flex-grow: 0)
+   ที่เหลือไปลงกับสองแผงที่มีแท่งกราฟ ซึ่งยิ่งกว้างยิ่งอ่านง่ายขึ้นจริง */
+.dbo-panel--gender { flex: 0 1 180px; padding-right: 24px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--age { flex: 1 1 220px; padding: 0 24px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--job { flex: 1 1 240px; padding: 0 24px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--courses { flex: 2 1 280px; padding-left: 24px; }
 
 /* ---- เพศ ---- */
 /* --dbo-c ของแถวเพศไม่ได้มาจากสเกลปริมาณ แต่ต้องมีเพื่อให้จุดสีในกล่อง tooltip
@@ -492,12 +501,14 @@
 .dbo-gender-unit { font-size: var(--dbo-fs-micro); color: var(--dbo-text-4); }
 .dbo-gender-label { font-size: var(--dbo-fs-small); color: var(--dbo-text-3); }
 
-/* ---- ช่วงอายุ ---- */
-.dbo-ages { display: flex; flex-direction: column; gap: 11px; }
+/* ---- แท่งแนวนอน — ใช้ร่วมกันทั้งแผงช่วงอายุและแผงอาชีพ ----
+   สองแผงนี้เป็นกราฟชนิดเดียวกัน (ป้าย + แท่ง + จำนวน) จึงใช้ชุดคลาสเดียว
+   ไม่แยกเขียนสองชุด เพิ่มแผงแบบเดียวกันในอนาคตก็ใช้คลาสนี้ต่อได้เลย */
+.dbo-hbars { display: flex; flex-direction: column; gap: 11px; }
 
-.dbo-age {
+.dbo-hbar {
   display: grid;
-  grid-template-columns: 82px minmax(0, 1fr);
+  grid-template-columns: var(--dbo-hbar-label-w, 82px) minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   padding: 3px 5px;
@@ -505,10 +516,28 @@
   border-radius: var(--dbo-bar-lg);
 }
 
-.dbo-age-label { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); text-align: right; }
-.dbo-age-bar { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* ป้ายอาชีพยาวกว่าช่วงอายุ ("นักเรียน/นักศึกษา" เทียบกับ "15–24 ปี")
+   จึงกว้างขึ้นและตัดบรรทัดได้ ไม่บีบรางแท่งจนเหลือไม่กี่พิกเซล */
+.dbo-panel--job { --dbo-hbar-label-w: 104px; }
 
-.dbo-age-fill {
+/* บรรทัดเดียวแล้วตัดด้วย … ชื่อเต็มดูได้จาก tooltip ของแถว (แถวมี data-dbo-tip อยู่แล้ว)
+   จำเป็นต่อความถูกต้องของ .dbo-hbars--scroll ที่คิดความสูง 5 แถวจากแถวสูง 20px
+   ถ้าปล่อยให้ป้ายตัดบรรทัดได้ ชื่ออาชีพยาว ๆ จาก master data จะดันแถวสูงขึ้น
+   แล้วกรอบ 144px จะเห็นไม่ครบ 5 แถวตามที่ตั้งใจ */
+.dbo-hbar-label {
+  min-width: 0;
+  font-size: var(--dbo-fs-small);
+  line-height: 1.35;
+  color: var(--dbo-text-chart);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dbo-hbar-track { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.dbo-hbar-fill {
   height: 20px;
   min-width: 3px;
   border-radius: var(--dbo-bar);
@@ -517,14 +546,56 @@
   transition: width var(--dbo-dur-bar) ease, opacity var(--dbo-dur);
 }
 
-.dbo-age-count { font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-num); color: var(--dbo-text-2); }
+.dbo-hbar-count { font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-num); color: var(--dbo-text-2); }
 
-/* ---- หลักสูตร: กราฟแท่งตั้ง + ตารางอันดับ ---- */
-/* flex-basis ต่ำกว่าความกว้างที่อยากได้จริง เพราะค่านี้คือเกณฑ์ตัดสินว่าจะตกบรรทัดหรือไม่
-   ตั้งไว้ 300+240 ทำให้ตารางตกบรรทัดทันทีที่แผงแคบกว่า 564px ซึ่งเกิดบ่อยกว่าที่คิด
-   ทั้งคู่มี flex-grow จึงยืดเต็มพื้นที่ที่มีอยู่ดี การลด basis ไม่ได้ทำให้แคบลงบนจอกว้าง */
-.dbo-courses-chart { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.dbo-courses-table { flex: 1 1 210px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+/* ---- แท่งแนวนอนแบบเลื่อนดูได้ ----
+   ใช้เมื่อรายการมีมากกว่าที่การ์ดสูงพอจะแสดง (เช่นอาชีพที่มาจาก master data)
+   ล็อกความสูงไว้เท่า 5 แถวพอดี = แท่ง 20px x 5 + ระยะ 11px x 4
+   การ์ดจึงสูงเท่ากับแผงช่วงอายุเสมอ ไม่ว่า master data จะมีกี่รายการ */
+.dbo-hbars--scroll {
+  --dbo-hbar-rows: 5;
+  /* แถวในโหมดเลื่อนสูงเท่าแท่งพอดี (ไม่มี padding บน-ล่าง ดูกฎถัดไป)
+     5 แถวจึงได้ 5x20 + 4x11 = 144px เท่ากับรายการช่วงอายุพอดี แผงสองอันจึงจบระดับเดียวกัน */
+  max-height: calc(20px * var(--dbo-hbar-rows) + 11px * (var(--dbo-hbar-rows) - 1));
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* เว้นที่ให้แถบเลื่อน ไม่ให้ทับตัวเลขจำนวนที่อยู่ริมขวา */
+  padding-right: 10px;
+
+  /* แถบเลื่อนบางสีเทาอ่อน — Firefox/Chrome รุ่นใหม่ใช้สองบรรทัดนี้ */
+  scrollbar-width: thin;
+  scrollbar-color: var(--dbo-scrollbar) transparent;
+}
+
+/* ถอด margin ติดลบของแถวออกในโหมดเลื่อน ไม่งั้นพื้น hover จะยื่นเกินกรอบแล้วถูกตัด
+   เว้น padding เฉพาะแนวนอน — ถ้าใส่บน-ล่างด้วย แถวจะสูง 26px ไม่ใช่ 20px
+   แล้วในกรอบ 144px จะเห็นแค่ 4 แถวแทน 5 */
+.dbo-hbars--scroll .dbo-hbar { margin: 0; padding: 0 4px; }
+
+/* Safari กับ Chrome รุ่นที่ยังไม่รองรับ scrollbar-color ต้องใช้ ::-webkit-scrollbar */
+.dbo-hbars--scroll::-webkit-scrollbar { width: 8px; }
+.dbo-hbars--scroll::-webkit-scrollbar-track { background: transparent; }
+
+.dbo-hbars--scroll::-webkit-scrollbar-thumb {
+  background: var(--dbo-scrollbar);
+  border-radius: 999px;
+}
+
+.dbo-hbars--scroll::-webkit-scrollbar-thumb:hover { background: var(--dbo-scrollbar-hover); }
+
+/* เลื่อนด้วยคีย์บอร์ดได้ (tabindex="0" ที่ตัวกล่อง) จึงต้องมีขอบโฟกัสให้เห็น */
+.dbo-hbars--scroll:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 148, 85, .22);
+  border-radius: var(--dbo-bar-lg);
+}
+
+/* ---- หลักสูตร: กราฟแท่งตั้ง ----
+   ตารางอันดับข้าง ๆ ถูกตัดออกตามที่ทีมสั่ง — ตัวเลขบนหัวแท่งกับ tooltip
+   ให้ข้อมูลเดียวกันอยู่แล้ว (ชื่อ · จำนวน · สัดส่วน) ตารางจึงเป็นการพูดซ้ำ */
+/* gap ต้องเท่ากับ .dbo-panel — หัวแผงของกราฟนี้อยู่ในกล่องนี้ ไม่ใช่ในกล่องแผง
+   ถ้าไม่เท่า กราฟแท่งจะเริ่มสูง/ต่ำกว่ารายการช่วงอายุที่ JS ใช้วัดความสูงให้ */
+.dbo-courses-chart { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 
 /* ความสูงถูก JS ตั้งให้เท่ากับความสูงจริงของรายการช่วงอายุ เส้นฐานสองกราฟจึงตรงกัน
    ค่าเริ่มต้นเป็นค่าที่ใกล้ของจริง กันเลย์เอาต์กระโดดก่อน JS วัดเสร็จ */
@@ -571,6 +642,10 @@
   gap: 14px;
 }
 
+/* ชื่อหลักสูตรยาวไม่เท่ากัน บางชื่อยาวถึง 4 บรรทัดซึ่งดันความสูงการ์ดทั้งใบ
+   ตัดที่ 2 บรรทัดแล้วต่อ … ชื่อเต็มดูได้จาก tooltip ตอนชี้ (ดูแอตทริบิวต์ใน Blade)
+   line-clamp ต้องมาพร้อม display: -webkit-box จึงทำงาน — เขียนทั้งชื่อมาตรฐาน
+   และแบบ -webkit- เพราะเบราว์เซอร์รองรับไม่เท่ากัน */
 .dbo-bar-label {
   min-width: 0;
   text-align: center;
@@ -578,36 +653,19 @@
   line-height: 1.35;
   color: var(--dbo-text-2);
   overflow-wrap: break-word;
-  text-wrap: pretty;
-}
 
-.dbo-rank-head,
-.dbo-rank-row {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 46px 44px;
-  gap: 7px;
-  align-items: center;
-}
-
-.dbo-rank-head { padding-bottom: 7px; border-bottom: 1px solid var(--dbo-divider); }
-.dbo-rank-head span { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
-.dbo-rank-list { display: flex; flex-direction: column; gap: 6px; }
-
-.dbo-rank-row { padding: 3px 5px; margin: -3px -5px; border-radius: var(--dbo-bar-lg); }
-.dbo-rank-no { font-size: var(--dbo-fs-small); color: var(--dbo-text-4); }
-
-.dbo-rank-name {
-  min-width: 0;
-  font-size: var(--dbo-fs-label);
-  color: var(--dbo-text);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* จองความสูงไว้ 2 บรรทัดเสมอ ป้ายสั้นกับป้ายยาวจึงเริ่มที่ระดับเดียวกัน
+     ไม่งั้นแถวป้ายจะเหลื่อมกันตามความยาวชื่อ */
+  min-height: calc(1.35em * 2);
+  cursor: default;
 }
 
-.dbo-rank-count { font-size: var(--dbo-fs-label); font-weight: var(--dbo-fw-num); color: var(--dbo-text); text-align: right; }
-.dbo-rank-pct { font-size: var(--dbo-fs-small); color: var(--dbo-text-chart); text-align: right; }
-.dbo-align-right { text-align: right; }
+/* สไตล์ของตารางอันดับหลักสูตร (.dbo-rank-*) ถูกถอดออกพร้อมกับตารางนั้น */
 
 /* ==========================================================================
    แถว 3 ซ้าย — โดนัทกลุ่มตัวอย่าง
@@ -729,8 +787,10 @@
 
 .dbo-compare { display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch; }
 
+/* กราฟกินพื้นที่มากกว่าแผงข้อสรุป (2 : 1) — ยิ่งกว้าง แกน X ยิ่งมีที่ให้ชื่อหัวข้อ
+   ชื่อจึงตัดบรรทัดน้อยลง และค่า "+xx.x จุด" ใต้ชื่อไปอยู่แถวเดียวกันทั้งห้าหัวข้อ */
 .dbo-trend {
-  flex: 1 1 320px;
+  flex: 2 1 340px;
   min-width: 0;
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
@@ -816,13 +876,25 @@
 
 .dbo-trend-axis-item { display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 0 4px; }
 
+/* จองความสูงไว้ 2 บรรทัดเสมอ ชื่อสั้นกับชื่อยาวจึงกินที่เท่ากัน
+   ค่า "+xx.x จุด" ที่อยู่บรรทัดล่างจึงเรียงเป็นแถวเดียวกันทั้งห้าหัวข้อ
+   ไม่ใช่สูงต่ำไม่เท่ากันตามความยาวชื่อ · ชื่อที่ยาวเกินสองบรรทัดตัดด้วย …
+   (อ่านเต็มได้จาก tooltip ของจุดบนกราฟ และจากตารางสำรองท้ายการ์ด) */
 .dbo-trend-axis-label {
+  width: 100%;
   text-align: center;
   font-size: var(--dbo-fs-micro);
   line-height: 1.35;
   color: var(--dbo-text);
   word-break: keep-all;
   text-wrap: balance;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: calc(1.35em * 2);
 }
 
 .dbo-trend-gain { font-size: var(--dbo-fs-micro); font-weight: var(--dbo-fw-num); color: var(--dbo-g0); }
@@ -951,14 +1023,18 @@
    ไม่มี breakpoint ตายตัวสำหรับการตกบรรทัด การ์ดจัดตัวเองจาก flex-basis
    ========================================================================== */
 
-@media (max-width: 1080px) {
+/* สี่แผงในการ์ดผู้เข้าร่วมเรียงบรรทัดเดียวไม่ได้ที่ความกว้างนี้
+   ถอดเส้นคั่นและระยะด้านข้างออก ไม่งั้นจะเห็นเส้นลอยกลางอากาศตอนแผงตกบรรทัด */
+@media (max-width: 1240px) {
   .dbo-panel--gender,
-  .dbo-panel--age {
+  .dbo-panel--age,
+  .dbo-panel--job {
     border-right: 0;
     padding-right: 0;
   }
 
-  .dbo-panel--age { padding-left: 0; }
+  .dbo-panel--age,
+  .dbo-panel--job,
   .dbo-panel--courses { padding-left: 0; }
 }
 
@@ -974,9 +1050,9 @@
 
   .dbo-total-side { padding-left: 0; border-left: 0; }
 
-  /* ป้ายช่วงอายุขึ้นบรรทัดบนของแท่ง ไม่บีบรางให้เหลือไม่กี่พิกเซล */
-  .dbo-age { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .dbo-age-label { text-align: left; }
+  /* ป้ายขึ้นบรรทัดบนของแท่ง ไม่บีบรางให้เหลือไม่กี่พิกเซล */
+  .dbo-hbar { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .dbo-hbar-label { text-align: left; }
 
   .dbo-round { grid-template-columns: minmax(0, 1fr); }
   .dbo-area { grid-template-columns: minmax(0, 1fr) 48px 46px; }

@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'menu' => \App\Http\Middleware\EnsureMenuAccess::class,
         ]);
+
+        /* คนที่ถูกระงับสิทธิ์ระหว่างที่เปิดหน้าจอค้างไว้ ต้องถูกดีดออกในคำขอถัดไป
+           ใส่ไว้ในกลุ่ม web เพื่อให้ครอบทุกหน้ารวมถึงหน้า static เดิม ไม่ใช่เฉพาะที่ประกาศเอง */
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureUserIsActive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /* ค่าเริ่มต้นของ Laravel จำกัดไว้เฉพาะ api/* ทำให้คำขอ fetch จากหน้าจอหลังบ้าน

@@ -2,16 +2,24 @@
 
 @section('title', 'หมวดหมู่กิจกรรม')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">หมวดหมู่กิจกรรม</span>
   </nav>
   <div class="page-header" id="fmt-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="fmt-counts"></div>
-    <div id="fmt-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="fmt-search"
+             placeholder="ค้นหาชื่อหมวดหมู่" aria-label="ค้นหาหมวดหมู่กิจกรรม">
+      <div id="fmt-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -21,17 +29,18 @@
           <tr>
             <th class="col-no">#</th>
             <th>ชื่อหมวดหมู่</th>
-            <th>ใช้กับกิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-count">จำนวนจัดกิจกรรม</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="fmt-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="fmt-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="fmt-pagination"></div>
 @endsection
 
 @section('modals')
@@ -206,10 +215,9 @@ window.TFC_SEED.activityFormats = @json($seedRows);
       .then(function () {
         window.TFC.closeModal('fmt-form-modal');
         window.TFC.showToast(editingId ? 'บันทึกหมวดหมู่แล้ว' : 'เพิ่มหมวดหมู่แล้ว', 'success');
-        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
-           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
            การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
-        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -265,6 +273,14 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
     return !bucket || !bucket.match || bucket.match(row);
   }
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(row) {
+    if (!row.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(row.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(row.updatedTime ? date + ' | ' + row.updatedTime : date);
+  }
+
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
@@ -280,8 +296,15 @@ window.TFC_SEED.activityFormats = @json($seedRows);
       });
 
       var keyword = (($('fmt-search') || {}).value || '').trim().toLowerCase();
+      var statusFilter = (($('fmt-filter-status') || {}).value || '');
+
+      /* ชิปด้านบนกับตัวกรองในแผงเป็นคนละชั้น ใช้ร่วมกันได้ ต้องผ่านทั้งคู่ */
       var filtered = rows.filter(function (f) {
-        return matchesStatus(f) && (!keyword || f.name.toLowerCase().indexOf(keyword) !== -1);
+        var statusLabel = f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน';
+
+        return matchesStatus(f) &&
+          (!keyword || f.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!statusFilter || statusLabel === statusFilter);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -295,9 +318,11 @@ window.TFC_SEED.activityFormats = @json($seedRows);
           '<td><span class="master-avatar-cell"><span class="master-avatar">' + iconSvg(f.icon) + '</span>' +
           '<button type="button" class="cell-title-link font-medium" data-action-key="fmt-edit-' + window.TFC.escapeHtml(f.id) + '" data-open-modal="fmt-form-modal">' +
           window.TFC.escapeHtml(f.name) + '</button></span></td>' +
-          '<td>' + Number(f.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
-          '<td><div class="cell-updated-at">' + (f.updatedAt ? window.TFC.formatThaiDate(f.updatedAt) : '-') + '</div></td>' +
+          '<td class="cell-count">' + Number(f.activityCount || 0).toLocaleString('th-TH') + '</td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: f.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าพื้นที่ดำเนินงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(f.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(f) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'fmt-edit-' + f.id, label: 'แก้ไข', icon: 'edit', modal: 'fmt-form-modal', perm: 'master_data' },
@@ -306,12 +331,21 @@ window.TFC_SEED.activityFormats = @json($seedRows);
           '</td></tr>';
       }).join('');
 
-      window.TFC.renderPagination('fmt-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_activityCount = filtered.reduce(function (acc, row) { return acc + Number(row.activityCount || 0); }, 0);
+      $('fmt-table-foot').innerHTML =
+        '<td colspan="2" id="fmt-foot-info"></td>' +
+        '<td class="cell-count">' + sum_activityCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="fmt-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'fmt-foot-info',
+        controlsTarget: 'fmt-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -320,13 +354,32 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('fmt-search-popover', {
-    search: { id: 'fmt-search', placeholder: 'ค้นหาชื่อหมวดหมู่' },
+    search: false,
+    icon: 'filter',
+    filters: [
+      { id: 'status', inputId: 'fmt-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
+        options: (mock.masterActiveStatuses || []).map(function (o) { return { label: o.value }; }) }
+    ],
     onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('fmt-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่

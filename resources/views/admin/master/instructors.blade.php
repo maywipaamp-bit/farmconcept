@@ -2,16 +2,24 @@
 
 @section('title', 'วิทยากร')
 
+{{-- ตารางยืดเต็มจอ แถบแบ่งหน้าจึงติดขอบล่างเสมอ ข้อมูลล้นก็เลื่อนเฉพาะส่วนแถว --}}
+@section('main-class', 'is-fill')
+
 @section('content')
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard.html">แดชบอร์ด</a> <span>/</span> <span class="is-current">วิทยากร</span>
   </nav>
   <div class="page-header" id="instructor-page-header"></div>
 
-  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ปุ่มค้นหาขวา --}}
+  {{-- โครงเดียวกับหน้ารายการกิจกรรม: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="instructor-counts"></div>
-    <div id="instructor-search-popover"></div>
+    <div class="list-filter-tools">
+      {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
+      <input type="search" class="input list-search-input" id="instructor-search"
+             placeholder="ค้นหาชื่อวิทยากร" aria-label="ค้นหาวิทยากร">
+      <div id="instructor-search-popover"></div>
+    </div>
   </div>
 
   <div class="table-wrapper mb-4">
@@ -23,17 +31,18 @@
             <th>ชื่อวิทยากร</th>
             <th>ความเชี่ยวชาญ</th>
             <th>หลักสูตรที่สอน</th>
-            <th>กิจกรรม</th>
-            <th>สถานะ</th>
-            <th class="col-updated">ปรับปรุงล่าสุด</th>
+            <th class="cell-count">จำนวนจัดกิจกรรม</th>
+            <th class="cell-center">สถานะ</th>
+            <th class="col-updated cell-center">ปรับปรุงล่าสุด</th>
             <th class="col-actions">จัดการ</th>
           </tr>
         </thead>
         <tbody id="instructor-table-body"></tbody>
+        {{-- แถบท้ายตารางเป็นแถวจริงในตาราง ผลรวมจึงตรงคอลัมน์ได้ --}}
+        <tfoot><tr id="instructor-table-foot"></tr></tfoot>
       </table>
     </div>
   </div>
-  <div id="instructor-pagination"></div>
 @endsection
 
 @section('modals')
@@ -404,10 +413,9 @@ window.TFC_INSTRUCTOR = {
       .then(function () {
         window.TFC.closeModal('instructor-create-modal');
         window.TFC.showToast(editingId ? 'บันทึกวิทยากรแล้ว' : 'เพิ่มวิทยากรแล้ว', 'success');
-        /* แถวที่เพิ่งเพิ่มอยู่ท้ายรายการ ต้องเด้งไปหน้าสุดท้ายไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
-           renderTable หดเลขหน้าที่เกินจำนวนหน้าจริงลงมาให้เองอยู่แล้ว จึงส่งค่าสูงสุดไปได้เลย
+        /* แถวที่เพิ่งเพิ่มอยู่บนสุดของหน้าแรก ต้องเด้งกลับหน้าแรกไม่งั้นบันทึกแล้วเหมือนไม่มีอะไรเกิดขึ้น
            การแก้ไขไม่แตะเลขหน้า ผู้ใช้จึงยังอยู่หน้าเดิมที่กำลังไล่ดูอยู่ */
-        if (!editingId) pageState.page = Number.MAX_SAFE_INTEGER;
+        if (!editingId) pageState.page = 1;
         return renderTable();
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
@@ -474,6 +482,14 @@ window.TFC_INSTRUCTOR = {
     var bucket = BUCKETS.filter(function (b) { return b.key === pageState.statusKey; })[0];
     return !bucket || !bucket.match || bucket.match(row);
   }
+  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
+  function updatedStamp(row) {
+    if (!row.updatedAt) return '-';
+
+    var date = window.TFC.formatThaiDate(row.updatedAt).replace(/\d{2}(\d{2})$/, '$1');
+    return window.TFC.escapeHtml(row.updatedTime ? date + ' | ' + row.updatedTime : date);
+  }
+
   function renderTable() {
     return svc.list().then(function (all) {
       rows = all;
@@ -489,8 +505,15 @@ window.TFC_INSTRUCTOR = {
       });
 
       var keyword = (($('instructor-search') || {}).value || '').trim().toLowerCase();
+      var statusFilter = (($('instructor-filter-status') || {}).value || '');
+
+      /* ชิปด้านบนกับตัวกรองในแผงเป็นคนละชั้น ใช้ร่วมกันได้ ต้องผ่านทั้งคู่ */
       var filtered = rows.filter(function (r) {
-        return matchesStatus(r) && (!keyword || r.name.toLowerCase().indexOf(keyword) !== -1);
+        var statusLabel = r.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน';
+
+        return matchesStatus(r) &&
+          (!keyword || r.name.toLowerCase().indexOf(keyword) !== -1) &&
+          (!statusFilter || statusLabel === statusFilter);
       });
 
       var pageCount = Math.max(1, Math.ceil(filtered.length / pageState.pageSize));
@@ -515,9 +538,11 @@ window.TFC_INSTRUCTOR = {
           '<div class="cell-updated-at">' + window.TFC.escapeHtml(r.phone || '-') + '</div></span></span></td>' +
           '<td>' + expertise + '</td>' +
           '<td>' + courses + '</td>' +
-          '<td>' + Number(r.activityCount || 0).toLocaleString('th-TH') + '</td>' +
-          '<td class="nowrap">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: r.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
-          '<td><div class="cell-updated-at">' + (r.updatedAt ? window.TFC.formatThaiDate(r.updatedAt) : '-') + '</div></td>' +
+          '<td class="cell-count">' + Number(r.activityCount || 0).toLocaleString('th-TH') + '</td>' +
+          '<td class="nowrap cell-center">' + window.TFC.statusTextHTML({ options: mock.masterActiveStatuses, value: r.active === false ? 'ไม่ใช้งาน' : 'ใช้งาน' }) + '</td>' +
+          /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าพื้นที่ดำเนินงาน */
+          '<td class="cell-center"><div>' + window.TFC.escapeHtml(r.updatedBy || '-') + '</div>' +
+          '<div class="caption text-secondary nowrap">' + updatedStamp(r) + '</div></td>' +
           '<td class="table-row-actions">' +
           window.TFC.actionMenuTrigger([
             { key: 'instr-edit-' + r.id, label: 'แก้ไข', icon: 'edit', modal: 'instructor-create-modal', perm: 'master_data' },
@@ -526,12 +551,21 @@ window.TFC_INSTRUCTOR = {
           '</td></tr>';
       }).join('');
 
-      window.TFC.renderPagination('instructor-pagination', {
+      /* ผลรวมคิดจากรายการที่ผ่านตัวกรองทั้งหมด ไม่ใช่เฉพาะแถวในหน้านี้
+         ไม่งั้นตัวเลขจะเปลี่ยนไปมาทุกครั้งที่พลิกหน้า ทั้งที่ข้อมูลชุดเดิม */
+      var sum_activityCount = filtered.reduce(function (acc, row) { return acc + Number(row.activityCount || 0); }, 0);
+      $('instructor-table-foot').innerHTML =
+        '<td colspan="4" id="instructor-foot-info"></td>' +
+        '<td class="cell-count">' + sum_activityCount.toLocaleString('th-TH') + '</td>' +
+        '<td colspan="3" id="instructor-foot-controls"></td>';
+
+      window.TFC.renderPagination(null, {
         page: pageState.page,
         pageSize: pageState.pageSize,
         total: filtered.length,
         pageSizeOptions: window.TFC.pageSizeOptions(pageState.pageSize),
-        footer: true,
+        infoTarget: 'instructor-foot-info',
+        controlsTarget: 'instructor-foot-controls',
         onChange: function (p) { pageState.page = p; renderTable(); },
         onPageSizeChange: function (size) { pageState.pageSize = size; pageState.page = 1; renderTable(); }
       });
@@ -540,13 +574,32 @@ window.TFC_INSTRUCTOR = {
     });
   }
 
+  /* ช่องค้นหาย้ายออกมาอยู่นอกแผงแล้ว ปุ่มนี้จึงเหลือแค่ตัวกรอง และเปลี่ยนไอคอนเป็นกรวยให้ตรงกับหน้าที่ */
   window.TFC.searchPopover('instructor-search-popover', {
-    search: { id: 'instructor-search', placeholder: 'ค้นหาชื่อวิทยากร' },
+    search: false,
+    icon: 'filter',
+    filters: [
+      { id: 'status', inputId: 'instructor-filter-status', label: 'สถานะ', placeholder: 'สถานะทั้งหมด',
+        options: (mock.masterActiveStatuses || []).map(function (o) { return { label: o.value }; }) }
+    ],
     onSearch: function (values, done) {
       pageState.page = 1;
       renderTable();
       done();
     }
+  });
+
+  /* ค้นหาแบบพิมพ์แล้วกรองเลย — หน่วง 200ms กันวาดตารางใหม่ทุกตัวอักษร
+     ปุ่มกากบาทของ input[type=search] ยิง 'search' ไม่ใช่ 'input' จึงต้องดักทั้งสองอีเวนต์ */
+  var searchTimer = null;
+  ['input', 'search'].forEach(function (evt) {
+    $('instructor-search').addEventListener(evt, function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        pageState.page = 1;
+        renderTable();
+      }, 200);
+    });
   });
 
   /* ปุ่มส่งออกถูกเอาออกจากแถบเครื่องมือแล้ว ผูก event เฉพาะเมื่อยังมีปุ่มอยู่
