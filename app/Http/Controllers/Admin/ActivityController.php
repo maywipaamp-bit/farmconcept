@@ -408,15 +408,9 @@ class ActivityController extends Controller
         return response()->json([
             'message' => 'อัปโหลดรูปปกแล้ว',
             'path' => $path,
-<<<<<<< Updated upstream
-            'url' => Storage::disk('public')->url($path),
+            'url' => route('admin.activities.cover.show', $activity->code),
             'label' => $file->getClientOriginalName()
                 .' · '.round($file->getSize() / 1048576, 1).'MB',
-=======
-            'url' => route('admin.activities.cover.show', $activity->code),
-            'label' => $request->file('cover')->getClientOriginalName()
-                .' · '.round($request->file('cover')->getSize() / 1048576, 1).'MB',
->>>>>>> Stashed changes
         ]);
     }
 
