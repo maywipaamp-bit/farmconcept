@@ -898,9 +898,13 @@ window.TFC_MOCK = {
 window.TFC = window.TFC || {};
 
 window.TFC.escapeHtml = function (str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : str;
-  return div.innerHTML;
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
 
 /* Permission check against the current mock user's role — used by the Action Menu to hide items the

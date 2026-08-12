@@ -385,7 +385,22 @@
 
   function idOf(group, name) {
     if (!name) return null;
-    var id = (lookup[group] || {})[name];
+    var groupMap = lookup[group] || {};
+    var id = groupMap[name];
+    if (!id) {
+      var cleanName = String(name).trim();
+      id = groupMap[cleanName];
+
+      if (!id) {
+        var keys = Object.keys(groupMap);
+        for (var i = 0; i < keys.length; i++) {
+          if (keys[i].indexOf(cleanName) === 0 || cleanName.indexOf(keys[i]) === 0) {
+            id = groupMap[keys[i]];
+            break;
+          }
+        }
+      }
+    }
     if (!id) missing.push(group + ': ' + name);
     return id || null;
   }
