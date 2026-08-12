@@ -50,8 +50,11 @@ class UserController extends Controller
 
             $avatarPath = null;
             if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-                $avatarPath = Storage::url($avatarPath);
+                $file = $request->file('avatar');
+                if ($file->isValid()) {
+                    $avatarPath = $file->store('avatars', 'public');
+                    $avatarPath = Storage::url($avatarPath);
+                }
             }
 
             $user = User::create([
@@ -96,8 +99,11 @@ class UserController extends Controller
             }
 
             if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-                $updateData['avatar_path'] = Storage::url($avatarPath);
+                $file = $request->file('avatar');
+                if ($file->isValid()) {
+                    $avatarPath = $file->store('avatars', 'public');
+                    $updateData['avatar_path'] = Storage::url($avatarPath);
+                }
             }
 
             $user->update($updateData);
