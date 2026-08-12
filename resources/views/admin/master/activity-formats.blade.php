@@ -45,7 +45,7 @@
 
 @section('modals')
 <div class="modal-overlay" id="fmt-form-modal">
-  <div class="modal">
+  <div class="modal activity-format-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="fmt-form-title">เพิ่มหมวดหมู่กิจกรรม</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -54,24 +54,28 @@
     </div>
     <form id="fmt-form">
       <div class="modal-body">
-        <div class="form-row mb-3">
-          <div class="form-group mb-0">
-            <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
-            <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
-          </div>
-          <div class="form-group mb-0">
-            <label class="form-label" for="fmt-icon">ไอคอนหมวดหมู่<span class="form-required">*</span></label>
-            <div class="icon-select-control">
-              <span class="icon-select-preview" id="fmt-icon-preview" aria-hidden="true"></span>
-              <select class="select" id="fmt-icon" data-plain-select required aria-label="ไอคอนหมวดหมู่"></select>
+        <div class="activity-format-fields">
+          <div class="activity-format-main-fields">
+            <div class="form-group mb-0">
+              <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
+              <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label" for="fmt-icon-trigger">ไอคอนหมวดหมู่<span class="form-required">*</span></label>
+              <input type="hidden" id="fmt-icon">
+              <button type="button" class="input activity-icon-trigger" id="fmt-icon-trigger"
+                      aria-haspopup="listbox" aria-expanded="false">
+                <span class="activity-icon-trigger-value" id="fmt-icon-trigger-value"></span>
+                <svg class="activity-icon-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
             </div>
           </div>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="fmt-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="fmt-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="fmt-active-label">ใช้งาน</span>
+          <div class="form-group mb-0">
+            <label class="form-label" for="fmt-active">สถานะ<span class="form-required">*</span></label>
+            <div class="flex items-center gap-2" style="height:42px;">
+              <label class="switch"><input type="checkbox" id="fmt-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="fmt-active-label">ใช้งาน</span>
+            </div>
           </div>
         </div>
       </div>
@@ -141,21 +145,76 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + found.path + '</svg>';
   }
 
-  var iconSelect = $('fmt-icon');
-  var iconPreview = $('fmt-icon-preview');
-  iconSelect.innerHTML = iconList.map(function (ic) {
-    return '<option value="' + window.TFC.escapeHtml(ic.value) + '">' +
-      window.TFC.escapeHtml(ic.label) + '</option>';
+  var iconInput = $('fmt-icon');
+  var iconTrigger = $('fmt-icon-trigger');
+  var iconTriggerValue = $('fmt-icon-trigger-value');
+  var iconPanel = document.createElement('div');
+  iconPanel.className = 'activity-icon-panel';
+  iconPanel.id = 'fmt-icon-panel';
+  iconPanel.setAttribute('role', 'listbox');
+  iconPanel.hidden = true;
+  iconPanel.innerHTML = iconList.map(function (ic) {
+    return '<button type="button" class="activity-icon-option" role="option" aria-selected="false"' +
+      ' data-icon="' + window.TFC.escapeHtml(ic.value) + '">' +
+      '<span class="activity-icon-option-image">' + iconSvg(ic.value) + '</span>' +
+      '<span>' + window.TFC.escapeHtml(ic.label) + '</span></button>';
   }).join('');
+  document.body.appendChild(iconPanel);
+
+  function selectedIconData(value) {
+    return iconList.filter(function (ic) { return ic.value === value; })[0] || iconList[0];
+  }
 
   function setSelectedIcon(value) {
     selectedIcon = value || defaultIcon;
-    iconSelect.value = selectedIcon;
-    iconPreview.innerHTML = iconSvg(selectedIcon);
+    iconInput.value = selectedIcon;
+    var selected = selectedIconData(selectedIcon);
+    iconTriggerValue.innerHTML = selected
+      ? '<span class="activity-icon-option-image">' + iconSvg(selectedIcon) + '</span><span>' + window.TFC.escapeHtml(selected.label) + '</span>'
+      : '';
+    Array.prototype.forEach.call(iconPanel.querySelectorAll('.activity-icon-option'), function (option) {
+      var active = option.getAttribute('data-icon') === selectedIcon;
+      option.classList.toggle('is-active', active);
+      option.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
   }
 
-  iconSelect.addEventListener('change', function () {
-    setSelectedIcon(this.value);
+  function closeIconPanel() {
+    iconPanel.hidden = true;
+    iconTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openIconPanel() {
+    var rect = iconTrigger.getBoundingClientRect();
+    iconPanel.style.left = Math.round(rect.left) + 'px';
+    iconPanel.style.top = Math.round(rect.bottom + 6) + 'px';
+    iconPanel.style.width = Math.max(296, Math.round(rect.width)) + 'px';
+    iconPanel.hidden = false;
+    iconTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  iconTrigger.addEventListener('click', function () {
+    if (iconPanel.hidden) openIconPanel(); else closeIconPanel();
+  });
+
+  iconPanel.addEventListener('click', function (e) {
+    var option = e.target.closest('.activity-icon-option');
+    if (!option) return;
+    setSelectedIcon(option.getAttribute('data-icon'));
+    closeIconPanel();
+    iconTrigger.focus();
+  });
+
+  document.addEventListener('click', function (e) {
+    if (iconPanel.hidden || iconTrigger.contains(e.target) || iconPanel.contains(e.target)) return;
+    closeIconPanel();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !iconPanel.hidden) {
+      closeIconPanel();
+      iconTrigger.focus();
+    }
   });
   setSelectedIcon(defaultIcon);
 

@@ -45,7 +45,7 @@
 
 @section('modals')
 <div class="modal-overlay" id="target-group-create-modal">
-  <div class="modal modal-md">
+  <div class="modal target-group-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="tg-form-title">เพิ่มกลุ่มเป้าหมาย</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -57,18 +57,20 @@
     <form id="tg-form">
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="tg-name">ชื่อกลุ่มเป้าหมาย<span class="form-required">*</span></label>
+          <label class="form-label" for="tg-name">เป้าหมาย<span class="form-required">*</span></label>
           <input class="input" id="tg-name" data-validate required maxlength="100" autocomplete="off">
         </div>
-        <div class="form-group">
-          <label class="form-label" for="tg-target-count">จำนวนเป้าหมาย (คน)<span class="form-required">*</span></label>
-          <input class="input" type="number" min="0" id="tg-target-count" data-validate required>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="tg-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="tg-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="tg-active-label">ใช้งาน</span>
+        <div class="form-row target-group-meta-row mb-0">
+          <div class="form-group mb-0">
+            <label class="form-label" for="tg-target-count">จำนวนเป้าหมาย (คน)<span class="form-required">*</span></label>
+            <input class="input" type="number" min="0" id="tg-target-count" data-validate required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="tg-active">สถานะ<span class="form-required">*</span></label>
+            <div class="flex items-center gap-2" style="height:42px;">
+              <label class="switch"><input type="checkbox" id="tg-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="tg-active-label">ใช้งาน</span>
+            </div>
           </div>
         </div>
       </div>

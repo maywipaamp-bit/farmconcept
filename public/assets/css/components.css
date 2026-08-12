@@ -4954,36 +4954,113 @@ dd { margin: 0; }
 /* ต้องประกาศคืนหลัง .modal เพราะ specificity เท่ากัน (0,1,0) และไฟล์นี้โหลดทีหลัง
    ถ้าไม่ประกาศ กล่องเล็ก/กลางจะถูก .modal ด้านบนขยายเป็น 960px ทั้งหมด */
 .modal.modal-sm { max-width: 400px; }
-.modal.modal-md { max-width: 520px; }
 .modal.modal-lg { max-width: 720px; }
 
-.icon-select-control {
+.modal.target-group-form-modal { max-width: 650px; }
+.modal-body .form-row.target-group-meta-row {
+  grid-template-columns: minmax(0, 1fr) 120px;
+  column-gap: 56px;
+}
+.modal.program-form-modal { max-width: 600px; }
+.program-fields-grid { grid-template-columns: minmax(0, 1fr) 64px; }
+.program-active-label { display: none; }
+
+.dynamic-row-list.program-course-grid .dynamic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.dynamic-row-list.program-course-grid .dynamic-row-order {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  pointer-events: none;
+}
+
+.dynamic-row-list.program-course-grid .dynamic-row .input { padding-left: 32px; }
+.dynamic-row-list.program-course-grid .dynamic-row-remove { justify-self: start; align-self: center; }
+.dynamic-row-add.program-course-add { margin-left: calc(100% - 64px); }
+
+.modal.activity-format-form-modal { max-width: 520px; }
+.activity-format-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  column-gap: 44px;
+  align-items: start;
+}
+.activity-format-main-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.activity-icon-trigger {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  justify-content: space-between;
+  gap: var(--space-2);
+  cursor: pointer;
+  text-align: left;
+  background: var(--color-surface);
 }
 
-.icon-select-preview {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
+.activity-icon-trigger-value,
+.activity-icon-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.activity-icon-chevron { flex: none; color: var(--color-text-secondary); }
+
+.activity-icon-panel {
+  position: fixed;
+  z-index: calc(var(--z-modal) + 20);
+  max-height: 280px;
+  padding: var(--space-2);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-lg);
+}
+
+.activity-icon-panel[hidden] { display: none; }
+
+.activity-icon-option {
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.activity-icon-option:hover,
+.activity-icon-option.is-active {
   color: var(--color-primary-dark);
   background: var(--color-primary-soft);
-  border: 1px solid var(--color-primary-soft-border);
-  border-radius: var(--radius-md);
+  border-color: var(--color-primary-soft-border);
 }
 
-.icon-select-preview svg {
+.activity-icon-option-image {
   width: 22px;
   height: 22px;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
 }
 
-.icon-select-control .select {
-  min-width: 0;
-  flex: 1 1 auto;
-}
+.activity-icon-option-image svg { width: 20px; height: 20px; }
 
 /* ==========================================================================
    กล่องยืนยัน (ลบ / ออกจากระบบ) — เนื้อหาอยู่กึ่งกลาง ไอคอนวงกลมสีตามสถานะ

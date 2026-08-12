@@ -45,7 +45,7 @@
 
 @section('modals')
 <div class="modal-overlay" id="program-create-modal">
-  <div class="modal modal-lg">
+  <div class="modal program-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="program-form-title">เพิ่มโปรแกรมการเรียนรู้</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -54,8 +54,8 @@
     </div>
     <form id="program-form">
       <div class="modal-body">
-        <div class="form-row-3 mb-3">
-          <div class="form-group form-col-span-2 mb-0">
+        <div class="form-row program-fields-grid mb-3">
+          <div class="form-group mb-0">
             <label class="form-label" for="program-name">ชื่อโปรแกรมการเรียนรู้<span class="form-required">*</span></label>
             <input class="input" id="program-name" data-validate required maxlength="150" autocomplete="off">
           </div>
@@ -63,15 +63,15 @@
             <label class="form-label" for="program-active">สถานะ<span class="form-required">*</span></label>
             <div class="flex items-center gap-2" style="height:38px;">
               <label class="switch"><input type="checkbox" id="program-active" checked><span class="switch-track"></span></label>
-              <span class="small text-secondary" id="program-active-label">ใช้งาน</span>
+              <span class="small text-secondary program-active-label" id="program-active-label">ใช้งาน</span>
             </div>
           </div>
         </div>
-        {{-- is-cols-3: ช่องหลักสูตรกว้างเท่าชื่อโปรแกรมด้านบน ปุ่มลบ/เพิ่มอยู่ตรงคอลัมน์เดียวกับสถานะ --}}
+        {{-- ช่องหลักสูตรกว้างเท่าชื่อโปรแกรมด้านบน ปุ่มลบ/เพิ่มอยู่ตรงคอลัมน์เดียวกับสถานะ --}}
         <div class="form-group mb-0">
           <label class="form-label">หลักสูตร</label>
-          <div class="dynamic-row-list is-cols-3" id="program-courses-list"></div>
-          <button type="button" class="dynamic-row-add is-cols-3" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
+          <div class="dynamic-row-list program-course-grid" id="program-courses-list"></div>
+          <button type="button" class="dynamic-row-add program-course-add" id="program-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
           <div class="form-helper">หลักสูตรที่มีกิจกรรมใช้อยู่จะไม่ถูกลบ แม้เอาออกจากรายการนี้</div>
