@@ -58,7 +58,7 @@ class UserController extends Controller
                 'code' => $code,
                 'name' => $validated['name'],
                 'username' => $validated['username'],
-                'email' => $validated['email'] ?? null,
+                'email' => !empty($validated['email']) ? $validated['email'] : ($validated['username'] . '@farmconcept.local'),
                 'phone' => $validated['phone'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'status' => $validated['status'],
@@ -86,7 +86,7 @@ class UserController extends Controller
             $updateData = [
                 'name' => $validated['name'],
                 'username' => $validated['username'],
-                'email' => $validated['email'] ?? null,
+                'email' => !empty($validated['email']) ? $validated['email'] : ($user->email ?? ($validated['username'] . '@farmconcept.local')),
                 'phone' => $validated['phone'] ?? null,
                 'status' => $validated['status'],
             ];
