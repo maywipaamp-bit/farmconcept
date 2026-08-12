@@ -61,6 +61,14 @@
 (function () {
   var mock = window.TFC_MOCK;
 
+  try {
+    var savedMessage = sessionStorage.getItem('tfc-activity-success');
+    if (savedMessage) {
+      sessionStorage.removeItem('tfc-activity-success');
+      window.TFC.showToast(savedMessage, 'success');
+    }
+  } catch (e) { /* หน้า Index ยังทำงานได้แม้เบราว์เซอร์ปิด sessionStorage */ }
+
   /* ---------------------------------------------------------------------
      สะพานชั่วคราวระหว่างย้ายหน้าจอ
      ตรรกะการกรอง/เรียง/แบ่งหน้าด้านล่างคงของเดิมทุกบรรทัด เปลี่ยนเฉพาะ "แหล่งข้อมูล"

@@ -116,6 +116,7 @@
     parentEvent: '',
     place: PLACE_EMPTY,
     cover: false,
+    coverLabel: '', coverUrl: '',
     courses: [], hosts: [],
     slots: [{ id: 1, date: '', start: '', end: '', cap: '' }],
     nextSlotId: 2,
@@ -168,7 +169,12 @@
     CATALOG.forEach(function (p) {
       p.courses.forEach(function (c) {
         if (state.courses.indexOf(c.name) < 0) return;
-        c.teachers.forEach(function (t) { if (out.indexOf(t) < 0) out.push(t); });
+        c.teachers.forEach(function (teacher) {
+          /* Backend ส่ง { id, name } เพื่อใช้รหัสจริงตอนบันทึก
+             ยังรองรับข้อมูล static เดิมที่เป็นชื่อข้อความอย่างเดียว */
+          var name = teacher && typeof teacher === 'object' ? teacher.name : teacher;
+          if (name && out.indexOf(name) < 0) out.push(name);
+        });
       });
     });
     return out;
@@ -577,9 +583,16 @@
     var totalCap = state.slots.reduce(function (n, s) { return n + (parseInt(s.cap, 10) || 0); }, 0);
     var hasFee = state.fee === FEES[1];
 
-    $('ac-preview-cover').classList.toggle('is-filled', state.cover);
-    $('ac-preview-cover').querySelector('.ac-preview-cover-text').textContent =
-      state.cover ? 'cover-ปลูกผักปลอดสาร.jpg' : 'ยังไม่ได้อัปโหลดรูปปก';
+    var previewCover = $('ac-preview-cover');
+    var previewImage = $('ac-preview-cover-image');
+    var previewText = previewCover.querySelector('.ac-preview-cover-text');
+    previewCover.classList.toggle('is-filled', state.cover);
+    previewImage.hidden = !state.coverUrl;
+    previewImage.src = state.coverUrl || '';
+    previewText.hidden = !!state.coverUrl;
+    previewText.textContent = state.cover
+      ? (state.coverLabel || 'มีรูปภาพปกแล้ว')
+      : 'ยังไม่ได้อัปโหลดรูปปก';
 
     /* ตัวอย่างแสดงเฉพาะหมวดหมู่ — "กิจกรรม/อีเว้นท์" เป็นข้อมูลสำหรับจัดการภายใน
        ผู้เข้าร่วมไม่ได้ใช้แยกแยะอะไร ใส่ไปก็เบียดพื้นที่ป้ายที่มีความหมายจริง */
@@ -680,7 +693,11 @@
 
   function renderCover() {
     var zone = $('ac-cover');
+    var image = $('ac-cover-preview-image');
     zone.classList.toggle('is-filled', state.cover);
+    zone.classList.toggle('has-image', !!state.coverUrl);
+    image.hidden = !state.coverUrl;
+    image.src = state.coverUrl || '';
     /* ชื่อไฟล์จริงมาจาก state.coverLabel ที่หน้าจอตั้งให้หลังอัปโหลดสำเร็จ
        ข้อความตัวอย่างใช้เฉพาะหน้า static เดิมที่ยังอัปโหลดจริงไม่ได้ */
     $('ac-cover-headline').textContent = state.cover
@@ -974,10 +991,13 @@
     state.dirty = false;
     state.savedAt = new Date();
     var el = $('ac-autosave');
-    el.hidden = false;
-    $('ac-autosave-text').textContent = 'บันทึกร่างล่าสุด ' +
-      String(state.savedAt.getHours()).padStart(2, '0') + ':' +
-      String(state.savedAt.getMinutes()).padStart(2, '0') + ' น.';
+    var text = $('ac-autosave-text');
+    if (el) el.hidden = false;
+    if (text) {
+      text.textContent = 'บันทึกร่างล่าสุด ' +
+        String(state.savedAt.getHours()).padStart(2, '0') + ':' +
+        String(state.savedAt.getMinutes()).padStart(2, '0') + ' น.';
+    }
     if (manual && window.TFC.showToast) window.TFC.showToast('บันทึกฉบับร่างเรียบร้อย', 'success');
   }
 
@@ -1019,6 +1039,8 @@
     if (!state.cats.length && isKnownCat(a.format)) state.cats = [a.format];
     state.place = PLACES.indexOf(a.area) > -1 ? a.area : PLACE_EMPTY;
     state.cover = !!a.coverImage;
+    state.coverUrl = a.coverImageUrl || '';
+    state.coverLabel = a.coverImage ? String(a.coverImage).split('/').pop() : '';
     state.targets = (a.targetGroups || []).filter(function (t) { return TARGETS.indexOf(t) > -1; });
     state.hosts = (a.instructorList || []).slice();
     state.courses = a.course ? [a.course] : [];
@@ -1134,9 +1156,10 @@
 
     /* ตั้งรูปปกจากภายนอกหลังอัปโหลดสำเร็จ — label เป็นข้อความที่แสดงในกล่อง
        ส่งค่าว่างหรือ null = ไม่มีรูปปก */
-    setCover: function (label) {
+    setCover: function (label, url) {
       state.cover = !!label;
       state.coverLabel = label || '';
+      state.coverUrl = url || '';
       renderCover();
       sync();
     },

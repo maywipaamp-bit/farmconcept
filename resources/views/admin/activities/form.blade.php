@@ -115,6 +115,7 @@
               <div class="ac-field ac-field-half">
                 <label class="form-label">รูปภาพปก<span class="form-required">*</span></label>
                 <div class="ac-cover is-stacked" id="ac-cover">
+                  <img class="ac-cover-preview-image" id="ac-cover-preview-image" alt="" aria-hidden="true" hidden>
                   <span class="ac-cover-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 17l5-5 4 4 3-2 4 4"/></svg>
                   </span>
@@ -287,6 +288,7 @@
 
             <div class="ac-preview">
               <div class="ac-preview-cover" id="ac-preview-cover">
+                <img class="ac-preview-cover-image" id="ac-preview-cover-image" alt="รูปภาพปกที่ผู้เข้าร่วมเห็น" hidden>
                 <span class="ac-preview-cover-text">ยังไม่ได้อัปโหลดรูปปก</span>
               </div>
               <div class="ac-preview-body">
@@ -392,6 +394,26 @@
     return (names || []).map(function (n) { return idOf(group, n); }).filter(Boolean);
   }
 
+  /* วิทยากรที่แสดงในฟอร์มมาจากหลักสูตรและมี id ติดมาด้วยแล้ว
+     ใช้ id นี้ก่อนเพื่อไม่ให้การบันทึกขึ้นกับการเทียบชื่อ ส่วนข้อมูลเก่ายังถอยไปใช้ lookup เดิมได้ */
+  function instructorIds(names) {
+    var idsByName = {};
+    ((window.TFC_MOCK || {}).programCatalog || []).forEach(function (program) {
+      (program.courses || []).forEach(function (course) {
+        (course.teachers || []).forEach(function (teacher) {
+          if (teacher && typeof teacher === 'object' && teacher.id && teacher.name) {
+            idsByName[teacher.name] = teacher.id;
+          }
+        });
+      });
+    });
+
+    return (names || []).map(function (name) {
+      if (idsByName[name]) return idsByName[name];
+      return idOf('instructors', name);
+    }).filter(Boolean);
+  }
+
   /* ประกบช่องวันกับช่องเวลาของช่วงเวลาหนึ่งกลับเป็นค่าเดียว
      side = 'from' (ต้นช่วง) หรือ 'to' (ปลายช่วง) */
   function joinAt(win, side) {
@@ -423,7 +445,7 @@
 
       area_ids: state.place && state.place !== PLACE_EMPTY ? idsOf('areas', [state.place]) : [],
       target_group_ids: idsOf('targetGroups', state.targets),
-      instructor_ids: idsOf('instructors', state.hosts),
+      instructor_ids: instructorIds(state.hosts),
 
       has_fee: state.fee !== 'ไม่มีค่าใช้จ่าย',
       fee: state.feeAmount ? Number(state.feeAmount) : 0,
@@ -481,6 +503,7 @@
      และเช็กลิสต์ "รูปภาพปก" ติ๊กได้ ไม่งั้นปุ่มเผยแพร่จะกดไม่ได้ตลอดกาล */
 @if ($isCreate)
   var pendingCover = null;
+  var pendingCoverUrl = '';
 @endif
 
   form.onPickCover = function () { picker.click(); };
@@ -499,11 +522,18 @@
 
 @if ($isCreate)
     pendingCover = file;
+    if (pendingCoverUrl) URL.revokeObjectURL(pendingCoverUrl);
+    pendingCoverUrl = URL.createObjectURL(file);
     picker.value = '';
-    form.setCover(file.name + ' · จะอัปโหลดตอนบันทึก');
+    form.setCover(file.name + ' · จะอัปโหลดตอนบันทึก', pendingCoverUrl);
     window.TFC.showToast('เลือกรูปปกแล้ว จะอัปโหลดให้ตอนกดบันทึกครั้งแรก', 'info');
     return;
 @endif
+
+    var previousCoverLabel = form.state.coverLabel;
+    var previousCoverUrl = form.state.coverUrl;
+    var selectedCoverUrl = URL.createObjectURL(file);
+    form.setCover(file.name, selectedCoverUrl);
 
     var data = new FormData();
     data.append('cover', file);
@@ -520,10 +550,15 @@
     })
       .then(readJson)
       .then(function (res) {
-        form.setCover(res.label);
+        URL.revokeObjectURL(selectedCoverUrl);
+        form.setCover(res.label, res.url);
         window.TFC.showToast(res.message, 'success');
       })
-      .catch(function (err) { window.TFC.showToast(err.message, 'danger'); })
+      .catch(function (err) {
+        URL.revokeObjectURL(selectedCoverUrl);
+        form.setCover(previousCoverLabel, previousCoverUrl);
+        window.TFC.showToast(err.message, 'danger');
+      })
       /* ล้างค่าไว้เสมอ ไม่งั้นเลือกไฟล์เดิมซ้ำจะไม่เกิด event change */
       .finally(function () { picker.value = ''; });
   });
@@ -532,7 +567,9 @@
 @if ($isCreate)
     /* ยังไม่เคยขึ้นเซิร์ฟเวอร์ ลบทิ้งในหน้าจอก็พอ */
     pendingCover = null;
-    form.setCover('');
+    if (pendingCoverUrl) URL.revokeObjectURL(pendingCoverUrl);
+    pendingCoverUrl = '';
+    form.setCover('', '');
     return;
 @endif
 
@@ -545,7 +582,7 @@
     })
       .then(readJson)
       .then(function (res) {
-        form.setCover('');
+        form.setCover('', '');
         window.TFC.showToast(res.message, 'success');
       })
       .catch(function (err) { window.TFC.showToast(err.message, 'danger'); });
@@ -617,18 +654,18 @@
       })
       .then(function (data) {
         form.markSaved();
-        window.TFC.showToast(data.message || 'บันทึกแล้ว', 'success');
         Object.assign(current, body);
 
         /* สร้างเสร็จแล้วต้องย้ายไปหน้าแก้ไขของรหัสที่เพิ่งได้ ไม่งั้นกดบันทึกซ้ำ
            จะสร้างกิจกรรมใหม่อีกใบ — ส่งรูปที่พักไว้ตามไปก่อนแล้วค่อยย้ายหน้า */
         if (!data.redirect) return;
 
-        return uploadPendingCover(data.code)
-          .catch(function (err) {
-            window.TFC.showToast('บันทึกแล้ว แต่อัปโหลดรูปปกไม่สำเร็จ: ' + err.message, 'danger');
-          })
-          .then(function () { window.location.assign(data.redirect); });
+        return uploadPendingCover(data.code).then(function () {
+          try {
+            sessionStorage.setItem('tfc-activity-success', 'บันทึกสำเร็จ');
+          } catch (e) { /* ถ้าเบราว์เซอร์ปิด sessionStorage ยังกลับหน้ารายการได้ตามปกติ */ }
+          window.location.assign(data.redirect);
+        });
       })
       .catch(function (err) {
         window.TFC.showToast(err.message, 'danger');

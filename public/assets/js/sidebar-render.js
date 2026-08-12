@@ -44,10 +44,18 @@
     return pathOf(href).path === currentPath;
   }
 
+  function isCurrentPattern(pattern) {
+    if (!pattern) return false;
+    try { return new RegExp(pattern).test(currentPath); }
+    catch (e) { return false; }
+  }
+
   /* เมนูไฮไลต์เมื่ออยู่ที่ href ของตัวเอง หรืออยู่ที่หน้าใน alsoMatch
      ใช้กับโมดูลที่มีเมนูเดียวแต่หลายหน้า เช่นหน้าสร้าง/แก้ไขที่ไม่มีเมนูของตัวเอง */
   function isActiveItem(item) {
-    return isCurrentHref(item.href) || (item.alsoMatch || []).some(isCurrentPath);
+    return isCurrentHref(item.href)
+      || (item.alsoMatch || []).some(isCurrentPath)
+      || (item.alsoMatchPatterns || []).some(isCurrentPattern);
   }
 
   /* ---------- โครงข้อมูล ----------

@@ -124,7 +124,7 @@ class ActivityController extends Controller
         return response()->json([
             'message' => 'สร้าง'.($activity->isEvent() ? 'อีเวนท์' : 'กิจกรรม').' "'.$activity->name.'" แล้ว',
             'code' => $activity->code,
-            'redirect' => route('admin.activities.edit', $activity->code),
+            'redirect' => route('admin.activities.index'),
             'activity' => $this->toListRow($activity->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
         ], 201);
     }
@@ -216,7 +216,15 @@ class ActivityController extends Controller
                 'program' => $program->name,
                 'courses' => $program->courses->map(fn (Course $course) => [
                     'name' => $course->name,
-                    'teachers' => $course->instructors->pluck('name')->all(),
+                    /* ส่ง id มากับชื่อเลย ไม่ให้หน้าจอต้องนำชื่อวิทยากรไปค้นหา id อีกรอบ
+                       ชื่อแก้ไขได้และอาจมีช่องว่างต่างกัน แต่ id เป็นตัวอ้างอิงจริงของฐานข้อมูล */
+                    'teachers' => $course->instructors
+                        ->map(fn (Instructor $instructor) => [
+                            'id' => $instructor->id,
+                            'name' => $instructor->name,
+                        ])
+                        ->values()
+                        ->all(),
                 ])->all(),
             ])
             ->all();
@@ -298,6 +306,9 @@ class ActivityController extends Controller
             'area' => $activity->areas->first()?->name,
             'evaluationFormIds' => [],
             'coverImage' => $activity->cover_image_path,
+            'coverImageUrl' => $activity->cover_image_path
+                ? route('admin.activities.cover.show', $activity->code)
+                : null,
 
             /* สวิตช์จริงจากฐานข้อมูล — ฟอร์มเดิมต้องอนุมานเอาเองเพราะข้อมูลจำลองไม่มีสามฟิลด์นี้ */
             'joinFlags' => [
@@ -330,8 +341,27 @@ class ActivityController extends Controller
 
         return response()->json([
             'message' => 'บันทึกกิจกรรม "'.$updated->name.'" แล้ว',
+            'redirect' => route('admin.activities.index'),
             'activity' => $this->toListRow($updated->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
         ]);
+    }
+
+    /** แสดงรูปผ่าน Laravel เพื่อให้ใช้งานบน IIS ได้โดยไม่ขึ้นกับ public/storage symlink */
+    public function showCover(Activity $activity)
+    {
+        $this->authorize('update', $activity);
+
+        abort_unless(
+            $activity->cover_image_path
+                && Storage::disk('public')->exists($activity->cover_image_path),
+            404
+        );
+
+        return Storage::disk('public')->response(
+            $activity->cover_image_path,
+            null,
+            ['Cache-Control' => 'private, max-age=300']
+        );
     }
 
     /**
@@ -378,9 +408,15 @@ class ActivityController extends Controller
         return response()->json([
             'message' => 'อัปโหลดรูปปกแล้ว',
             'path' => $path,
+<<<<<<< Updated upstream
             'url' => Storage::disk('public')->url($path),
             'label' => $file->getClientOriginalName()
                 .' · '.round($file->getSize() / 1048576, 1).'MB',
+=======
+            'url' => route('admin.activities.cover.show', $activity->code),
+            'label' => $request->file('cover')->getClientOriginalName()
+                .' · '.round($request->file('cover')->getSize() / 1048576, 1).'MB',
+>>>>>>> Stashed changes
         ]);
     }
 

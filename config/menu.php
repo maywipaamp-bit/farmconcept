@@ -40,6 +40,10 @@ return [
                     /* ย้ายเป็นหน้า Blade แล้ว (ไม่มี .html) — alsoMatch ไว้ให้ไฟล์ static เดิมยังไฮไลต์ถูก */
                     'href' => 'admin/activities/list',
                     'alsoMatch' => ['admin/activities/list.html'],
+                    'alsoMatchPatterns' => [
+                        '^/admin/activities/create$',
+                        '^/admin/activities/[^/]+/edit$',
+                    ],
                 ],
                 [
                     'key' => 'activities-registrants',

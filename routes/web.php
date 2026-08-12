@@ -91,6 +91,10 @@ Route::middleware('auth')->group(function () {
                 ->middleware('menu:activities-list')
                 ->name('edit');
 
+            Route::get('/{activity}/cover', [ActivityController::class, 'showCover'])
+                ->middleware('menu:activities-list')
+                ->name('cover.show');
+
             /* รูปปกแยก endpoint เพราะ PHP อ่าน multipart จาก PUT ไม่ได้ */
             Route::post('/{activity}/cover', [ActivityController::class, 'uploadCover'])
                 ->middleware('menu:activities-list')

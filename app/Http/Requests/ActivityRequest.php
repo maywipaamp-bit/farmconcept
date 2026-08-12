@@ -53,7 +53,7 @@ class ActivityRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
 
             'type' => [$whenPublishing, 'in:' . implode(',', self::TYPES)],
-            'participant_type' => [$whenPublishing, 'in:' . implode(',', self::PARTICIPANT_TYPES)],
+            'participant_type' => ['nullable', 'in:' . implode(',', self::PARTICIPANT_TYPES)],
             'status' => ['required', 'in:' . implode(',', self::STATUSES)],
             'visibility' => ['required', 'in:' . implode(',', self::VISIBILITIES)],
 
@@ -228,15 +228,11 @@ class ActivityRequest extends FormRequest
         }
     }
 
-    /** เผยแพร่แล้วต้องมีช่วงเวลาเผยแพร่ และต้องไม่สิ้นสุดหลังกิจกรรมเริ่มไปแล้ว */
+    /** ถ้าระบุช่วงเวลาเผยแพร่ เวลาสิ้นสุดต้องไม่เลยวันที่เริ่มกิจกรรม */
     private function checkPublishWindow(Validator $validator): void
     {
         if (! $this->boolean('is_published')) {
             return;
-        }
-
-        if (! $this->filled('publish_start_at')) {
-            $validator->errors()->add('publish_start_at', 'กิจกรรมที่เผยแพร่ต้องระบุเวลาเริ่มเผยแพร่');
         }
 
         $publishEnd = $this->input('publish_end_at');
