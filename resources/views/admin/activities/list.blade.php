@@ -246,6 +246,12 @@
     return window.TFC.escapeHtml(activity.updatedTime ? date + ' | ' + activity.updatedTime : date);
   }
 
+  function truncate(str, maxLen) {
+    maxLen = maxLen || 25;
+    if (!str) return '';
+    return str.length > maxLen ? str.slice(0, maxLen) + '...' : str;
+  }
+
   /* order = ลำดับที่ในหน้าปัจจุบัน นับต่อจากแถวแรกของหน้า ไม่ใช่นับใหม่ทุกหน้า */
   function rowHtml(activity, order) {
     var schedules = window.TFC.activity.schedules(activity);
@@ -255,6 +261,7 @@
     var cap = activity.capacity || 0;
     var reg = activity.registered || 0;
     var dash = '<span class="grid-dash">—</span>';
+    var respText = responsible(activity).join(' · ');
 
     return '<div class="grid-row" data-id="' + activity.id + '">' +
       '<div class="grid-code grid-center">' + order + '</div>' +
@@ -262,8 +269,8 @@
       /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
       '<div>' +
       (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
-      '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit">' + window.TFC.escapeHtml(activity.name) + '</a>' +
-      (responsible(activity).length ? '<div class="grid-sub">' + window.TFC.escapeHtml(responsible(activity).join(' · ')) + '</div>' : '') + '</div>' +
+      '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 25)) + '</a>' +
+      (respText ? '<div class="grid-sub" title="' + window.TFC.escapeHtml(respText) + '">' + window.TFC.escapeHtml(truncate(respText, 25)) + '</div>' : '') + '</div>' +
 
       '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
       (timeText ? '<div class="grid-sub">' + window.TFC.escapeHtml(timeText) + '</div>' : '') + '</div>' +
