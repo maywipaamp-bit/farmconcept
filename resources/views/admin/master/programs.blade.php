@@ -45,7 +45,7 @@
 
 @section('modals')
 <div class="modal-overlay" id="program-create-modal">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <h3 class="modal-title" id="program-form-title">เพิ่มโปรแกรมการเรียนรู้</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">

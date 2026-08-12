@@ -449,11 +449,21 @@
       dueDate: tr.querySelector('.review-due').value
     };
 
+    /* Production บางเครื่องปฏิเสธ HTTP PUT ก่อนคำขอจะถึง Laravel
+       ส่งเป็น POST พร้อม method override เพื่อให้สถานะและวันที่บันทึกได้เหมือนกันทุก Server */
+    var encodedBody = '_method=PUT' +
+      '&status=' + encodeURIComponent(body.status) +
+      '&dueDate=' + encodeURIComponent(body.dueDate || '');
+
     fetch('{{ url('/review/items') }}/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf
+      },
       credentials: 'same-origin',
-      body: JSON.stringify(body)
+      body: encodedBody
     })
       .then(function (res) {
         return res.json().catch(function () { return {}; }).then(function (payload) {

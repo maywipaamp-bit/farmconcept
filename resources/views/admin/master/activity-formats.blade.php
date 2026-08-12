@@ -54,14 +54,18 @@
     </div>
     <form id="fmt-form">
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
-          <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <span class="form-label">ไอคอนหมวดหมู่<span class="form-required">*</span></span>
-          <div class="icon-picker" id="fmt-icon-picker" role="radiogroup" aria-label="ไอคอนหมวดหมู่"></div>
-          <div class="form-helper">ใช้ไอคอนนี้แสดงคู่กับชื่อหมวดหมู่ในฟอร์มกิจกรรม</div>
+        <div class="form-row mb-3">
+          <div class="form-group mb-0">
+            <label class="form-label" for="fmt-name">ชื่อหมวดหมู่กิจกรรม<span class="form-required">*</span></label>
+            <input class="input" id="fmt-name" data-validate required maxlength="60" autocomplete="off">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="fmt-icon">ไอคอนหมวดหมู่<span class="form-required">*</span></label>
+            <div class="icon-select-control">
+              <span class="icon-select-preview" id="fmt-icon-preview" aria-hidden="true"></span>
+              <select class="select" id="fmt-icon" data-plain-select required aria-label="ไอคอนหมวดหมู่"></select>
+            </div>
+          </div>
         </div>
         <div class="form-group mb-0">
           <label class="form-label" for="fmt-active">สถานะ<span class="form-required">*</span></label>
@@ -137,25 +141,21 @@ window.TFC_SEED.activityFormats = @json($seedRows);
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + found.path + '</svg>';
   }
 
-  var iconPicker = $('fmt-icon-picker');
-  iconPicker.innerHTML = iconList.map(function (ic) {
-    return '<button type="button" class="icon-picker-option" role="radio" aria-checked="false"' +
-      ' data-icon="' + ic.value + '" title="' + window.TFC.escapeHtml(ic.label) + '"' +
-      ' aria-label="' + window.TFC.escapeHtml(ic.label) + '">' + iconSvg(ic.value) + '</button>';
+  var iconSelect = $('fmt-icon');
+  var iconPreview = $('fmt-icon-preview');
+  iconSelect.innerHTML = iconList.map(function (ic) {
+    return '<option value="' + window.TFC.escapeHtml(ic.value) + '">' +
+      window.TFC.escapeHtml(ic.label) + '</option>';
   }).join('');
 
   function setSelectedIcon(value) {
     selectedIcon = value || defaultIcon;
-    Array.prototype.forEach.call(iconPicker.querySelectorAll('.icon-picker-option'), function (btn) {
-      var on = btn.getAttribute('data-icon') === selectedIcon;
-      btn.classList.toggle('is-active', on);
-      btn.setAttribute('aria-checked', on ? 'true' : 'false');
-    });
+    iconSelect.value = selectedIcon;
+    iconPreview.innerHTML = iconSvg(selectedIcon);
   }
 
-  iconPicker.addEventListener('click', function (e) {
-    var btn = e.target.closest('.icon-picker-option');
-    if (btn) setSelectedIcon(btn.getAttribute('data-icon'));
+  iconSelect.addEventListener('change', function () {
+    setSelectedIcon(this.value);
   });
   setSelectedIcon(defaultIcon);
 

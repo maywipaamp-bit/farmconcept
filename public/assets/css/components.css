@@ -4954,7 +4954,36 @@ dd { margin: 0; }
 /* ต้องประกาศคืนหลัง .modal เพราะ specificity เท่ากัน (0,1,0) และไฟล์นี้โหลดทีหลัง
    ถ้าไม่ประกาศ กล่องเล็ก/กลางจะถูก .modal ด้านบนขยายเป็น 960px ทั้งหมด */
 .modal.modal-sm { max-width: 400px; }
+.modal.modal-md { max-width: 520px; }
 .modal.modal-lg { max-width: 720px; }
+
+.icon-select-control {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.icon-select-preview {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft-border);
+  border-radius: var(--radius-md);
+}
+
+.icon-select-preview svg {
+  width: 22px;
+  height: 22px;
+}
+
+.icon-select-control .select {
+  min-width: 0;
+  flex: 1 1 auto;
+}
 
 /* ==========================================================================
    กล่องยืนยัน (ลบ / ออกจากระบบ) — เนื้อหาอยู่กึ่งกลาง ไอคอนวงกลมสีตามสถานะ
@@ -14178,4 +14207,3 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   .frt-actions-btns { width: 100%; }
   .frt-actions-btns .btn { flex: 1; }
 }
-
