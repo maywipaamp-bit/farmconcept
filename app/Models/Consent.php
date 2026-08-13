@@ -26,6 +26,11 @@ class Consent extends Model
         return $this->belongsTo(Participant::class);
     }
 
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(ConsentDocument::class, 'consent_document_id');
+    }
+
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');

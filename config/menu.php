@@ -139,18 +139,36 @@ return [
                     'href' => 'admin/master/activity-formats',
                 ],
                 [
+                    /* คนละหน้ากับ "รอบติดตาม" ในกลุ่มประเมินสุขภาพ — ตัวนั้นตั้งช่วงวันที่จริงร่วมกันทั้งระบบ
+                       ตัวนี้เป็น master data ของระยะห่างเป็นวัน ที่ระบบกลุ่มตัวอย่างใช้คำนวณวันครบกำหนดรายคน */
+                    'key' => 'master-data-follow-up-rounds',
+                    'label' => 'รอบประเมิน',
+                    'icon' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+                    'href' => 'admin/master/follow-up-rounds',
+                ],
+                [
                     'key' => 'master-data-payment-accounts',
                     'label' => 'ข้อมูลการรับชำระ',
                     'icon' => '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/>',
                     'href' => 'admin/master/payment-accounts',
                 ],
                 [
-                    /* คนละหน้ากับ "รอบติดตาม" ในกลุ่มประเมินสุขภาพ — ตัวนั้นตั้งช่วงวันที่จริงร่วมกันทั้งระบบ
-                       ตัวนี้เป็น master data ของระยะห่างเป็นวัน ที่ระบบกลุ่มตัวอย่างใช้คำนวณวันครบกำหนดรายคน */
-                    'key' => 'master-data-follow-up-rounds',
-                    'label' => 'ตั้งค่ารอบประเมิน',
-                    'icon' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-                    'href' => 'admin/master/follow-up-rounds',
+                    'key' => 'master-data-registration-options',
+                    'label' => 'ตัวเลือกการลงทะเบียน',
+                    'icon' => '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+                    'href' => 'admin/master/registration-options',
+                ],
+                [
+                    'key' => 'master-data-consents',
+                    'label' => 'เอกสารและความยินยอม',
+                    'icon' => '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/>',
+                    'href' => 'admin/master/consent-documents',
+                ],
+                [
+                    'key' => 'master-data-system-settings',
+                    'label' => 'ตั้งค่าระบบ',
+                    'icon' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6v.2h-4V21a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9A1.7 1.7 0 003 14H2.8v-4H3a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 009 4.6 1.7 1.7 0 0010 3V2.8h4V3a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1h.2v4H21a1.7 1.7 0 00-1.6 1z"/>',
+                    'href' => 'admin/master/system-settings',
                 ],
             ],
         ],
@@ -204,7 +222,8 @@ return [
         'areas' => ['master-data-areas'],
         'master_data' => [
             'master-data-target-groups', 'master-data-programs', 'master-data-instructors',
-            'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-follow-up-rounds',
+            'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-registration-options',
+            'master-data-consents', 'master-data-system-settings', 'master-data-follow-up-rounds',
         ],
         'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],

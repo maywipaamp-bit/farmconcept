@@ -78,33 +78,33 @@
   /* ---------- แบบประเมินที่เลือกได้ ----------
      ดึงจากระบบแบบประเมิน (mock.evaluationForms) ไม่ได้พิมพ์รายชื่อไว้ที่นี่
      เอาเฉพาะชุดที่เปิดใช้งานแล้ว — ฉบับร่างยังแก้อยู่ ผูกกับกิจกรรมไปก่อนไม่ได้
-     แยกสองช่องด้วย type: ชุดที่เป็นแบบลงทะเบียนไปช่อง "ตอนลงทะเบียน" ที่เหลือไปช่อง "หลังจบ" */
-  var FORM_ACTIVE_STATUS = 'เผยแพร่แล้ว';
+     แยกสองช่องด้วย type มาตรฐานของระบบ ไม่ใช้ข้อความที่แสดงบนหน้าจอมาเทียบ */
+  var FORM_ACTIVE_STATUS = 'active';
 
   function activeForms() {
     return (mock.evaluationForms || []).filter(function (f) { return f.status === FORM_ACTIVE_STATUS; });
   }
 
-  function isRegForm(f) { return String(f.type || '').indexOf('ลงทะเบียน') > -1; }
+  function isRegForm(f) { return f && f.type === 'registration'; }
+  function isPostForm(f) { return f && f.type === 'post_activity'; }
 
   function formsReg() { return activeForms().filter(isRegForm); }
-  function formsPost() { return activeForms().filter(function (f) { return !isRegForm(f); }); }
+  function formsPost() { return activeForms().filter(isPostForm); }
 
   /* คำอธิบายใต้ชื่อชุด สร้างจากข้อมูลจริงของชุดนั้น ไม่ได้พิมพ์ตัวเลขไว้เอง */
   function formHint(o) {
     var n = o.questions ? o.questions.length : (o.questionCount || 0);
-    return (o.type ? o.type + ' · ' : '') + n + ' คำถาม';
+    var type = isRegForm(o) ? 'แบบลงทะเบียน' : 'แบบประเมินหลังกิจกรรม';
+    return type + ' · ' + (n ? n + ' คำถามเพิ่มเติม' : 'ไม่มีคำถามเพิ่มเติม');
   }
 
   function formById(id) {
     return activeForms().filter(function (o) { return o.id === id; })[0];
   }
 
-  var QR_LINKS = [
-    { label: 'ลงทะเบียนเข้าร่วม', url: 'farmconcept.th/r/0142' },
-    { label: 'เช็คอินหน้างาน', url: 'farmconcept.th/c/0142' },
-    { label: 'แบบประเมินหลังกิจกรรม', url: 'farmconcept.th/s/0142' }
-  ];
+  /* รายการจริงจาก act_qr_codes — หน้า Create ยังไม่มี activity_id จึงเป็นรายการว่าง
+     และจะสร้างอัตโนมัติทันทีหลังบันทึกกิจกรรม */
+  var QR_LINKS = window.TFC_ACTIVITY_QR || [];
 
   var MAX_SLOTS = 5;
   var AUTOSAVE_MS = 60000;
@@ -180,10 +180,10 @@
     return out;
   }
 
-  /* ---------- เช็กลิสต์ 9 ข้อ ที่คุมปุ่มเผยแพร่และแถบความคืบหน้า ---------- */
+  /* ---------- เช็กลิสต์ที่คุมปุ่มเผยแพร่และแถบความคืบหน้า ---------- */
   function checklist() {
     var first = state.slots[0] || {};
-    return [
+    var list = [
       { label: 'ชื่อกิจกรรม', ok: state.title.trim().length > 0 },
       { label: 'ประเภท', ok: !!state.kind },
       { label: 'หมวดหมู่', ok: state.cats.length > 0 },
@@ -194,6 +194,11 @@
       { label: 'กลุ่มเป้าหมาย', ok: state.targets.length > 0 },
       { label: 'วิทยากร', ok: state.hosts.length > 0 }
     ];
+
+    if (needsReg()) list.push({ label: 'เลือกแบบลงทะเบียน', ok: !!state.formReg });
+    if (hasSurvey()) list.push({ label: 'เลือกแบบประเมินหลังกิจกรรม', ok: state.formsPost.length === 1 });
+
+    return list;
   }
 
   /* ================= เรนเดอร์แต่ละส่วน ================= */
@@ -260,7 +265,7 @@
       : pickEmpty('แบบลงทะเบียน');
 
     $('ac-form-post').innerHTML = post.length
-      ? post.map(function (o) { return pickRow(o, state.formsPost.indexOf(o.id) > -1, 'data-form-post', false); }).join('')
+      ? post.map(function (o) { return pickRow(o, state.formsPost.indexOf(o.id) > -1, 'data-form-post', true); }).join('')
       : pickEmpty('แบบประเมิน');
   }
 
@@ -296,8 +301,8 @@
               '</li>';
           }).join('') +
         '</ol>'
-      : '<p class="ac-field-note">ชุดนี้มี ' + count + ' คำถาม · ดูและแก้คำถามได้ที่ ' +
-        '<a href="../evaluations/list.html">เมนู แบบประเมิน</a></p>';
+      : '<p class="ac-field-note">ชุดนี้ไม่มีคำถามเพิ่มเติม · ดูและแก้ไขได้ที่ ' +
+        '<a href="/admin/evaluations">เมนู แบบประเมิน</a></p>';
 
     var root = document.createElement('div');
     root.className = 'modal-overlay is-open ac-preview-overlay';
@@ -627,44 +632,38 @@
   }
 
   function renderQr() {
-    var on = state.publish;
-    $('ac-qr-hint').textContent = on
-      ? 'ใช้เช็คอินหน้างานและให้ผู้เข้าร่วมลงทะเบียนเอง'
-      : 'QR จะใช้งานได้จริงหลังเผยแพร่กิจกรรม';
+    if (!QR_LINKS.length) {
+      $('ac-qr-hint').textContent = window.TFC_ACTIVITY_IS_NEW
+        ? 'QR จะถูกสร้างอัตโนมัติหลังบันทึกกิจกรรม'
+        : 'บันทึกกิจกรรมเพื่อสร้าง QR ตามขั้นตอนที่เปิดไว้';
+      $('ac-qr-list').innerHTML = '<p class="ac-field-note">ยังไม่มี QR สำหรับกิจกรรมนี้</p>';
+      $('ac-qr-all').disabled = true;
+      return;
+    }
+
+    var activeCount = QR_LINKS.filter(function (q) { return q.active; }).length;
+    $('ac-qr-hint').textContent = activeCount === QR_LINKS.length
+      ? 'QR พร้อมใช้งานและสแกนได้จริง'
+      : 'ดาวน์โหลดเตรียมไว้ได้ · QR จะเปิดใช้งานเมื่อเผยแพร่กิจกรรม';
 
     $('ac-qr-list').innerHTML = QR_LINKS.map(function (q) {
-      return '<div class="ac-qr-item' + (on ? '' : ' is-off') + '">' +
-        '<span class="ac-qr-thumb">' + qrSvg(q.url) + '</span>' +
+      return '<div class="ac-qr-item' + (q.active ? '' : ' is-off') + '">' +
+        '<span class="ac-qr-thumb"><img src="' + esc(q.imageUrl) + '" alt="QR ' + esc(q.label) + '"></span>' +
         '<span class="ac-qr-text">' +
           '<span class="ac-qr-label">' + esc(q.label) + '</span>' +
           '<span class="ac-qr-url">' + esc(q.url) + '</span>' +
+          '<span class="ac-field-note">' + (q.active ? 'เปิดใช้งาน' : 'ยังไม่เปิดใช้งาน') + '</span>' +
         '</span>' +
         '<span class="ac-qr-actions">' +
-          '<button type="button" class="ac-qr-btn" data-qr-download="' + esc(q.url) + '"' + (on ? '' : ' disabled') + ' aria-label="ดาวน์โหลด QR ' + esc(q.label) + '">' +
+          '<button type="button" class="ac-qr-btn" data-qr-download="' + esc(q.downloadUrl) + '" aria-label="ดาวน์โหลด QR ' + esc(q.label) + '">' +
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg></button>' +
-          '<button type="button" class="ac-qr-btn" data-copy="' + esc(q.url) + '"' + (on ? '' : ' disabled') + ' aria-label="คัดลอกลิงก์ ' + esc(q.label) + '">' +
+          '<button type="button" class="ac-qr-btn" data-copy="' + esc(q.url) + '" aria-label="คัดลอกลิงก์ ' + esc(q.label) + '">' +
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg></button>' +
         '</span>' +
         '</div>';
     }).join('');
 
-    $('ac-qr-all').disabled = !on;
-  }
-
-  /* QR จำลอง 17x17 ช่อง คำนวณจากลิงก์ ไม่ใช่ QR ที่สแกนได้จริง
-     เมื่อต่อ backend ให้แทนด้วย <img src="{{qrUrl}}"> ที่ผูก token ของกิจกรรม */
-  function qrSvg(seed) {
-    var n = 17, cells = '', h = 0, i;
-    for (i = 0; i < seed.length; i++) h = (h * 131 + seed.charCodeAt(i)) >>> 0;
-    for (i = 0; i < n * n; i++) {
-      h = (h * 1103515245 + 12345) >>> 0;
-      if ((h >>> 16) % 100 < 46) cells += '<rect x="' + (i % n) + '" y="' + Math.floor(i / n) + '" width="1" height="1"/>';
-    }
-    [[0, 0], [n - 5, 0], [0, n - 5]].forEach(function (p) {
-      cells += '<rect x="' + p[0] + '" y="' + p[1] + '" width="5" height="5" fill="none" stroke="currentColor" stroke-width="1"/>' +
-        '<rect x="' + (p[0] + 2) + '" y="' + (p[1] + 2) + '" width="1" height="1"/>';
-    });
-    return '<svg viewBox="0 0 ' + n + ' ' + n + '" fill="currentColor" aria-hidden="true">' + cells + '</svg>';
+    $('ac-qr-all').disabled = false;
   }
 
   function renderChecklist() {
@@ -846,7 +845,7 @@
     if (fr) { state.formReg = fr.getAttribute('data-form-reg'); return touch(); }
 
     var fp = t.closest('[data-form-post]');
-    if (fp) { toggleIn('formsPost', fp.getAttribute('data-form-post')); return touch(); }
+    if (fp) { state.formsPost = [fp.getAttribute('data-form-post')]; return touch(); }
 
     /* ---- combobox ---- */
     var rmCourse = t.closest('[data-remove-course]');
@@ -920,17 +919,25 @@
     var copy = t.closest('[data-copy]');
     if (copy && !copy.disabled) {
       var url = copy.getAttribute('data-copy');
-      if (navigator.clipboard) navigator.clipboard.writeText('https://' + url);
+      if (navigator.clipboard) navigator.clipboard.writeText(url);
       if (window.TFC.showToast) window.TFC.showToast('คัดลอกลิงก์ ' + url + ' แล้ว', 'success');
       return;
     }
     var dl = t.closest('[data-qr-download]');
     if (dl && !dl.disabled) {
+      window.location.assign(dl.getAttribute('data-qr-download'));
       if (window.TFC.showToast) window.TFC.showToast('ดาวน์โหลด QR เรียบร้อย', 'success');
       return;
     }
     if (t.closest('#ac-qr-all') && !$('ac-qr-all').disabled) {
-      if (window.TFC.showToast) window.TFC.showToast('กำลังสร้างไฟล์ PDF รวม QR ทั้งหมด', 'info');
+      QR_LINKS.forEach(function (q, index) {
+        window.setTimeout(function () {
+          var link = document.createElement('a');
+          link.href = q.downloadUrl;
+          link.click();
+        }, index * 250);
+      });
+      if (window.TFC.showToast) window.TFC.showToast('กำลังดาวน์โหลด QR ทั้งหมด', 'info');
       return;
     }
 
@@ -1092,7 +1099,7 @@
     /* กิจกรรมเก็บ id ของแบบประเมินอยู่แล้ว ตอนนี้หน้านี้ก็ใช้ id เหมือนกัน จึงผูกกลับได้ตรง ๆ
        กรองเฉพาะชุดที่ยังเปิดใช้งาน — ชุดที่ถูกปิดไปแล้วไม่ควรโผล่มาเป็นตัวเลือกที่ติ๊กค้างไว้ */
     var linked = (a.evaluationFormIds || []).filter(function (id) { return !!formById(id); });
-    var linkedPost = linked.filter(function (id) { return !isRegForm(formById(id)); });
+    var linkedPost = linked.filter(function (id) { return isPostForm(formById(id)); });
     var linkedReg = linked.filter(function (id) { return isRegForm(formById(id)); });
     if (linkedPost.length) state.formsPost = linkedPost;
     if (linkedReg.length) state.formReg = linkedReg[0];

@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Activity;
+use App\Models\Form;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -52,10 +54,10 @@ class ActivityRequest extends FormRequest
             'name' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', 'max:5000'],
 
-            'type' => [$whenPublishing, 'in:' . implode(',', self::TYPES)],
-            'participant_type' => ['nullable', 'in:' . implode(',', self::PARTICIPANT_TYPES)],
-            'status' => ['required', 'in:' . implode(',', self::STATUSES)],
-            'visibility' => ['required', 'in:' . implode(',', self::VISIBILITIES)],
+            'type' => [$whenPublishing, 'in:'.implode(',', self::TYPES)],
+            'participant_type' => ['nullable', 'in:'.implode(',', self::PARTICIPANT_TYPES)],
+            'status' => ['required', 'in:'.implode(',', self::STATUSES)],
+            'visibility' => ['required', 'in:'.implode(',', self::VISIBILITIES)],
 
             /* อีเวนท์แม่ — ตรวจว่าเป็นอีเวนท์จริงและไม่ใช่ตัวเองใน after() เพราะ exists ตรวจได้แค่ว่ามีแถวอยู่ */
             'parent_event_id' => ['nullable', 'integer', 'exists:act_activities,id'],
@@ -72,6 +74,22 @@ class ActivityRequest extends FormRequest
             'requires_registration' => ['boolean'],
             'requires_checkin' => ['boolean'],
             'has_post_survey' => ['boolean'],
+            'registration_form_id' => [
+                'nullable',
+                'required_if:requires_registration,true',
+                'integer',
+                Rule::exists('evl_forms', 'id')->where(fn ($query) => $query
+                    ->where('type', Form::TYPE_REGISTRATION)
+                    ->where('status', Form::STATUS_ACTIVE)),
+            ],
+            'post_survey_form_id' => [
+                'nullable',
+                'required_if:has_post_survey,true',
+                'integer',
+                Rule::exists('evl_forms', 'id')->where(fn ($query) => $query
+                    ->where('type', Form::TYPE_POST_ACTIVITY)
+                    ->where('status', Form::STATUS_ACTIVE)),
+            ],
             'is_published' => ['boolean'],
             'is_featured' => ['boolean'],
 
@@ -133,6 +151,8 @@ class ActivityRequest extends FormRequest
             'publish_end_at' => 'เวลาสิ้นสุดเผยแพร่',
             'registration_start_at' => 'เวลาเปิดรับสมัคร',
             'registration_end_at' => 'เวลาปิดรับสมัคร',
+            'registration_form_id' => 'แบบลงทะเบียน',
+            'post_survey_form_id' => 'แบบประเมินหลังกิจกรรม',
             'public_sort_order' => 'ลำดับการแสดงหน้าเว็บ',
             'parent_event_id' => 'อีเวนท์ที่สังกัด',
             'area_ids' => 'สถานที่จัด',
@@ -160,6 +180,10 @@ class ActivityRequest extends FormRequest
             'checkin_start_at.required_if' => 'กรุณาระบุเวลาเริ่มเช็คอิน เมื่อเปิดใช้การเช็คอิน',
             'checkin_end_at.required_if' => 'กรุณาระบุเวลาสิ้นสุดเช็คอิน เมื่อเปิดใช้การเช็คอิน',
             'registration_end_at.required_if' => 'กรุณาระบุเวลาปิดรับสมัคร เมื่อเปิดใช้การลงทะเบียน',
+            'registration_form_id.required_if' => 'กรุณาเลือกแบบลงทะเบียนที่เปิดใช้งาน',
+            'registration_form_id.exists' => 'แบบลงทะเบียนที่เลือกไม่ถูกต้องหรือยังไม่ได้เปิดใช้งาน',
+            'post_survey_form_id.required_if' => 'กรุณาเลือกแบบประเมินหลังกิจกรรมที่เปิดใช้งาน',
+            'post_survey_form_id.exists' => 'แบบประเมินหลังกิจกรรมที่เลือกไม่ถูกต้องหรือยังไม่ได้เปิดใช้งาน',
         ];
     }
 
@@ -229,7 +253,7 @@ class ActivityRequest extends FormRequest
                 if (($a['time_start'] ?? '') < ($b['time_end'] ?? '') && ($b['time_start'] ?? '') < ($a['time_end'] ?? '')) {
                     $validator->errors()->add(
                         "rounds.{$j}.time_start",
-                        'ช่วงเวลาทับซ้อนกับรอบที่ ' . ($i + 1)
+                        'ช่วงเวลาทับซ้อนกับรอบที่ '.($i + 1)
                     );
                 }
             }
@@ -246,7 +270,7 @@ class ActivityRequest extends FormRequest
         $publishEnd = $this->input('publish_end_at');
         $startDate = $this->input('start_date');
 
-        if ($publishEnd && $startDate && $publishEnd > $startDate . ' 23:59:59') {
+        if ($publishEnd && $startDate && $publishEnd > $startDate.' 23:59:59') {
             $validator->errors()->add('publish_end_at', 'เวลาสิ้นสุดเผยแพร่ต้องไม่เลยวันที่จัดกิจกรรม');
         }
     }
@@ -261,7 +285,7 @@ class ActivityRequest extends FormRequest
         $registrationEnd = $this->input('registration_end_at');
         $startDate = $this->input('start_date');
 
-        if ($registrationEnd && $startDate && $registrationEnd > $startDate . ' 23:59:59') {
+        if ($registrationEnd && $startDate && $registrationEnd > $startDate.' 23:59:59') {
             $validator->errors()->add('registration_end_at', 'เวลาปิดรับสมัครต้องไม่เลยวันที่จัดกิจกรรม');
         }
     }

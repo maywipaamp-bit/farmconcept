@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\ActivityFormat;
+use App\Models\Form;
+use App\Services\PublicRegistrationService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicActivityController extends Controller
@@ -43,14 +46,61 @@ class PublicActivityController extends Controller
         ]);
     }
 
-    public function show(string $activity): View
+    public function show(Request $request, string $activity, PublicRegistrationService $registrationService): View
     {
         $activity = Activity::forPublicListing()
             ->where('code', $activity)
             ->firstOrFail();
 
+        $activity->load([
+            'rounds' => fn ($query) => $query
+                ->withCount('registrations')
+                ->orderBy('round_date')
+                ->orderBy('time_start'),
+            'forms' => fn ($query) => $query
+                ->whereIn('evl_form_activity.slot', ['registration', 'post_survey'])
+                ->where('status', Form::STATUS_ACTIVE)
+                ->with(['questions.options']),
+        ]);
+
+        $registrationForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'registration'
+            && $form->type === Form::TYPE_REGISTRATION);
+        $postSurveyForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'post_survey'
+            && $form->type === Form::TYPE_POST_ACTIVITY);
+        $canRegister = $activity->acceptsRegistration() && $registrationForm !== null;
+        $checkinRequested = $request->query('action') === 'checkin';
+        $postSurveyRequested = $request->query('action') === 'post-survey';
+
         return view('public.activities.show', [
             'activity' => $this->present($activity),
+            'registration' => [
+                'enabled' => $canRegister,
+                'open' => $canRegister && $request->query('action') === 'registration',
+                'maxSeats' => $registrationService->maxSeats($activity),
+                'checkPhoneUrl' => route('public.activities.registration.check-phone', $activity->code),
+                'storeUrl' => route('public.activities.registration.store', $activity->code),
+                'rounds' => $activity->rounds->map(fn ($round) => [
+                    'id' => $round->id,
+                    'label' => $this->thaiDate($round->round_date)
+                        .' · '.substr((string) $round->time_start, 0, 5)
+                        .'–'.substr((string) $round->time_end, 0, 5).' น.',
+                    'seatsLeft' => $round->capacity > 0
+                        ? max(0, $round->capacity - $round->registrations_count)
+                        : null,
+                ])->values(),
+            ],
+            'checkin' => [
+                'requested' => $checkinRequested,
+                'enabled' => $checkinRequested && $activity->acceptsCheckin(),
+                'lookupUrl' => route('public.activities.checkin.lookup', $activity->code),
+                'storeUrl' => route('public.activities.checkin.store', $activity->code),
+            ],
+            'postSurvey' => [
+                'requested' => $postSurveyRequested,
+                'enabled' => $postSurveyRequested && $activity->acceptsPostSurvey() && $postSurveyForm !== null,
+                'form' => $postSurveyForm,
+                'storeUrl' => route('public.activities.post-survey.store', $activity->code),
+            ],
         ]);
     }
 
@@ -92,6 +142,9 @@ class PublicActivityController extends Controller
                 ? 'ปิดรับสมัคร '.$this->thaiDateTime($activity->registration_end_at)
                 : null,
             'canRegister' => $activity->acceptsRegistration(),
+            'requiresRegistration' => $activity->requires_registration,
+            'requiresCheckin' => $activity->requires_checkin,
+            'hasPostSurvey' => $activity->has_post_survey,
             'seatsLeft' => $activity->seatsLeft(),
             'sortOrder' => $activity->public_sort_order,
         ];

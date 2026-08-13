@@ -197,4 +197,28 @@ class Activity extends Model
             && (! $this->registration_end_at || $this->registration_end_at->gte($now))
             && ($this->capacity === 0 || $this->seatsLeft() > 0);
     }
+
+    /** เปิดให้ผู้ลงทะเบียนยืนยันตัวตนเฉพาะช่วง Check-in ที่กิจกรรมกำหนด */
+    public function acceptsCheckin(): bool
+    {
+        $now = now();
+
+        return $this->requires_checkin
+            && $this->is_published
+            && $this->status !== self::STATUS_CANCELLED
+            && (! $this->checkin_start_at || $this->checkin_start_at->lte($now))
+            && (! $this->checkin_end_at || $this->checkin_end_at->gte($now));
+    }
+
+    /** แบบประเมินหลังจบเปิดตามช่วงเวลาที่กิจกรรมกำหนด */
+    public function acceptsPostSurvey(): bool
+    {
+        $now = now();
+
+        return $this->has_post_survey
+            && $this->is_published
+            && $this->status !== self::STATUS_CANCELLED
+            && (! $this->survey_start_at || $this->survey_start_at->lte($now))
+            && (! $this->survey_end_at || $this->survey_end_at->gte($now));
+    }
 }

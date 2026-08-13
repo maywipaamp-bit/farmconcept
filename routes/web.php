@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\ActivityQrController;
 use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
@@ -10,6 +11,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
 use App\Http\Controllers\PublicActivityController;
+use App\Http\Controllers\PublicCheckinController;
+use App\Http\Controllers\PublicPostSurveyController;
+use App\Http\Controllers\PublicQrController;
+use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +47,42 @@ Route::redirect('/activities.html', '/activities', 301);
 Route::get('/activities/{activity}', [PublicActivityController::class, 'show'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->name('public.activities.show');
+
+Route::post('/activities/{activity}/registration/check-phone', [PublicRegistrationController::class, 'checkPhone'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:30,1')
+    ->name('public.activities.registration.check-phone');
+
+Route::post('/activities/{activity}/registration', [PublicRegistrationController::class, 'store'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:10,1')
+    ->name('public.activities.registration.store');
+
+Route::post('/activities/{activity}/checkin/lookup', [PublicCheckinController::class, 'lookup'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:30,1')
+    ->name('public.activities.checkin.lookup');
+
+Route::post('/activities/{activity}/checkin', [PublicCheckinController::class, 'store'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:15,1')
+    ->name('public.activities.checkin.store');
+
+Route::post('/activities/{activity}/post-survey', [PublicPostSurveyController::class, 'store'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:10,1')
+    ->name('public.activities.post-survey.store');
+
+/* QR สาธารณะของกิจกรรม — token สุ่ม ไม่เปิดเผย activity id และ QR ที่ถูกปิดต้องได้หน้าอธิบายแทน 404 */
+Route::get('/r/{token}', [PublicQrController::class, 'registration'])
+    ->where('token', '[a-z0-9]{24}')
+    ->name('public.qr.registration');
+Route::get('/c/{token}', [PublicQrController::class, 'checkin'])
+    ->where('token', '[a-z0-9]{24}')
+    ->name('public.qr.checkin');
+Route::get('/s/{token}', [PublicQrController::class, 'postSurvey'])
+    ->where('token', '[a-z0-9]{24}')
+    ->name('public.qr.post-survey');
 
 /* ข้อมูลกิจกรรมสาธารณะ — คืนเฉพาะรายการที่เผยแพร่ */
 Route::get('/api/public/activities', [PublicActivityController::class, 'index'])
@@ -124,6 +165,11 @@ Route::middleware('auth')->group(function () {
                 ->middleware('menu:activities-list')
                 ->name('cover.destroy');
 
+            Route::get('/{activity}/qr/{purpose}', [ActivityQrController::class, 'show'])
+                ->where('purpose', 'public|checkin|post_survey')
+                ->middleware('menu:activities-list')
+                ->name('qr.show');
+
             Route::put('/{activity}', [ActivityController::class, 'update'])
                 ->middleware('menu:activities-list')
                 ->name('update');
@@ -145,13 +191,14 @@ Route::middleware('auth')->group(function () {
                 'target-groups' => [MasterData\TargetGroupController::class, 'master-data-target-groups'],
                 'activity-formats' => [MasterData\ActivityFormatController::class, 'master-data-activity-formats'],
                 'payment-accounts' => [MasterData\PaymentAccountController::class, 'master-data-payment-accounts'],
+                'consent-documents' => [MasterData\ConsentDocumentController::class, 'master-data-consents'],
                 'programs' => [MasterData\ProgramController::class, 'master-data-programs'],
                 'instructors' => [MasterData\InstructorController::class, 'master-data-instructors'],
                 'areas' => [MasterData\AreaController::class, 'master-data-areas'],
             ];
 
             foreach ($tables as $slug => [$controller, $menuKey]) {
-                Route::prefix($slug)->name($slug . '.')->middleware('menu:' . $menuKey)->group(function () use ($controller) {
+                Route::prefix($slug)->name($slug.'.')->middleware('menu:'.$menuKey)->group(function () use ($controller) {
                     /* URL เดียวทำสองหน้าที่ — เปิดจากเบราว์เซอร์ได้หน้าจอ ยิงด้วย Accept: application/json
                        ได้รายการข้อมูล ทำให้ลิงก์ในเมนูกับปลายทางที่หน้าจอเรียกเป็นที่เดียวกัน
                        ไม่ต้องจำสอง URL ต่อหนึ่งตาราง */
@@ -161,6 +208,20 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/{code}', [$controller, 'destroy'])->name('destroy');
                 });
             }
+
+            Route::prefix('registration-options')->name('registration-options.')
+                ->middleware('menu:master-data-registration-options')->group(function () {
+                    Route::get('/', [MasterData\RegistrationOptionController::class, 'index'])->name('index');
+                    Route::post('/', [MasterData\RegistrationOptionController::class, 'store'])->name('store');
+                    Route::put('/{key}', [MasterData\RegistrationOptionController::class, 'update'])->name('update');
+                    Route::delete('/{key}', [MasterData\RegistrationOptionController::class, 'destroy'])->name('destroy');
+                });
+
+            Route::prefix('system-settings')->name('system-settings.')
+                ->middleware('menu:master-data-system-settings')->group(function () {
+                    Route::get('/', [MasterData\SystemSettingController::class, 'index'])->name('index');
+                    Route::post('/', [MasterData\SystemSettingController::class, 'update'])->name('update');
+                });
 
             /* รูปวิทยากรแยก endpoint เพราะ PHP อ่าน multipart จาก PUT ไม่ได้ — แบบเดียวกับรูปปกกิจกรรม */
             Route::middleware('menu:master-data-instructors')->group(function () {

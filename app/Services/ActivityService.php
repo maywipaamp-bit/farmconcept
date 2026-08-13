@@ -32,6 +32,7 @@ class ActivityService
             $activity->targetGroups()->sync($data['target_group_ids'] ?? []);
 
             $this->syncRounds($activity, $data['rounds'] ?? []);
+            $this->syncEvaluationForms($activity, $data);
             $this->syncQrCodes($activity);
 
             ActivityLog::create([
@@ -39,8 +40,8 @@ class ActivityService
                 'action' => 'activity.updated',
                 'subject_type' => 'activity',
                 'subject_id' => $activity->id,
-                'detail' => 'แก้ไขกิจกรรม ' . $activity->code
-                    . ($changed === [] ? ' (ไม่มีคอลัมน์หลักเปลี่ยน)' : ' · ฟิลด์ที่เปลี่ยน: ' . implode(', ', $changed)),
+                'detail' => 'แก้ไขกิจกรรม '.$activity->code
+                    .($changed === [] ? ' (ไม่มีคอลัมน์หลักเปลี่ยน)' : ' · ฟิลด์ที่เปลี่ยน: '.implode(', ', $changed)),
             ]);
 
             return $activity;
@@ -140,12 +141,35 @@ class ActivityService
                 }
 
                 $qr->token = Str::lower(Str::random(24));
-                $qr->target_url = '/' . ['public' => 'r', 'checkin' => 'c', 'post_survey' => 's'][$purpose] . '/' . $qr->token;
+                $qr->target_url = '/'.['public' => 'r', 'checkin' => 'c', 'post_survey' => 's'][$purpose].'/'.$qr->token;
             }
 
             $qr->is_active = $enabled;
             $qr->save();
         }
+    }
+
+    /**
+     * ผูกแบบประเมินกับช่องใช้งานของกิจกรรมแบบหนึ่งต่อหนึ่ง
+     *
+     * เมื่อปิดสวิตช์ ระบบต้องถอดความสัมพันธ์เดิมออกด้วย เพื่อไม่ให้กิจกรรมยังอ้างถึง
+     * แบบลงทะเบียนหรือแบบประเมินหลังจบที่ผู้ดูแลตั้งใจปิดไปแล้ว
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function syncEvaluationForms(Activity $activity, array $data): void
+    {
+        $forms = [];
+
+        if (($data['requires_registration'] ?? false) && ! empty($data['registration_form_id'])) {
+            $forms[(int) $data['registration_form_id']] = ['slot' => 'registration'];
+        }
+
+        if (($data['has_post_survey'] ?? false) && ! empty($data['post_survey_form_id'])) {
+            $forms[(int) $data['post_survey_form_id']] = ['slot' => 'post_survey'];
+        }
+
+        $activity->forms()->sync($forms);
     }
 
     /**
@@ -171,6 +195,7 @@ class ActivityService
             $activity->targetGroups()->sync($data['target_group_ids'] ?? []);
 
             $this->syncRounds($activity, $data['rounds'] ?? []);
+            $this->syncEvaluationForms($activity, $data);
             $this->syncQrCodes($activity);
 
             ActivityLog::create([
@@ -178,7 +203,7 @@ class ActivityService
                 'action' => 'activity.created',
                 'subject_type' => 'activity',
                 'subject_id' => $activity->id,
-                'detail' => 'สร้างกิจกรรม ' . $activity->code . ' — ' . $activity->name,
+                'detail' => 'สร้างกิจกรรม '.$activity->code.' — '.$activity->name,
             ]);
 
             return $activity;
@@ -197,16 +222,16 @@ class ActivityService
      */
     private function nextCode(): string
     {
-        $prefix = 'ACT-' . now()->year . '-';
+        $prefix = 'ACT-'.now()->year.'-';
 
         $last = Activity::withTrashed()
-            ->where('code', 'like', $prefix . '%')
+            ->where('code', 'like', $prefix.'%')
             ->lockForUpdate()
             ->max('code');
 
         $running = $last ? (int) Str::afterLast($last, '-') : 0;
 
-        return $prefix . str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) ($running + 1), 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -229,7 +254,7 @@ class ActivityService
                 'action' => 'activity.deleted',
                 'subject_type' => 'activity',
                 'subject_id' => $activity->id,
-                'detail' => 'ลบกิจกรรม ' . $activity->code . ' — ' . $activity->name,
+                'detail' => 'ลบกิจกรรม '.$activity->code.' — '.$activity->name,
             ]);
         });
     }

@@ -89,5 +89,6 @@
 
 @stack('page-data')
 <script src="{{ asset('assets/js/public-activities.js') }}" defer></script>
+@stack('page-script')
 </body>
 </html>

@@ -306,7 +306,7 @@
             </div>
             <span class="ac-panel-desc" id="ac-qr-hint"></span>
             <div class="ac-qr-list" id="ac-qr-list"></div>
-            <button type="button" class="btn btn-outline btn-block btn-sm" id="ac-qr-all" disabled>ดาวน์โหลด QR ทั้งหมด (PDF)</button>
+            <button type="button" class="btn btn-outline btn-block btn-sm" id="ac-qr-all" disabled>ดาวน์โหลด QR ทั้งหมด</button>
           </div>
 
           <div class="card ac-panel">
@@ -354,11 +354,13 @@
   mock.activities = @json($activities);
   mock.activitySessions = @json($sessions);
   mock.selectableEvents = @json($events);
+  mock.evaluationForms = @json($evaluationForms);
 
   window.TFC_ACTIVITY_EDIT_ID = @json($activity->code);
   window.TFC_ACTIVITY_IS_NEW = @json($isCreate);
   window.TFC_ACTIVITY_LOOKUP = @json($lookup);
   window.TFC_ACTIVITY_CURRENT = @json($current);
+  window.TFC_ACTIVITY_QR = @json($qrCodes);
 })();
 </script>
 <script src="@assetv('assets/js/activity-module.js')"></script>
@@ -468,6 +470,8 @@
       requires_registration: !!state.join.reg,
       requires_checkin: !!state.join.chk,
       has_post_survey: !!state.join.survey,
+      registration_form_id: state.join.reg ? (state.formReg || null) : null,
+      post_survey_form_id: state.join.survey ? (state.formsPost[0] || null) : null,
 
       start_date: dates[0] || null,
       end_date: dates[dates.length - 1] || null,

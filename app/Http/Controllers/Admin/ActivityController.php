@@ -8,6 +8,7 @@ use App\Models\Activity;
 use App\Models\ActivityFormat;
 use App\Models\Area;
 use App\Models\Course;
+use App\Models\Form;
 use App\Models\Instructor;
 use App\Models\Program;
 use App\Models\TargetGroup;
@@ -69,7 +70,7 @@ class ActivityController extends Controller
     {
         $this->authorize('update', $activity);
 
-        $activity->load(['areas', 'instructors', 'targetGroups', 'rounds', 'program', 'course', 'format', 'parentEvent']);
+        $activity->load(['areas', 'instructors', 'targetGroups', 'rounds', 'program', 'course', 'format', 'parentEvent', 'forms', 'qrCodes']);
 
         return $this->formView($activity);
     }
@@ -96,7 +97,7 @@ class ActivityController extends Controller
             'fee' => 0,
         ]);
 
-        foreach (['areas', 'instructors', 'targetGroups', 'rounds'] as $many) {
+        foreach (['areas', 'instructors', 'targetGroups', 'rounds', 'forms', 'qrCodes'] as $many) {
             $activity->setRelation($many, collect());
         }
 
@@ -138,6 +139,25 @@ class ActivityController extends Controller
      */
     private function formView(Activity $activity): View
     {
+        $evaluationForms = Form::active()
+            ->whereIn('type', [Form::TYPE_REGISTRATION, Form::TYPE_POST_ACTIVITY])
+            ->with(['questions:id,form_id,question_type,text,is_required,sort_order'])
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Form $form) => [
+                'id' => (string) $form->id,
+                'code' => $form->code,
+                'name' => $form->name,
+                'type' => $form->type,
+                'status' => $form->status,
+                'questions' => $form->questions->map(fn ($question) => [
+                    'text' => $question->text,
+                    'type' => $question->question_type,
+                    'required' => $question->is_required,
+                ])->values()->all(),
+            ])->values();
+
         return view('admin.activities.form', [
             'activity' => $activity,
             'isCreate' => ! $activity->exists,
@@ -157,6 +177,8 @@ class ActivityController extends Controller
 
             /* อีเวนท์ที่เลือกเป็นแม่ได้ — ไม่รวมตัวเอง กันชี้หาตัวเอง */
             'events' => Activity::selectableEvents($activity->id)->get(['id', 'name']),
+            'evaluationForms' => $evaluationForms,
+            'qrCodes' => $this->qrPayload($activity),
 
             /* สองชุดนี้ยังไม่มีตารางในฐาน — docs/activity-module.md บรรทัด 84 ระบุว่า
                ประเภทกิจกรรมไม่ต้องมีหน้าจอจัดการ จึงเก็บเป็น config ไปก่อน
@@ -256,6 +278,9 @@ class ActivityController extends Controller
      */
     private function currentPayload(Activity $activity): array
     {
+        $registrationForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'registration');
+        $postSurveyForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'post_survey');
+
         return [
             'name' => $activity->name,
             'description' => $activity->description,
@@ -276,6 +301,8 @@ class ActivityController extends Controller
             'requires_registration' => $activity->requires_registration,
             'requires_checkin' => $activity->requires_checkin,
             'has_post_survey' => $activity->has_post_survey,
+            'registration_form_id' => $registrationForm?->id,
+            'post_survey_form_id' => $postSurveyForm?->id,
             'is_published' => $activity->is_published,
             'is_featured' => $activity->is_featured,
             'start_date' => $activity->start_date?->toDateString(),
@@ -307,7 +334,7 @@ class ActivityController extends Controller
             'isFeatured' => $activity->is_featured,
             'tags' => $activity->format ? [$activity->format->name] : [],
             'area' => $activity->areas->first()?->name,
-            'evaluationFormIds' => [],
+            'evaluationFormIds' => $activity->forms->pluck('id')->map(fn ($id) => (string) $id)->all(),
             'coverImage' => $activity->cover_image_path,
             'coverImageUrl' => $activity->cover_image_path
                 ? route('admin.activities.cover.show', $activity->code)
@@ -328,6 +355,34 @@ class ActivityController extends Controller
             'surveyStart' => $activity->survey_start_at?->format('Y-m-d H:i'),
             'surveyEnd' => $activity->survey_end_at?->format('Y-m-d H:i'),
         ];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function qrPayload(Activity $activity): array
+    {
+        if (! $activity->exists) {
+            return [];
+        }
+
+        $labels = [
+            'public' => $activity->requires_registration ? 'ลงทะเบียนเข้าร่วม' : 'หน้ากิจกรรม',
+            'checkin' => 'Check-in หน้างาน',
+            'post_survey' => 'แบบประเมินหลังกิจกรรม',
+        ];
+
+        return $activity->qrCodes
+            ->whereIn('purpose', array_keys($labels))
+            ->sortBy(fn ($qr) => array_search($qr->purpose, array_keys($labels), true))
+            ->map(fn ($qr) => [
+                'purpose' => $qr->purpose,
+                'label' => $labels[$qr->purpose],
+                'url' => url($qr->target_url),
+                'imageUrl' => route('admin.activities.qr.show', [$activity->code, $qr->purpose]),
+                'downloadUrl' => route('admin.activities.qr.show', [$activity->code, $qr->purpose, 'download' => 1]),
+                'active' => $qr->is_active,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

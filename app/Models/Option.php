@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * รายการตัวเลือกแบนทั้งหมดอยู่ตารางเดียว แยกด้วย option_group (ปม F.3)
- * group ที่ใช้: occupation · source_channel · interest · contact_channel · note_kind · purchase_channel
+ * group ที่ใช้: age_range · occupation · source_channel · interest · cohort_source · contact_channel · note_kind · purchase_channel
  */
 class Option extends Model
 {
@@ -16,6 +17,16 @@ class Option extends Model
     protected $guarded = ['id'];
 
     protected $casts = ['is_active' => 'bool'];
+
+    public function getNameAttribute(): string
+    {
+        return $this->label;
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 
     public function scopeGroup(Builder $query, string $group): Builder
     {
