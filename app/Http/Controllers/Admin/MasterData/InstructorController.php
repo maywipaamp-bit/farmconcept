@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\MasterData;
 use App\Models\Activity;
 use App\Models\Course;
 use App\Models\Instructor;
+use App\Models\InstructorExpertise;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -75,6 +76,15 @@ class InstructorController extends MasterDataController
                 ->get()
                 ->map(fn (Program $p) => ['name' => $p->name, 'courses' => $p->courses->pluck('name')->values()]),
 
+            /* ใช้เป็นรายการแนะนำในช่อง Tag ความเชี่ยวชาญ
+               ผู้ใช้ยังพิมพ์ค่าใหม่ได้ แต่ข้อมูลเดิมจะเลือกซ้ำได้โดยไม่สะกดต่างกัน */
+            'expertiseOptions' => InstructorExpertise::query()
+                ->select('name')
+                ->distinct()
+                ->orderBy('name')
+                ->pluck('name')
+                ->values(),
+
             'photoMaxBytes' => self::photoMaxBytes(),
         ];
     }
@@ -86,6 +96,9 @@ class InstructorController extends MasterDataController
             'phone' => ['required', 'string', 'max:30'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'active' => ['required', 'boolean'],
+
+            'searchTags' => ['present', 'array', 'max:20'],
+            'searchTags.*' => ['required', 'string', 'max:100', 'distinct'],
 
             'expertiseList' => ['present', 'array', 'max:20'],
             'expertiseList.*' => ['required', 'string', 'max:100', 'distinct'],
@@ -103,6 +116,8 @@ class InstructorController extends MasterDataController
             'phone' => 'เบอร์โทร',
             'bio' => 'รายละเอียด',
             'active' => 'สถานะ',
+            'searchTags' => 'คำค้นหา (Tag)',
+            'searchTags.*' => 'คำค้นหา (Tag)',
             'expertiseList' => 'ความเชี่ยวชาญ',
             'expertiseList.*' => 'ความเชี่ยวชาญ',
             'courses' => 'หลักสูตรที่สอน',
@@ -116,6 +131,7 @@ class InstructorController extends MasterDataController
             'name' => $data['name'],
             'phone' => $data['phone'],
             'bio' => $data['bio'] ?? null,
+            'search_tags' => $data['searchTags'] ?: null,
             'is_active' => $data['active'],
             'updated_by' => auth()->id(),
 
@@ -164,6 +180,7 @@ class InstructorController extends MasterDataController
             'expertise' => $record->expertise,
             'expertiseList' => $record->expertises->pluck('name')->values(),
             'courses' => $record->courses->pluck('name')->values(),
+            'searchTags' => $record->search_tags ?? [],
             'bio' => $record->bio,
             'activityCount' => $record->activities_count,
             'deleteUsageCount' => $record->activities_count,

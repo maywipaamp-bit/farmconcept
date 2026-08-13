@@ -14,7 +14,10 @@ class Instructor extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = ['is_active' => 'bool'];
+    protected $casts = [
+        'is_active' => 'bool',
+        'search_tags' => 'array',
+    ];
 
     public function scopeActive(Builder $query): Builder
     {

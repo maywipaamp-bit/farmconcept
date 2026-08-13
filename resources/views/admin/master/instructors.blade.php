@@ -47,7 +47,7 @@
 
 @section('modals')
 <div class="modal-overlay" id="instructor-create-modal">
-  <div class="modal modal-lg">
+  <div class="modal modal-lg instructor-profile-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="instr-form-title">เพิ่มวิทยากร</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -57,61 +57,93 @@
 
     {{-- ต้องมี data-tabs ไม่งั้น navigation.js ไม่ผูกการสลับแท็บให้ และคลาสต้องเป็น modal-tabs
          ซึ่งเป็นคลาสที่ CSS ของโมดัลรู้จัก --}}
-    <div class="modal-tabs" data-tabs>
+    <div class="modal-tabs instructor-history-tabs" data-tabs>
       <button type="button" class="tab-item is-active" data-tab-target="instr-tab-info">ข้อมูลวิทยากร</button>
       <button type="button" class="tab-item" data-tab-target="instr-tab-history">ประวัติการเป็นวิทยากร</button>
     </div>
 
     <form id="instr-form">
       <div class="modal-body" data-tab-panel="instr-tab-info">
-        {{-- ภาพติดบัตรขนาดเล็กแบบใบสมัครงาน วางคู่กับชื่อ/เบอร์โทร --}}
-        <div class="photo-form-row mb-3">
-          <div class="form-group mb-0">
-            <label class="form-label">รูปภาพ</label>
-            <div class="photo-slot" id="instr-photo-slot" tabindex="0" role="button" aria-label="เลือกรูปภาพวิทยากร">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span>เพิ่มรูป</span>
-              <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" id="instr-photo">
-            </div>
+        <div class="instructor-photo-section">
+          <div class="photo-slot instructor-photo-slot" id="instr-photo-slot" tabindex="0" role="button" aria-label="เลือกรูปภาพวิทยากร">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>เพิ่มรูป</span>
+            <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" id="instr-photo">
           </div>
-          <div>
-            <div class="form-group">
-              <label class="form-label" for="instr-name">ชื่อวิทยากร<span class="form-required">*</span></label>
-              <input class="input" id="instr-name" data-validate required maxlength="150" autocomplete="off">
-            </div>
-            <div class="form-group mb-0">
-              <label class="form-label" for="instr-phone">เบอร์โทร<span class="form-required">*</span></label>
-              <input class="input" type="tel" id="instr-phone" data-validate required maxlength="30">
-            </div>
-          </div>
+          <button type="button" class="instructor-photo-action" id="instr-photo-action">เปลี่ยนรูปภาพ</button>
         </div>
 
-        <div class="form-row mb-3">
-          <div class="form-group mb-0">
-            <label class="form-label">ความเชี่ยวชาญ</label>
-            <div class="dynamic-row-list" id="instr-expertise-list"></div>
-            <button type="button" class="dynamic-row-add" id="instr-add-expertise-btn" aria-label="เพิ่มความเชี่ยวชาญ" title="เพิ่มความเชี่ยวชาญ">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
+        <div class="instructor-profile-fields">
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <label for="instr-name">ชื่อวิทยากร<span class="form-required">*</span></label>
+            </div>
+            <input class="input" id="instr-name" data-validate required maxlength="150" autocomplete="off" placeholder="เช่น นายสมชาย ใจดี">
           </div>
-          <div class="form-group mb-0">
-            <label class="form-label">หลักสูตรที่สอน</label>
-            <div class="dynamic-row-list" id="instr-course-list"></div>
-            <button type="button" class="dynamic-row-add" id="instr-add-course-btn" aria-label="เพิ่มหลักสูตร" title="เพิ่มหลักสูตร">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label" for="instr-bio">รายละเอียด</label>
-          <textarea class="textarea" id="instr-bio" rows="3" maxlength="1000"></textarea>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="instr-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="instr-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="instr-active-label">ใช้งาน</span>
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.69 2.8a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0122 16.92z"/></svg>
+              <label for="instr-phone">เบอร์โทร<span class="form-required">*</span></label>
+            </div>
+            <input class="input" type="tel" id="instr-phone" data-validate required maxlength="30" placeholder="เช่น 081-234-5678">
+          </div>
+
+          <div class="instructor-profile-field is-align-start">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M8.5 14.5A7 7 0 1115.5 14.5c-.9.7-1.5 1.5-1.5 2.5h-4c0-1-.6-1.8-1.5-2.5z"/></svg>
+              <span>ความเชี่ยวชาญ</span>
+            </div>
+            <div class="instructor-profile-control">
+              <input type="hidden" id="instr-expertise" data-tags-input
+                     data-tags-placeholder="พิมพ์ความเชี่ยวชาญแล้วกด Enter"
+                     data-tags-options="{{ $expertiseOptions->toJson(JSON_UNESCAPED_UNICODE) }}">
+            </div>
+          </div>
+
+          <div class="instructor-profile-field is-align-start">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              <span>หลักสูตรที่สอนได้</span>
+            </div>
+            <div class="instructor-profile-control">
+              <div class="instructor-course-picker" id="instr-course-picker">
+                <button type="button" class="multiselect instructor-course-trigger" id="instr-course-trigger"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span class="instructor-course-placeholder">เลือกหลักสูตรที่สอนได้</span>
+                  <svg class="instructor-course-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="instructor-course-panel" id="instr-course-panel" role="listbox" aria-multiselectable="true"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="instructor-profile-field is-align-start">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.59 13.41L11 3.83V3H4v7h.83l9.58 9.59a2 2 0 002.82 0l3.36-3.36a2 2 0 000-2.82z"/><circle cx="7.5" cy="6.5" r="1"/></svg>
+              <label for="instr-search-tags">คำค้นหา (Tag)</label>
+            </div>
+            <input type="hidden" id="instr-search-tags" data-tags-input data-tags-placeholder="พิมพ์คำค้นหาแล้วกด Enter">
+          </div>
+
+          <div class="instructor-profile-field is-align-start">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+              <label for="instr-bio">รายละเอียด</label>
+            </div>
+            <textarea class="textarea" id="instr-bio" rows="4" maxlength="1000" placeholder="รายละเอียดและประสบการณ์ของวิทยากร"></textarea>
+          </div>
+
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <label for="instr-active">สถานะ<span class="form-required">*</span></label>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="switch"><input type="checkbox" id="instr-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="instr-active-label">ใช้งาน</span>
+            </div>
           </div>
         </div>
       </div>
@@ -150,6 +182,7 @@
 <script src="@assetv('assets/js/activity-module.js')"></script>
 <script src="@assetv('assets/js/master-list.js')"></script>
 <script src="@assetv('assets/js/dynamic-row.js')"></script>
+<script src="@assetv('assets/js/field-widgets.js')"></script>
 <script>
 window.TFC_API = window.TFC_API || {};
 window.TFC_API.instructors = @json(route('admin.master.instructors.index'));
@@ -162,6 +195,7 @@ window.TFC_SEED.instructors = @json($seedRows);
 /* หลักสูตรที่เลือกได้มาจากฐานข้อมูลจริง ไม่ใช่รายการที่เขียนไว้ใน mock-data.js */
 window.TFC_INSTRUCTOR = {
   programs: @json($programs),
+  expertiseOptions: @json($expertiseOptions),
   photoUrlTemplate: @json(route('admin.master.instructors.photo.store', '__CODE__')),
   photoMaxBytes: @json($photoMaxBytes)
 };
@@ -182,51 +216,135 @@ window.TFC_INSTRUCTOR = {
   function $(id) { return document.getElementById(id); }
   function rowOf(code) { return rows.filter(function (r) { return r.id === code; })[0]; }
 
-  /* ---------- ความเชี่ยวชาญ ---------- */
-
-  function expertiseRowHtml(value) {
-    return '<div class="dynamic-row">' +
-      '<span class="dynamic-row-order" data-row-order></span>' +
-      '<input class="input" placeholder="เช่น เกษตรอินทรีย์" maxlength="100" value="' + window.TFC.escapeHtml(value) + '">' +
-      '<button type="button" class="dynamic-row-remove" aria-label="ลบแถว">' +
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
-      '</button></div>';
+  /* ปิดประวัติ Autofill ของเบราว์เซอร์เฉพาะช่องนี้
+     รายการที่ยังแสดงอยู่จึงมาจาก data-tags-options ในฐานข้อมูลวิทยากรเท่านั้น */
+  var expertiseTagField = document.querySelector('#instr-expertise + .tags-input .tags-input-field');
+  if (expertiseTagField) {
+    expertiseTagField.name = 'instructor_expertise_tags';
+    expertiseTagField.autocomplete = 'new-password';
+    expertiseTagField.setAttribute('autocorrect', 'off');
+    expertiseTagField.setAttribute('autocapitalize', 'off');
+    expertiseTagField.spellcheck = false;
   }
-  var expertiseList = window.TFC.dynamicRowList('instr-expertise-list', 'instr-add-expertise-btn', expertiseRowHtml);
-  expertiseList.reset([]);
 
-  /* ---------- หลักสูตรที่สอน ----------
-     ไม่ใส่ data-new-item-label เพื่อซ่อนปุ่ม "เพิ่มรายการใหม่" — เลือกได้เฉพาะหลักสูตรที่มีอยู่จริง
-     จัดกลุ่มด้วย optgroup ตามโปรแกรม จะได้เห็นว่าหลักสูตรนั้นอยู่ใต้โปรแกรมใด */
-  function courseRowHtml(value) {
-    return '<div class="dynamic-row">' +
-      '<span class="dynamic-row-order" data-row-order></span>' +
-      '<select class="select" data-smart-select>' +
-      '<option value="">เลือกหลักสูตร</option>' +
-      CFG.programs.map(function (p) {
-        if (!p.courses.length) return '';
-        return '<optgroup label="' + window.TFC.escapeHtml(p.name) + '">' +
-          p.courses.map(function (name) {
-            return '<option value="' + window.TFC.escapeHtml(name) + '"' + (name === value ? ' selected' : '') + '>' +
-              window.TFC.escapeHtml(name) + '</option>';
-          }).join('') + '</optgroup>';
-      }).join('') +
-      '</select>' +
-      '<button type="button" class="dynamic-row-remove" aria-label="ลบแถว">' +
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
-      '</button></div>';
+  /* ---------- หลักสูตรที่สอนได้: Multi-select แบ่งกลุ่มตามโปรแกรม ---------- */
+  var selectedCourses = [];
+  var coursePicker = $('instr-course-picker');
+  var courseTrigger = $('instr-course-trigger');
+  var coursePanel = $('instr-course-panel');
+
+  function renderCoursePicker() {
+    var placeholder = '<span class="instructor-course-placeholder">เลือกหลักสูตรที่สอนได้</span>';
+    var chips = selectedCourses.map(function (name) {
+      return '<span class="multiselect-tag"><span>' + window.TFC.escapeHtml(name) + '</span>' +
+        '<button type="button" data-remove-course="' + window.TFC.escapeHtml(name) + '" aria-label="ลบ ' + window.TFC.escapeHtml(name) + '">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+        '</button></span>';
+    }).join('');
+
+    courseTrigger.innerHTML = (chips || placeholder) +
+      '<svg class="instructor-course-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+    coursePanel.innerHTML = '<div class="instructor-course-search-wrap">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+      '<input type="search" class="instructor-course-search" id="instr-course-search" placeholder="ค้นหาหลักสูตร" autocomplete="off">' +
+      '</div><div class="instructor-course-results">' + CFG.programs.map(function (program) {
+      if (!program.courses.length) return '';
+      return '<div class="instructor-course-group" data-program-name="' + window.TFC.escapeHtml(program.name.toLowerCase()) + '">' +
+        '<div class="instructor-course-group-title">' + window.TFC.escapeHtml(program.name) + '</div>' +
+        program.courses.map(function (name) {
+          var checked = selectedCourses.indexOf(name) !== -1;
+          return '<label class="instructor-course-option' + (checked ? ' is-selected' : '') + '" data-course-name="' + window.TFC.escapeHtml(name.toLowerCase()) + '">' +
+            '<input type="checkbox" value="' + window.TFC.escapeHtml(name) + '"' + (checked ? ' checked' : '') + '>' +
+            '<span class="instructor-course-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+            '<span>' + window.TFC.escapeHtml(name) + '</span></label>';
+        }).join('') + '</div>';
+    }).join('') + '<p class="instructor-course-empty hidden">ไม่พบหลักสูตรที่ค้นหา</p></div>';
   }
-  var courseList = window.TFC.dynamicRowList('instr-course-list', 'instr-add-course-btn', courseRowHtml, function (row) {
-    window.TFC.initSmartSelects(row);
+
+  function setCourses(values) {
+    selectedCourses = Array.from(new Set(values || []));
+    renderCoursePicker();
+  }
+
+  function setCoursePanel(open) {
+    coursePicker.classList.toggle('is-open', open);
+    coursePanel.classList.toggle('is-open', open);
+    courseTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      /* ย้าย Dropdown ไปไว้ใต้ body ชั่วคราว เพื่อไม่ให้ overflow/stacking ของ Popup
+         ตัดกล่องหรือวางทับจนตัวเลือกคลิกไม่ได้ */
+      document.body.appendChild(coursePanel);
+      positionCoursePanel();
+    }
+  }
+
+  function positionCoursePanel() {
+    var rect = courseTrigger.getBoundingClientRect();
+    var gap = 2;
+    var maxHeight = 240;
+    var roomBelow = window.innerHeight - rect.bottom - 12;
+    var roomAbove = rect.top - 12;
+    var openAbove = roomBelow < 180 && roomAbove > roomBelow;
+    var available = Math.max(120, Math.min(maxHeight, openAbove ? roomAbove - gap : roomBelow - gap));
+
+    coursePanel.style.left = rect.left + 'px';
+    coursePanel.style.width = rect.width + 'px';
+    coursePanel.style.maxHeight = available + 'px';
+    coursePanel.style.top = openAbove ? Math.max(12, rect.top - available - gap) + 'px' : (rect.bottom + gap) + 'px';
+  }
+
+  courseTrigger.addEventListener('click', function (e) {
+    var remove = e.target.closest('[data-remove-course]');
+    if (remove) {
+      e.stopPropagation();
+      setCourses(selectedCourses.filter(function (name) { return name !== remove.getAttribute('data-remove-course'); }));
+      return;
+    }
+    setCoursePanel(!coursePicker.classList.contains('is-open'));
   });
-  courseList.reset([]);
 
-  function valuesOf(containerId, selector) {
-    return Array.prototype.map.call(
-      $(containerId).querySelectorAll('.dynamic-row ' + selector),
-      function (el) { return el.value.trim(); }
-    ).filter(Boolean);
-  }
+  coursePanel.addEventListener('change', function (e) {
+    if (!e.target.matches('input[type="checkbox"]')) return;
+    var name = e.target.value;
+    if (e.target.checked) setCourses(selectedCourses.concat(name));
+    else setCourses(selectedCourses.filter(function (item) { return item !== name; }));
+  });
+
+  coursePanel.addEventListener('input', function (e) {
+    if (!e.target.matches('.instructor-course-search')) return;
+    var query = e.target.value.trim().toLowerCase();
+    var visibleCount = 0;
+
+    coursePanel.querySelectorAll('.instructor-course-group').forEach(function (group) {
+      var programMatches = (group.getAttribute('data-program-name') || '').indexOf(query) !== -1;
+      var visibleInGroup = 0;
+      group.querySelectorAll('.instructor-course-option').forEach(function (option) {
+        var visible = !query || programMatches || (option.getAttribute('data-course-name') || '').indexOf(query) !== -1;
+        option.classList.toggle('hidden', !visible);
+        if (visible) visibleInGroup += 1;
+      });
+      group.classList.toggle('hidden', visibleInGroup === 0);
+      visibleCount += visibleInGroup;
+    });
+
+    var empty = coursePanel.querySelector('.instructor-course-empty');
+    if (empty) empty.classList.toggle('hidden', visibleCount > 0);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!coursePicker.contains(e.target) && !coursePanel.contains(e.target)) setCoursePanel(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setCoursePanel(false);
+  });
+
+  window.addEventListener('resize', function () {
+    if (coursePicker.classList.contains('is-open')) positionCoursePanel();
+  });
+
+  setCourses([]);
 
   /* ---------- รูปวิทยากร ----------
      อัปทันทีที่เลือกไฟล์เฉพาะตอนแก้ไข (มีรหัสแล้ว) ตอนเพิ่มใหม่ต้องพักไฟล์ไว้ก่อน
@@ -244,12 +362,23 @@ window.TFC_INSTRUCTOR = {
         photoSlot.insertBefore(img, photoSlot.firstChild);
       }
       img.src = src;
+      photoSlot.classList.add('has-photo');
     } else if (img) {
       img.remove();
+      photoSlot.classList.remove('has-photo');
+    } else {
+      photoSlot.classList.remove('has-photo');
     }
   }
 
   photoSlot.addEventListener('click', function () { photoInput.click(); });
+  $('instr-photo-action').addEventListener('click', function () { photoInput.click(); });
+  photoSlot.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      photoInput.click();
+    }
+  });
   photoInput.addEventListener('click', function (e) { e.stopPropagation(); });
 
   photoInput.addEventListener('change', function () {
@@ -365,12 +494,14 @@ window.TFC_INSTRUCTOR = {
   function resetForm() {
     $('instr-form-title').textContent = 'เพิ่มวิทยากร';
     $('instr-form').reset();
+    $('instructor-create-modal').classList.add('is-create-mode');
     $('instr-active').checked = true;
     $('instr-active-label').textContent = 'ใช้งาน';
     pendingPhoto = null;
     showPhoto('');
-    expertiseList.reset([]);
-    courseList.reset([]);
+    window.TFC.setTagsValue('instr-expertise', '');
+    setCourses([]);
+    window.TFC.setTagsValue('instr-search-tags', '');
     $('instr-form').setAttribute('data-editing-id', '');
     renderHistory(null);
     resetTabs();
@@ -385,6 +516,7 @@ window.TFC_INSTRUCTOR = {
     if (!instructor) return;
 
     $('instr-form-title').textContent = 'แก้ไขวิทยากร';
+    $('instructor-create-modal').classList.remove('is-create-mode');
     $('instr-name').value = instructor.name || '';
     $('instr-phone').value = instructor.phone || '';
     $('instr-bio').value = instructor.bio || '';
@@ -392,8 +524,9 @@ window.TFC_INSTRUCTOR = {
     $('instr-active-label').textContent = instructor.active !== false ? 'ใช้งาน' : 'ไม่ใช้งาน';
     pendingPhoto = null;
     showPhoto(instructor.photo || '');
-    expertiseList.reset(instructor.expertiseList || []);
-    courseList.reset(instructor.courses || []);
+    window.TFC.setTagsValue('instr-expertise', (instructor.expertiseList || []).join(', '));
+    setCourses(instructor.courses || []);
+    window.TFC.setTagsValue('instr-search-tags', (instructor.searchTags || []).join(', '));
     $('instr-form').setAttribute('data-editing-id', instructor.id);
     renderHistory(instructor);
     resetTabs();
@@ -408,8 +541,9 @@ window.TFC_INSTRUCTOR = {
       phone: $('instr-phone').value.trim(),
       bio: $('instr-bio').value.trim(),
       active: $('instr-active').checked,
-      expertiseList: valuesOf('instr-expertise-list', 'input'),
-      courses: valuesOf('instr-course-list', 'select')
+      searchTags: $('instr-search-tags').value.split(',').map(function (tag) { return tag.trim(); }).filter(Boolean),
+      expertiseList: $('instr-expertise').value.split(',').map(function (item) { return item.trim(); }).filter(Boolean),
+      courses: selectedCourses.slice()
     };
 
     var submit = $('instr-submit');
