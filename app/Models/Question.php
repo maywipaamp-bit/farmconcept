@@ -23,4 +23,9 @@ class Question extends Model
     {
         return $this->hasMany(Answer::class);
     }
+
+    public function options(): HasMany
+    {
+        return $this->hasMany(QuestionOption::class)->orderBy('sort_order');
+    }
 }

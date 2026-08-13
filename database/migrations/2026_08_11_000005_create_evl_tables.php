@@ -93,7 +93,7 @@ return new class extends Migration
            ความถูกต้องของคู่ (type, id) บังคับที่ Service layer */
         Schema::create('evl_answers', function (Blueprint $table) {
             $table->id();
-            $table->enum('response_type', ['satisfaction', 'survey']);
+            $table->enum('response_type', ['registration', 'satisfaction', 'survey']);
             $table->unsignedBigInteger('response_id');
             $table->foreignId('question_id')->constrained('evl_questions');
             $table->unsignedTinyInteger('score')->nullable();

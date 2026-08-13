@@ -25,7 +25,7 @@ class RoleAndUserSeeder extends Seeder
         'health-assessment', 'cohort', 'evaluations-rounds', 'evaluations-responses',
         'evaluations',
         'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',
-        'master-data-instructors', 'master-data-activity-formats', 'master-data-follow-up-rounds',
+        'master-data-instructors', 'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-follow-up-rounds',
         'users', 'users-list', 'users-roles',
     ];
 
@@ -59,7 +59,7 @@ class RoleAndUserSeeder extends Seeder
                 'description' => 'จัดการกิจกรรม ลงทะเบียน ตรวจสอบการชำระเงิน และติดตามผลในพื้นที่ที่รับผิดชอบ',
                 'deny' => [
                     'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',
-                    'master-data-instructors', 'master-data-activity-formats', 'master-data-follow-up-rounds',
+                    'master-data-instructors', 'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-follow-up-rounds',
                     'users', 'users-list', 'users-roles',
                 ],
             ],

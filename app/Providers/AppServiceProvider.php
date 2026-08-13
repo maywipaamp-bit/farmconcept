@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Activity;
+use App\Models\Registration;
 use App\Models\SatisfactionResponse;
 use App\Models\SurveyResponse;
 use App\Services\MenuService;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
            ย้าย namespace ของ Model ได้โดยข้อมูลเดิมไม่พัง
            enforceMorphMap ทำให้ลืมลงทะเบียนชนิดใหม่แล้วพังทันทีตอนพัฒนา ไม่ใช่ตอน production */
         Relation::enforceMorphMap([
+            'registration' => Registration::class,
             'satisfaction' => SatisfactionResponse::class,
             'survey' => SurveyResponse::class,
             'activity' => Activity::class,

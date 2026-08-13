@@ -1,4 +1,4 @@
-/* TheFarmConcept — หน้าสร้างแบบประเมิน (admin/evaluations/create.html)
+/* TheFarmConcept — หน้าสร้าง/แก้ไขแบบประเมิน (/admin/evaluations/create และ /{code}/edit)
 
    วิธีเรนเดอร์: รายการคำถามถูกสร้างใหม่เฉพาะตอนที่โครงสร้างเปลี่ยน (เพิ่ม/ลบ/สลับลำดับ/เปลี่ยนชนิด)
    ส่วนการพิมพ์ในช่องข้อความจะอัปเดตแค่ state + แผงขวา ไม่แตะ DOM ของรายการ
@@ -28,24 +28,36 @@
   ];
   var REGISTRATION = 'ตอนลงทะเบียน';
   var STANDALONE = 'ติดตามสุขภาพ';
+  var TYPE_BY_STAGE = {
+    'ตอนลงทะเบียน': 'registration',
+    'หลังกิจกรรม': 'post_activity',
+    'ติดตามสุขภาพ': 'health_follow_up'
+  };
+  var STAGE_BY_TYPE = {
+    registration: 'ตอนลงทะเบียน',
+    post_activity: 'หลังกิจกรรม',
+    health_follow_up: 'ติดตามสุขภาพ'
+  };
 
   /* ฟิลด์มาตรฐานของแบบลงทะเบียน — ชื่อ/ชนิดมาจากระบบ ผู้ดูแลเลือกได้แค่เปิดหรือปิด
-     สามฟิลด์แรกเป็นแกนของการลงทะเบียน จึงแสดงตลอดและไม่มีสวิตช์ให้ปิด */
+     ชื่อ เบอร์โทร และ PDPA เป็นแกนของการลงทะเบียน จึงแสดงตลอดและไม่มีสวิตช์ให้ปิด */
   var REGISTRATION_FIELDS = [
     { key: 'name', label: 'ชื่อ–นามสกุล', hint: 'ใช้ระบุตัวผู้ลงทะเบียน', required: true, preview: 'text' },
-    { key: 'phone', label: 'เบอร์โทรศัพท์', hint: 'ใช้ตรวจสอบการลงทะเบียนซ้ำ', required: true, preview: 'phone' },
-    { key: 'pdpa', label: 'การยอมรับ PDPA', hint: 'ต้องยอมรับก่อนยืนยันการลงทะเบียน', required: true, preview: 'consent' },
+    { key: 'phone', label: 'เบอร์โทรศัพท์', hint: 'ใช้ตรวจสอบการลงทะเบียน / Check-in', required: true, preview: 'phone' },
     { key: 'gender', label: 'เพศ', hint: 'ตัวเลือกมาตรฐานจากระบบ', enabled: true, preview: 'select' },
-    { key: 'age_range', label: 'ช่วงอายุ', hint: 'ตัวเลือกช่วงอายุมาตรฐาน', enabled: true, preview: 'select' },
+    { key: 'age_range', label: 'ช่วงอายุ', hint: 'ตัวเลือกมาตรฐานจากระบบ', enabled: true, preview: 'select' },
     { key: 'email', label: 'อีเมล', hint: 'สำหรับรับข้อมูลและการติดต่อกลับ', enabled: true, preview: 'email' },
     { key: 'occupation', label: 'อาชีพ', hint: 'ตัวเลือกอาชีพจากข้อมูลพื้นฐาน', enabled: true, preview: 'select' },
-    { key: 'source_channel', label: 'รับรู้ข่าวสารกิจกรรมจากช่องทางใด', hint: 'ใช้วิเคราะห์ช่องทางประชาสัมพันธ์', enabled: true, preview: 'select' },
-    { key: 'interests', label: 'กิจกรรมที่สนใจนอกเหนือจากที่เราจัด', hint: 'เลือกได้มากกว่า 1 ข้อ', enabled: true, preview: 'multi' }
+    { key: 'source_channel', label: 'รับรู้ข่าวสารกิจกรรมจากช่องทางใด', hint: 'ตัวเลือกมาตรฐานจากระบบ', enabled: true, preview: 'select' },
+    { key: 'interests', label: 'กิจกรรมที่สนใจนอกเหนือจากที่เราจัด', hint: 'เลือกได้มากกว่า 1 ข้อ', enabled: true, preview: 'multi' },
+    { key: 'pdpa', label: 'การยอมรับ PDPA', hint: 'ต้องยอมรับก่อนยืนยันการลงทะเบียน', required: true, preview: 'consent' }
   ];
 
   var AUTOSAVE_MS = 60000;
 
   var state = {
+    formCode: null,
+    status: 'draft',
     name: '',
     desc: '',
     stage: 'หลังกิจกรรม',
@@ -54,6 +66,9 @@
        ทำให้เห็นทั้งชุดในจอเดียวโดยไม่ต้องเลื่อนผ่านช่องกรอกของทุกข้อ */
     activeId: null,
     dirty: false,
+    saving: false,
+    bookingMode: 'single',
+    maxSeats: 5,
     registrationItems: [],
     /* ตั้งต้นด้วยหัวข้อส่วน 1 ส่วนพร้อมคำถาม 2 ข้อในนั้น
        ให้เห็นตั้งแต่แรกว่าจัดคำถามเป็นตอนได้ และเลขข้อจะเป็น 1.1 / 1.2
@@ -76,6 +91,34 @@
 
   /* เลือกได้หลายข้อไหม — ใช้ตัดสินทั้งเครื่องหมายในตัวแก้ไขและคำกำกับที่ผู้ตอบเห็น */
   function isMulti(kind) { return kind === 'multi' || kind === 'chips'; }
+
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+  }
+
+  function requestJson(url, options) {
+    options = options || {};
+    options.headers = Object.assign({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrfToken()
+    }, options.headers || {});
+
+    return fetch(url, options).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (!response.ok) {
+          var errors = data.errors || {};
+          var firstKey = Object.keys(errors)[0];
+          var message = firstKey && errors[firstKey] && errors[firstKey][0]
+            ? errors[firstKey][0]
+            : (data.message || 'ไม่สามารถบันทึกข้อมูลได้');
+          throw new Error(message);
+        }
+        return data;
+      });
+    });
+  }
 
   /* วงกลม = เลือก 1 ข้อ · สี่เหลี่ยม = เลือกหลายข้อ · แคปซูล = แบบป้าย · สี่เหลี่ยมเทา = เลือกจากรายการ */
   function markHtml(kind) {
@@ -142,6 +185,12 @@
     return REGISTRATION_FIELDS.filter(function (field) { return field.key === key; })[0];
   }
 
+  function renderBookingConfig() {
+    $('ec-booking-mode').value = state.bookingMode;
+    $('ec-booking-max').hidden = state.bookingMode !== 'group';
+    $('ec-booking-max-seats').value = String(state.maxSeats);
+  }
+
   function registrationFieldRow(field) {
     var control = field.required
       ? '<span class="ec-registration-required-badge">บังคับ</span>'
@@ -150,12 +199,12 @@
           '<span class="switch-track"></span>' +
         '</label>';
 
-    return '<div class="ec-registration-field' + (field.required ? ' is-required' : '') + '">' +
-      '<span class="ec-registration-field-icon" aria-hidden="true">' +
-        (field.required
-          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'
-          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>') +
-      '</span>' +
+    var leading = field.required
+      ? '<span class="ec-registration-field-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>'
+      : '<button type="button" class="ec-registration-grip" data-registration-grip="' + esc(field.key) + '" aria-label="ลากเพื่อสลับลำดับฟิลด์ ' + esc(field.label) + ' หรือกดลูกศรขึ้นลง"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="8" cy="7" r="1.5"/><circle cx="16" cy="7" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/></svg></button>';
+
+    return '<div class="ec-registration-field' + (field.required ? ' is-required' : '') + '"' + (field.required ? '' : ' data-registration-row="' + esc(field.key) + '"') + '>' +
+      leading +
       '<span class="ec-registration-field-text"><strong>' + esc(field.label) + '</strong><span>' + esc(field.hint) + '</span></span>' +
       control +
     '</div>';
@@ -171,13 +220,12 @@
     $('ec-questions-note').hidden = !registration;
     if (!registration) return;
 
-    var required = REGISTRATION_FIELDS.filter(function (field) { return field.required; });
+    renderBookingConfig();
     var optional = REGISTRATION_FIELDS.filter(function (field) { return !field.required; });
     var enabledCount = optional.filter(function (field) { return field.enabled; }).length;
 
-    $('ec-registration-required').innerHTML = required.map(registrationFieldRow).join('');
-    $('ec-registration-optional').innerHTML = optional.map(registrationFieldRow).join('');
-    $('ec-registration-summary').textContent = 'บังคับ 3 · เปิดใช้งาน ' + enabledCount + '/' + optional.length;
+    $('ec-registration-fields').innerHTML = REGISTRATION_FIELDS.map(registrationFieldRow).join('');
+    $('ec-registration-summary').textContent = 'เปิดใช้งาน ' + (enabledCount + 3) + '/' + REGISTRATION_FIELDS.length;
   }
 
 
@@ -191,9 +239,11 @@
           return q.kind === 'section' ? sectionHtml(q, n) : questionHtml(q, n);
         }).join('')
       : '<div class="ec-questions-empty">' +
-          '<span class="ec-questions-empty-title">ยังไม่มีคำถามเพิ่มเติม</span>' +
-          '<span class="ec-questions-empty-text">ฟิลด์ระบบด้านบนเพียงพอสำหรับการลงทะเบียน หรือเพิ่มคำถามเฉพาะกิจกรรมได้ภายหลัง</span>' +
-          '<button type="button" class="btn btn-outline btn-sm" data-add-first>เพิ่มคำถามเพิ่มเติม</button>' +
+          '<span class="ec-questions-empty-title">' + (isRegistration() ? 'ยังไม่มีคำถามเพิ่มเติม' : 'ยังไม่มีคำถามในแบบประเมิน') + '</span>' +
+          '<span class="ec-questions-empty-text">' + (isRegistration()
+            ? 'ฟิลด์ระบบด้านบนเพียงพอสำหรับการลงทะเบียน หรือเพิ่มคำถามเฉพาะกิจกรรมได้ภายหลัง'
+            : 'เพิ่มคำถามอย่างน้อย 1 ข้อ เพื่อให้ผู้ตอบเริ่มทำแบบประเมินได้') + '</span>' +
+          '<button type="button" class="btn btn-outline btn-sm" data-add-first>' + (isRegistration() ? 'เพิ่มคำถามเพิ่มเติม' : 'เพิ่มคำถาม') + '</button>' +
         '</div>';
 
     $('ec-summary').textContent = questionCount() + ' ข้อ · ' +
@@ -414,24 +464,39 @@
       previewInput(field.label, placeholder, field.preview) + '</div>';
   }
 
+  function participantNamesPreviewHtml() {
+    var seats = state.bookingMode === 'group' ? state.maxSeats : 1;
+    var quantity = state.bookingMode === 'group'
+      ? '<div class="ec-registration-preview-field"><span class="ec-registration-preview-label">จำนวนที่นั่ง <b>*</b></span>' +
+          previewInput('จำนวนที่นั่ง', seats + ' ที่นั่ง', 'select') +
+          '<span class="ec-registration-preview-note">ตัวอย่างเมื่อผู้ลงทะเบียนเลือก ' + seats + ' ที่นั่ง</span></div>'
+      : '';
+    var names = [];
+    for (var i = 1; i <= seats; i++) {
+      var label = seats > 1 ? 'ชื่อ–นามสกุล คนที่ ' + i : 'ชื่อ–นามสกุล';
+      names.push('<div class="ec-registration-preview-field"><span class="ec-registration-preview-label">' + esc(label) + ' <b>*</b></span>' +
+        previewInput(label, 'ชื่อ นามสกุล', 'text') + '</div>');
+    }
+    return quantity + names.join('');
+  }
+
   function customQuestionsPreviewHtml() {
-    var nums = numbering();
     if (!state.items.length) return '';
-    return '<div class="ec-pv-section"><span class="ec-pv-section-no">เพิ่มเติม</span><span class="ec-pv-section-title">คำถามจากแบบประเมิน</span></div>' +
-      state.items.map(function (q, i) {
-        var n = nums[i];
+    return state.items.map(function (q) {
         if (q.kind === 'section') {
-          return '<div class="ec-pv-section"><span class="ec-pv-section-no">' + esc(n.sectionNo) + '</span><span class="ec-pv-section-title">' + esc(q.title.trim() || 'หัวข้อส่วน') + '</span></div>';
+          return '<div class="ec-registration-preview-heading">' + esc(q.title.trim() || 'หัวข้อส่วน') + '</div>';
         }
-        return '<div class="ec-pv-q' + (n.inSection ? ' is-nested' : '') + '"><span class="ec-pv-title">' + esc(n.no + '. ' + (q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
+        return '<div class="ec-pv-q"><span class="ec-pv-title">' + esc((q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
           multiHint(q.kind) + answerHtml(q, 'ec-pv') + (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') + '</div>';
       }).join('');
   }
 
   function registrationPreviewHtml() {
-    var order = ['name', 'gender', 'age_range', 'phone', 'email', 'occupation', 'source_channel', 'interests'];
-    return '<div class="ec-pv-section"><span class="ec-pv-section-no">ข้อมูล</span><span class="ec-pv-section-title">ข้อมูลผู้ลงทะเบียน</span></div>' +
-      order.map(registrationPreviewField).join('') + customQuestionsPreviewHtml() + registrationPreviewField('pdpa');
+    var optional = REGISTRATION_FIELDS.filter(function (field) { return !field.required; });
+    var order = optional.slice(0, 2).map(function (field) { return field.key; })
+      .concat(['phone'])
+      .concat(optional.slice(2).map(function (field) { return field.key; }));
+    return participantNamesPreviewHtml() + order.map(registrationPreviewField).join('') + customQuestionsPreviewHtml() + registrationPreviewField('pdpa');
   }
 
   function renderPreview() {
@@ -444,6 +509,7 @@
       : (isStandalone() ? 'ส่งตามรอบเวลา ไม่ผูกกับกิจกรรม' : 'คำอธิบายจะแสดงตรงนี้'));
 
     $('ec-preview-submit').textContent = isRegistration() ? 'ยืนยันการลงทะเบียน' : 'ส่งแบบประเมิน';
+    $('ec-preview-intro').hidden = isRegistration();
 
     if (isRegistration()) {
       $('ec-preview-list').innerHTML = registrationPreviewHtml();
@@ -572,8 +638,15 @@
      ตั้ง draggable ตอนกดที่ตัวจับเท่านั้น ไม่งั้นการลากเลือกข้อความในช่องกรอก
      จะกลายเป็นการลากทั้งแถวไปด้วย */
   var dragId = null;
+  var registrationDragKey = null;
 
   document.addEventListener('mousedown', function (e) {
+    var registrationGrip = e.target.closest('[data-registration-grip]');
+    var registrationRow = registrationGrip && registrationGrip.closest('[data-registration-row]');
+    if (registrationRow) {
+      registrationRow.setAttribute('draggable', 'true');
+      return;
+    }
     var grip = e.target.closest('[data-grip]');
     var row = grip && grip.closest('[data-row]');
     if (row) row.setAttribute('draggable', 'true');
@@ -582,11 +655,21 @@
   document.addEventListener('mouseup', clearDraggable);
 
   function clearDraggable() {
-    var rows = document.querySelectorAll('[data-row][draggable]');
+    var rows = document.querySelectorAll('[data-row][draggable], [data-registration-row][draggable]');
     Array.prototype.forEach.call(rows, function (r) { r.removeAttribute('draggable'); });
   }
 
   document.addEventListener('dragstart', function (e) {
+    var registrationRow = e.target.closest && e.target.closest('[data-registration-row]');
+    if (registrationRow && registrationRow.getAttribute('draggable')) {
+      registrationDragKey = registrationRow.getAttribute('data-registration-row');
+      registrationRow.classList.add('is-dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', registrationDragKey);
+      }
+      return;
+    }
     var row = e.target.closest && e.target.closest('[data-row]');
     if (!row || !row.getAttribute('draggable')) return;
     dragId = row.getAttribute('data-row');
@@ -599,6 +682,17 @@
   });
 
   document.addEventListener('dragover', function (e) {
+    if (registrationDragKey !== null) {
+      var registrationRow = e.target.closest && e.target.closest('[data-registration-row]');
+      if (!registrationRow) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      clearDropMarks();
+      if (registrationRow.getAttribute('data-registration-row') === registrationDragKey) return;
+      var registrationBox = registrationRow.getBoundingClientRect();
+      registrationRow.classList.add(e.clientY < registrationBox.top + registrationBox.height / 2 ? 'is-drop-before' : 'is-drop-after');
+      return;
+    }
     if (dragId === null) return;
     var row = e.target.closest && e.target.closest('[data-row]');
     if (!row) return;
@@ -611,24 +705,88 @@
   });
 
   document.addEventListener('drop', function (e) {
+    if (registrationDragKey !== null) {
+      var registrationRow = e.target.closest && e.target.closest('[data-registration-row]');
+      if (!registrationRow) return;
+      e.preventDefault();
+      var sourceKey = registrationDragKey;
+      var registrationTargetKey = registrationRow.getAttribute('data-registration-row');
+      var registrationBefore = registrationRow.classList.contains('is-drop-before');
+      endRegistrationDrag();
+      if (registrationTargetKey !== sourceKey) reorderRegistrationField(sourceKey, registrationTargetKey, registrationBefore);
+      return;
+    }
     if (dragId === null) return;
     var row = e.target.closest && e.target.closest('[data-row]');
     if (!row) return;
     e.preventDefault();
 
+    var sourceId = dragId;
     var targetId = row.getAttribute('data-row');
     var before = row.classList.contains('is-drop-before');
     endDrag();
-    if (targetId === dragId) return;
+    if (targetId === sourceId) return;
 
-    var from = indexOfId(dragId);
+    var from = indexOfId(sourceId);
     var moved = state.items.splice(from, 1)[0];
     var to = indexOfId(targetId);
     state.items.splice(before ? to : to + 1, 0, moved);
     touch(true);
   });
 
-  document.addEventListener('dragend', endDrag);
+  document.addEventListener('dragend', function () {
+    if (registrationDragKey !== null) endRegistrationDrag();
+    else endDrag();
+  });
+
+  function optionalRegistrationFields() {
+    return REGISTRATION_FIELDS.filter(function (field) { return !field.required; });
+  }
+
+  function applyRegistrationFieldOrder(optional) {
+    var required = REGISTRATION_FIELDS.filter(function (field) { return field.required && field.key !== 'pdpa'; });
+    var pdpa = registrationFieldByKey('pdpa');
+    REGISTRATION_FIELDS = required.concat(optional).concat(pdpa ? [pdpa] : []);
+  }
+
+  function finishRegistrationFieldMove(key) {
+    state.dirty = true;
+    renderRegistrationFields();
+    syncDerived();
+    var grip = document.querySelector('[data-registration-grip="' + key + '"]');
+    if (grip) grip.focus();
+  }
+
+  function moveRegistrationField(key, dir) {
+    var optional = optionalRegistrationFields();
+    var from = optional.map(function (field) { return field.key; }).indexOf(key);
+    var to = from + dir;
+    if (from < 0 || to < 0 || to >= optional.length) return;
+    var moved = optional.splice(from, 1)[0];
+    optional.splice(to, 0, moved);
+    applyRegistrationFieldOrder(optional);
+    finishRegistrationFieldMove(key);
+  }
+
+  function reorderRegistrationField(sourceKey, targetKey, before) {
+    var optional = optionalRegistrationFields();
+    var from = optional.map(function (field) { return field.key; }).indexOf(sourceKey);
+    if (from < 0) return;
+    var moved = optional.splice(from, 1)[0];
+    var to = optional.map(function (field) { return field.key; }).indexOf(targetKey);
+    if (to < 0) return;
+    optional.splice(before ? to : to + 1, 0, moved);
+    applyRegistrationFieldOrder(optional);
+    finishRegistrationFieldMove(sourceKey);
+  }
+
+  function endRegistrationDrag() {
+    var dragging = document.querySelector('[data-registration-row].is-dragging');
+    if (dragging) dragging.classList.remove('is-dragging');
+    clearDropMarks();
+    clearDraggable();
+    registrationDragKey = null;
+  }
 
   function endDrag() {
     var dragging = document.querySelector('.is-dragging');
@@ -666,6 +824,21 @@
   });
 
   document.addEventListener('change', function (e) {
+    if (e.target.id === 'ec-booking-mode') {
+      state.bookingMode = e.target.value;
+      state.dirty = true;
+      renderBookingConfig();
+      syncDerived();
+      return;
+    }
+
+    if (e.target.id === 'ec-booking-max-seats') {
+      state.maxSeats = Math.max(2, Math.min(5, Number(e.target.value) || 5));
+      state.dirty = true;
+      syncDerived();
+      return;
+    }
+
     var registrationField = e.target.closest('[data-registration-field]');
     if (registrationField) {
       var field = registrationFieldByKey(registrationField.getAttribute('data-registration-field'));
@@ -784,9 +957,7 @@
     if (t.closest('#ec-save-draft')) return saveDraft(true);
 
     if (t.closest('#ec-save') && !$('ec-save').disabled) {
-      state.dirty = false;
-      if (window.TFC.showToast) window.TFC.showToast('บันทึกและเปิดใช้งานแบบประเมินเรียบร้อย', 'success');
-      return;
+      return persist('active', true);
     }
 
     /* คลิกนอกรายการคำถาม = เลิกแก้ใบที่เปิดอยู่ ทุกใบยุบกลับเป็นตัวอย่าง
@@ -799,11 +970,18 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+      if (registrationDragKey !== null) return endRegistrationDrag();
       if (dragId !== null) return endDrag();
       if (state.activeId !== null) { state.activeId = null; renderItems(); }
       return;
     }
     /* คนที่ใช้คีย์บอร์ดหรือ screen reader ลากไม่ได้ จึงต้องมีทางเลื่อนลำดับด้วยลูกศร */
+    var registrationGrip = e.target.closest && e.target.closest('[data-registration-grip]');
+    if (registrationGrip && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      moveRegistrationField(registrationGrip.getAttribute('data-registration-grip'), e.key === 'ArrowUp' ? -1 : 1);
+      return;
+    }
     var grip = e.target.closest && e.target.closest('[data-grip]');
     if (grip && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       e.preventDefault();
@@ -812,8 +990,77 @@
   });
 
   /* ---------- บันทึกร่าง ---------- */
+  function payload(status) {
+    return {
+      name: state.name.trim(),
+      description: state.desc.trim() || null,
+      type: TYPE_BY_STAGE[state.stage],
+      status: status,
+      registration_mode: isRegistration() ? state.bookingMode : null,
+      max_participants: isRegistration() ? (state.bookingMode === 'group' ? state.maxSeats : 1) : null,
+      fields: isRegistration() ? REGISTRATION_FIELDS.map(function (field, index) {
+        return {
+          key: field.key,
+          is_enabled: field.required || !!field.enabled,
+          is_required: !!field.required,
+          sort_order: index + 1
+        };
+      }) : [],
+      questions: state.items.map(function (item, index) {
+        return {
+          type: item.kind,
+          text: item.title.trim(),
+          dimension: item.dimension || null,
+          is_required: item.kind === 'section' ? false : !!item.required,
+          sort_order: index + 1,
+          options: (item.choices || []).map(function (choice) {
+            return { label: choice.trim(), is_other: choice.trim() === 'อื่น ๆ' };
+          })
+        };
+      })
+    };
+  }
+
+  function setSaving(saving) {
+    state.saving = saving;
+    $('ec-save-draft').disabled = saving;
+    $('ec-save').disabled = saving || checklist().some(function (item) { return !item.ok; });
+  }
+
+  function persist(status, redirectAfter) {
+    if (state.saving) return Promise.resolve();
+    if (!state.name.trim()) {
+      if (window.TFC.showToast) window.TFC.showToast('กรุณาระบุชื่อชุดแบบประเมิน', 'error');
+      $('ec-name').focus();
+      return Promise.resolve();
+    }
+
+    setSaving(true);
+    var url = state.formCode ? '/admin/evaluations/' + encodeURIComponent(state.formCode) : '/admin/evaluations';
+    var method = state.formCode ? 'PUT' : 'POST';
+
+    return requestJson(url, { method: method, body: JSON.stringify(payload(status)) })
+      .then(function (data) {
+        state.formCode = data.form.code;
+        state.status = data.form.status;
+        state.dirty = false;
+        window.history.replaceState({}, '', '/admin/evaluations/' + encodeURIComponent(state.formCode) + '/edit');
+        if (window.TFC.showToast) window.TFC.showToast(data.message, 'success');
+        if (redirectAfter) window.setTimeout(function () { window.location.href = data.redirect; }, 450);
+        return data;
+      })
+      .catch(function (error) {
+        if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+      })
+      .finally(function () { setSaving(false); });
+  }
+
   function saveDraft(manual) {
-    state.dirty = false;
+    if (!state.name.trim()) {
+      if (manual && window.TFC.showToast) window.TFC.showToast('กรุณาระบุชื่อชุดแบบประเมินก่อนบันทึกร่าง', 'error');
+      return Promise.resolve();
+    }
+
     var now = new Date();
     /* ป้ายบอกเวลาบันทึกร่างอยู่บน topbar ซึ่งบางหน้าไม่ได้ใส่ไว้
        เช็กก่อนใช้ ไม่งั้นทั้งฟังก์ชันพังและ toast แจ้งผลก็ไม่ทำงานตามไปด้วย */
@@ -823,7 +1070,7 @@
       badgeText.textContent = 'บันทึกร่างล่าสุด ' +
         String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' น.';
     }
-    if (manual && window.TFC.showToast) window.TFC.showToast('บันทึกฉบับร่างเรียบร้อย', 'success');
+    return persist(manual ? 'draft' : state.status, false);
   }
 
   setInterval(function () { if (state.dirty) saveDraft(false); }, AUTOSAVE_MS);
@@ -839,6 +1086,62 @@
     if (!window.confirm('ยังไม่ได้บันทึกการเปลี่ยนแปลง ต้องการออกจากหน้านี้หรือไม่')) e.preventDefault();
   });
 
+  function applyLoadedForm(form) {
+    state.formCode = form.code;
+    state.status = form.status || 'draft';
+    state.name = form.name || '';
+    state.desc = form.description || '';
+    state.stage = STAGE_BY_TYPE[form.type] || 'หลังกิจกรรม';
+    state.bookingMode = form.registration_mode || 'single';
+    state.maxSeats = form.max_participants || 5;
+
+    var fields = (form.fields || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; });
+    if (fields.length) {
+      REGISTRATION_FIELDS = fields.map(function (saved) {
+        var base = registrationFieldByKey(saved.key);
+        if (!base) return null;
+        return Object.assign({}, base, {
+          enabled: !!saved.is_enabled,
+          required: !!saved.is_required || base.required
+        });
+      }).filter(Boolean);
+    }
+
+    var items = (form.questions || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; }).map(function (question) {
+      return {
+        id: question.id,
+        title: question.text,
+        kind: question.type,
+        dimension: question.dimension,
+        required: !!question.is_required,
+        choices: (question.options || []).map(function (option) { return option.label; })
+      };
+    });
+    state.nextId = items.reduce(function (max, item) { return Math.max(max, Number(item.id) || 0); }, 0) + 1;
+    state.items = items;
+    if (isRegistration()) {
+      state.registrationItems = items;
+      evaluationItems = [];
+    } else {
+      evaluationItems = items;
+      state.registrationItems = [];
+    }
+
+    $('ec-name').value = state.name;
+    $('ec-desc').value = state.desc;
+    document.title = 'แก้ไขแบบประเมิน | TheFarmConcept';
+    var pageTitle = document.querySelector('.ec-title');
+    var currentBreadcrumb = document.querySelector('.breadcrumb .is-current');
+    if (pageTitle) pageTitle.textContent = 'แก้ไขแบบประเมิน';
+    if (currentBreadcrumb) currentBreadcrumb.textContent = 'แก้ไขแบบประเมิน';
+    state.dirty = false;
+  }
+
+  function boot() {
+    if (window.TFC_EVALUATION_FORM) applyLoadedForm(window.TFC_EVALUATION_FORM);
+    syncAll();
+  }
+
   /* ---------- เริ่มต้น ---------- */
-  syncAll();
+  boot();
 })();

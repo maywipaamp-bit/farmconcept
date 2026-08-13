@@ -103,15 +103,16 @@ class PublicActivityController extends Controller
             return null;
         }
 
-        $days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+        $days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
         $months = [1 => 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
-        return 'วัน'.$days[$date->dayOfWeek].'ที่ '
-            .$date->day.' '.$months[$date->month].' '.($date->year + 543);
+        return $days[$date->dayOfWeek].' '
+            .$date->day.' '.$months[$date->month].' '
+            .str_pad((string) (($date->year + 543) % 100), 2, '0', STR_PAD_LEFT);
     }
 
     private function thaiDateTime(CarbonInterface $date): string
     {
-        return $this->thaiDate($date).' '.$date->format('H:i').' น.';
+        return $this->thaiDate($date).' · '.$date->format('H:i').' น.';
     }
 }

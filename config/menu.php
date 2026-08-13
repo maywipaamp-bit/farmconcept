@@ -95,8 +95,13 @@ return [
             'key' => 'evaluations',
             'label' => 'แบบประเมิน',
             'icon' => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
-            'href' => 'admin/evaluations/list.html',
-            'alsoMatch' => ['admin/evaluations/create.html'],
+            'href' => 'admin/evaluations',
+            'alsoMatch' => [
+                'admin/evaluations/create',
+                'admin/evaluations/list.html',
+                'admin/evaluations/create.html',
+            ],
+            'alsoMatchPatterns' => ['^/admin/evaluations/[A-Za-z0-9-]+/edit$'],
         ],
         [
             'key' => 'master-data',
@@ -132,6 +137,12 @@ return [
                     'label' => 'หมวดหมู่กิจกรรม',
                     'icon' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
                     'href' => 'admin/master/activity-formats',
+                ],
+                [
+                    'key' => 'master-data-payment-accounts',
+                    'label' => 'ข้อมูลการรับชำระ',
+                    'icon' => '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/>',
+                    'href' => 'admin/master/payment-accounts',
                 ],
                 [
                     /* คนละหน้ากับ "รอบติดตาม" ในกลุ่มประเมินสุขภาพ — ตัวนั้นตั้งช่วงวันที่จริงร่วมกันทั้งระบบ
@@ -193,7 +204,7 @@ return [
         'areas' => ['master-data-areas'],
         'master_data' => [
             'master-data-target-groups', 'master-data-programs', 'master-data-instructors',
-            'master-data-activity-formats', 'master-data-follow-up-rounds',
+            'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-follow-up-rounds',
         ],
         'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],

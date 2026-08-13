@@ -31,6 +31,9 @@ return new class extends Migration
         }
 
         Schema::table('mst_areas', function (Blueprint $table) {
+            /* SQLite ไม่ยอมลบคอลัมน์ที่ยังถูกอ้างโดย index ต้องถอด index ก่อน
+               MySQL ก็ได้ผล schema เดิม เพราะคอลัมน์ทั้งคู่กำลังถูกลบอยู่แล้ว */
+            $table->dropIndex(['province', 'district']);
             $table->dropColumn(['area_type', 'area_group', 'province', 'district', 'partner_org']);
         });
 
@@ -53,6 +56,7 @@ return new class extends Migration
             $table->string('province', 120)->nullable()->after('area_group');
             $table->string('district', 120)->nullable()->after('province');
             $table->string('partner_org', 200)->nullable()->after('end_date');
+            $table->index(['province', 'district']);
         });
 
         /* เขียนข้อความกลับจาก id เพื่อให้ย้อนกลับแล้วข้อมูลไม่หาย */

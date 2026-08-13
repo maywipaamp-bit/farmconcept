@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EvaluationController;
 use App\Http\Controllers\Admin\MasterData;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
@@ -143,6 +144,7 @@ Route::middleware('auth')->group(function () {
             $tables = [
                 'target-groups' => [MasterData\TargetGroupController::class, 'master-data-target-groups'],
                 'activity-formats' => [MasterData\ActivityFormatController::class, 'master-data-activity-formats'],
+                'payment-accounts' => [MasterData\PaymentAccountController::class, 'master-data-payment-accounts'],
                 'programs' => [MasterData\ProgramController::class, 'master-data-programs'],
                 'instructors' => [MasterData\InstructorController::class, 'master-data-instructors'],
                 'areas' => [MasterData\AreaController::class, 'master-data-areas'],
@@ -167,6 +169,14 @@ Route::middleware('auth')->group(function () {
 
                 Route::delete('/instructors/{code}/photo', [MasterData\InstructorController::class, 'deletePhoto'])
                     ->name('instructors.photo.destroy');
+            });
+
+            Route::middleware('menu:master-data-payment-accounts')->group(function () {
+                Route::post('/payment-accounts/{code}/qr-code', [MasterData\PaymentAccountController::class, 'uploadQrCode'])
+                    ->name('payment-accounts.qr-code.store');
+
+                Route::delete('/payment-accounts/{code}/qr-code', [MasterData\PaymentAccountController::class, 'deleteQrCode'])
+                    ->name('payment-accounts.qr-code.destroy');
             });
 
             /*
@@ -208,6 +218,27 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [CohortController::class, 'store'])->name('store');
             Route::get('/{cohortProfile}', [CohortController::class, 'show'])->name('show');
             Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
+        });
+
+        /* ลิงก์ Legacy ส่งต่อไป clean URL เท่านั้น ไม่ใช้ .html เป็น URL หลัก */
+        Route::get('/evaluations/list.html', fn () => redirect()->route('admin.evaluations.index', status: 301))
+            ->middleware('menu:evaluations')
+            ->name('evaluations.legacy-list');
+        Route::get('/evaluations/create.html', [EvaluationController::class, 'legacyCreateRedirect'])
+            ->middleware('menu:evaluations')
+            ->name('evaluations.legacy-create');
+
+        Route::prefix('evaluations')->name('evaluations.')->middleware('menu:evaluations')->group(function () {
+            Route::get('/', [EvaluationController::class, 'index'])->name('index');
+            Route::get('/data', [EvaluationController::class, 'data'])->name('data');
+            Route::get('/create', [EvaluationController::class, 'create'])->name('create');
+            Route::post('/', [EvaluationController::class, 'store'])->name('store');
+            Route::get('/{form}/edit', [EvaluationController::class, 'edit'])->where('form', '[A-Za-z0-9-]+')->name('edit');
+            Route::get('/{form}', [EvaluationController::class, 'show'])->where('form', '[A-Za-z0-9-]+')->name('show');
+            Route::put('/{form}', [EvaluationController::class, 'update'])->where('form', '[A-Za-z0-9-]+')->name('update');
+            Route::post('/{form}/duplicate', [EvaluationController::class, 'duplicate'])->where('form', '[A-Za-z0-9-]+')->name('duplicate');
+            Route::patch('/{form}/status', [EvaluationController::class, 'changeStatus'])->where('form', '[A-Za-z0-9-]+')->name('status');
+            Route::delete('/{form}', [EvaluationController::class, 'destroy'])->where('form', '[A-Za-z0-9-]+')->name('destroy');
         });
     });
 

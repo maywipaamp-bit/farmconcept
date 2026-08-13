@@ -1,0 +1,167 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Form;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class EvaluationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function admin(): User
+    {
+        $role = Role::create(['code' => 'evaluation-admin', 'name' => 'ผู้ดูแลแบบประเมิน', 'is_active' => true]);
+        $role->menuPermissions()->create(['menu_key' => 'evaluations', 'is_allowed' => true]);
+
+        $user = User::create([
+            'code' => 'USR-EVL-1',
+            'name' => 'ผู้ทดสอบแบบประเมิน',
+            'email' => 'evaluation@test.local',
+            'password' => 'secret-not-used',
+            'status' => 'ใช้งานอยู่',
+        ]);
+        $user->roles()->attach($role);
+
+        return $user;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function registrationFields(): array
+    {
+        $required = ['name', 'phone', 'pdpa'];
+        $keys = ['name', 'phone', 'gender', 'age_range', 'email', 'occupation', 'source_channel', 'interests', 'pdpa'];
+
+        return collect($keys)->map(fn (string $key, int $index) => [
+            'key' => $key,
+            'is_enabled' => true,
+            'is_required' => in_array($key, $required, true),
+            'sort_order' => $index + 1,
+        ])->all();
+    }
+
+    public function test_สร้างแบบลงทะเบียนแบบจองหลายคนและเก็บฟิลด์มาตรฐานได้(): void
+    {
+        $response = $this->actingAs($this->admin())->postJson('/admin/evaluations', [
+            'name' => 'แบบลงทะเบียนทดสอบ',
+            'description' => 'รองรับการจองแทน',
+            'type' => Form::TYPE_REGISTRATION,
+            'status' => Form::STATUS_ACTIVE,
+            'registration_mode' => 'group',
+            'max_participants' => 5,
+            'fields' => $this->registrationFields(),
+            'questions' => [],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('form.type', Form::TYPE_REGISTRATION);
+        $form = Form::where('code', $response->json('form.code'))->firstOrFail();
+
+        $this->assertSame(5, $form->max_participants);
+        $this->assertFalse($form->is_anonymous);
+        $this->assertCount(9, $form->fields);
+        $this->assertSame(['name', 'pdpa', 'phone'], $form->fields->where('is_required', true)->pluck('field_key')->sort()->values()->all());
+    }
+
+    public function test_สร้างแบบหลังกิจกรรมเป็นนิรนามพร้อมตัวเลือกคำถามได้(): void
+    {
+        $response = $this->actingAs($this->admin())->postJson('/admin/evaluations', [
+            'name' => 'แบบประเมินหลังจบกิจกรรม',
+            'type' => Form::TYPE_POST_ACTIVITY,
+            'status' => Form::STATUS_ACTIVE,
+            'fields' => [],
+            'questions' => [[
+                'type' => 'single',
+                'text' => 'จะแนะนำกิจกรรมนี้หรือไม่',
+                'dimension' => 'ความพึงพอใจ',
+                'is_required' => true,
+                'sort_order' => 1,
+                'options' => [
+                    ['label' => 'แนะนำ', 'is_other' => false],
+                    ['label' => 'ไม่แนะนำ', 'is_other' => false],
+                ],
+            ]],
+        ]);
+
+        $response->assertCreated();
+        $form = Form::where('code', $response->json('form.code'))->firstOrFail();
+        $this->assertTrue($form->is_anonymous);
+        $this->assertCount(2, $form->questions->first()->options);
+    }
+
+    public function test_แบบติดตามสุขภาพระบุตัวตนและบันทึกร่างได้แม้ยังไม่มีคำถาม(): void
+    {
+        $response = $this->actingAs($this->admin())->postJson('/admin/evaluations', [
+            'name' => 'แบบติดตามสุขภาพฉบับร่าง',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP,
+            'status' => Form::STATUS_DRAFT,
+            'fields' => [],
+            'questions' => [],
+        ]);
+
+        $response->assertCreated();
+        $this->assertFalse(Form::where('code', $response->json('form.code'))->firstOrFail()->is_anonymous);
+    }
+
+    public function test_เปิดใช้แบบประเมินทั่วไปไม่ได้ถ้ายังไม่มีคำถาม(): void
+    {
+        $this->actingAs($this->admin())->postJson('/admin/evaluations', [
+            'name' => 'แบบที่ยังไม่ครบ',
+            'type' => Form::TYPE_POST_ACTIVITY,
+            'status' => Form::STATUS_ACTIVE,
+            'fields' => [],
+            'questions' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors('questions');
+    }
+
+    public function test_ลบได้เฉพาะฉบับร่างที่ยังไม่มีคำตอบ(): void
+    {
+        $user = $this->admin();
+        $draft = Form::create([
+            'code' => 'EVL-TEST-DRAFT', 'name' => 'ร่างลบได้', 'type' => Form::TYPE_HEALTH_FOLLOW_UP,
+            'status' => Form::STATUS_DRAFT, 'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+        $active = Form::create([
+            'code' => 'EVL-TEST-ACTIVE', 'name' => 'เปิดใช้ลบไม่ได้', 'type' => Form::TYPE_HEALTH_FOLLOW_UP,
+            'status' => Form::STATUS_ACTIVE, 'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)->deleteJson('/admin/evaluations/'.$active->code)->assertUnprocessable();
+        $this->actingAs($user)->deleteJson('/admin/evaluations/'.$draft->code)->assertOk();
+        $this->assertDatabaseMissing('evl_forms', ['id' => $draft->id]);
+    }
+
+    public function test_หน้ารายการสร้างและแก้ไขใช้_clean_url_และผ่านสิทธิ์เมนู(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-ROUTE-1', 'name' => 'แบบทดสอบเส้นทาง',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_DRAFT,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)->get('/admin/evaluations')->assertOk()->assertSee('แบบประเมิน');
+        $this->actingAs($user)->get('/admin/evaluations/create')->assertOk()->assertSee('สร้างแบบประเมิน');
+        $this->actingAs($user)->get('/admin/evaluations/'.$form->code.'/edit')->assertOk()->assertSee('แก้ไขแบบประเมิน');
+        $this->actingAs($user)->getJson('/admin/evaluations/data')->assertOk()->assertJsonStructure(['forms']);
+    }
+
+    public function test_ลิงก์_html_เดิม_redirect_ไป_clean_url(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-LEGACY-1', 'name' => 'แบบทดสอบลิงก์เดิม',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_DRAFT,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)->get('/admin/evaluations/list.html')
+            ->assertRedirect('/admin/evaluations');
+        $this->actingAs($user)->get('/admin/evaluations/create.html')
+            ->assertRedirect(route('admin.evaluations.create'));
+        $this->actingAs($user)->get('/admin/evaluations/create.html?id='.$form->code)
+            ->assertRedirect(route('admin.evaluations.edit', $form));
+    }
+}

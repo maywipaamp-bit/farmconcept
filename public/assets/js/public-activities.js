@@ -1,6 +1,25 @@
 (function () {
     'use strict';
 
+    const menuButton = document.getElementById('public-menu-button');
+    const drawerFrame = document.getElementById('public-drawer-frame');
+    const drawerClose = document.getElementById('public-drawer-close');
+    const drawerOverlay = document.getElementById('public-drawer-overlay');
+
+    function setDrawer(open) {
+        if (!drawerFrame || !menuButton) return;
+        drawerFrame.classList.toggle('is-open', open);
+        drawerFrame.setAttribute('aria-hidden', String(!open));
+        menuButton.setAttribute('aria-expanded', String(open));
+    }
+
+    menuButton?.addEventListener('click', function () { setDrawer(true); });
+    drawerClose?.addEventListener('click', function () { setDrawer(false); });
+    drawerOverlay?.addEventListener('click', function () { setDrawer(false); });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') setDrawer(false);
+    });
+
     const rawActivities = window.TFC_PUBLIC_ACTIVITIES;
     const rawCategories = window.TFC_PUBLIC_CATEGORIES;
     if (!Array.isArray(rawActivities)) return;
@@ -108,7 +127,7 @@
             '<div class="other-thumb"><img src="' + escapeHtml(item.image) + '" alt=""><span class="activity-badge">' + escapeHtml(item.category || item.type) + '</span></div>' +
             '<div class="other-body">' +
                 '<p class="other-title">' + escapeHtml(item.title) + '</p>' +
-                '<div class="other-meta">' + icon('calendar') + '<span>' + escapeHtml(item.dateLabel || '-') + '</span></div>' +
+                '<div class="other-meta">' + icon('calendar') + '<span>' + escapeHtml(item.scheduleLabel || '-') + '</span></div>' +
                 '<div class="other-meta">' + icon('pin') + '<span>' + escapeHtml(item.location || '-') + '</span></div>' +
                 '<div class="other-price">฿ ' + escapeHtml(item.priceLabel) + '</div>' +
             '</div>' +

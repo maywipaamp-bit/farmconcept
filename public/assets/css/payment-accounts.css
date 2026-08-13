@@ -1,0 +1,257 @@
+/* หน้าข้อมูลการรับชำระ — ขอบเขตทุกกฎอยู่ใต้ .payment-accounts-page ไม่กระทบหน้าอื่น */
+.payment-accounts-page .payment-account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  width: min(100%, 640px);
+  margin-top: var(--sp-6);
+}
+
+.payment-accounts-page .payment-account-card {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.payment-accounts-page .payment-account-card.is-active {
+  border-color: var(--border-brand-soft);
+}
+
+.payment-accounts-page .payment-account-card-main {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 128px;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-4);
+}
+
+.payment-accounts-page .payment-account-bank-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--bank-color, var(--brand-600)) 12%, var(--bg-surface));
+  color: var(--bank-color, var(--brand-600));
+}
+
+.payment-accounts-page .payment-account-bank-icon svg { width: 25px; height: 25px; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="BBL"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="KKP"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="TISCO"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="LH"] { --bank-color: #1565C0; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="KBANK"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="BAAC"] { --bank-color: #138A48; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="KTB"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="TTB"] { --bank-color: #16A5D9; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="SCB"] { --bank-color: #5A2D82; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="BAY"] { --bank-color: #C99A00; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="GSB"] { --bank-color: #D81B78; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="GHB"] { --bank-color: #F57C00; }
+.payment-accounts-page .payment-account-bank-icon[data-bank="UOB"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="CIMB"],
+.payment-accounts-page .payment-account-bank-icon[data-bank="ICBC"] { --bank-color: #C62828; }
+
+.payment-accounts-page .payment-account-bank {
+  margin: 0 0 var(--sp-1);
+  color: var(--text-strong);
+  font-size: var(--fs-n-md);
+  font-weight: var(--fw-semibold);
+}
+
+.payment-accounts-page .payment-account-details span {
+  color: var(--text-secondary);
+  font-size: var(--fs-t5);
+  font-weight: var(--fw-regular);
+}
+
+.payment-accounts-page .payment-account-number {
+  margin: 0 0 var(--sp-1);
+  color: var(--text-strong);
+  font-size: var(--fs-n-md);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.02em;
+}
+
+.payment-accounts-page .payment-account-name,
+.payment-accounts-page .payment-account-updated {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-t5);
+}
+
+.payment-accounts-page .payment-account-updated {
+  margin-top: var(--sp-4);
+}
+
+.payment-accounts-page .payment-account-qr {
+  display: grid;
+  width: 128px;
+  height: 128px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: var(--fs-t5);
+}
+
+.payment-accounts-page .payment-account-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--sp-2);
+  background: var(--bg-surface);
+}
+
+.payment-accounts-page .payment-account-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+}
+
+.payment-accounts-page .payment-account-status-control,
+.payment-accounts-page .payment-account-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.payment-accounts-page .payment-account-status-label {
+  color: var(--text-body);
+  font-size: var(--fs-t4);
+}
+
+.payment-accounts-page .payment-account-empty {
+  grid-column: 1 / -1;
+  padding: var(--sp-12) var(--sp-6);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.payment-account-form-modal {
+  max-width: 680px;
+}
+
+.payment-account-form-modal .payment-account-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: var(--sp-6);
+}
+
+.payment-account-form-modal .payment-qr-upload {
+  display: block;
+  width: 100%;
+  height: 190px;
+  min-height: 0;
+  padding: var(--sp-2);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.payment-account-form-modal .payment-qr-preview {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  overflow: hidden;
+}
+
+.payment-account-form-modal .payment-qr-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 174px;
+  max-height: 174px;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+}
+
+.payment-account-form-modal #payment-qr-remove[hidden] {
+  display: none;
+}
+
+.payment-account-form-modal .payment-qr-placeholder svg {
+  display: block;
+  margin: 0 auto var(--sp-2);
+}
+
+.payment-account-form-modal .payment-active-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+}
+
+.payment-account-form-modal .payment-active-field .form-label {
+  margin: 0;
+}
+
+.payment-account-form-modal .payment-qr-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.payment-account-form-modal .payment-qr-actions .btn {
+  cursor: pointer;
+}
+
+.payment-account-form-modal .payment-qr-help {
+  margin: var(--sp-2) 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .payment-accounts-page .payment-account-card-main {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--sp-3);
+    padding: var(--sp-3);
+  }
+
+  .payment-accounts-page .payment-account-qr {
+    grid-column: 1 / -1;
+    width: min(100%, 190px);
+    height: auto;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
+  .payment-accounts-page .payment-account-number {
+    font-size: var(--fs-n-md);
+  }
+
+  .payment-accounts-page .payment-account-updated {
+    display: none;
+  }
+
+  .payment-accounts-page .payment-account-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: var(--sp-3);
+  }
+
+  .payment-accounts-page .payment-account-empty {
+    overflow-wrap: anywhere;
+  }
+
+  .payment-account-form-modal .payment-account-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

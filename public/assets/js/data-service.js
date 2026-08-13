@@ -26,7 +26,7 @@ window.TFC.dataService = function (entityKey, idField) {
   idField = idField || 'id';
   var LATENCY = 250;
   var base = window.TFC_API[entityKey] || null;
-  var masterMutationsViaPost = ['areas', 'targetGroups', 'programs', 'instructors', 'activityFormats']
+  var masterMutationsViaPost = ['areas', 'targetGroups', 'programs', 'instructors', 'activityFormats', 'paymentAccounts']
     .indexOf(entityKey) !== -1;
 
   /* ---------- โหมดฐานข้อมูลจริง ---------- */

@@ -1,4 +1,4 @@
-/* TheFarmConcept — หน้าจัดการแบบประเมิน (admin/evaluations/list.html)
+/* TheFarmConcept — หน้าจัดการแบบประเมิน (/admin/evaluations)
 
    หมายเหตุสำคัญเรื่องการลบ:
    เงื่อนไข "ลบได้เฉพาะชุดที่ยังไม่มีคำตอบ" ที่บังคับไว้ในไฟล์นี้เป็นแค่ชั้น UI
@@ -12,71 +12,15 @@
   var STAGES = ['ตอนลงทะเบียน', 'หลังกิจกรรม', 'ติดตามสุขภาพ'];
   var PAGE_SIZES = [10, 20, 50];
 
-  var FORMS = [
-    { id: 'f1', name: 'แบบประเมินความพึงพอใจ', stage: 'หลังกิจกรรม', status: 'ใช้งานอยู่', q: 8, answers: 486, updated: '2 ส.ค. 69' },
-    { id: 'f2', name: 'แบบลงทะเบียนมาตรฐาน', stage: 'ตอนลงทะเบียน', status: 'ใช้งานอยู่', q: 6, answers: 742, updated: '28 ก.ค. 69' },
-    { id: 'f3', name: 'แบบประเมินความรู้หลังอบรม', stage: 'หลังกิจกรรม', status: 'ใช้งานอยู่', q: 10, answers: 96, updated: '15 ก.ค. 69' },
-    { id: 'f4', name: 'แบบประเมินสุขภาพก่อนเข้าร่วม', stage: 'ตอนลงทะเบียน', status: 'ฉบับร่าง', q: 14, answers: 0, updated: '8 ส.ค. 69' },
-    { id: 'f5', name: 'แบบประเมินวิทยากร', stage: 'หลังกิจกรรม', status: 'ปิดใช้งาน', q: 5, answers: 38, updated: '20 มิ.ย. 69' },
-    { id: 'f6', name: 'แบบติดตามการเปลี่ยนแปลงสุขภาพ', stage: 'ติดตามสุขภาพ', status: 'ใช้งานอยู่', q: 12, answers: 264, updated: '6 ส.ค. 69' },
-    { id: 'f7', name: 'แบบคัดกรองสุขภาพเบื้องต้น', stage: 'ติดตามสุขภาพ', status: 'ฉบับร่าง', q: 16, answers: 0, updated: '8 ส.ค. 69' }
-  ];
-
-  /* ชุดคำถามของแต่ละแบบประเมิน — Preview ต้องแสดงคำถามของชุดที่กดจริง ไม่ใช่ชุดตัวอย่างชุดเดียว */
-  var QUESTIONS = {
-    f2: [
-      { title: 'ชื่อ–นามสกุล', kind: 'text', placeholder: 'ชื่อ นามสกุล' },
-      { title: 'เพศ', kind: 'choice', multi: false, choices: ['หญิง', 'ชาย', 'ไม่ระบุ'] },
-      { title: 'ช่วงอายุ', kind: 'dropdown', choices: ['18–25 ปี', '26–35 ปี', '36–45 ปี', '46 ปีขึ้นไป'] },
-      { title: 'รู้จักกิจกรรมจากช่องทางใด', kind: 'choice', multi: false, choices: ['Instagram', 'Facebook', 'เพื่อนแนะนำ', 'ป้ายในชุมชน'] },
-      { title: 'กิจกรรมที่สนใจเพิ่มเติม', kind: 'choice', multi: true, choices: ['เวิร์กช็อปทำอาหาร', 'ปลูกต้นไม้ / ทำสวน', 'โยคะ / สมาธิ'] }
-    ],
-    f3: [
-      { title: 'ผักปลอดสารต้องงดใช้สารเคมีทุกชนิด', kind: 'choice', multi: false, choices: ['ถูก', 'ผิด'] },
-      { title: 'ระยะเวลาหมักปุ๋ยจากเศษอาหารที่เหมาะสม', kind: 'dropdown', choices: ['7 วัน', '14 วัน', '30 วัน'] },
-      { title: 'สิ่งที่ได้เรียนรู้และจะนำไปใช้ต่อ', kind: 'text', placeholder: 'พิมพ์คำตอบ…' }
-    ],
-    f4: [
-      { title: 'โรคประจำตัว', kind: 'choice', multi: true, choices: ['ไม่มี', 'ความดันโลหิตสูง', 'เบาหวาน', 'โรคหัวใจ'] },
-      { title: 'น้ำหนัก (กก.)', kind: 'text', placeholder: 'เช่น 62.5' },
-      { title: 'ส่วนสูง (ซม.)', kind: 'text', placeholder: 'เช่น 165' }
-    ],
-    f5: [
-      { title: 'วิทยากรอธิบายเข้าใจง่าย', kind: 'rating' },
-      { title: 'ตอบคำถามได้ชัดเจน', kind: 'rating' },
-      { title: 'ความเห็นเพิ่มเติมต่อวิทยากร', kind: 'text', placeholder: 'พิมพ์คำตอบ…' }
-    ],
-    health: [
-      { title: 'น้ำหนักปัจจุบัน (กก.)', kind: 'text', placeholder: 'เช่น 62.5' },
-      { title: 'รอบเอว (ซม.)', kind: 'text', placeholder: 'เช่น 78' },
-      { title: 'ใน 1 สัปดาห์ที่ผ่านมา กินผักผลไม้กี่วัน', kind: 'dropdown', choices: ['ไม่ได้กินเลย', '1–2 วัน', '3–5 วัน', 'เกือบทุกวัน'] },
-      { title: 'ออกกำลังกาย 30 นาที กี่วันต่อสัปดาห์', kind: 'choice', multi: false, choices: ['ไม่ได้ออกเลย', '1–2 วัน', '3–4 วัน', '5 วันขึ้นไป'] },
-      { title: 'ประเมินสุขภาพโดยรวมของตนเอง', kind: 'rating' },
-      { title: 'สิ่งที่เปลี่ยนแปลงหลังเข้าร่วมโครงการ', kind: 'text', placeholder: 'พิมพ์คำตอบ…' }
-    ],
-    _default: [
-      { title: 'ความพึงพอใจโดยรวมต่อกิจกรรมนี้', kind: 'rating' },
-      { title: 'เนื้อหาตรงกับที่คาดหวัง', kind: 'rating' },
-      { title: 'วิทยากรอธิบายเข้าใจง่าย', kind: 'rating' },
-      { title: 'จะแนะนำกิจกรรมนี้ให้คนอื่นหรือไม่', kind: 'choice', multi: false, choices: ['แนะนำ', 'ไม่แน่ใจ', 'ไม่แนะนำ'] },
-      { title: 'สิ่งที่อยากให้ปรับปรุง', kind: 'text', placeholder: 'พิมพ์ความเห็นของคุณ…' }
-    ]
-  };
+  /* Blade ส่งข้อมูลจริงจากฐานมาให้ก่อนวาดเฟรมแรก */
+  var FORMS = window.TFC_EVALUATION_FORMS || [];
 
   function questionsFor(id) {
-    if (id === 'f6' || id === 'f7') return QUESTIONS.health;
-    return QUESTIONS[id] || QUESTIONS._default;
+    var form = formById(id);
+    return form && form.questions ? form.questions : [];
   }
 
   var state = { tab: 'ทั้งหมด', menu: null, page: 1, pageSize: PAGE_SIZES[0] };
-
-  var THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-  /* รูปแบบเดียวกับที่เก็บไว้ในข้อมูล เช่น "8 ส.ค. 69" (พ.ศ. 2 หลัก) */
-  function todayThai() {
-    var d = new Date();
-    return d.getDate() + ' ' + THAI_MONTHS[d.getMonth()] + ' ' + String((d.getFullYear() + 543) % 100);
-  }
 
   function filtered() {
     if (STAGES.indexOf(state.tab) > -1) {
@@ -89,14 +33,38 @@
   }
 
   function formById(id) {
-    return FORMS.filter(function (f) { return f.id === id; })[0];
+    return FORMS.filter(function (f) { return String(f.id) === String(id); })[0];
+  }
+
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+  }
+
+  function requestJson(url, options) {
+    options = options || {};
+    options.headers = Object.assign({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrfToken()
+    }, options.headers || {});
+    return fetch(url, options).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (!response.ok) {
+          var errors = data.errors || {};
+          var key = Object.keys(errors)[0];
+          throw new Error(key && errors[key] ? errors[key][0] : (data.message || 'ไม่สามารถทำรายการได้'));
+        }
+        return data;
+      });
+    });
   }
 
   /* ---------- หัวหน้า ---------- */
   window.TFC.renderPageHeader('el-page-header', {
     title: 'แบบประเมิน',
     actions: [
-      { label: 'สร้างแบบประเมิน', variant: 'primary', href: 'create.html',
+      { label: 'สร้างแบบประเมิน', variant: 'primary', href: window.TFC_EVALUATION_CREATE_URL || '/admin/evaluations/create',
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' }
     ]
   });
@@ -116,7 +84,7 @@
   /* รหัสสั้นสำหรับอ้างอิงเวลาคุยกัน — ยึดลำดับที่สร้าง ไม่ใช่ลำดับที่แสดงในตาราง
      สลับแท็บกรองแล้วรหัสจึงไม่เปลี่ยน */
   function codeOf(f) {
-    return 'EVL-' + String(FORMS.indexOf(f) + 1).padStart(2, '0');
+    return f.code || f.id;
   }
 
   function rowHtml(f) {
@@ -126,12 +94,14 @@
       '<div class="el-name-cell">' +
         '<span class="el-dot ' + STATUS_CLASS[f.status] + '"></span>' +
         '<span class="el-name-text">' +
-          '<a class="el-name" href="create.html?id=' + esc(f.id) + '">' + esc(f.name) + '</a>' +
+          '<a class="el-name" href="' + esc(f.edit_url || ('/admin/evaluations/' + f.id + '/edit')) + '">' + esc(f.name) + '</a>' +
           '<span class="el-status ' + STATUS_CLASS[f.status] + '">' + esc(f.status) + '</span>' +
         '</span>' +
       '</div>' +
       '<div class="el-cell">' + esc(f.stage) + '</div>' +
-      '<div class="el-cell el-num text-right">' + f.q + ' ข้อ</div>' +
+      /* ศูนย์ไม่ได้แปลว่าแบบฟอร์มว่าง — แบบลงทะเบียนยังมีฟิลด์ระบบอยู่
+         ใช้ขีดแทนเพื่อสื่อว่าไม่มี "คำถามเพิ่มเติม" โดยไม่ทำให้ผู้ใช้เข้าใจผิด */
+      '<div class="el-cell el-num text-right">' + (f.q > 0 ? f.q + ' ข้อ' : '–') + '</div>' +
       '<div class="el-cell el-num text-right">' + f.answers.toLocaleString('th-TH') + '</div>' +
       '<div class="el-cell el-num">' + esc(f.updated) + '</div>' +
       '<div class="el-actions">' +
@@ -169,7 +139,7 @@
 
   /* ลบได้เฉพาะชุดที่ยังไม่มีคำตอบ — ชุดที่มีคำตอบแล้วต้องเก็บไว้เพื่อไม่ให้ข้อมูลที่เก็บมากำพร้า */
   function menuHtml(f) {
-    var canDelete = f.answers === 0;
+    var canDelete = f.answers === 0 && f.status === 'ฉบับร่าง';
     var moves = statusMoves(f);
 
     return '<div class="el-menu" role="menu">' +
@@ -187,13 +157,16 @@
       '<button type="button" class="el-menu-item" role="menuitem" data-preview="' + f.id + '">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.8 5.4h2.4"/></svg>' +
         'Preview มือถือ</button>' +
-      '<a class="el-menu-item" role="menuitem" href="create.html?id=' + esc(f.id) + '">' +
+      '<a class="el-menu-item" role="menuitem" href="' + esc(f.edit_url || ('/admin/evaluations/' + f.id + '/edit')) + '">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>' +
         'แก้ไขแบบประเมิน</a>' +
+      '<button type="button" class="el-menu-item" role="menuitem" data-duplicate="' + f.id + '">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>' +
+        'ทำสำเนาแบบประเมิน</button>' +
       /* เหตุผลที่ลบไม่ได้ย้ายไปอยู่ใน title แทนบรรทัดอธิบาย เพื่อให้เมนูสะอาด
          แต่ยังชี้เมาส์อ่านได้ว่าทำไมปุ่มถึงกดไม่ลง */
       '<button type="button" class="el-menu-item is-danger" role="menuitem" data-delete="' + f.id + '"' +
-        (canDelete ? '' : ' disabled title="ลบไม่ได้ — ชุดนี้มีคำตอบที่เก็บไว้แล้ว"') + '>' +
+        (canDelete ? '' : ' disabled title="ลบได้เฉพาะฉบับร่างที่ยังไม่มีคำตอบ"') + '>' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5.5h5V7M7 7l.8 12h8.4L17 7"/></svg>' +
         'ลบแบบประเมิน</button>' +
       '</div>';
@@ -315,13 +288,34 @@
       var sp = st.getAttribute('data-status').split(':');
       var sf = formById(sp[0]);
       state.menu = null;
-      if (sf) {
-        sf.status = sp[1];
-        /* เปลี่ยนสถานะถือเป็นการแก้ไข วันที่แก้ไขล่าสุดจึงต้องขยับตาม */
-        sf.updated = todayThai();
-      }
       render();
-      if (sf && window.TFC.showToast) window.TFC.showToast(sf.name + ' → ' + sf.status, 'success');
+      if (sf) {
+        var statusKey = { 'ใช้งานอยู่': 'active', 'ปิดใช้งาน': 'inactive', 'ฉบับร่าง': 'draft' }[sp[1]];
+        requestJson('/admin/evaluations/' + encodeURIComponent(sf.code) + '/status', {
+          method: 'PATCH', body: JSON.stringify({ status: statusKey })
+        }).then(function (data) {
+          Object.assign(sf, data.form);
+          render();
+          if (window.TFC.showToast) window.TFC.showToast(data.message, 'success');
+        }).catch(function (error) {
+          if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+        });
+      }
+      return;
+    }
+
+    var duplicate = t.closest('[data-duplicate]');
+    if (duplicate) {
+      var source = formById(duplicate.getAttribute('data-duplicate'));
+      state.menu = null;
+      render();
+      if (!source) return;
+      requestJson('/admin/evaluations/' + encodeURIComponent(source.code) + '/duplicate', { method: 'POST', body: '{}' })
+        .then(function (data) {
+          window.location.href = '/admin/evaluations/' + encodeURIComponent(data.form.code) + '/edit';
+        }).catch(function (error) {
+          if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+        });
       return;
     }
 
@@ -351,7 +345,15 @@
       var df = formById(del.getAttribute('data-delete'));
       state.menu = null;
       render();
-      if (df && window.TFC.showToast) window.TFC.showToast('ลบ ' + df.name + ' เรียบร้อย', 'success');
+      if (!df || !window.confirm('ยืนยันการลบ “' + df.name + '” หรือไม่')) return;
+      requestJson('/admin/evaluations/' + encodeURIComponent(df.code), { method: 'DELETE' })
+        .then(function (data) {
+          FORMS = FORMS.filter(function (form) { return form.id !== df.id; });
+          render();
+          if (window.TFC.showToast) window.TFC.showToast(data.message, 'success');
+        }).catch(function (error) {
+          if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+        });
       return;
     }
 
@@ -372,4 +374,6 @@
   /* ---------- เริ่มต้น ---------- */
   renderTabs();
   render();
+  /* Blade ส่งข้อมูลรอบแรกมาใน HTML จึงไม่เกิด Loading/Flicker ตอนเปิดหน้า
+     endpoint /data ยังเก็บไว้สำหรับ refresh แบบไม่โหลดหน้าในอนาคต */
 })();

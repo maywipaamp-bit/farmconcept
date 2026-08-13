@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Registration extends Model
 {
@@ -78,6 +79,12 @@ class Registration extends Model
     public function satisfactionReceipts(): HasMany
     {
         return $this->hasMany(SatisfactionReceipt::class);
+    }
+
+    /** คำตอบคำถามเพิ่มเติมในแบบลงทะเบียน เก็บรวมกับคำตอบแบบประเมินผ่าน morph map */
+    public function answers(): MorphMany
+    {
+        return $this->morphMany(Answer::class, 'response');
     }
 
     public function scopeCheckedIn(Builder $query): Builder

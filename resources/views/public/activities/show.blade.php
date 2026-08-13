@@ -14,6 +14,10 @@
         <div class="detail-body">
             <h1>{{ $activity['title'] }}</h1>
 
+            @if($activity['description'])
+                <p class="detail-description">{{ $activity['description'] }}</p>
+            @endif
+
             <div class="detail-meta">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
                 <span>{{ $activity['scheduleLabel'] ?: '-' }}</span>
@@ -30,10 +34,6 @@
                 <span class="baht-icon">฿</span>
                 <span>{{ $activity['priceLabel'] }}</span>
             </div>
-
-            @if($activity['description'])
-                <p class="detail-description">{{ $activity['description'] }}</p>
-            @endif
 
             @if($activity['registrationDeadlineLabel'])
                 <div class="deadline-note">
