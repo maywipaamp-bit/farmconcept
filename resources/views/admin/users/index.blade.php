@@ -50,7 +50,7 @@
 {{-- modal-lg (720px) ไม่ใช่ค่าเริ่มต้น 960px — ฟอร์มนี้มี 7 ช่อง ถ้ากว้างเต็มที่
      ช่องกรอกจะยาวเกินความยาวข้อมูลที่กรอกจริงไปมาก อ่านแล้วรู้สึกว่างเปล่า --}}
 <div class="modal-overlay" id="user-form-modal">
-  <div class="modal modal-lg">
+  <div class="modal modal-lg instructor-profile-modal user-profile-form-modal">
     <div class="modal-header">
       <h3 class="modal-title" id="user-form-title">เพิ่มผู้ใช้งาน</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิดหน้าต่าง">
@@ -58,60 +58,76 @@
       </button>
     </div>
     <form id="user-form">
-      {{-- กริดเดียวสามคอลัมน์: รูป · ช่องซ้าย · ช่องขวา
-           ทุกช่องจึงเรียงตรงคอลัมน์กันหมด — สถานะอยู่ตรงกับ Password และเบอร์โทร --}}
-      <div class="modal-body user-form-grid">
-        <div class="form-group mb-0 user-form-photo">
-          <label class="form-label">รูปภาพ</label>
-          <div class="photo-slot" id="user-photo-slot" tabindex="0" role="button" aria-label="เลือกรูปภาพผู้ใช้งาน">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div class="modal-body">
+        <div class="instructor-photo-section">
+          <div class="photo-slot instructor-photo-slot" id="user-photo-slot" tabindex="0" role="button" aria-label="เลือกรูปภาพผู้ใช้งาน">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span>เพิ่มรูป</span>
             <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" id="user-avatar-input">
           </div>
-          <div class="form-helper">.jpg / .png ไม่เกิน 2 MB</div>
+          <button type="button" class="instructor-photo-action" id="user-photo-action">เปลี่ยนรูปภาพ</button>
         </div>
 
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
-          <input class="input" id="user-name" data-validate required placeholder="เช่น สุนิสา แก้วมณี">
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-phone">เบอร์โทร</label>
-          <input class="input" type="tel" id="user-phone" maxlength="30" placeholder="08x-xxx-xxxx">
-        </div>
-
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-username">Username<span class="form-required">*</span></label>
-          <input class="input" id="user-username" data-validate required placeholder="เช่น sunisa01">
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-password">Password<span class="form-required" id="user-password-required">*</span>
-            {{-- คำอธิบายอยู่ในเครื่องหมาย ? ชี้เมาส์หรือ Tab มาโฟกัสแล้วจึงแสดง
-                 ข้อความเปลี่ยนตามโหมด: เพิ่มใหม่บอกเงื่อนไขรหัส แก้ไขบอกว่าเว้นว่างได้ --}}
-            <span class="tooltip label-hint" tabindex="0" role="note"
-                  id="user-password-helper" data-tooltip="ตัวอักษรภาษาอังกฤษ ตัวเลข อย่างน้อย 4 ตัวอักษร"
-                  aria-label="ตัวอักษรภาษาอังกฤษ ตัวเลข อย่างน้อย 4 ตัวอักษร">?</span>
-          </label>
-          {{-- ปุ่มสลับซ่อน/แสดง — รหัสที่พิมพ์ผิดโดยไม่รู้ตัวคือสาเหตุอันดับหนึ่งที่บันทึกแล้วเข้าไม่ได้ --}}
-          <div class="input-with-action">
-            <input class="input" type="password" id="user-password" autocomplete="new-password">
-            <button type="button" class="input-action" id="user-password-toggle" aria-pressed="false">แสดง</button>
+        <div class="instructor-profile-fields">
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <label for="user-name">ชื่อ-นามสกุล<span class="form-required">*</span></label>
+            </div>
+            <input class="input" id="user-name" data-validate required placeholder="เช่น สุนิสา แก้วมณี">
           </div>
-        </div>
 
-        {{-- บทบาทเป็นช่องติ๊กที่เห็นทุกตัวเลือกพร้อมกัน ไม่ใช่ dropdown ที่ต้องกดเปิดก่อน
-             ตัวเลือกมีไม่กี่รายการและมักเลือกมากกว่าหนึ่ง การซ่อนไว้ทำให้ต้องกดเพิ่มโดยไม่จำเป็น --}}
-        <div class="form-group mb-0 user-form-roles">
-          <span class="form-label" id="user-roles-label">บทบาท<span class="form-required">*</span>
-            <span class="form-label-note">เลือกได้มากกว่า 1 บทบาท</span>
-          </span>
-          <div class="check-grid" id="user-roles-menu" role="group" aria-labelledby="user-roles-label"></div>
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-active">สถานะ<span class="form-required">*</span></label>
-          <div class="flex items-center gap-2">
-            <label class="switch"><input type="checkbox" id="user-active" checked><span class="switch-track"></span></label>
-            <span class="small text-secondary" id="user-active-label">ใช้งานอยู่</span>
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.69 2.8a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0122 16.92z"/></svg>
+              <label for="user-phone">เบอร์โทร</label>
+            </div>
+            <input class="input" type="tel" id="user-phone" maxlength="30" placeholder="08x-xxx-xxxx">
+          </div>
+
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+              <label for="user-username">Username<span class="form-required">*</span></label>
+            </div>
+            <input class="input" id="user-username" data-validate required placeholder="เช่น sunisa01">
+          </div>
+
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+              <label for="user-password">Password<span class="form-required" id="user-password-required">*</span>
+                <span class="tooltip label-hint" tabindex="0" role="note"
+                      id="user-password-helper" data-tooltip="ตัวอักษรภาษาอังกฤษ ตัวเลข อย่างน้อย 4 ตัวอักษร"
+                      aria-label="ตัวอักษรภาษาอังกฤษ ตัวเลข อย่างน้อย 4 ตัวอักษร">?</span>
+              </label>
+            </div>
+            <div class="input-with-action">
+              <input class="input" type="password" id="user-password" autocomplete="new-password">
+              <button type="button" class="input-action" id="user-password-toggle" aria-pressed="false">แสดง</button>
+            </div>
+          </div>
+
+          <div class="instructor-profile-field is-align-start user-profile-role-row">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span id="user-roles-label">บทบาท<span class="form-required">*</span></span>
+            </div>
+            <div class="instructor-profile-control">
+              <span class="form-label-note user-profile-role-note">เลือกได้มากกว่า 1 บทบาท</span>
+              <div class="check-grid" id="user-roles-menu" role="group" aria-labelledby="user-roles-label"></div>
+            </div>
+          </div>
+
+          <div class="instructor-profile-field">
+            <div class="instructor-profile-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <label for="user-active">สถานะ<span class="form-required">*</span></label>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="switch"><input type="checkbox" id="user-active" checked><span class="switch-track"></span></label>
+              <span class="small text-secondary" id="user-active-label">ใช้งานอยู่</span>
+            </div>
           </div>
         </div>
       </div>
@@ -229,6 +245,7 @@
 
   function showAvatar(name, src) {
     photoSlot.innerHTML = src ? '<img src="' + src + '" alt="รูปผู้ใช้งาน">' : photoPlaceholder;
+    photoSlot.classList.toggle('has-photo', Boolean(src));
 
     /* innerHTML สร้าง input file ตัวใหม่ที่ไม่มี event และไม่มีไฟล์ที่เลือกไว้ทุกครั้ง
        ต้องทิ้งตัวใหม่แล้วเอาตัวจริงกลับเข้ามา ไม่งั้นหลังกด "เพิ่มผู้ใช้งาน" จะเลือกรูปไม่ได้อีกเลย */
@@ -238,6 +255,7 @@
   }
 
   photoSlot.addEventListener('click', function () { photoInput.click(); });
+  document.getElementById('user-photo-action').addEventListener('click', function () { photoInput.click(); });
   photoInput.addEventListener('click', function (e) { e.stopPropagation(); });
 
   photoSlot.addEventListener('keydown', function (e) {
