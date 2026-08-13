@@ -485,8 +485,8 @@
 
       /* ฟอร์มแยกช่องวันกับช่องเวลา ฐานข้อมูลเก็บเป็นค่าเดียว จึงต้องประกบกลับ
          ไม่ครบทั้งวันและเวลา = ถือว่าไม่ได้ตั้ง ส่ง null ไปแทนค่าครึ่ง ๆ ที่ใช้ไม่ได้ */
-      publish_start_at: joinAt(state.windows.reg, 'from'),
-      publish_end_at: joinAt(state.windows.reg, 'to'),
+      registration_start_at: joinAt(state.windows.reg, 'from'),
+      registration_end_at: joinAt(state.windows.reg, 'to'),
       checkin_start_at: joinAt(state.windows.chk, 'from'),
       checkin_end_at: joinAt(state.windows.chk, 'to'),
       survey_start_at: joinAt(state.windows.srv, 'from'),

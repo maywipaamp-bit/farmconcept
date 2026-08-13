@@ -1064,7 +1064,7 @@
       return { from: s.date || '', fromT: s.time || '', to: e.date || '', toT: e.time || '' };
     }
 
-    state.windows.reg = windowFrom(a.publishStart, a.publishEnd);
+    state.windows.reg = windowFrom(a.registrationStart, a.registrationEnd);
     state.windows.chk = windowFrom(a.checkinStart, a.checkinEnd);
     state.windows.srv = windowFrom(a.surveyStart, a.surveyEnd);
 

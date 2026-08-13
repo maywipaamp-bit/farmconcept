@@ -90,6 +90,9 @@ class ActivityRequest extends FormRequest
 
             'publish_start_at' => ['nullable', 'date'],
             'publish_end_at' => ['nullable', 'date', 'after:publish_start_at'],
+            'registration_start_at' => ['nullable', 'date'],
+            'registration_end_at' => ['nullable', 'required_if:requires_registration,true', 'date', 'after_or_equal:registration_start_at'],
+            'public_sort_order' => ['nullable', 'integer', 'min:0', 'max:100000'],
 
             'area_ids' => [$whenPublishing, 'array'],
             'area_ids.*' => ['integer', 'exists:mst_areas,id'],
@@ -128,6 +131,9 @@ class ActivityRequest extends FormRequest
             'survey_end_at' => 'เวลาสิ้นสุดทำแบบประเมิน',
             'publish_start_at' => 'เวลาเริ่มเผยแพร่',
             'publish_end_at' => 'เวลาสิ้นสุดเผยแพร่',
+            'registration_start_at' => 'เวลาเปิดรับสมัคร',
+            'registration_end_at' => 'เวลาปิดรับสมัคร',
+            'public_sort_order' => 'ลำดับการแสดงหน้าเว็บ',
             'parent_event_id' => 'อีเวนท์ที่สังกัด',
             'area_ids' => 'สถานที่จัด',
             'target_group_ids' => 'กลุ่มเป้าหมาย',
@@ -153,6 +159,7 @@ class ActivityRequest extends FormRequest
             'fee.required_if' => 'กรุณาระบุค่าเข้าร่วม เมื่อเลือกว่ากิจกรรมมีค่าใช้จ่าย',
             'checkin_start_at.required_if' => 'กรุณาระบุเวลาเริ่มเช็คอิน เมื่อเปิดใช้การเช็คอิน',
             'checkin_end_at.required_if' => 'กรุณาระบุเวลาสิ้นสุดเช็คอิน เมื่อเปิดใช้การเช็คอิน',
+            'registration_end_at.required_if' => 'กรุณาระบุเวลาปิดรับสมัคร เมื่อเปิดใช้การลงทะเบียน',
         ];
     }
 
@@ -164,6 +171,7 @@ class ActivityRequest extends FormRequest
         return [
             fn (Validator $v) => $this->checkRoundsDoNotOverlap($v),
             fn (Validator $v) => $this->checkPublishWindow($v),
+            fn (Validator $v) => $this->checkRegistrationWindow($v),
             fn (Validator $v) => $this->checkParentEvent($v),
         ];
     }
@@ -240,6 +248,21 @@ class ActivityRequest extends FormRequest
 
         if ($publishEnd && $startDate && $publishEnd > $startDate . ' 23:59:59') {
             $validator->errors()->add('publish_end_at', 'เวลาสิ้นสุดเผยแพร่ต้องไม่เลยวันที่จัดกิจกรรม');
+        }
+    }
+
+    /** วันปิดรับสมัครต้องไม่เลยวันจัดกิจกรรม */
+    private function checkRegistrationWindow(Validator $validator): void
+    {
+        if (! $this->boolean('requires_registration')) {
+            return;
+        }
+
+        $registrationEnd = $this->input('registration_end_at');
+        $startDate = $this->input('start_date');
+
+        if ($registrationEnd && $startDate && $registrationEnd > $startDate . ' 23:59:59') {
+            $validator->errors()->add('registration_end_at', 'เวลาปิดรับสมัครต้องไม่เลยวันที่จัดกิจกรรม');
         }
     }
 }

@@ -67,7 +67,8 @@ class ActivityService
             'start_date', 'end_date', 'checkin_start_at', 'checkin_end_at',
             'survey_start_at', 'survey_end_at',
             'is_published', 'publish_start_at', 'publish_end_at',
-            'visibility', 'is_featured',
+            'registration_start_at', 'registration_end_at',
+            'visibility', 'is_featured', 'public_sort_order',
         ];
 
         $columns = array_intersect_key($data, array_flip($keys));

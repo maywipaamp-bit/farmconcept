@@ -74,12 +74,58 @@
 
           </section>
 
-          <!-- ---------- 2. คำถาม ---------- -->
-          <section class="card ec-section">
+          <!-- ---------- 2. ฟิลด์ลงทะเบียน (แสดงเฉพาะประเภทตอนลงทะเบียน) ---------- -->
+          <section class="card ec-section" id="ec-registration-section" hidden>
             <div class="ec-section-head ec-section-head-split">
               <div class="ec-section-head">
                 <span class="ec-section-no">2</span>
-                <h2 class="ec-section-title">คำถาม</h2>
+                <div class="ec-section-heading">
+                  <h2 class="ec-section-title">ฟิลด์ลงทะเบียน</h2>
+                  <span class="ec-note">กำหนดเฉพาะข้อมูลผู้ลงทะเบียนที่ต้องการเก็บ</span>
+                </div>
+              </div>
+              <span class="ec-summary" id="ec-registration-summary"></span>
+            </div>
+
+            <div class="ec-registration-auto" role="note">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+              <div>
+                <strong>ระบบจะแสดงอีก 2 ส่วนให้อัตโนมัติ</strong>
+                <span>รอบที่สมัครดึงจากรอบกิจกรรม · บัญชีรับชำระและช่องแนบสลิปแสดงเมื่อกิจกรรมมีค่าใช้จ่าย</span>
+              </div>
+            </div>
+
+            <div class="ec-registration-group">
+              <div class="ec-registration-group-head">
+                <div>
+                  <h3>ข้อมูลบังคับ</h3>
+                  <p>เป็นข้อมูลหลักสำหรับยืนยันและบันทึกการลงทะเบียน ปิดใช้งานไม่ได้</p>
+                </div>
+                <span class="badge badge-primary">ระบบกำหนด</span>
+              </div>
+              <div class="ec-registration-fields" id="ec-registration-required"></div>
+            </div>
+
+            <div class="ec-registration-group">
+              <div class="ec-registration-group-head">
+                <div>
+                  <h3>ข้อมูลเพิ่มเติม</h3>
+                  <p>เปิดเฉพาะข้อมูลที่จำเป็นต่อกิจกรรมและการนำไปใช้ในรายงาน</p>
+                </div>
+              </div>
+              <div class="ec-registration-fields" id="ec-registration-optional"></div>
+            </div>
+          </section>
+
+          <!-- ---------- 2/3. คำถาม ---------- -->
+          <section class="card ec-section">
+            <div class="ec-section-head ec-section-head-split">
+              <div class="ec-section-head">
+                <span class="ec-section-no" id="ec-questions-section-no">2</span>
+                <div class="ec-section-heading">
+                  <h2 class="ec-section-title" id="ec-questions-title">คำถาม</h2>
+                  <span class="ec-note" id="ec-questions-note" hidden>เพิ่มคำถามเฉพาะที่ไม่มีอยู่ในฟิลด์ระบบ โดยจะแสดงต่อท้ายข้อมูลลงทะเบียน</span>
+                </div>
               </div>
               <span class="ec-summary" id="ec-summary"></span>
             </div>
@@ -102,7 +148,7 @@
                 <span class="ec-preview-desc" id="ec-preview-desc">คำอธิบายจะแสดงตรงนี้</span>
               </div>
               <div class="ec-preview-list" id="ec-preview-list"></div>
-              <button type="button" class="btn btn-primary btn-block btn-sm ec-preview-submit" disabled>ส่งแบบประเมิน</button>
+              <button type="button" class="btn btn-primary btn-block btn-sm ec-preview-submit" id="ec-preview-submit" disabled>ส่งแบบประเมิน</button>
             </div>
           </div>
 

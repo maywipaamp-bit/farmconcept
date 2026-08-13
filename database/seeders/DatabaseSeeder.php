@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             MasterDataSeeder::class,
             RoleAndUserSeeder::class,
             ActivitySeeder::class,
+            PublicActivitySeeder::class,
             DashboardDemoSeeder::class,
             ReviewRoundSeeder::class,
         ]);

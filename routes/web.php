@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
+use App\Http\Controllers\PublicActivityController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,20 @@ Route::middleware('guest')->group(function () {
 
 /* ลิงก์เก่าที่ยังชี้ /login.html — ส่งต่อไปหน้าใหม่แทนที่จะ 404 */
 Route::redirect('/login.html', '/login');
+
+/* หน้ากิจกรรมสาธารณะ — รายการและรายละเอียดอ่านจาก MySQL ผ่าน Laravel */
+Route::get('/activities', [PublicActivityController::class, 'page'])
+    ->name('public.activities');
+
+Route::redirect('/activities.html', '/activities', 301);
+
+Route::get('/activities/{activity}', [PublicActivityController::class, 'show'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->name('public.activities.show');
+
+/* ข้อมูลกิจกรรมสาธารณะ — คืนเฉพาะรายการที่เผยแพร่ */
+Route::get('/api/public/activities', [PublicActivityController::class, 'index'])
+    ->name('public.activities.data');
 
 /*
  | หน้าส่งงานให้ลูกค้าตรวจ — อยู่นอก middleware auth โดยตั้งใจ

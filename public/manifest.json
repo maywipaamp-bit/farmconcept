@@ -1,7 +1,7 @@
 {
   "name": "The Farm Concept",
   "short_name": "The Farm Concept",
-  "start_url": "activities.html",
+  "start_url": "/activities",
   "scope": "./",
   "display": "standalone",
   "theme_color": "#81C060",

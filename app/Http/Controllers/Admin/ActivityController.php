@@ -286,6 +286,9 @@ class ActivityController extends Controller
             'survey_end_at' => $activity->survey_end_at?->format('Y-m-d H:i:s'),
             'publish_start_at' => $activity->publish_start_at?->format('Y-m-d H:i:s'),
             'publish_end_at' => $activity->publish_end_at?->format('Y-m-d H:i:s'),
+            'registration_start_at' => $activity->registration_start_at?->format('Y-m-d H:i:s'),
+            'registration_end_at' => $activity->registration_end_at?->format('Y-m-d H:i:s'),
+            'public_sort_order' => $activity->public_sort_order,
             'area_ids' => $activity->areas->pluck('id'),
             'instructor_ids' => $activity->instructors->pluck('id'),
             'target_group_ids' => $activity->targetGroups->pluck('id'),
@@ -318,8 +321,8 @@ class ActivityController extends Controller
             ],
 
             /* ช่วงเวลา — ฟอร์มผ่าเป็นช่องวันกับช่องเวลาเอง */
-            'publishStart' => $activity->publish_start_at?->format('Y-m-d H:i'),
-            'publishEnd' => $activity->publish_end_at?->format('Y-m-d H:i'),
+            'registrationStart' => $activity->registration_start_at?->format('Y-m-d H:i'),
+            'registrationEnd' => $activity->registration_end_at?->format('Y-m-d H:i'),
             'checkinStart' => $activity->checkin_start_at?->format('Y-m-d H:i'),
             'checkinEnd' => $activity->checkin_end_at?->format('Y-m-d H:i'),
             'surveyStart' => $activity->survey_start_at?->format('Y-m-d H:i'),

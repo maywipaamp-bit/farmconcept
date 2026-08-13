@@ -26,7 +26,22 @@
     { label: 'หลังกิจกรรม', hint: 'ส่งให้ผู้เข้าร่วมหลังจบงาน' },
     { label: 'ติดตามสุขภาพ', hint: 'ไม่ผูกกับกิจกรรม ส่งตามรอบเวลา' }
   ];
+  var REGISTRATION = 'ตอนลงทะเบียน';
   var STANDALONE = 'ติดตามสุขภาพ';
+
+  /* ฟิลด์มาตรฐานของแบบลงทะเบียน — ชื่อ/ชนิดมาจากระบบ ผู้ดูแลเลือกได้แค่เปิดหรือปิด
+     สามฟิลด์แรกเป็นแกนของการลงทะเบียน จึงแสดงตลอดและไม่มีสวิตช์ให้ปิด */
+  var REGISTRATION_FIELDS = [
+    { key: 'name', label: 'ชื่อ–นามสกุล', hint: 'ใช้ระบุตัวผู้ลงทะเบียน', required: true, preview: 'text' },
+    { key: 'phone', label: 'เบอร์โทรศัพท์', hint: 'ใช้ตรวจสอบการลงทะเบียนซ้ำ', required: true, preview: 'phone' },
+    { key: 'pdpa', label: 'การยอมรับ PDPA', hint: 'ต้องยอมรับก่อนยืนยันการลงทะเบียน', required: true, preview: 'consent' },
+    { key: 'gender', label: 'เพศ', hint: 'ตัวเลือกมาตรฐานจากระบบ', enabled: true, preview: 'select' },
+    { key: 'age_range', label: 'ช่วงอายุ', hint: 'ตัวเลือกช่วงอายุมาตรฐาน', enabled: true, preview: 'select' },
+    { key: 'email', label: 'อีเมล', hint: 'สำหรับรับข้อมูลและการติดต่อกลับ', enabled: true, preview: 'email' },
+    { key: 'occupation', label: 'อาชีพ', hint: 'ตัวเลือกอาชีพจากข้อมูลพื้นฐาน', enabled: true, preview: 'select' },
+    { key: 'source_channel', label: 'รับรู้ข่าวสารกิจกรรมจากช่องทางใด', hint: 'ใช้วิเคราะห์ช่องทางประชาสัมพันธ์', enabled: true, preview: 'select' },
+    { key: 'interests', label: 'กิจกรรมที่สนใจนอกเหนือจากที่เราจัด', hint: 'เลือกได้มากกว่า 1 ข้อ', enabled: true, preview: 'multi' }
+  ];
 
   var AUTOSAVE_MS = 60000;
 
@@ -39,6 +54,7 @@
        ทำให้เห็นทั้งชุดในจอเดียวโดยไม่ต้องเลื่อนผ่านช่องกรอกของทุกข้อ */
     activeId: null,
     dirty: false,
+    registrationItems: [],
     /* ตั้งต้นด้วยหัวข้อส่วน 1 ส่วนพร้อมคำถาม 2 ข้อในนั้น
        ให้เห็นตั้งแต่แรกว่าจัดคำถามเป็นตอนได้ และเลขข้อจะเป็น 1.1 / 1.2
        ตั้งชื่อส่วนไว้ให้ด้วย ไม่งั้นเช็กลิสต์ข้อ "ทุกคำถามและหัวข้อส่วนมีข้อความ" จะไม่ผ่านตั้งแต่เปิดหน้า */
@@ -48,7 +64,9 @@
       { id: 3, title: 'จะแนะนำกิจกรรมนี้ให้คนอื่นหรือไม่', kind: 'single', required: true, choices: ['แนะนำ', 'ไม่แน่ใจ', 'ไม่แนะนำ'] }
     ]
   };
+  var evaluationItems = state.items;
 
+  function isRegistration() { return state.stage === REGISTRATION; }
   function isStandalone() { return state.stage === STANDALONE; }
   function itemById(id) { return state.items.filter(function (i) { return String(i.id) === String(id); })[0]; }
   /* เลือกจากรายการใช้ชุดตัวเลือกเหมือนแบบเลือก 1 ข้อ ต่างแค่วิธีแสดงให้ผู้ตอบ */
@@ -86,6 +104,17 @@
 
   function checklist() {
     var filled = state.items.filter(function (i) { return i.title.trim().length > 0; }).length;
+    if (isRegistration()) {
+      return [
+        { label: 'ตั้งชื่อชุดแบบประเมิน', ok: state.name.trim().length > 0 },
+        { label: 'เลือกประเภทตอนลงทะเบียน', ok: true },
+        { label: 'ฟิลด์บังคับเปิดใช้งานครบ 3 รายการ', ok: true },
+        { label: 'คำถามเพิ่มเติมมีข้อความครบ', ok: state.items.length === 0 || filled === state.items.length },
+        { label: 'คำถามแบบเลือกมีตัวเลือกครบ', ok: state.items.every(function (i) {
+            return !hasChoices(i.kind) || i.choices.filter(function (c) { return c.trim(); }).length >= 2;
+          }) }
+      ];
+    }
     return [
       { label: 'ตั้งชื่อชุดแบบประเมิน', ok: state.name.trim().length > 0 },
       { label: 'เลือกว่าใช้ตอนไหน', ok: !!state.stage },
@@ -108,15 +137,64 @@
     }).join('');
   }
 
+  /* ================= ส่วนที่ 2 — ฟิลด์ลงทะเบียน ================= */
+  function registrationFieldByKey(key) {
+    return REGISTRATION_FIELDS.filter(function (field) { return field.key === key; })[0];
+  }
+
+  function registrationFieldRow(field) {
+    var control = field.required
+      ? '<span class="ec-registration-required-badge">บังคับ</span>'
+      : '<label class="switch" aria-label="เปิดหรือปิดฟิลด์ ' + esc(field.label) + '">' +
+          '<input type="checkbox" data-registration-field="' + esc(field.key) + '"' + (field.enabled ? ' checked' : '') + '>' +
+          '<span class="switch-track"></span>' +
+        '</label>';
+
+    return '<div class="ec-registration-field' + (field.required ? ' is-required' : '') + '">' +
+      '<span class="ec-registration-field-icon" aria-hidden="true">' +
+        (field.required
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>') +
+      '</span>' +
+      '<span class="ec-registration-field-text"><strong>' + esc(field.label) + '</strong><span>' + esc(field.hint) + '</span></span>' +
+      control +
+    '</div>';
+  }
+
+  function renderRegistrationFields() {
+    var section = $('ec-registration-section');
+    var registration = isRegistration();
+    section.hidden = !registration;
+
+    $('ec-questions-section-no').textContent = registration ? '3' : '2';
+    $('ec-questions-title').textContent = registration ? 'คำถามเพิ่มเติม' : 'คำถาม';
+    $('ec-questions-note').hidden = !registration;
+    if (!registration) return;
+
+    var required = REGISTRATION_FIELDS.filter(function (field) { return field.required; });
+    var optional = REGISTRATION_FIELDS.filter(function (field) { return !field.required; });
+    var enabledCount = optional.filter(function (field) { return field.enabled; }).length;
+
+    $('ec-registration-required').innerHTML = required.map(registrationFieldRow).join('');
+    $('ec-registration-optional').innerHTML = optional.map(registrationFieldRow).join('');
+    $('ec-registration-summary').textContent = 'บังคับ 3 · เปิดใช้งาน ' + enabledCount + '/' + optional.length;
+  }
+
 
   /* ================= ส่วนที่ 2 — รายการคำถาม ================= */
   function renderItems() {
     var nums = numbering();
 
-    $('ec-items').innerHTML = state.items.map(function (q, i) {
-      var n = nums[i];
-      return q.kind === 'section' ? sectionHtml(q, n) : questionHtml(q, n);
-    }).join('');
+    $('ec-items').innerHTML = state.items.length
+      ? state.items.map(function (q, i) {
+          var n = nums[i];
+          return q.kind === 'section' ? sectionHtml(q, n) : questionHtml(q, n);
+        }).join('')
+      : '<div class="ec-questions-empty">' +
+          '<span class="ec-questions-empty-title">ยังไม่มีคำถามเพิ่มเติม</span>' +
+          '<span class="ec-questions-empty-text">ฟิลด์ระบบด้านบนเพียงพอสำหรับการลงทะเบียน หรือเพิ่มคำถามเฉพาะกิจกรรมได้ภายหลัง</span>' +
+          '<button type="button" class="btn btn-outline btn-sm" data-add-first>เพิ่มคำถามเพิ่มเติม</button>' +
+        '</div>';
 
     $('ec-summary').textContent = questionCount() + ' ข้อ · ' +
       state.items.filter(function (i2) { return i2.kind === 'section'; }).length + ' หัวข้อส่วน · บังคับตอบ ' +
@@ -305,13 +383,72 @@
   }
 
   /* ================= แผงขวา ================= */
+  function previewInput(label, placeholder, kind) {
+    if (kind === 'select') {
+      return '<div class="ec-pv-select"><span>' + esc(placeholder) + '</span>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>';
+    }
+    return '<div class="ec-registration-preview-input">' + esc(placeholder) + '</div>';
+  }
+
+  function registrationPreviewField(key) {
+    var field = registrationFieldByKey(key);
+    if (!field || (!field.required && !field.enabled)) return '';
+
+    if (field.preview === 'consent') {
+      return '<div class="ec-registration-preview-consent"><span class="ec-mark is-box"></span><span>ยอมรับเงื่อนไขการเข้าร่วมกิจกรรมและนโยบาย PDPA <b>*</b></span></div>';
+    }
+    if (field.preview === 'multi') {
+      return '<div class="ec-registration-preview-field"><span class="ec-registration-preview-label">' + esc(field.label) + '</span>' +
+        '<div class="ec-pv-choices"><span class="ec-pv-choice"><span class="ec-mark is-box"></span>เวิร์กช็อปอาหาร / ขนม</span><span class="ec-pv-choice"><span class="ec-mark is-box"></span>กิจกรรมปลูกต้นไม้ / ทำสวน</span><span class="ec-pv-choice"><span class="ec-mark is-box"></span>โยคะ / สมาธิ</span></div></div>';
+    }
+
+    var placeholder = field.key === 'name' ? 'ชื่อ นามสกุล'
+      : (field.key === 'phone' ? '08X-XXX-XXXX'
+      : (field.key === 'email' ? 'name@email.com'
+      : (field.key === 'gender' ? 'เลือกเพศ'
+      : (field.key === 'age_range' ? 'เลือกช่วงอายุ'
+      : (field.key === 'occupation' ? 'เลือกอาชีพ' : 'เลือกช่องทาง')))));
+
+    return '<div class="ec-registration-preview-field"><span class="ec-registration-preview-label">' + esc(field.label) + (field.required ? ' <b>*</b>' : '') + '</span>' +
+      previewInput(field.label, placeholder, field.preview) + '</div>';
+  }
+
+  function customQuestionsPreviewHtml() {
+    var nums = numbering();
+    if (!state.items.length) return '';
+    return '<div class="ec-pv-section"><span class="ec-pv-section-no">เพิ่มเติม</span><span class="ec-pv-section-title">คำถามจากแบบประเมิน</span></div>' +
+      state.items.map(function (q, i) {
+        var n = nums[i];
+        if (q.kind === 'section') {
+          return '<div class="ec-pv-section"><span class="ec-pv-section-no">' + esc(n.sectionNo) + '</span><span class="ec-pv-section-title">' + esc(q.title.trim() || 'หัวข้อส่วน') + '</span></div>';
+        }
+        return '<div class="ec-pv-q' + (n.inSection ? ' is-nested' : '') + '"><span class="ec-pv-title">' + esc(n.no + '. ' + (q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
+          multiHint(q.kind) + answerHtml(q, 'ec-pv') + (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') + '</div>';
+      }).join('');
+  }
+
+  function registrationPreviewHtml() {
+    var order = ['name', 'gender', 'age_range', 'phone', 'email', 'occupation', 'source_channel', 'interests'];
+    return '<div class="ec-pv-section"><span class="ec-pv-section-no">ข้อมูล</span><span class="ec-pv-section-title">ข้อมูลผู้ลงทะเบียน</span></div>' +
+      order.map(registrationPreviewField).join('') + customQuestionsPreviewHtml() + registrationPreviewField('pdpa');
+  }
+
   function renderPreview() {
     var nameEl = $('ec-preview-name');
-    nameEl.textContent = state.name.trim() || 'ชื่อชุดแบบประเมิน';
+    nameEl.textContent = state.name.trim() || (isRegistration() ? 'แบบฟอร์มลงทะเบียนกิจกรรม' : 'ชื่อชุดแบบประเมิน');
     nameEl.classList.toggle('is-empty', !state.name.trim());
 
     $('ec-preview-desc').textContent = state.desc.trim() ||
-      (isStandalone() ? 'ส่งตามรอบเวลา ไม่ผูกกับกิจกรรม' : 'คำอธิบายจะแสดงตรงนี้');
+      (isRegistration() ? 'กรอกข้อมูลเพื่อสำรองที่นั่งเข้าร่วมกิจกรรม'
+      : (isStandalone() ? 'ส่งตามรอบเวลา ไม่ผูกกับกิจกรรม' : 'คำอธิบายจะแสดงตรงนี้'));
+
+    $('ec-preview-submit').textContent = isRegistration() ? 'ยืนยันการลงทะเบียน' : 'ส่งแบบประเมิน';
+
+    if (isRegistration()) {
+      $('ec-preview-list').innerHTML = registrationPreviewHtml();
+      return;
+    }
 
     var nums = numbering();
     $('ec-preview-list').innerHTML = state.items.map(function (q, i) {
@@ -364,6 +501,7 @@
 
   function syncAll() {
     renderStages();
+    renderRegistrationFields();
     renderItems();
     syncDerived();
   }
@@ -528,6 +666,18 @@
   });
 
   document.addEventListener('change', function (e) {
+    var registrationField = e.target.closest('[data-registration-field]');
+    if (registrationField) {
+      var field = registrationFieldByKey(registrationField.getAttribute('data-registration-field'));
+      if (field && !field.required) {
+        field.enabled = registrationField.checked;
+        state.dirty = true;
+        renderRegistrationFields();
+        syncDerived();
+      }
+      return;
+    }
+
     var req = e.target.closest('[data-required]');
     if (req) {
       var q = itemById(req.getAttribute('data-required'));
@@ -555,9 +705,26 @@
 
     var stage = t.closest('[data-stage]');
     if (stage) {
-      state.stage = stage.getAttribute('data-stage');
+      var nextStage = stage.getAttribute('data-stage');
+      if (nextStage === state.stage) return;
+      if (isRegistration()) state.registrationItems = state.items;
+      else evaluationItems = state.items;
+      state.stage = nextStage;
+      state.items = isRegistration() ? state.registrationItems : evaluationItems;
+      state.activeId = null;
       renderStages();
+      renderRegistrationFields();
       return touch(true);
+    }
+
+    var addFirst = t.closest('[data-add-first]');
+    if (addFirst) {
+      var first = { id: state.nextId++, title: '', kind: 'single', required: false, choices: ['ตัวเลือกที่ 1', 'ตัวเลือกที่ 2'] };
+      state.items.push(first);
+      state.activeId = first.id;
+      touch(true);
+      focusActiveTitle();
+      return;
     }
 
     var rm = t.closest('[data-remove]');

@@ -190,7 +190,7 @@
 
   /* ---------- ชุดสีของ prototype หน้าลงทะเบียนสาธารณะ — ถูกถอดออกแล้ว ----------
      เดิมประกาศตัวแปรชื่อสั้น (--primary, --border, --text-primary, --text-secondary,
-     --radius-sm/md/lg) ไว้ที่นี่เพื่อ "อ้างอิง" แต่ pages/public/activities.html มี :root
+     --radius-sm/md/lg) ไว้ที่นี่เพื่อ "อ้างอิง" แต่หน้า public activities มี token เฉพาะหน้า
      ของตัวเองครบอยู่แล้ว ชุดนี้จึงซ้ำซ้อน และที่สำคัญคือ **ชนกับตัวแปรของมาตรฐานใหม่**
      ใน assets/css/standard/tokens.css ซึ่งใช้ชื่อเดียวกัน (--text-primary, --text-secondary,
      --border) เมื่อไฟล์นี้โหลดทีหลัง ค่าที่นี่จะทับค่ามาตรฐานทั้งระบบ

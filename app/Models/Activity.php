@@ -49,6 +49,8 @@ class Activity extends Model
         'survey_end_at' => 'datetime',
         'publish_start_at' => 'datetime',
         'publish_end_at' => 'datetime',
+        'registration_start_at' => 'datetime',
+        'registration_end_at' => 'datetime',
     ];
 
     /** อีเวนท์ที่กิจกรรมนี้อยู่ภายใต้ — ว่างได้ แปลว่าเป็นกิจกรรมเดี่ยว */
@@ -164,9 +166,35 @@ class Activity extends Model
             ->where(fn (Builder $q) => $q->whereNull('publish_end_at')->orWhere('publish_end_at', '>=', $now));
     }
 
+    /** ข้อมูลที่อนุญาตให้หน้าเว็บไซต์สาธารณะแสดง พร้อม relation ที่หน้า list/detail ใช้ */
+    public function scopeForPublicListing(Builder $query): Builder
+    {
+        return $query->published()
+            ->where('visibility', 'สาธารณะ')
+            ->where('public_sort_order', '>', 0)
+            ->with([
+                'format:id,name,icon',
+                'rounds:id,activity_id,round_date,time_start,time_end,location',
+                'instructors:id,name',
+            ])
+            ->withCount('registrations');
+    }
+
     /** ที่นั่งคงเหลือ — ต้องเรียกผ่าน scopeForList หรือ loadCount ก่อน ไม่งั้นจะยิง query ต่อแถว */
     public function seatsLeft(): int
     {
         return max(0, $this->capacity - ($this->registrations_count ?? $this->registrations()->count()));
+    }
+
+    /** เปิดปุ่มลงทะเบียนเฉพาะช่วงที่กำหนด และต้องยังมีที่นั่งถ้าระบุจำนวนรับไว้ */
+    public function acceptsRegistration(): bool
+    {
+        $now = now();
+
+        return $this->requires_registration
+            && $this->status !== self::STATUS_CANCELLED
+            && (! $this->registration_start_at || $this->registration_start_at->lte($now))
+            && (! $this->registration_end_at || $this->registration_end_at->gte($now))
+            && ($this->capacity === 0 || $this->seatsLeft() > 0);
     }
 }
