@@ -270,6 +270,191 @@
   cursor: pointer;
 }
 
+/* Popup โปรไฟล์เป็นหน้าต่างขนาดเล็กตามงานอ้างอิง — Preview ใช้แถวข้อความโปร่ง
+   ส่วน Edit ใช้ฟิลด์เรียงลงมาในหน้าต่างเดิม ไม่ขยายเป็นฟอร์มสองคอลัมน์ */
+.modal.profile-modal {
+  max-width: 440px;
+}
+
+.profile-modal .modal-header {
+  min-height: 0;
+  padding: 12px var(--space-5);
+}
+
+.profile-modal .modal-body {
+  padding: 10px var(--space-5) var(--space-3);
+}
+
+.profile-modal .modal-footer {
+  padding: var(--space-3) var(--space-5);
+}
+
+.profile-modal .modal-footer .btn {
+  min-height: 38px;
+}
+
+.profile-avatar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.profile-avatar-center .profile-avatar {
+  width: 72px;
+  height: 72px;
+}
+
+.profile-avatar-center.is-editing {
+  padding-bottom: 10px;
+}
+
+.profile-detail-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-detail-row {
+  display: grid;
+  grid-template-columns: 18px 104px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.profile-detail-row:last-child {
+  border-bottom: 0;
+}
+
+.profile-detail-icon {
+  display: flex;
+  color: var(--color-text-tertiary, #9ca3af);
+}
+
+.profile-detail-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profile-detail-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.profile-detail-value {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.profile-detail-value.is-password {
+  letter-spacing: 1px;
+}
+
+.profile-detail-value.is-readonly {
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle, #f5f6f5);
+  color: var(--color-text-secondary);
+}
+
+.profile-detail-value.is-role {
+  justify-self: start;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-caption);
+}
+
+.profile-avatar-change {
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.profile-avatar-change:hover {
+  text-decoration: underline;
+}
+
+.profile-avatar-center .caption {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.profile-detail-row.is-editing {
+  min-height: 44px;
+}
+
+.profile-inline-input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--font-size-small);
+}
+
+.profile-inline-input:hover {
+  background: var(--color-bg-subtle, #f8faf8);
+}
+
+.profile-inline-input:focus {
+  border-bottom-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.profile-inline-input.is-invalid {
+  border-bottom-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.profile-inline-input::placeholder {
+  color: var(--color-text-tertiary, #9ca3af);
+}
+
+.profile-modal #profile-form .modal-body {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.profile-modal #profile-form .modal-footer {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.profile-modal #profile-form .modal-footer .btn {
+  min-height: 36px;
+}
+
+@media (max-width: 520px) {
+  .modal.profile-modal { max-height: calc(100vh - var(--space-4)); }
+  .profile-modal .modal-header,
+  .profile-modal .modal-body,
+  .profile-modal .modal-footer { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .profile-detail-row { grid-template-columns: 18px 92px minmax(0, 1fr); }
+}
+
 .form-col-span-2 {
   grid-column: span 2;
 }

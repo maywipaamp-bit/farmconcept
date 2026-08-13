@@ -50,6 +50,10 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
 
 Route::middleware('auth')->group(function () {
+    /* โปรไฟล์ของผู้ล็อกอินทุกบทบาท ไม่ผูกกับสิทธิ์เมนูจัดการผู้ใช้ */
+    Route::post('/admin/profile', [UserController::class, 'updateProfile'])
+        ->name('admin.profile.update');
+
     Route::prefix('admin')->name('admin.')->group(function () {
         /*
          | แดชบอร์ดภาพรวม — ย้ายเป็นหน้า Blade แล้ว

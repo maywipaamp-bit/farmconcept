@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Role;
 use App\Models\User;
@@ -17,6 +18,54 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+        $oldAvatarPath = $user->avatar_path;
+        $newAvatarPath = null;
+
+        if ($request->hasFile('avatar')) {
+            $newAvatarPath = $this->storeAvatarFile($request->file('avatar'));
+
+            if ($newAvatarPath === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่สามารถบันทึกรูปโปรไฟล์ได้ กรุณาเลือกไฟล์ใหม่',
+                ], 422);
+            }
+        }
+
+        $updateData = [
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'username' => $validated['username'],
+        ];
+
+        if (! empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        if ($newAvatarPath !== null) {
+            $updateData['avatar_path'] = $newAvatarPath;
+        }
+
+        $user->update($updateData);
+
+        /* ลบไฟล์เดิมหลังบันทึกฐานข้อมูลสำเร็จเท่านั้น ลดโอกาสรูปหายหาก update ล้มเหลว */
+        if ($newAvatarPath !== null && $oldAvatarPath !== $newAvatarPath) {
+            $this->deleteAvatarFile($oldAvatarPath);
+        }
+
+        $user->load('roles');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'บันทึกโปรไฟล์เรียบร้อยแล้ว',
+            'data' => $user->toClientPayload(),
+        ]);
+    }
+
     public function index(Request $request): View|JsonResponse
     {
         /* ใหม่สุดอยู่บน และแก้ไข/ระงับสิทธิ์แล้วลำดับไม่ขยับ — ใช้ id ไม่ใช่ updated_at
@@ -224,5 +273,18 @@ class UserController extends Controller
         $path = $file->store('avatars', 'public');
 
         return Storage::url($path);
+    }
+
+    private function deleteAvatarFile(?string $publicUrl): void
+    {
+        if (empty($publicUrl)) {
+            return;
+        }
+
+        $path = ltrim((string) preg_replace('#^/?storage/#', '', $publicUrl), '/');
+
+        if ($path !== '' && ! str_contains($path, '..')) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

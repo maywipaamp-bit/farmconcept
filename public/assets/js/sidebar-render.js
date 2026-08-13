@@ -128,10 +128,8 @@
 
   /* ---------- แถบไอคอน ---------- */
 
-  /* "พื้นฐาน" ย้ายลงไปอยู่ใต้ไอคอนตั้งค่าท้ายแถบ ไม่ปนกับหมวดงานประจำวันด้านบน
-     เก็บ index เดิมไว้ เพราะ shownIndex/activeIndex อ้างตำแหน่งใน categories */
+  /* หมวดพื้นฐานอยู่ในลำดับเมนูหลักเหนือผู้ใช้งาน แต่ยังใช้ไอคอนเฟืองเดิม */
   var SETTINGS_KEY = 'master-data';
-  var settingsIndex = categories.findIndex(function (cat) { return cat.key === SETTINGS_KEY; });
 
   function railBtnHtml(cat, i, extraClass, iconOverride) {
     return '<button type="button" class="rail-btn' + (extraClass || '') + (i === shownIndex ? ' is-active' : '') + '"' +
@@ -142,14 +140,8 @@
 
   function railHtml() {
     var main = categories.map(function (cat, i) {
-      return i === settingsIndex ? '' : railBtnHtml(cat, i);
+      return railBtnHtml(cat, i, '', cat.key === SETTINGS_KEY ? ICON.cog : null);
     }).join('');
-
-    /* ท้ายแถบเหลือเฉพาะไอคอนตั้งค่า ซึ่งเปิดหมวด "พื้นฐาน"
-       กระดิ่งกับแอปทั้งหมดถูกถอดออกตามที่ทีมสั่ง — ยังไม่มีหน้าปลายทางอยู่แล้ว */
-    var system = settingsIndex === -1
-      ? ''
-      : railBtnHtml(categories[settingsIndex], settingsIndex, ' is-system', ICON.cog);
 
     var avatar = user.avatar
       ? '<img src="' + esc(user.avatar) + '" alt="" onerror="this.remove()">'
@@ -158,7 +150,6 @@
     return '<nav class="rail" aria-label="หมวดเมนูหลัก">' +
       main +
       '<span class="rail-spacer"></span>' +
-      system +
       '<div class="rail-user">' +
         '<button type="button" class="rail-avatar" id="rail-avatar" aria-haspopup="menu" aria-expanded="false"' +
         ' aria-label="เมนูผู้ใช้งาน" title="บัญชีผู้ใช้งาน">' + avatar + '</button>' +
@@ -176,7 +167,7 @@
     return '<div class="rail-menu" id="rail-user-menu" role="menu" hidden>' +
       '<div class="rail-menu-head">' +
         '<span class="rail-menu-name">' + esc(user.name || '') + '</span>' +
-        '<span class="rail-menu-mail">' + esc(user.email || user.role || '') + '</span>' +
+        '<span class="rail-menu-mail">' + esc(user.role || '') + '</span>' +
       '</div>' +
       '<div class="rail-menu-divider"></div>' +
       /* เปิด popup โปรไฟล์ตรง ๆ ไม่พาไปหน้าอื่น
