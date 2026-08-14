@@ -14,7 +14,7 @@
     {{-- หน้าที่ต้องการ CSS หรือ meta เพิ่มเติมต่อท้ายตรงนี้ — ต้องมาหลัง public-activities.css เสมอ --}}
     @stack('head')
 </head>
-<body>
+<body class="@yield('body-class')">
 <div class="public-app">
     <header class="public-topbar">
         <button type="button" class="round-icon-button" id="public-menu-button" aria-label="เมนู" aria-expanded="false">

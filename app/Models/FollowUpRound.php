@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
@@ -35,6 +36,12 @@ class FollowUpRound extends Model
     public function surveyResponse(): HasOne
     {
         return $this->hasOne(SurveyResponse::class, 'cohort_round_id');
+    }
+
+    /** ใบนี้ถูกดึงเข้ารอบติดตามไหนไปแล้วบ้าง — ใช้กันไม่ให้ถูกดึงซ้ำสองรอบพร้อมกัน */
+    public function batchMembers(): HasMany
+    {
+        return $this->hasMany(RoundBatchMember::class, 'follow_up_round_id');
     }
 
     /** วันแรกที่เปิดให้ตอบ — รอบ offset 0 ทำในวันที่เข้ากลุ่มเลย ไม่มีช่วงให้รอ */

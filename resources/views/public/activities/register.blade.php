@@ -2,6 +2,9 @@
 
 @section('title', 'ลงทะเบียน '.$activity['title'])
 
+{{-- หน้านี้เป็น full-bleed — ระยะขอบมาจาก padding ของ .public-app ไม่ใช่กรอบการ์ด --}}
+@section('body-class', 'is-register-page')
+
 {{-- ปุ่มขวาบนของ topbar เป็น "กลับไปหน้ากิจกรรม" แทนช่องค้นหา
      เพราะหน้านี้เข้ามาจากหน้ารายละเอียดกิจกรรมเสมอ ทางออกจึงควรพากลับไปที่เดิม --}}
 @section('search-action')
@@ -12,41 +15,55 @@
 
 @push('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- หน้านี้ใช้ Prompt ตามสเปกของหน้าลงทะเบียน ต่างจากหน้ากิจกรรมที่ใช้ Noto Sans Thai --}}
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="@assetv('assets/css/public-register.css')">
 @endpush
 
 @section('content')
 <div class="reg-page">
     <div class="reg-card">
-        {{-- แถบบอกว่ากำลังลงทะเบียนกิจกรรมไหน + ทางกลับไปหน้ารายละเอียด
-             ต่อเนื่องจากหน้าก่อนหน้า ไม่ใช่ขึ้นหน้าใหม่ที่ไม่บอกว่ามาจากไหน --}}
-        <a class="reg-back-link" href="{{ $config['urls']['activity'] }}">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            <span>กลับไปรายละเอียดกิจกรรม</span>
-        </a>
+        {{-- หัวหน้าจอบนพื้นไล่สี — บอกว่ากำลังลงทะเบียนกิจกรรมไหนและมีทางกลับ
+             ชื่อเรื่องกับคำอธิบายจะซ่อนเองเมื่อไม่ได้อยู่หน้าจอแรก (คุมด้วยคลาสที่ JS สลับให้) --}}
+        <header class="reg-hero">
+            <div class="reg-hero-top">
+                {{-- ยังเป็นลิงก์จริงไปหน้ากิจกรรม เพื่อให้ใช้ได้แม้ JS ไม่ทำงาน
+                     ส่วน JS จะดักไว้ให้ย้อนกลับทีละขั้นตอนก่อน แล้วค่อยออกจากหน้านี้เมื่อไม่มีขั้นก่อนหน้า --}}
+                <a class="reg-hero-back" id="reg-back" href="{{ $config['urls']['activity'] }}">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    <span>กลับ</span>
+                </a>
+
+                {{-- ชื่อกิจกรรมอยู่ฝั่งขวา และเป็นตัวกดเพื่อดูวันเวลา/สถานที่/ค่าเข้าร่วม
+                     ใช้ <details> แทนการเขียน JS เปิด/ปิดเอง — กดด้วยคีย์บอร์ดและ screen reader อ่านได้ในตัว --}}
+                <details class="reg-hero-more">
+                    <summary>
+                        <span class="reg-hero-activity">{{ $config['activity']['title'] }}</span>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </summary>
+                    <div class="reg-hero-more-body">
+                        <span><b>เมื่อไหร่</b>{{ $config['activity']['scheduleLabel'] ?: '-' }}</span>
+                        <span><b>ที่ไหน</b>{{ $config['activity']['location'] ?: '-' }}</span>
+                        <span><b>ค่าเข้าร่วม</b>{{ $config['activity']['isFree'] ? 'เข้าร่วมฟรี ไม่มีค่าใช้จ่าย' : number_format($config['activity']['fee']).' บาท / ท่าน' }}</span>
+                    </div>
+                </details>
+            </div>
+
+            {{-- หัวเรื่องเปลี่ยนตามหน้าจอที่กำลังอยู่ — JS ตั้ง data-screen ให้ที่ body --}}
+            <h1 class="reg-hero-title" data-for="check">ลงทะเบียนเข้าร่วมกิจกรรม</h1>
+            <p class="reg-hero-desc" data-for="check">แค่กรอกเบอร์โทรหรืออีเมล เราจะเช็คให้ว่าคุณเคยลงทะเบียนไว้แล้วหรือยัง</p>
+
+            <h1 class="reg-hero-title" data-for="form">กรอกข้อมูลผู้ลงทะเบียน</h1>
+            <p class="reg-hero-desc" data-for="form">อีกนิดเดียว กรอกข้อมูลสั้นๆ แล้วไปชำระเงินได้เลย</p>
+
+            <h1 class="reg-hero-title" data-for="pay">ชำระค่าลงทะเบียน</h1>
+            <p class="reg-hero-desc" data-for="pay">ชำระภายใน 30 นาที ระบบจะยืนยันที่นั่งให้เมื่อได้รับเงิน</p>
+        </header>
 
         <div class="reg-pane is-center" id="reg-pane">
 
             {{-- หน้าจอ 1 — ตรวจสอบสิทธิ์ --}}
             <section class="reg-screen-check" data-screen="check">
-                {{-- ชื่อกิจกรรมอยู่บนสุดของทุกทางเข้า เพื่อให้รู้ว่ากำลังลงทะเบียนอะไรตั้งแต่วินาทีแรก --}}
-                <div class="reg-activity-card is-lead">
-                    <div class="reg-activity-thumb">
-                        @if($config['activity']['image'])
-                            <img src="{{ $config['activity']['image'] }}" alt="">
-                        @endif
-                    </div>
-                    <div class="reg-activity-info">
-                        <span class="reg-activity-title">{{ $config['activity']['title'] }}</span>
-                        <span>{{ $config['activity']['scheduleLabel'] ?: '-' }}</span>
-                        <span>{{ $config['activity']['isFree'] ? 'เข้าร่วมฟรี ไม่มีค่าใช้จ่าย' : 'ค่าลงทะเบียน '.number_format($config['activity']['fee']).' บาท / ท่าน' }}</span>
-                    </div>
-                </div>
-
-                <div class="reg-heading">
-                    <span class="reg-title">ลงทะเบียนเข้าร่วมกิจกรรม</span>
-                    <span class="reg-subtitle">กรุณากรอกเบอร์โทรศัพท์หรืออีเมล เพื่อตรวจสอบสิทธิ์การลงทะเบียน</span>
-                </div>
                 <div class="reg-check-body">
                     @if($lineError)
                         <p class="reg-error-text is-block">{{ $lineError }}</p>
@@ -54,12 +71,15 @@
 
                     <div class="reg-field">
                         <label for="reg-contact">เบอร์โทรศัพท์ หรือ อีเมล</label>
-                        <input id="reg-contact" class="reg-input is-bright reg-check-input" type="text"
+                        {{-- ไม่ใส่ placeholder ตามสเปก — ป้ายบนช่องบอกอยู่แล้วว่ากรอกอะไร --}}
+                        {{-- ตัวอย่างรูปแบบอยู่ในช่องเป็นตัวสีเทา ไม่ใช่บรรทัดอธิบายใต้ช่อง
+                             จะได้ไม่กินความสูงเพิ่ม และหายไปเองทันทีที่เริ่มพิมพ์ --}}
+                        <input id="reg-contact" class="reg-input reg-check-input" type="text"
                                inputmode="email" autocomplete="tel email"
                                placeholder="081-234-5678 หรือ you@example.com">
-                        <span class="reg-error-text" id="reg-contact-error" hidden>กรุณากรอกเบอร์โทรศัพท์หรืออีเมลให้ถูกต้อง</span>
+                        <span class="reg-error-text" id="reg-contact-error" hidden>ขอเป็นเบอร์มือถือ 10 หลัก หรืออีเมลที่ใช้งานได้นะคะ</span>
                     </div>
-                    <button type="button" class="reg-btn-primary" id="reg-check-btn" disabled>ตรวจสอบและไปต่อ</button>
+                    <button type="button" class="reg-btn-soft" id="reg-check-btn" disabled>ถัดไป</button>
 
                     @if($config['line']['enabled'])
                         <div class="reg-divider"><span>หรือ</span></div>
@@ -80,16 +100,17 @@
                                 </span>
                                 <form method="POST" action="{{ $config['line']['logoutUrl'] }}">
                                     @csrf
-                                    <button type="submit" class="reg-line-switch">เปลี่ยนบัญชี</button>
+                                    <button type="submit" class="reg-line-switch">ออกจากระบบ</button>
                                 </form>
                             </div>
                             <button type="button" class="reg-btn-outline" id="reg-line-continue">ใช้บัญชีนี้ลงทะเบียนต่อ</button>
+                            {{-- บอกทางเลือกให้ชัด — ล็อกอินค้างอยู่ไม่ได้แปลว่าต้องลงทะเบียนด้วยบัญชีนี้เท่านั้น --}}
+                            <span class="reg-line-hint">ลงทะเบียนให้คนอื่นได้ โดยกรอกเบอร์โทรของคนนั้นในช่องด้านบน หรือกด "ออกจากระบบ" เพื่อเริ่มใหม่</span>
                         @else
-                            <a class="reg-btn-line" href="{{ $config['line']['loginUrl'] }}">
-                                <span class="reg-line-badge">L</span>
-                                <span>เข้าสู่ระบบด้วย LINE</span>
-                            </a>
-                            <span class="reg-line-hint">เชื่อมบัญชี LINE แล้วระบบจะกรอกชื่อให้อัตโนมัติ และแจ้งผลการลงทะเบียนกลับทาง LINE</span>
+                            <a class="reg-btn-line" href="{{ $config['line']['loginUrl'] }}">เข้าสู่ระบบด้วย LINE</a>
+                            {{-- บอกเฉพาะสิ่งที่ระบบทำได้จริงตอนนี้ — การส่งข้อความอัตโนมัติผ่าน LINE
+                                 ต้องใช้ Messaging API ซึ่งยังไม่ได้ทำ อย่าสัญญาไว้ในหน้าจอ --}}
+                            <span class="reg-line-hint">เข้าสู่ระบบด้วย LINE ระบบจะจำข้อมูลของคุณไว้ให้ ครั้งถัดไปไม่ต้องกรอกใหม่</span>
                         @endif
                     @elseif($config['links']['line'])
                         <div class="reg-divider"><span>หรือ</span></div>
@@ -111,45 +132,71 @@
                     <p>รอเข้างานเพื่อ check-in ที่จุดลงทะเบียนหน้างาน</p>
                     <span class="reg-code-pill" id="reg-found-code"></span>
                 </div>
-                <div class="reg-booking-rows">
+                {{-- บล็อกประวัติการลงทะเบียนเดิม — จุดเดียวในหน้าที่มีกรอบได้
+                     เพราะเป็นข้อมูลคนละก้อนกับขั้นตอนที่กำลังทำอยู่ ต้องแยกบริบทให้เห็น
+                     ข้างในแยกรายแถวด้วยเส้นบางเท่านั้น ห้ามมีกรอบซ้อนอีกชั้น --}}
+                <div class="reg-booking-block">
                     <span class="reg-group-label">รายละเอียดการจอง</span>
-                    <dl class="reg-booking-rows" id="reg-found-rows" style="margin:0"></dl>
+                    <dl class="reg-booking-rows" id="reg-found-rows"></dl>
                 </div>
+
+                @if($config['line']['profile'] && count($config['line']['history']))
+                    {{-- ประวัติกิจกรรมอื่นที่บัญชี LINE นี้เคยลงทะเบียน
+                         แสดงเฉพาะตอนเข้าผ่าน LINE เพราะยืนยันตัวตนมาแล้ว — เข้าด้วยเบอร์โทรเฉย ๆ
+                         ไม่ควรเห็นประวัติของคนอื่นที่บังเอิญใช้เบอร์เดียวกัน
+                         ไม่ใส่กรอบ ใช้เส้นคั่นรายแถว เพราะกรอบชั้นเดียวของหน้าถูกใช้ไปกับการจองปัจจุบันแล้ว --}}
+                    <div class="reg-history">
+                        <span class="reg-group-label">กิจกรรมอื่นที่คุณเคยลงทะเบียน</span>
+                        <div class="reg-history-list">
+                            @foreach($config['line']['history'] as $past)
+                                <a class="reg-history-row" href="{{ $past['url'] }}">
+                                    <span class="reg-history-text">
+                                        <span class="reg-history-title">{{ $past['title'] }}</span>
+                                        <span class="reg-history-meta">{{ $past['date'] }} · {{ $past['paymentLabel'] }}</span>
+                                    </span>
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($config['line']['profile'])
+                    {{-- ทางออกจากหน้าจอนี้ — คนที่เคยลงทะเบียนด้วย LINE แล้วจะถูกพามาหน้านี้ทุกครั้ง
+                         ถ้าไม่มีปุ่มนี้จะกลับไปช่องกรอกเบอร์ไม่ได้เลย และลงทะเบียนให้คนอื่นไม่ได้ --}}
+                    <div class="reg-line-exit">
+                        <span>ต้องการลงทะเบียนให้คนอื่น หรือใช้เบอร์โทรแทน?</span>
+                        <form method="POST" action="{{ $config['line']['logoutUrl'] }}">
+                            @csrf
+                            <button type="submit" class="reg-btn-secondary">ออกจากระบบ LINE แล้วกรอกเบอร์โทร</button>
+                        </form>
+                    </div>
+                @endif
             </section>
 
             {{-- หน้าจอ 3 — กรอกข้อมูลผู้ลงทะเบียนหลัก --}}
             <section class="reg-screen-form" data-screen="form" hidden>
-                <div class="reg-activity-card">
-                    <div class="reg-activity-thumb">
-                        @if($config['activity']['image'])
-                            <img src="{{ $config['activity']['image'] }}" alt="">
-                        @endif
-                    </div>
-                    <div class="reg-activity-info">
-                        <span class="reg-activity-title">{{ $config['activity']['title'] }}</span>
-                        <span>{{ $config['activity']['scheduleLabel'] ?: '-' }}</span>
-                        <span>{{ $config['activity']['isFree'] ? 'เข้าร่วมฟรี ไม่มีค่าใช้จ่าย' : 'ค่าลงทะเบียน '.number_format($config['activity']['fee']).' บาท / ท่าน' }}</span>
-                    </div>
-                </div>
-
-                <span class="reg-section-title">ข้อมูลผู้ลงทะเบียนหลัก</span>
-
+                {{-- ชื่อกิจกรรม วันเวลา และค่าเข้าร่วม ย้ายไปอยู่ในหัวหน้าจอ (พร้อมปุ่ม "ดูรายละเอียด")
+                     จึงไม่ต้องมีการ์ดกิจกรรมซ้ำอีกก้อนที่นี่ --}}
                 <div class="reg-form-fields">
                     <div class="reg-field">
                         <label for="reg-name"><span>ชื่อ - นามสกุล</span><span class="reg-star">*</span></label>
-                        <input id="reg-name" class="reg-input" type="text" maxlength="160" autocomplete="name" placeholder="เช่น สมหญิง รักธรรมชาติ">
+                        {{-- ไม่ใส่ placeholder — ป้ายชื่อช่องบอกอยู่แล้วว่าต้องกรอกอะไร
+                             ข้อความตัวอย่างจาง ๆ ในช่องทำให้ดูเหมือนกรอกไว้แล้วและอ่านสับสนกับค่าจริง --}}
+                        <input id="reg-name" class="reg-input" type="text" maxlength="160" autocomplete="name">
                     </div>
                     <div class="reg-field">
                         <label for="reg-phone"><span>เบอร์โทรศัพท์</span><span class="reg-star">*</span></label>
-                        <input id="reg-phone" class="reg-input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="081-234-5678">
+                        <input id="reg-phone" class="reg-input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel">
                         <span class="reg-error-text" id="reg-phone-error" hidden>กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก</span>
                     </div>
-                    @if($config['fields']['email']['enabled'])
-                        <div class="reg-field">
-                            <label for="reg-email"><span>อีเมล</span>@if($config['fields']['email']['required'])<span class="reg-star">*</span>@endif</label>
-                            <input id="reg-email" class="reg-input" type="email" maxlength="160" autocomplete="email" placeholder="you@example.com">
-                        </div>
-                    @endif
+                    {{-- แสดงเสมอ ไม่ผูกกับสวิตช์ "เปิดใช้อีเมล" ของแบบลงทะเบียน
+                         เพราะหน้าจอแรกให้กรอกเบอร์โทร "หรืออีเมล" ได้ ถ้าคนกรอกอีเมลมาแล้วที่นี่ไม่มีช่องรับ
+                         อีเมลที่เพิ่งกรอกจะหายไปเงียบ ๆ · สวิตช์ของแบบฟอร์มยังคุมว่าบังคับกรอกหรือไม่ --}}
+                    <div class="reg-field">
+                        <label for="reg-email"><span>อีเมล</span>@if($config['fields']['email']['required'])<span class="reg-star">*</span>@endif</label>
+                        <input id="reg-email" class="reg-input" type="email" maxlength="160" autocomplete="email">
+                    </div>
 
                     @if($config['fields']['age_range']['enabled'] || $config['fields']['occupation']['enabled'])
                         <div class="reg-field-grid{{ ($config['fields']['age_range']['enabled'] && $config['fields']['occupation']['enabled']) ? '' : ' is-single' }}">
@@ -192,7 +239,7 @@
 
                     <div class="reg-field">
                         <label for="reg-note">หมายเหตุ (ถ้ามี)</label>
-                        <input id="reg-note" class="reg-input" type="text" maxlength="255" placeholder="เช่น แพ้อาหารบางชนิด">
+                        <input id="reg-note" class="reg-input" type="text" maxlength="255">
                     </div>
 
                     @if(count($config['rounds']) > 0)
@@ -235,30 +282,27 @@
 
             {{-- หน้าจอ 5 — ชำระเงิน --}}
             <section class="reg-screen-pay" data-screen="pay" hidden>
-                <div class="reg-heading">
-                    <span class="reg-section-title">ชำระค่าลงทะเบียน</span>
-                    <span class="reg-subtitle">ชำระภายใน 30 นาที ระบบจะยืนยันที่นั่งเมื่อได้รับเงิน</span>
-                </div>
-
-                <dl class="reg-pay-summary" style="margin:0">
-                    <div class="reg-pay-row">
-                        <dt id="reg-pay-fee-label">ค่าลงทะเบียน</dt>
-                        <dd id="reg-pay-fee-value"></dd>
-                    </div>
-                    <div class="reg-pay-row">
-                        <dt>ค่าธรรมเนียมระบบ</dt>
-                        <dd>0 ฿</dd>
-                    </div>
-                    <div class="reg-pay-row">
-                        <dt>ส่วนลด</dt>
-                        <dd>0 ฿</dd>
-                    </div>
-                    <hr>
-                    <div class="reg-pay-total">
-                        <dt>ยอดชำระทั้งสิ้น</dt>
-                        <dd id="reg-pay-total"></dd>
-                    </div>
-                </dl>
+                {{-- หัวเรื่องย้ายไปอยู่บนหัวหน้าจอเหมือนหน้าจออื่นแล้ว
+                     ตรงนี้เหลือแถบยอดที่ย่อไว้ — เห็นยอดรวมทันที กดกางดูที่มาได้ถ้าอยากรู้
+                     (ค่าธรรมเนียมกับส่วนลดเป็น 0 เสมอ กางเฉพาะตอนอยากตรวจก็พอ) --}}
+                <details class="reg-pay-collapse">
+                    <summary>
+                        <span class="reg-pay-collapse-label">ยอดชำระทั้งสิ้น</span>
+                        <span class="reg-pay-collapse-value num" id="reg-pay-total"></span>
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </summary>
+                    <dl class="reg-pay-summary">
+                        <div class="reg-pay-row">
+                            <dt id="reg-pay-fee-label">ค่าลงทะเบียน</dt>
+                            <dd id="reg-pay-fee-value"></dd>
+                        </div>
+                        {{-- ตัด "ค่าธรรมเนียมระบบ" ออก — เป็น 0 เสมอ ไม่ได้ให้ข้อมูลอะไรกับผู้จ่าย --}}
+                        <div class="reg-pay-row">
+                            <dt>ส่วนลด</dt>
+                            <dd>0 ฿</dd>
+                        </div>
+                    </dl>
+                </details>
 
                 @if($config['payment']['qrUrl'])
                     <div class="reg-method-tabs" role="tablist" aria-label="วิธีชำระเงิน">
@@ -337,7 +381,6 @@
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                         </button>
                     </div>
-                    <span class="reg-slip-note">โอนแล้วกดยืนยันด้านล่าง เจ้าหน้าที่จะตรวจสอบให้ภายใน 1 วันทำการ แล้วแจ้งกลับทาง LINE</span>
                 </div>
             </section>
 
@@ -416,10 +459,6 @@
                         @endif
                     </div>
                 @endif
-                <div class="reg-guest-saved" id="reg-guest-saved" hidden>
-                    <span class="reg-guest-saved-title">ผู้ร่วมที่ระบุแล้ว</span>
-                    <div id="reg-guest-saved-list"></div>
-                </div>
             </div>
             <div class="reg-modal-foot">
                 <button type="button" class="reg-btn-secondary" id="reg-guest-back">ย้อนกลับ</button>

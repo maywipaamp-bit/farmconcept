@@ -87,55 +87,28 @@
     </div>
     <form id="co-add-form">
       <div class="modal-body">
-        <div class="co-form-grid" id="co-form-grid">
-          <label class="co-field">
-            <span class="co-field-label">ชื่อ-นามสกุล<span class="form-required">*</span></span>
-            <input type="text" class="input" id="co-input-name" required placeholder="เช่น สมชาย ใจดี">
-          </label>
-          <label class="co-field">
-            <span class="co-field-label">เบอร์โทรศัพท์<span class="form-required">*</span></span>
-            <input type="tel" class="input" id="co-input-phone" required placeholder="เช่น 081-234-5678">
-          </label>
-          <label class="co-field">
-            <span class="co-field-label">เพศ</span>
-            <select class="select" id="co-input-gender">
-              <option value="ชาย">ชาย</option>
-              <option value="หญิง">หญิง</option>
-              <option value="อื่น ๆ">อื่น ๆ</option>
-            </select>
-          </label>
-          <label class="co-field">
-            <span class="co-field-label">พื้นที่ดำเนินงาน<span class="form-required">*</span></span>
-            <select class="select" id="co-input-area" required>
-              @foreach($areas as $area)
-                <option value="{{ $area->id }}">{{ $area->name }}</option>
-              @endforeach
-            </select>
-          </label>
-          <label class="co-field">
-            <span class="co-field-label">กลุ่มเป้าหมาย</span>
-            <select class="select" id="co-input-target">
-              @foreach($targetGroups as $tg)
-                <option value="{{ $tg->id }}">{{ $tg->name }}</option>
-              @endforeach
-            </select>
-          </label>
-          <label class="co-field">
-            <span class="co-field-label">วันที่เข้ากลุ่มตัวอย่าง<span class="form-required">*</span></span>
-            <input type="date" class="input" id="co-input-entry" required value="{{ date('Y-m-d') }}">
-          </label>
+        <div class="co-form-grid" id="co-form-grid"></div>
+
+        <div class="co-block">
+          <label class="form-label">รอบการติดตาม<span class="form-required">*</span></label>
+          <div class="co-chips" id="co-round-chips"></div>
+          <div class="co-due-table" id="co-due-table"></div>
         </div>
 
-        <div class="co-block mt-4">
+        <div class="co-block">
           <label class="co-consent">
-            <input type="checkbox" id="co-consent" required checked>
+            <input type="checkbox" id="co-consent">
             <span>ได้รับความยินยอมในการเก็บข้อมูลแล้ว<span class="form-required">*</span></span>
+          </label>
+          <label class="co-field" id="co-consent-file" hidden>
+            <span class="co-field-label">แนบเอกสารความยินยอม</span>
+            <input type="file" class="input" id="co-file" accept=".pdf,.jpg,.jpeg,.png">
           </label>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
-        <button type="submit" class="btn btn-primary" id="co-save">บันทึก</button>
+        <button type="submit" class="btn btn-primary" id="co-save" disabled>บันทึก</button>
       </div>
     </form>
   </div>
@@ -173,10 +146,11 @@
 </div>
 @endsection
 
+{{-- ต้องการเฉพาะ TFC.exportTableCsv ของปุ่มส่งออก
+     ส่วน cohort-data.js / followup-template-service.js เป็นชั้นข้อมูลของต้นแบบ
+     หน้านี้อ่านข้อมูลจริงจากเซิร์ฟเวอร์แล้ว จึงไม่โหลดสองไฟล์นั้นอีก --}}
 @push('scripts')
 <script src="@assetv('assets/js/activity-module.js')"></script>
-<script src="@assetv('assets/js/followup-template-service.js')"></script>
-<script src="@assetv('assets/js/cohort-data.js')"></script>
 @endpush
 
 @push('page-script')
@@ -185,6 +159,8 @@
   var membersList = @json($members);
   var areasList = @json($areas->pluck('name'));
   var templatesList = @json($templates->pluck('name'));
+  /* ตัวเลือกทุกช่องของฟอร์มมาจาก master data ทั้งหมด ไม่มีรายการไหนเขียนตายไว้ในหน้านี้ */
+  var lookups = @json($lookups);
   var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   var TABS = ['ทั้งหมด', 'ต้องติดตามรอบนี้', 'เกินกำหนด', 'ติดตามครบ', 'หลุดการติดตาม'];
@@ -344,74 +320,390 @@
     });
   }
 
-  /* --- Add Cohort Form AJAX --- */
-  var addForm = $('co-add-form');
-  if (addForm) {
-    addForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var saveBtn = $('co-save');
-      saveBtn.disabled = true;
+  /* ================= ฟอร์มเพิ่มกลุ่มตัวอย่าง ================= */
+  function toast(msg, tone) {
+    if (window.TFC.showToast) window.TFC.showToast(msg, tone || 'info');
+  }
 
-      var payload = {
-        name: $('co-input-name').value,
-        phone: $('co-input-phone').value,
-        gender: $('co-input-gender').value,
-        area_id: $('co-input-area').value,
-        target_group_id: $('co-input-target').value,
-        entry_date: $('co-input-entry').value,
-        consent: $('co-consent').checked ? 1 : 0
-      };
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
 
-      fetch('{{ route('admin.cohort.store') }}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify(payload)
+  function addDays(iso, n) {
+    var p = iso.split('-').map(Number);
+    var d = new Date(p[0], p[1] - 1, p[2] + n);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  var form = {
+    /* ว่างไว้จนกว่าจะกดรันเลข — เลขต้องมาจากเซิร์ฟเวอร์เท่านั้น
+       นับต่อจากรายการบนหน้าจอไม่ได้ เพราะหน้าจอไม่เห็นคนที่คนอื่นเพิ่มระหว่างนี้ */
+    personCode: '',
+    name: '', phone: '',
+    gender: '', ageRangeId: '', occupationId: '',
+    areaId: '', targetGroupId: '', sourceCode: '',
+    entryDate: lookups.today,
+    status: lookups.statuses[0] || '',
+    /* เก็บเป็น id ของรอบจาก master data ไม่ใช่จำนวนเดือน — ชุดรอบเปลี่ยนได้ตลอดที่หน้าตั้งค่า */
+    rounds: lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; }),
+    dueEdit: {}, editing: null,
+    consent: false, consentFile: null, uploading: false,
+    linkCopied: false, saving: false
+  };
+
+  function optionsHtml(list, value, placeholder) {
+    var head = placeholder
+      ? '<option value=""' + (value === '' ? ' selected' : '') + '>' + esc(placeholder) + '</option>'
+      : '';
+    return head + list.map(function (o) {
+      return '<option value="' + esc(String(o.value)) + '"' +
+        (String(o.value) === String(value) ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+    }).join('');
+  }
+
+  function selectHtml(id, list, value, placeholder) {
+    return '<select class="select" id="' + id + '">' + optionsHtml(list, value, placeholder) + '</select>';
+  }
+
+  function fieldHtml(label, required, control) {
+    return '<label class="co-field">' +
+      '<span class="co-field-label">' + esc(label) + (required ? '<span class="form-required">*</span>' : '') + '</span>' +
+      control + '</label>';
+  }
+
+  function plainList(values) {
+    return values.map(function (v) { return { value: v, label: v }; });
+  }
+
+  function renderForm() {
+    $('co-form-grid').innerHTML =
+      '<label class="co-field">' +
+        '<span class="co-field-label">รหัสบุคคล<span class="form-required">*</span></span>' +
+        '<span class="co-pid-input">' +
+          '<input type="text" class="input" id="co-f-pid" value="' + esc(form.personCode) + '" placeholder="กดปุ่มเพื่อรันเลข" disabled>' +
+          '<button type="button" class="co-pid-btn" id="co-gen-pid">รันเลข</button>' +
+        '</span></label>' +
+      fieldHtml('ชื่อ–นามสกุล', true, '<input type="text" class="input" id="co-f-name" value="' + esc(form.name) + '" placeholder="ชื่อ นามสกุล">') +
+      fieldHtml('เบอร์โทร', true, '<input type="tel" class="input" id="co-f-phone" value="' + esc(form.phone) + '" placeholder="08x-xxx-xxxx" inputmode="tel">') +
+
+      fieldHtml('เพศ', true, selectHtml('co-f-gender', lookups.genders, form.gender, 'เลือกเพศ')) +
+      fieldHtml('ช่วงอายุ', false, selectHtml('co-f-age', lookups.ageRanges, form.ageRangeId, 'ไม่ระบุ')) +
+      fieldHtml('อาชีพ', false, selectHtml('co-f-job', lookups.occupations, form.occupationId, 'ไม่ระบุ')) +
+
+      fieldHtml('พื้นที่', true, selectHtml('co-f-area', lookups.areas, form.areaId, 'เลือกพื้นที่')) +
+      fieldHtml('กลุ่มเป้าหมาย', true, selectHtml('co-f-target', lookups.targetGroups, form.targetGroupId, 'เลือกกลุ่มเป้าหมาย')) +
+      fieldHtml('แหล่งที่มา', true, selectHtml('co-f-source', lookups.sources, form.sourceCode, 'เลือกแหล่งที่มา')) +
+
+      fieldHtml('วันที่เข้ากลุ่มตัวอย่าง', true, '<input type="date" class="input" id="co-f-base" value="' + esc(form.entryDate) + '" lang="th-TH">') +
+      fieldHtml('สถานะ', false, selectHtml('co-f-status', plainList(lookups.statuses), form.status)) +
+      '<label class="co-field">' +
+        '<span class="co-field-label">ลิงก์แบบประเมิน</span>' +
+        '<button type="button" class="co-copy-btn' + (form.linkCopied ? ' is-done' : '') + '" id="co-copy-link"' +
+          (form.personCode ? '' : ' disabled') + '>' +
+          (form.linkCopied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์แบบประเมิน') + '</button>' +
+      '</label>';
+  }
+
+  /* รอบติดตามทั้งหมดมาจากหน้าตั้งค่ารอบประเมิน เรียงตามลำดับที่ตั้งไว้ ไม่มี 3/6/12 เขียนตายที่นี่ */
+  function renderRoundChips() {
+    $('co-round-chips').innerHTML = lookups.followUpRounds.map(function (r) {
+      var on = form.rounds.indexOf(r.value) > -1;
+      return '<button type="button" class="co-chip' + (on ? ' is-on' : '') + '" data-round-chip="' + esc(String(r.value)) + '"' +
+        ' role="checkbox" aria-checked="' + on + '">' +
+        '<span class="co-chip-mark">' +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
+        '</span>' + esc(r.label) + '</button>';
+    }).join('');
+  }
+
+  function selectedRounds() {
+    return lookups.followUpRounds
+      .filter(function (r) { return form.rounds.indexOf(r.value) > -1; })
+      .map(function (r) {
+        return { value: r.value, label: r.label, due: form.dueEdit[r.value] || addDays(form.entryDate, r.offsetDays) };
       })
-      .then(function (res) { return res.json(); })
+      .sort(function (a, b) { return a.due < b.due ? -1 : (a.due > b.due ? 1 : 0); });
+  }
+
+  /* ตารางย่อยแสดงวันครบกำหนดที่คำนวณจากวันที่เข้ากลุ่ม แก้ทับได้รายรอบ
+     เรียงตามวันครบกำหนด ไม่ใช่ตามลำดับที่กด เพื่อให้อ่านเป็นไทม์ไลน์เสมอ */
+  function renderDueTable() {
+    var rounds = selectedRounds();
+
+    if (!rounds.length || !form.entryDate) {
+      $('co-due-table').innerHTML = '';
+      return;
+    }
+
+    $('co-due-table').innerHTML =
+      '<div class="co-due-row co-due-head"><div>รอบ</div><div>เกณฑ์กำหนดติดตาม</div><div></div></div>' +
+      rounds.map(function (r) {
+        var editing = form.editing === r.value;
+        return '<div class="co-due-row">' +
+          '<div class="co-due-name">' + esc(r.label) + '</div>' +
+          '<div>' + (editing
+            ? '<input type="date" class="input co-due-input" value="' + esc(r.due) + '" data-due-input="' + esc(String(r.value)) + '" lang="th-TH">'
+            : '<span class="co-due-date">' + esc(window.TFC.formatThaiDate(r.due)) + '</span>') + '</div>' +
+          '<div class="co-due-action">' +
+            '<button type="button" class="co-icon-btn" data-due-edit="' + esc(String(r.value)) + '" aria-label="' +
+              (editing ? 'บันทึกวันที่' : 'แก้วันครบกำหนด') + '">' +
+              (editing
+                ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+                : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>') +
+            '</button>' +
+          '</div></div>';
+      }).join('');
+  }
+
+  function formValid() {
+    return !!(form.personCode && form.name.trim() && form.phone.trim() && form.gender &&
+      form.areaId && form.targetGroupId && form.sourceCode && form.entryDate &&
+      form.rounds.length && form.consent && !form.uploading && !form.saving);
+  }
+
+  function syncForm() {
+    $('co-consent-file').hidden = !form.consent;
+    var saveBtn = $('co-save');
+    saveBtn.disabled = !formValid();
+    saveBtn.textContent = form.saving ? 'กำลังบันทึก…' : 'บันทึก';
+  }
+
+  function renderAddModal() {
+    renderForm();
+    renderRoundChips();
+    renderDueTable();
+    syncForm();
+  }
+
+  /* --- เหตุการณ์ในฟอร์ม --- */
+  document.addEventListener('click', function (e) {
+    var genBtn = e.target.closest('#co-gen-pid');
+    if (genBtn) {
+      genBtn.disabled = true;
+      fetch('{{ route('admin.cohort.lookups') }}', { headers: { 'Accept': 'application/json' } })
+        .then(function (res) { return res.json(); })
+        .then(function (res) {
+          form.personCode = res.nextPersonCode;
+          form.linkCopied = false;
+          renderAddModal();
+        })
+        .catch(function () {
+          genBtn.disabled = false;
+          toast('รันเลขรหัสบุคคลไม่สำเร็จ กรุณาลองใหม่', 'danger');
+        });
+      return;
+    }
+
+    if (e.target.closest('#co-copy-link')) {
+      if (!form.personCode || !navigator.clipboard) return;
+      navigator.clipboard.writeText(lookups.assessmentLinkBase + form.personCode).then(function () {
+        form.linkCopied = true;
+        renderAddModal();
+      }, function () {
+        toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + lookups.assessmentLinkBase + form.personCode, 'warning');
+      });
+      return;
+    }
+
+    var chip = e.target.closest('[data-round-chip]');
+    if (chip) {
+      var rid = Number(chip.getAttribute('data-round-chip'));
+      var at = form.rounds.indexOf(rid);
+      if (at > -1) form.rounds.splice(at, 1); else form.rounds.push(rid);
+      renderRoundChips();
+      renderDueTable();
+      syncForm();
+      return;
+    }
+
+    var dueBtn = e.target.closest('[data-due-edit]');
+    if (dueBtn) {
+      var did = Number(dueBtn.getAttribute('data-due-edit'));
+      if (form.editing === did) {
+        var input = document.querySelector('[data-due-input="' + did + '"]');
+        if (input && input.value) form.dueEdit[did] = input.value;
+        form.editing = null;
+      } else {
+        form.editing = did;
+      }
+      renderDueTable();
+      return;
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    var id = e.target.id;
+    if (id === 'co-f-name') form.name = e.target.value;
+    else if (id === 'co-f-phone') form.phone = e.target.value;
+    else if (id === 'co-f-base') {
+      form.entryDate = e.target.value;
+      /* วันฐานเปลี่ยน = วันครบกำหนดทุกรอบต้องคำนวณใหม่ทั้งชุด
+         วันที่ที่แก้ทับไว้ก่อนหน้าอ้างอิงวันฐานเดิม จึงต้องล้างทิ้ง ไม่ใช่คงไว้เงียบ ๆ */
+      form.dueEdit = {};
+      form.editing = null;
+      renderDueTable();
+    } else return;
+    syncForm();
+  });
+
+  document.addEventListener('change', function (e) {
+    var id = e.target.id;
+    var map = {
+      'co-f-gender': 'gender', 'co-f-age': 'ageRangeId', 'co-f-job': 'occupationId',
+      'co-f-area': 'areaId', 'co-f-target': 'targetGroupId', 'co-f-source': 'sourceCode',
+      'co-f-status': 'status'
+    };
+
+    if (map[id]) { form[map[id]] = e.target.value; return syncForm(); }
+    if (id === 'co-consent') { form.consent = e.target.checked; return syncForm(); }
+    if (id === 'co-file') uploadConsentFile(e.target);
+  });
+
+  /* อัปโหลดใบยินยอมก่อนกดบันทึก เซิร์ฟเวอร์คืน path มาให้ฟอร์มถือไว้
+     ตรวจนามสกุลอีกครั้งฝั่งเซิร์ฟเวอร์เสมอ accept ของ input กันได้แค่หน้าจอ */
+  function uploadConsentFile(input) {
+    var file = input.files && input.files[0];
+    if (!file) { form.consentFile = null; return syncForm(); }
+
+    var body = new FormData();
+    body.append('file', file);
+    form.uploading = true;
+    syncForm();
+
+    fetch('{{ route('admin.cohort.upload-consent') }}', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+      body: body
+    })
+      .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
       .then(function (res) {
-        saveBtn.disabled = false;
-        if (!res.success) {
-          var msg = res.message || (res.errors ? Object.values(res.errors).flat().join('<br>') : 'เกิดข้อผิดพลาดในการบันทึก');
-          if (window.TFC.showToast) window.TFC.showToast(msg, 'danger');
+        form.uploading = false;
+        if (!res.ok) {
+          input.value = '';
+          form.consentFile = null;
+          toast(firstError(res.body) || 'อัปโหลดไฟล์ไม่สำเร็จ', 'danger');
+        } else {
+          form.consentFile = res.body.path;
+          toast('แนบเอกสารความยินยอมแล้ว', 'success');
+        }
+        syncForm();
+      })
+      .catch(function () {
+        form.uploading = false;
+        input.value = '';
+        form.consentFile = null;
+        toast('อัปโหลดไฟล์ไม่สำเร็จ', 'danger');
+        syncForm();
+      });
+  }
+
+  function firstError(body) {
+    if (body && body.errors) {
+      var keys = Object.keys(body.errors);
+      if (keys.length) return body.errors[keys[0]][0];
+    }
+    return body && body.message;
+  }
+
+  function resetForm() {
+    form.personCode = ''; form.name = ''; form.phone = '';
+    form.gender = ''; form.ageRangeId = ''; form.occupationId = '';
+    form.areaId = ''; form.targetGroupId = ''; form.sourceCode = '';
+    form.entryDate = lookups.today;
+    form.status = lookups.statuses[0] || '';
+    form.rounds = lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; });
+    form.dueEdit = {}; form.editing = null;
+    form.consent = false; form.consentFile = null; form.linkCopied = false;
+    $('co-consent').checked = false;
+    $('co-file').value = '';
+    renderAddModal();
+  }
+
+  $('co-add-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!formValid()) return;
+
+    form.saving = true;
+    syncForm();
+
+    /* ส่งวันครบกำหนดของทุกรอบไปด้วย ไม่ใช่แค่รายการรอบที่ติ๊ก
+       เซิร์ฟเวอร์จะคำนวณ offset ของ "คนนี้" ย้อนกลับจากวันที่บนหน้าจอ
+       วันที่ที่แอดมินแก้ทับจึงไม่หายไประหว่างทาง */
+    var payload = {
+      person_code: form.personCode,
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      gender: form.gender,
+      age_range_id: form.ageRangeId || null,
+      occupation_id: form.occupationId || null,
+      area_id: form.areaId,
+      target_group_id: form.targetGroupId,
+      source_code: form.sourceCode,
+      entry_date: form.entryDate,
+      status: form.status,
+      rounds: selectedRounds().map(function (r) { return { template_id: r.value, due_date: r.due }; }),
+      consent: form.consent ? 1 : 0,
+      consent_file_path: form.consentFile
+    };
+
+    fetch('{{ route('admin.cohort.store') }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
+      .then(function (res) {
+        form.saving = false;
+
+        if (!res.ok || !res.body.success) {
+          syncForm();
+          toast(firstError(res.body) || 'เกิดข้อผิดพลาดในการบันทึก', 'danger');
           return;
         }
 
-        membersList.unshift(res.data);
+        membersList.unshift(res.body.data);
+        state.page = 1;
         renderTable();
 
         if (window.TFC.closeModal) window.TFC.closeModal('co-add-modal');
-        addForm.reset();
 
-        $('co-saved-name').textContent = res.data.name + ' (' + res.data.pid + ')';
-        $('co-saved-link').textContent = res.evalLink || '';
-        $('co-bind-link').textContent = res.lineBindLink || '';
+        $('co-saved-name').textContent = res.body.data.name + ' · ' + res.body.data.pid;
+        $('co-saved-link').textContent = res.body.evalLink || '';
+        $('co-bind-link').textContent = res.body.lineBindLink || '';
+        $('co-saved-copy').textContent = 'คัดลอกลิงก์';
+        $('co-bind-copy').textContent = 'คัดลอกลิงก์';
 
         if (window.TFC.openModal) window.TFC.openModal('co-saved-modal');
+        resetForm();
       })
       .catch(function () {
-        saveBtn.disabled = false;
-        if (window.TFC.showToast) window.TFC.showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
+        form.saving = false;
+        syncForm();
+        toast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
       });
+  });
+
+  /* clipboard ล้มเหลวได้จริง (ไม่ใช่ https หรือผู้ใช้ไม่อนุญาต) จึงรอผลก่อนค่อยบอกว่าสำเร็จ */
+  function bindCopy(btnId, linkId, label) {
+    $(btnId).addEventListener('click', function () {
+      var link = $(linkId).textContent;
+      if (!navigator.clipboard) return toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + link, 'warning');
+      navigator.clipboard.writeText(link).then(
+        function () { $(btnId).textContent = 'คัดลอกแล้ว'; toast(label, 'success'); },
+        function () { toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + link, 'warning'); }
+      );
     });
   }
 
-  $('co-saved-copy')?.addEventListener('click', function () {
-    navigator.clipboard.writeText($('co-saved-link').textContent);
-    if (window.TFC.showToast) window.TFC.showToast('คัดลอกลิงก์เรียบร้อย', 'success');
-  });
-
-  $('co-bind-copy')?.addEventListener('click', function () {
-    navigator.clipboard.writeText($('co-bind-link').textContent);
-    if (window.TFC.showToast) window.TFC.showToast('คัดลอกลิงก์ผูก LINE เรียบร้อย', 'success');
-  });
+  bindCopy('co-saved-copy', 'co-saved-link', 'คัดลอกลิงก์เรียบร้อย');
+  bindCopy('co-bind-copy', 'co-bind-link', 'คัดลอกลิงก์ผูก LINE เรียบร้อย');
 
   renderTabs();
   fillFilters();
   renderTable();
+  renderAddModal();
 })();
 </script>
 @endpush

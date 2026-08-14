@@ -69,8 +69,10 @@ class PublicRegistrationTest extends TestCase
         $this->get('/activities/'.$activity->code.'/register')
             ->assertOk()
             ->assertSee('ลงทะเบียนเข้าร่วมกิจกรรม')
-            ->assertSee('ตรวจสอบและไปต่อ')
-            ->assertSee('ข้อมูลผู้ลงทะเบียนหลัก');
+            /* ปุ่มถูกลดน้ำหนักเป็นทางเลือกรองตามสเปกหน้าจอใหม่ ข้อความจึงสั้นลงเหลือ "ถัดไป" */
+            ->assertSee('ถัดไป')
+            /* หัวข้อของหน้าจอกรอกข้อมูลย้ายขึ้นไปอยู่บนหัวหน้าจอแทนหัวข้อในตัวฟอร์ม */
+            ->assertSee('กรอกข้อมูลผู้ลงทะเบียน');
 
         $this->get('/activities/'.$activity->code.'?action=registration')
             ->assertRedirect('/activities/'.$activity->code.'/register');

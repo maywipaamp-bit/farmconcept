@@ -224,17 +224,17 @@
   });
 
   /* ---------- มุมมองตาราง ---------- */
-  /* center: true = หัวคอลัมน์กับเนื้อจัดกลางเหมือนกัน (คอลัมน์ตัวเลขและสถานะตามมาตรฐาน) */
+  /* center: true = หัวคอลัมน์กับเนื้อจัดกลางเหมือนกัน (คอลัมน์ตัวเลขและสถานะตามมาตรฐาน)
+     คู่ที่เป็นเรื่องเดียวกันรวมช่องเดียว (เข้าร่วม·ประเมิน / สถานะ·หน้าเว็บ)
+     เพื่อให้ตารางพอดีความกว้างจอ ไม่ต้องเลื่อนแนวนอน — ต้องตรงกับ grid-template ใน components.css */
   var TABLE_COLS = [
     { label: '#', center: true },
     { label: 'ชื่อกิจกรรม' },
     { label: 'วันและเวลา' },
     { label: 'สถานที่' },
     { label: 'ผู้ลงทะเบียน', center: true },
-    { label: 'เข้าร่วม', center: true },
-    { label: 'แบบประเมิน', center: true },
-    { label: 'สถานะ', center: true },
-    { label: 'หน้าเว็บ', center: true },
+    { label: 'เข้าร่วม · ประเมิน', center: true },
+    { label: 'สถานะ · หน้าเว็บ', center: true },
     { label: 'ปรับปรุงล่าสุด', center: true },
     { label: '' }
   ];
@@ -252,13 +252,12 @@
      ไม่โผล่ก็บอกเหตุผลเลย แอดมินจะได้รู้ว่าต้องแก้อะไร ไม่ต้องไล่เดาเอง */
   function publicCell(activity) {
     if (activity.publicRank) {
-      return '<div class="grid-center">' +
-        '<span class="badge badge-success" title="กำลังแสดงบนหน้าเว็บสาธารณะ เป็นลำดับที่ ' + activity.publicRank + '">ลำดับที่ ' + activity.publicRank + '</span>' +
+      return '<div class="grid-sub">' +
+        '<span class="badge badge-success" title="กำลังแสดงบนหน้าเว็บสาธารณะ เป็นลำดับที่ ' + activity.publicRank + '">เว็บ · ลำดับที่ ' + activity.publicRank + '</span>' +
         '</div>';
     }
-    var reason = activity.publicHiddenReason || 'ไม่แสดง';
-    return '<div class="grid-center"><span class="grid-dash">ไม่แสดง</span>' +
-      '<div class="grid-sub" title="' + window.TFC.escapeHtml(reason) + '">' + window.TFC.escapeHtml(reason) + '</div></div>';
+    var reason = activity.publicHiddenReason || 'ไม่แสดงบนเว็บ';
+    return '<div class="grid-sub" title="' + window.TFC.escapeHtml(reason) + '">ไม่แสดงบนเว็บ</div>';
   }
 
   function truncate(str, maxLen) {
@@ -294,11 +293,12 @@
 
       '<div class="grid-center grid-strong">' + reg + '/' + cap + '</div>' +
 
-      '<div class="grid-num grid-center">' + dash + '</div>' +
-      '<div class="grid-num grid-center">' + dash + '</div>' +
-      '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
+      /* เข้าร่วมกับแบบประเมินยังไม่มีข้อมูลจริง — รวมช่องเดียวรอไว้ ให้ตารางไม่กว้างเกินจอ */
+      '<div class="grid-num grid-center">' + dash + ' · ' + dash + '</div>' +
 
-      publicCell(activity) +
+      /* สถานะบรรทัดบน การแสดงบนหน้าเว็บบรรทัดล่าง — เรื่องเดียวกันอ่านคู่กัน */
+      '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
+      publicCell(activity) + '</div>' +
 
       /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าอื่นในระบบ */
       '<div class="grid-center"><div>' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +

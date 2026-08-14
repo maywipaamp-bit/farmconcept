@@ -73,6 +73,36 @@ class PublicRegistrationService
     }
 
     /**
+     * ประวัติการลงทะเบียน "กิจกรรมอื่น" ของบัญชี LINE นี้ — ใช้แสดงบนหน้าจอลงทะเบียนแล้ว
+     *
+     * ยืนยันตัวตนผ่าน LINE มาแล้วจึงแสดงประวัติของเจ้าของบัญชีได้
+     * ตัดกิจกรรมที่กำลังดูอยู่ออก เพราะแสดงเป็นรายละเอียดการจองด้านบนแล้ว
+     *
+     * @return Collection<int, Registration>
+     */
+    public function historyForLineUser(string $lineUserId, int $exceptActivityId, int $limit = 5): Collection
+    {
+        $participantIds = Participant::query()
+            ->where('line_user_id', $lineUserId)
+            ->pluck('id');
+
+        if ($participantIds->isEmpty()) {
+            return collect();
+        }
+
+        return Registration::query()
+            ->whereIn('participant_id', $participantIds)
+            ->where('activity_id', '!=', $exceptActivityId)
+            /* กิจกรรมที่ถูกลบไปแล้วไม่ต้องโชว์ค้างไว้ให้สับสน */
+            ->whereHas('activity')
+            ->with('activity:id,code,name,start_date')
+            ->latest('registered_at')
+            ->latest('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * ข้อมูลติดต่อล่าสุดของบัญชี LINE นี้ — ใช้เติมฟอร์มให้คนที่เคยลงทะเบียนกิจกรรมอื่นมาแล้ว
      *
      * @return array{name: ?string, phone: ?string, email: ?string}
@@ -247,12 +277,17 @@ class PublicRegistrationService
         $formattedPhone = substr($phone, 0, 3).'-'.substr($phone, 3, 3).'-'.substr($phone, 6);
 
         /* คนที่เคยล็อกอิน LINE ไว้แล้วให้จับคู่ด้วยบัญชี LINE ก่อน เพราะเป็นตัวระบุที่ไม่เปลี่ยน
-           ต่างจากชื่อ+เบอร์ที่พิมพ์ต่างกันนิดเดียวก็กลายเป็นคนใหม่ */
+           ต่างจากชื่อ+เบอร์ที่พิมพ์ต่างกันนิดเดียวก็กลายเป็นคนใหม่
+
+           แต่ต้องเป็นเบอร์เดียวกับที่ผูกไว้ด้วย ไม่งั้นคนที่ล็อกอิน LINE ค้างไว้แล้ว
+           กรอกเบอร์ลงทะเบียนให้ "คนอื่น" จะถูกจับคู่กลับมาเป็นตัวเอง แล้วการจองของคนอื่น
+           ไปผูกกับผู้เข้าร่วมผิดคนโดยไม่มีใครสังเกต */
         $participant = null;
 
         if ($lineProfile) {
             $participant = Participant::query()
                 ->where('line_user_id', $lineProfile['userId'])
+                ->whereIn('phone', [$phone, $formattedPhone])
                 ->lockForUpdate()
                 ->first();
         }

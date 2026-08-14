@@ -2,6 +2,9 @@
 
 @section('title', 'กิจกรรมทั้งหมด')
 
+{{-- พื้นหลังไล่สีชุดเดียวกับหน้ารายละเอียดและหน้าลงทะเบียน --}}
+@section('body-class', 'is-home-page')
+
 @section('search-action')
     <button type="button" class="round-icon-button" id="public-search-button" aria-label="ค้นหากิจกรรม">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>

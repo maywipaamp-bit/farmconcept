@@ -82,10 +82,15 @@ class User extends Authenticatable
      * ตรรกะเดียวกับ TFC.hasPermission() ในต้นแบบ: สิทธิ์แบบกว้างไม่ได้เก็บไว้
      * แต่คำนวณจากสิทธิ์ระดับเมนู เพื่อไม่ให้สองที่ขัดกันเอง
      *
-     * เรียกในลูปต้อง eager load ก่อน: User::with('roles.menuPermissions')
+     * โหลดความสัมพันธ์เองตรงนี้ ไม่ฝากผู้เรียก — EnsureMenuAccess ทำงานก่อน view composer
+     * ที่เคย eager load ให้ ผู้ใช้ที่มีมากกว่าหนึ่งบทบาทจึงโดน LazyLoadingViolationException
+     * ทุกคำขอ (Builder::hydrate เปิดการ์ดเฉพาะตอนผลลัพธ์เกินหนึ่งแถว บทบาทเดียวจึงรอดมาตลอด)
+     * loadMissing ยิงครั้งเดียวต่อคำขอ การวนเช็คทีละเมนูใน MenuService จึงไม่กลายเป็น N+1
      */
     public function canAccessMenu(string $menuKey): bool
     {
+        $this->loadMissing('roles.menuPermissions');
+
         return $this->roles->contains(
             fn (Role $role) => $role->allowsMenu($menuKey)
         );

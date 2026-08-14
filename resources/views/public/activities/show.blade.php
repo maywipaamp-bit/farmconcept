@@ -2,13 +2,21 @@
 
 @section('title', $activity['title'])
 
+{{-- ใช้ส่วนหัวโทนเดียวกับหน้าลงทะเบียน — กดปุ่มลงทะเบียนแล้วหัวหน้าจอจะต่อเนื่องกัน --}}
+@section('body-class', 'is-detail-page')
+
 @section('content')
+    {{-- แถบ "< กลับ" แบบเดียวกับหัวหน้าจอลงทะเบียน ใช้แทน topbar ของ layout ที่ถูกซ่อนไว้
+         ปุ่มย้อนกลับจึงมีปุ่มเดียวและอยู่ตำแหน่งเดิมตลอดทั้งเส้นทาง --}}
+    <header class="detail-head">
+        <a class="detail-back" href="{{ route('public.activities') }}">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <span>กลับ</span>
+        </a>
+    </header>
+
     <article class="detail-card">
         <div class="detail-hero{{ $activity['image'] ? '' : ' has-fallback' }}" @if($activity['image']) style="background-image:url('{{ $activity['image'] }}')" @endif>
-            <a class="detail-back-overlay" href="{{ route('public.activities') }}" aria-label="กลับไปหน้ากิจกรรม">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 18-6-6 6-6"/></svg>
-                <span>กลับ</span>
-            </a>
             <span class="activity-badge detail-category-badge">{{ strtoupper($activity['category'] ?: $activity['type']) }}</span>
         </div>
         <div class="detail-body">

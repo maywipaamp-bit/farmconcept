@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -23,6 +24,23 @@ class LineLoginService
 
     private const VERIFY_URL = 'https://api.line.me/oauth2/v2.1/verify';
 
+    /**
+     * บันทึกสาเหตุที่ LINE ปฏิเสธ เพื่อให้ตามปัญหาได้โดยไม่ต้องเดา
+     *
+     * เก็บเฉพาะรหัสและคำอธิบายที่ LINE ส่งกลับ ไม่บันทึก channel secret, code หรือ id_token
+     * เพราะสามอย่างนั้นใช้สวมสิทธิ์ผู้ใช้ได้ถ้าไฟล์ log หลุด
+     *
+     * @param  array<string, mixed>|null  $body
+     */
+    private function logFailure(string $step, int $status, ?array $body): void
+    {
+        Log::warning('LINE Login: '.$step, [
+            'status' => $status,
+            'error' => $body['error'] ?? null,
+            'error_description' => $body['error_description'] ?? null,
+        ]);
+    }
+
     /** ยังไม่ได้ตั้ง channel = ไม่ต้องแสดงปุ่ม LINE ให้ผู้ใช้กดแล้วเจอหน้า error */
     public function isConfigured(): bool
     {
@@ -36,6 +54,9 @@ class LineLoginService
         $state = Str::random(40);
         $nonce = Str::random(40);
 
+        /* ต้องเป็น PHP_QUERY_RFC3986 — ค่าเริ่มต้นของ http_build_query คือ RFC1738
+           ซึ่งเข้ารหัสช่องว่างเป็น "+" ทำให้ LINE อ่าน scope เป็นชื่อเดียวว่า "openid+profile"
+           แล้วตอบ 400 Bad Request กลับมา ส่วน RFC3986 เข้ารหัสเป็น %20 ตามที่ LINE กำหนด */
         $query = http_build_query([
             'response_type' => 'code',
             'client_id' => config('services.line.channel_id'),
@@ -43,7 +64,7 @@ class LineLoginService
             'state' => $state,
             'scope' => 'openid profile',
             'nonce' => $nonce,
-        ]);
+        ], '', '&', PHP_QUERY_RFC3986);
         /* ไม่ส่ง prompt=consent — จะบังคับให้เห็นหน้ายินยอมทุกครั้งแม้เคยกดแล้ว
            ปล่อยตามค่าเริ่มต้นของ LINE คนที่เคยยินยอมแล้วจะเด้งกลับมาทันที */
 
@@ -72,7 +93,12 @@ class LineLoginService
             ]);
 
         if ($token->failed() || ! $token->json('id_token')) {
-            throw new RuntimeException('แลกข้อมูลบัญชี LINE ไม่สำเร็จ');
+            /* LINE บอกสาเหตุจริงมาใน error_description (เช่น redirect_uri ไม่ตรงกับที่ลงทะเบียน
+               หรือ channel secret ผิด) แต่ข้อความนั้นเป็นภาษาอังกฤษเชิงเทคนิคและอาจมีข้อมูลภายใน
+               จึงบันทึกลง log ให้ผู้ดูแลตามต่อได้ ส่วนผู้ใช้เห็นเฉพาะข้อความกลาง ๆ */
+            $this->logFailure('แลก token ไม่สำเร็จ', $token->status(), $token->json());
+
+            throw new RuntimeException('เชื่อมต่อบัญชี LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
         }
 
         /* ตรวจว่า id_token ออกให้ channel นี้จริง และ nonce ตรงกับที่ส่งไปตอนเริ่ม
@@ -86,7 +112,9 @@ class LineLoginService
             ]);
 
         if ($verified->failed() || ! $verified->json('sub')) {
-            throw new RuntimeException('ตรวจสอบข้อมูลบัญชี LINE ไม่สำเร็จ');
+            $this->logFailure('ตรวจ id_token ไม่ผ่าน', $verified->status(), $verified->json());
+
+            throw new RuntimeException('ตรวจสอบข้อมูลบัญชี LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
         }
 
         return [

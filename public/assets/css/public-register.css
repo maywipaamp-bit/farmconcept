@@ -4,11 +4,26 @@
  */
 
 :root {
-    --reg-primary: #5ba554;
-    --reg-primary-hover: #4a8e45;
-    --reg-primary-disabled: #bfd3ba;
-    --reg-focus-border: #8cc584;
-    --reg-focus-ring: rgba(140, 197, 132, .22);
+    /* สีแบรนด์ตามสเปกหน้าลงทะเบียน — เขียว / เขียวเข้ม / เหลือง */
+    --reg-primary: #5FA052;
+    --reg-primary-hover: #4A7F3E;
+    /* เขียวจางในโทนเดียวกับปุ่ม stepper ที่กดไม่ได้ ไม่ใช่เทาอมเขียวคนละชุดแบบเดิม */
+    --reg-primary-disabled: #C9DDC3;
+    --reg-brand-dark: #35522C;
+    --reg-brand-yellow: #F5D014;
+    --reg-focus-border: #5FA052;
+    --reg-focus-ring: rgba(95, 160, 82, .18);
+
+    /* โทนของหัวหน้าจอและฟอร์ม */
+    --reg-hero-from: #CDE8C5;
+    --reg-hero-mid: #E4F3DF;
+    --reg-title: #2C4525;
+    --reg-desc: #5F7457;
+    --reg-muted: #8A9683;
+    --reg-footer-text: #9AA694;
+    --reg-field-border: #DCE5D8;
+    --reg-soft-bg: #EDF5EA;
+    --reg-rule: #E7EEE2;
 
     --reg-tint-strong: #f2f9ef;
     --reg-tint: #e8f3e4;
@@ -16,7 +31,7 @@
     --reg-tint-line: #d6e9d1;
     --reg-tint-line-strong: #bcdcb4;
 
-    --reg-page-bg: #eef3e9;
+    --reg-page-bg: #FAFBF8;
     --reg-card-bg: #ffffff;
     --reg-surface: #fafbf9;
     --reg-surface-alt: #fbfcfa;
@@ -38,14 +53,15 @@
     --reg-error-border: #e0a3a2;
     --reg-line: #06c755;
 
-    --reg-font: "IBM Plex Sans Thai", sans-serif;
+    --reg-font: "Prompt", sans-serif;
     --reg-font-numeric: "IBM Plex Sans", sans-serif;
 
     --reg-r-card: 26px;
     --reg-r-modal: 20px;
     --reg-r-box: 14px;
     --reg-r-box-sm: 13px;
-    --reg-r-input: 11px;
+    /* ช่องกรอกทุกช่องใช้ความมนเดียวกับช่องในหน้าจอแรก (14px) จะได้ไม่ปนสองค่าในหน้าเดียว */
+    --reg-r-input: 14px;
     --reg-r-pill: 999px;
 
     --reg-h-input: 46px;
@@ -68,16 +84,56 @@
 .reg-page input, .reg-page button, .reg-page textarea, .reg-page select,
 .reg-modal input, .reg-modal button, .reg-modal select { font-family: inherit; }
 .reg-page button:active, .reg-modal button:active { transform: scale(.985); }
-.reg-page a { color: var(--reg-primary); text-decoration: none; }
-.reg-page a:hover { color: var(--reg-primary-hover); }
+/* :not(.reg-btn-line) สำคัญ — ปุ่ม LINE เป็น <a> ถ้าไม่กันไว้ กฎนี้ (.reg-page a = specificity สูงกว่า
+   .reg-btn-line) จะทับสีขาวของปุ่ม กลายเป็นตัวหนังสือเขียวบนพื้นเขียวจนอ่านไม่ออก */
+.reg-page a:not(.reg-btn-line) { color: var(--reg-primary); text-decoration: none; }
+.reg-page a:not(.reg-btn-line):hover { color: var(--reg-primary-hover); }
+.reg-btn-line, .reg-btn-line:hover { color: #ffffff; text-decoration: none; }
 .reg-page ::placeholder, .reg-modal ::placeholder { color: #b8c2b6; }
 
 .num { font-family: var(--reg-font-numeric); font-variant-numeric: tabular-nums; }
 
 /* ---------- Shell ---------- */
 
-/* การ์ดลอยบนพื้นเขียวถูกถอดออก — หน้านี้ต่อจากหน้ารายละเอียดกิจกรรมโดยตรง
-   จึงใช้พื้นขาวและความกว้างชุดเดียวกับหน้ากิจกรรม ไม่ใช่กระโดดไปอีกธีมหนึ่ง */
+/*
+ * หน้านี้เป็น full-bleed — ไม่มีกรอบครอบทั้งหน้า
+ * ระยะขอบทั้งหมดมาจาก padding ของ .public-app ที่เดียว (18px) ทั้ง topbar และเนื้อหา
+ * จึงชิดขอบเท่ากันหมด และไม่เกิด padding ซ้อน padding แบบตอนที่ยังเป็นการ์ด
+ * (ของเดิม: margin 16 ของ .public-app + กรอบการ์ด + padding 24 ในหน้าจอ = ขอบ 40px)
+ */
+body.is-register-page {
+    font-family: var(--reg-font);
+    background: var(--reg-page-bg);
+    color: var(--reg-text);
+}
+
+/* หัวหน้าจอของหน้านี้ทำหน้าที่แทน topbar ของ layout ทั้งหมด (มีปุ่มย้อนกลับ + ชื่อกิจกรรมแล้ว)
+   ถ้าปล่อยไว้จะมีแถบซ้อนกันสองชั้นและมีปุ่มย้อนกลับสองปุ่มที่ไปคนละที่ */
+body.is-register-page .public-topbar { display: none; }
+
+/* พื้นไล่สีต้องชนขอบจอ ระยะขอบจึงย้ายไปอยู่ในแต่ละบล็อกแทนที่จะอยู่ที่ตัว shell */
+/* เนื้อหาสั้นแค่ไหน ลิขสิทธิ์ต้องอยู่ล่างสุดของจอเสมอ ไม่ลอยตามความสูงเนื้อหา
+   ทำด้วย flex column + main ยืดเต็มที่เหลือ (ไม่ใช้ position: fixed ที่จะทับเนื้อหาตอนจอเตี้ย) */
+body.is-register-page .public-app {
+    width: min(100%, 456px);
+    padding-inline: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+body.is-register-page .public-app > main { flex: 1 0 auto; }
+body.is-register-page .public-footer { margin-top: auto; }
+
+body.is-register-page .public-footer {
+    padding: 22px 20px 20px;
+    color: var(--reg-footer-text);
+    font-size: 12px;
+}
+
+/* เส้นคั่นบาง 0.5px — ใช้แทนกล่องในการแบ่ง section ทั้งหน้า
+   ประกาศเป็นตัวแปรเพื่อให้ความหนาและสีเท่ากันทุกจุด แก้ที่เดียวจบ */
+.reg-page { --reg-hairline: .5px solid var(--reg-border); }
+
 .reg-page {
     display: flex;
     flex-direction: column;
@@ -86,32 +142,155 @@
 
 .reg-card {
     width: 100%;
-    margin-top: 10px;
-    border: 1px solid var(--reg-border-card);
-    border-radius: 16px;
-    background: var(--reg-card-bg);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-/* ทางกลับไปหน้ารายละเอียดกิจกรรม — อยู่บนสุดของการ์ด อ่านก่อนเนื้อหา */
-.reg-back-link {
-    display: flex;
+/* ---------- หัวหน้าจอบนพื้นไล่สี ---------- */
+
+/* วงกลมตกแต่งมุมขวาบนวาดด้วย radial-gradient แทนการวาง element จริง
+   เพราะ element ที่ล้นขอบต้องใช้ overflow: hidden คุม ซึ่งจะไปตัดแผงรายละเอียดที่ลอยออกนอกหัวหน้าจอด้วย */
+.reg-hero {
+    position: relative;
     flex: none;
+    padding: 18px 20px 42px;
+    background:
+        radial-gradient(circle 74px at calc(100% + 34px) -46px, rgba(255, 255, 255, .35) 0 74px, transparent 74px),
+        linear-gradient(180deg, var(--reg-hero-from) 0%, var(--reg-hero-mid) 55%, var(--reg-page-bg) 100%);
+}
+
+/* align-items: flex-start เพื่อให้ตอนกาง "ดูรายละเอียด" แผงจะดันความสูงของแถวลงมาเอง
+   โดยปุ่มย้อนกลับกับชื่อกิจกรรมยังอยู่บรรทัดบนเหมือนเดิม (ไม่ถูกดันไปกลางแนวตั้ง) */
+.reg-hero-top { position: relative; display: flex; align-items: flex-start; gap: 6px; }
+
+/* มีคำว่า "กลับ" กำกับ ไม่ใช่ลูกศรเปล่า ๆ — ตรงกับปุ่มย้อนกลับของหน้ารายละเอียดกิจกรรม
+   และบอกปลายทางได้ชัดกว่าไอคอนอย่างเดียว */
+.reg-hero-back {
+    flex: none;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--reg-border-soft);
-    color: var(--reg-text-support);
-    font-size: 12.5px;
+    gap: 3px;
+    margin-left: -5px;
+    padding: 5px 8px 5px 3px;
+    border: 0;
+    border-radius: var(--reg-r-pill);
+    background: none;
+    color: var(--reg-brand-dark);
+    font-size: 14px;
     font-weight: 500;
 }
 
-.reg-back-link:hover { color: var(--reg-primary-hover); background: var(--reg-tint-strong); }
-.reg-back-link:focus-visible { outline: 2px solid var(--reg-primary); outline-offset: -2px; }
+.reg-hero-back:hover { color: var(--reg-primary-hover); }
+.reg-hero-back:focus-visible { outline: 2px solid var(--reg-primary); outline-offset: 2px; }
 
+/* ชื่อกิจกรรมยาวได้ไม่จำกัด ตัดด้วย ellipsis บรรทัดเดียว ไม่ให้ดันแถวบนสูงขึ้น */
+.reg-hero-activity {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--reg-brand-dark);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reg-hero-title {
+    position: relative;
+    margin: 20px 0 0;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--reg-title);
+    text-wrap: pretty;
+}
+
+.reg-hero-desc {
+    position: relative;
+    margin: 7px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--reg-desc);
+    text-wrap: pretty;
+}
+
+/* ชื่อเรื่อง/คำอธิบายแสดงเฉพาะของหน้าจอที่ตรงกับ data-screen ที่ JS ตั้งไว้ที่ body
+   หน้าจออื่น (found · pay · done) มีหัวเรื่องในตัวอยู่แล้ว จึงยุบเหลือแค่แถวย้อนกลับ */
+.reg-hero-title[data-for],
+.reg-hero-desc[data-for] { display: none; }
+
+body[data-screen="check"] .reg-hero-title[data-for="check"],
+body[data-screen="form"] .reg-hero-title[data-for="form"],
+body[data-screen="pay"] .reg-hero-title[data-for="pay"] { display: block; }
+
+body[data-screen="check"] .reg-hero-desc[data-for="check"],
+body[data-screen="form"] .reg-hero-desc[data-for="form"],
+body[data-screen="pay"] .reg-hero-desc[data-for="pay"] { display: block; }
+
+/* หน้าจอที่มีหัวเรื่องในตัวอยู่แล้ว (ลงทะเบียนแล้ว · สำเร็จ) ให้หัวหน้าจอยุบเหลือแค่แถวบน */
+body:not([data-screen="check"]):not([data-screen="form"]):not([data-screen="pay"]) .reg-hero { padding-bottom: 20px; }
+
+/* เฉพาะหน้าจอแรกที่ฟอร์มซ้อนขึ้นไปบนพื้นไล่สี (-28px) จึงต้องเผื่อระยะล่างไว้มาก
+   หน้าจออื่นไม่ได้ซ้อน ถ้าเผื่อเท่ากันจะเหลือช่องว่างโหว่ระหว่างคำอธิบายกับฟิลด์แรก */
+body[data-screen="form"] .reg-hero,
+body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
+
+/* ---------- ปุ่มดูรายละเอียดกิจกรรมในหัวหน้าจอ ---------- */
+
+/* ฝั่งขวาของแถวบน — กว้างได้ถึง 68% ของแถว เกินกว่านั้นชื่อกิจกรรมจะตัดด้วย ellipsis
+   z-index สูงกว่า .reg-pane (1) เพื่อให้แผงที่กางออกมาลอยทับฟิลด์ได้
+   (.reg-hero เป็น position: relative แต่ z-index: auto จึงไม่สร้าง stacking context ขังไว้) */
+.reg-hero-more { position: relative; z-index: 5; min-width: 0; max-width: 68%; margin-left: auto; }
+
+.reg-hero-more > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--reg-r-pill);
+    background: rgba(255, 255, 255, .72);
+    color: var(--reg-brand-dark);
+    font-size: 12px;
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* ซ่อนสามเหลี่ยมเริ่มต้นของ <details> ทั้งสองสายเบราว์เซอร์ — ใช้ไอคอน chevron ของเราแทน */
+.reg-hero-more > summary::-webkit-details-marker { display: none; }
+.reg-hero-more > summary::marker { content: ""; }
+.reg-hero-more > summary:hover { background: #ffffff; }
+.reg-hero-more[open] > summary svg { transform: rotate(180deg); }
+.reg-hero-more > summary svg { flex: none; transition: transform var(--reg-transition); }
+
+/* ลอยทับเนื้อหาด้านล่าง ไม่ดันฟิลด์ให้เลื่อนลง — กางแล้วตำแหน่งช่องกรอกจึงไม่ขยับ */
+.reg-hero-more-body {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: max(200px, 100%);
+    padding: 12px 14px;
+    border-radius: var(--reg-r-box);
+    background: #ffffff;
+    box-shadow: 0 10px 26px rgba(40, 70, 36, .16);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--reg-desc);
+}
+
+.reg-hero-more-body b { display: block; font-weight: 500; color: var(--reg-muted); font-size: 11.5px; }
+
+/* ต้องเป็น positioned ด้วย ไม่งั้นถูกหัวหน้าจอวาดทับ
+   เพราะ .reg-hero เป็น position: relative ซึ่งถูกวาดทีหลังเนื้อหาที่ไม่ได้ positioned เสมอ
+   ฟอร์มซ้อนขึ้นไปบน gradient (margin-top ติดลบ) ป้ายชื่อช่องแรกจึงหายไปใต้พื้นหลัง */
 .reg-pane {
+    position: relative;
+    z-index: 1;
     flex: 1;
     min-height: 0;
     display: flex;
@@ -133,7 +312,7 @@
 
 /* ---------- ฟิลด์ ---------- */
 
-.reg-field { display: flex; flex-direction: column; gap: 7px; }
+.reg-field { display: flex; flex-direction: column; gap: 5px; }
 
 .reg-field > label {
     display: flex;
@@ -144,8 +323,9 @@
     letter-spacing: .02em;
 }
 
-.reg-field .reg-star { color: var(--reg-text-faint); }
-.reg-field .reg-star.is-strong { color: var(--reg-error); }
+/* ดอกจันบังคับกรอกต้องเห็นชัดว่าเป็น "ต้องกรอก" ไม่ใช่จุดตกแต่งจาง ๆ */
+.reg-field .reg-star,
+.reg-field .reg-star.is-strong { color: #E0693C; font-weight: 500; }
 
 .reg-input, .reg-select {
     width: 100%;
@@ -180,13 +360,13 @@
 
 .reg-error-text { font-size: 12px; color: var(--reg-error); }
 
-/* ข้อความผิดพลาดระดับหน้าจอ (เช่น เชื่อม LINE ไม่สำเร็จ) — ไม่ได้ผูกกับช่องกรอกช่องใดช่องหนึ่ง */
+
+/* ข้อความผิดพลาดระดับหน้าจอ (เช่น เชื่อม LINE ไม่สำเร็จ) — ไม่ได้ผูกกับช่องกรอกช่องใดช่องหนึ่ง
+   ใช้แถบสีด้านซ้ายแทนกล่อง เพื่อให้สะดุดตาโดยไม่เพิ่มกรอบให้หน้า */
 .reg-error-text.is-block {
     margin: 0;
-    padding: 10px 12px;
-    border: 1px solid var(--reg-error-border);
-    border-radius: var(--reg-r-box-sm);
-    background: #fdf5f5;
+    padding: 2px 0 2px 12px;
+    border-left: 2px solid var(--reg-error-border);
     line-height: 1.55;
 }
 
@@ -209,7 +389,7 @@
     gap: 8px;
     width: 100%;
     border: 0;
-    border-radius: var(--reg-r-input);
+    border-radius: var(--reg-r-pill);
     background: var(--reg-primary);
     font-size: 15px;
     font-weight: 500;
@@ -225,38 +405,41 @@
     transform: none;
 }
 
+/* ปุ่มฝั่งผู้เข้าร่วมใช้ทรงเดียวกันหมด — pill ทุกใบ ต่างกันแค่ "น้ำหนัก" ของสี
+   ไล่จากเด่นสุดไปเบาสุด: LINE (เขียว LINE) › primary (เขียวแบรนด์) › soft (เขียวจาง) › secondary/outline (ขอบบาง)
+   ถ้าปนทรงมนไม่เท่ากันในหน้าเดียว จะอ่านเหมือนมาจากคนละระบบ */
 .reg-btn-secondary {
     height: var(--reg-h-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    border: 1px solid var(--reg-border-secondary);
+    border: 1px solid var(--reg-field-border);
     background: var(--reg-card-bg);
-    border-radius: var(--reg-r-input);
-    font-size: 14px;
+    border-radius: var(--reg-r-pill);
+    font-size: 14.5px;
     font-weight: 500;
-    color: var(--reg-text-secondary);
+    color: var(--reg-brand-dark);
     transition: border-color var(--reg-transition), background var(--reg-transition), color var(--reg-transition);
 }
 
-.reg-btn-secondary:hover { border-color: #9dc79f; background: #f7faf6; color: var(--reg-primary); }
+.reg-btn-secondary:hover { border-color: var(--reg-primary); background: var(--reg-soft-bg); color: var(--reg-primary-hover); }
 
 .reg-btn-outline {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border: 1px solid var(--reg-tint-line-strong);
+    border: 1px solid var(--reg-field-border);
     background: var(--reg-card-bg);
-    border-radius: 10px;
-    font-size: 12.5px;
+    border-radius: var(--reg-r-pill);
+    font-size: 13px;
     font-weight: 500;
-    color: var(--reg-primary);
+    color: var(--reg-primary-hover);
     transition: border-color var(--reg-transition), background var(--reg-transition);
 }
 
-.reg-btn-outline:hover { border-color: var(--reg-focus-border); background: #f7faf6; }
+.reg-btn-outline:hover { border-color: var(--reg-primary); background: var(--reg-soft-bg); }
 
 /* จำกัดไว้ในขอบเขตของ flow ลงทะเบียน — topbar กับเมนูของ layout ใช้ focus ring ของตัวเองอยู่แล้ว */
 .reg-page button:focus-visible,
@@ -274,46 +457,97 @@
 
 /* ---------- หน้าจอ 1: ตรวจสอบสิทธิ์ ---------- */
 
-.reg-screen-check { padding: 28px 24px 30px; display: flex; flex-direction: column; gap: 20px; }
-.reg-screen-check .reg-heading { display: flex; flex-direction: column; gap: 6px; }
+/* ฟอร์มซ้อนขึ้นไปบนพื้นไล่สี ไม่มีการ์ดหรือกรอบคั่น — ให้อ่านต่อเนื่องจากหัวหน้าจอ */
+.reg-screen-check {
+    margin-top: -28px;
+    padding: 0 20px 28px;
+    display: flex;
+    flex-direction: column;
+}
+
 .reg-check-body { display: flex; flex-direction: column; gap: 14px; }
 
-.reg-check-input { height: var(--reg-h-primary); }
+.reg-screen-check .reg-field > label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--reg-brand-dark);
+    letter-spacing: 0;
+}
+
+.reg-check-input {
+    height: auto;
+    padding: 11px 15px;
+    border: 1.5px solid var(--reg-field-border);
+    border-radius: 14px;
+    background: var(--reg-page-bg);
+    font-size: 15px;
+}
+
+.reg-check-input::placeholder { font-size: 14px; }
+
+/* บนอุปกรณ์สัมผัส (มือถือ · เบราว์เซอร์ในแอป LINE) ต้องกลับไป 16px
+   เพราะ iOS/WKWebView จะซูมหน้าจอเองทันทีที่โฟกัสช่องที่ตัวอักษรเล็กกว่า 16px
+   แล้วเลย์เอาต์เพี้ยนทั้งหน้าโดยผู้ใช้ซูมกลับเองไม่ได้ — บนเดสก์ท็อปไม่มีปัญหานี้ */
+@media (pointer: coarse) {
+    .reg-check-input { font-size: 16px; }
+    .reg-check-input::placeholder { font-size: 15px; }
+}
+
+.reg-check-input:focus { border-color: var(--reg-primary); background: #ffffff; }
 
 .reg-divider { display: flex; align-items: center; gap: 12px; }
-.reg-divider::before, .reg-divider::after { content: ""; flex: 1; height: 1px; background: var(--reg-border-soft); }
-.reg-divider span { font-size: 12px; color: var(--reg-text-support); }
+.reg-divider::before, .reg-divider::after { content: ""; flex: 1; height: 1px; background: var(--reg-rule); }
+.reg-divider span { font-size: 13px; color: var(--reg-muted); }
 
+/* ปุ่มรอง — จงใจให้เบากว่าปุ่ม LINE เพราะ LINE คือทางที่อยากให้เลือกก่อน */
+.reg-btn-soft {
+    width: 100%;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: var(--reg-r-pill);
+    background: var(--reg-soft-bg);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--reg-primary-hover);
+    transition: background var(--reg-transition), color var(--reg-transition);
+}
+
+.reg-btn-soft:hover:not(:disabled) { background: #e3efdf; }
+.reg-btn-soft:disabled { color: #9db894; cursor: not-allowed; transform: none; }
+
+/* ปุ่มหลักของหน้า — ใช้เขียวแบรนด์ชุดเดียวกับปุ่มในหน้ากิจกรรม/รายละเอียด ไม่ใช่เขียวของ LINE
+   หมายเหตุ: LINE มีข้อกำหนดเรื่องสี/โลโก้ของปุ่ม "Log in with LINE" อยู่
+   ถ้าวันหน้าต้องส่ง channel ให้ LINE ตรวจ อาจต้องกลับไปใช้ #06C755 ตามคู่มือของเขา */
 .reg-btn-line {
-    height: var(--reg-h-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 9px;
+    padding: 14px 16px;
     border: 0;
-    border-radius: var(--reg-r-input);
-    background: var(--reg-line);
+    border-radius: var(--reg-r-pill);
+    background: var(--reg-primary);
+    box-shadow: 0 6px 16px rgba(95, 160, 82, .28);
     font-size: 14.5px;
-    font-weight: 500;
+    font-weight: 600;
     color: #ffffff;
     transition: filter var(--reg-transition);
 }
 
-.reg-btn-line:hover { filter: brightness(.95); color: #ffffff; }
+.reg-btn-line:hover { background: var(--reg-primary-hover); color: #ffffff; }
 
 /* ---------- เข้าสู่ระบบด้วย LINE ---------- */
 
-.reg-line-hint { font-size: 12px; line-height: 1.55; color: var(--reg-text-support); text-wrap: pretty; }
+.reg-line-hint { font-size: 12px; line-height: 1.6; color: var(--reg-muted); text-align: center; text-wrap: pretty; }
 
-/* แถบบอกว่ากำลังใช้บัญชี LINE ไหนอยู่ — ต้องเห็นชื่อชัด เพราะเป็นบัญชีที่จะถูกผูกกับการจอง */
+/* แถบบอกว่ากำลังใช้บัญชี LINE ไหนอยู่ — เป็นแถวข้อมูล คั่นด้วยเส้นบางบนล่าง ไม่ใช่กล่อง */
 .reg-line-account {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid var(--reg-tint-line);
-    border-radius: var(--reg-r-box);
-    background: var(--reg-tint-strong);
+    padding: 12px 0;
+    border-top: var(--reg-hairline);
+    border-bottom: var(--reg-hairline);
 }
 
 .reg-line-avatar {
@@ -363,6 +597,57 @@
 
 .reg-line-switch:hover { border-color: var(--reg-focus-border); color: var(--reg-primary); }
 
+/* ---------- ประวัติกิจกรรมอื่นที่เคยลงทะเบียน (เฉพาะตอนเข้าผ่าน LINE) ---------- */
+
+.reg-history { display: flex; flex-direction: column; gap: 2px; }
+
+.reg-history .reg-group-label { padding-bottom: 8px; }
+
+.reg-history-list { display: flex; flex-direction: column; }
+
+.reg-history-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-top: var(--reg-hairline);
+    color: inherit;
+}
+
+.reg-history-row:last-child { border-bottom: var(--reg-hairline); }
+.reg-history-row:hover .reg-history-title { color: var(--reg-primary-hover); }
+.reg-history-row svg { flex: none; color: var(--reg-muted); }
+
+.reg-history-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+.reg-history-title {
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--reg-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reg-history-meta { font-size: 12px; color: var(--reg-muted); }
+
+/* ทางออกจากหน้าจอ "ลงทะเบียนแล้ว" ไปยังการลงทะเบียนด้วยเบอร์โทร
+   คั่นด้วยเส้นบางตามกติกาของหน้า ไม่ใช่กล่อง */
+.reg-line-exit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 18px;
+    border-top: var(--reg-hairline);
+}
+
+.reg-line-exit > span {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--reg-text-support);
+    text-wrap: pretty;
+}
+
 .reg-btn-line .reg-line-badge {
     width: 22px;
     height: 22px;
@@ -378,13 +663,12 @@
 
 /* ---------- หน้าจอ 2: ลงทะเบียนแล้ว ---------- */
 
-.reg-screen-found { padding: 24px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.reg-screen-found { padding: 22px 20px 28px; display: flex; flex-direction: column; gap: 18px; }
 
+/* ข้อความยืนยันสถานะ — ไม่ใช่กล่อง เป็นหัวเรื่องของหน้าจอ คั่นจากบล็อกข้อมูลด้วยเส้นบาง */
 .reg-confirm-card {
-    padding: 18px 18px 20px;
-    background: var(--reg-tint-strong);
-    border: 1px solid var(--reg-tint-line);
-    border-radius: 16px;
+    padding: 0 0 18px;
+    border-bottom: var(--reg-hairline);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -413,9 +697,11 @@
     text-wrap: pretty;
 }
 
+/* ป้ายรหัสจอง — เดิมพื้นขาวเพราะวางบนกล่องเขียวจาง พอถอดกล่องออกกลายเป็นขาวบนขาว
+   จึงสลับมาใช้พื้นเขียวจางแทน ให้ยังอ่านออกว่าเป็นรหัสที่หยิบไปใช้ต่อได้ */
 .reg-code-pill {
     padding: 5px 13px;
-    background: var(--reg-card-bg);
+    background: var(--reg-tint-strong);
     border-radius: var(--reg-r-pill);
     font-family: var(--reg-font-numeric);
     font-size: 13px;
@@ -423,14 +709,37 @@
     color: var(--reg-primary);
 }
 
-.reg-booking-rows { display: flex; flex-direction: column; gap: 12px; }
+/*
+ * บล็อกประวัติการลงทะเบียนเดิม — กรอบชั้นเดียวของทั้งหน้า
+ * เหตุผลที่ยอมให้มีกรอบตรงนี้จุดเดียว: เป็นข้อมูลคนละก้อนกับขั้นตอนที่ผู้ใช้กำลังทำอยู่
+ * ถ้าใช้แค่เส้นคั่นเหมือน section อื่น จะอ่านต่อเนื่องเป็นเนื้อเดียวกับฟอร์มจนแยกบริบทไม่ออก
+ * ภายในแยกรายแถวด้วยเส้นบางเท่านั้น — ห้ามใส่กล่อง/พื้นหลังให้แถวใดแถวหนึ่งอีก
+ */
+.reg-booking-block {
+    padding: 0 14px;
+    border: 1px solid var(--reg-border);
+    border-radius: var(--reg-r-box);
+}
+
+.reg-booking-block .reg-group-label {
+    display: block;
+    padding: 12px 0;
+    border-bottom: var(--reg-hairline);
+}
+
+.reg-booking-rows { margin: 0; display: flex; flex-direction: column; }
 
 .reg-booking-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
+    padding: 11px 0;
+    border-bottom: var(--reg-hairline);
 }
+
+/* แถวสุดท้ายไม่ต้องมีเส้น ไม่งั้นจะไปซ้อนกับขอบล่างของกรอบจนดูหนาผิดปกติ */
+.reg-booking-row:last-child { border-bottom: 0; }
 
 .reg-booking-row dt { flex: none; margin: 0; font-size: 13px; font-weight: 400; color: var(--reg-text-support); }
 
@@ -446,15 +755,17 @@
 
 /* ---------- หน้าจอ 3: กรอกข้อมูล ---------- */
 
-.reg-screen-form { padding: 22px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+/* หน้าจอกรอกข้อมูลมีฟิลด์เยอะที่สุด จึงบีบระยะให้แน่นกว่าหน้าจออื่นเล็กน้อย
+   แต่ยังคง 12px ระหว่างฟิลด์ ไม่ลดต่ำกว่านี้ ไม่งั้นป้ายชื่อช่องจะไปติดกับช่องด้านบนจนอ่านยาก */
+.reg-screen-form { padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
 
+/* หัวเรื่อง "กำลังลงทะเบียนกิจกรรมอะไร" — เป็น section หนึ่ง ไม่ใช่กล่อง
+   คั่นจากฟอร์มด้านล่างด้วยเส้นบางเส้นเดียว */
 .reg-activity-card {
     display: flex;
     gap: 12px;
-    padding: 12px 14px;
-    background: var(--reg-surface);
-    border: 1px solid var(--reg-border-card);
-    border-radius: var(--reg-r-box);
+    padding: 0 0 18px;
+    border-bottom: var(--reg-hairline);
 }
 
 .reg-activity-thumb {
@@ -480,35 +791,28 @@
 
 .reg-activity-info span { font-size: 12px; color: var(--reg-text-support); }
 
-/* การ์ดกิจกรรมบนหน้าจอแรก — เป็นบริบทที่ยกมาจากหน้ารายละเอียด ไม่ใช่ช่องให้กรอก
-   จึงใช้พื้นเขียวจางให้ต่างจากกล่องข้อมูลที่ผู้ใช้ต้องลงมือทำอะไรกับมัน */
-.reg-activity-card.is-lead { background: var(--reg-tint-strong); border-color: var(--reg-tint-line); }
+.reg-form-fields { display: flex; flex-direction: column; gap: 12px; }
 
-.reg-form-fields { display: flex; flex-direction: column; gap: 14px; }
-
+/* จำนวนที่นั่ง — แถวควบคุม ไม่ใช่กล่อง ตัวปุ่ม stepper ยังมีสไตล์ของตัวเองได้
+   เพราะเป็น control เหมือนช่องกรอก ไม่ใช่กล่องครอบเนื้อหา */
 .reg-seat-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 10px 8px 14px;
-    background: var(--reg-surface);
-    border: 1px solid var(--reg-border);
-    border-radius: var(--reg-r-input);
+    padding: 4px 0;
 }
 
 .reg-seat-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .reg-seat-text .reg-seat-label { font-size: 13.5px; font-weight: 500; color: var(--reg-text); }
 .reg-seat-text .reg-seat-note { font-size: 12px; color: var(--reg-text-support); }
 
+/* ปุ่มเพิ่ม/ลดเป็นวงกลมสีแบรนด์ — เป็น control ที่ต้องกดง่ายด้วยนิ้ว จึงคุมขนาดไว้ 32px */
 .reg-stepper {
     flex: none;
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: var(--reg-card-bg);
-    border-radius: 9px;
-    padding: 3px;
+    gap: 10px;
 }
 
 .reg-stepper button {
@@ -518,15 +822,16 @@
     align-items: center;
     justify-content: center;
     border: 0;
-    background: transparent;
-    border-radius: 7px;
-    color: var(--reg-text-label);
+    background: var(--reg-primary);
+    border-radius: 50%;
+    color: #ffffff;
     font-size: 17px;
-    transition: background var(--reg-transition);
+    line-height: 1;
+    transition: background var(--reg-transition), opacity var(--reg-transition);
 }
 
-.reg-stepper button:hover { background: #f1f3ee; }
-.reg-stepper button:disabled { color: var(--reg-primary-disabled); cursor: not-allowed; transform: none; background: transparent; }
+.reg-stepper button:hover { background: var(--reg-primary-hover); }
+.reg-stepper button:disabled { background: #C9DDC3; cursor: not-allowed; transform: none; }
 
 .reg-stepper .reg-seat-count {
     min-width: 24px;
@@ -537,10 +842,13 @@
     color: var(--reg-text);
 }
 
+/* ข้อความยินยอมเป็นคนละเรื่องกับช่องกรอก จึงคั่นด้วยเส้นบางเหนือแถว */
 .reg-consent {
     display: flex;
     align-items: flex-start;
     gap: 10px;
+    padding-top: 16px;
+    border-top: var(--reg-hairline);
     cursor: pointer;
     user-select: none;
 }
@@ -566,18 +874,43 @@
 
 /* ---------- หน้าจอ 5: ชำระเงิน ---------- */
 
-.reg-screen-pay { padding: 22px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
-.reg-screen-pay .reg-heading { display: flex; flex-direction: column; gap: 5px; }
-.reg-screen-pay .reg-heading .reg-subtitle { font-size: 12.5px; }
+.reg-screen-pay { padding: 10px 20px 22px; display: flex; flex-direction: column; gap: 10px; }
 
+/* ---------- แถบยอดชำระแบบย่อ/กางได้ ---------- */
+
+.reg-pay-collapse { border-bottom: var(--reg-hairline); }
+
+.reg-pay-collapse > summary {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 0 14px;
+    list-style: none;
+    cursor: pointer;
+}
+
+.reg-pay-collapse > summary::-webkit-details-marker { display: none; }
+.reg-pay-collapse > summary::marker { content: ""; }
+
+.reg-pay-collapse-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--reg-text); }
+
+.reg-pay-collapse-value {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--reg-primary);
+    letter-spacing: -.02em;
+}
+
+.reg-pay-collapse > summary svg { flex: none; align-self: center; color: var(--reg-muted); transition: transform var(--reg-transition); }
+.reg-pay-collapse[open] > summary svg { transform: rotate(180deg); }
+
+/* สรุปยอด — รายการที่อ่านไล่ลงมา ใช้ระยะห่างพอ ไม่ต้องมีกล่องครอบ */
 .reg-pay-summary {
-    padding: 16px 18px;
-    background: var(--reg-surface-alt);
-    border: 1px solid var(--reg-border-box);
-    border-radius: var(--reg-r-box);
+    margin: 0;
+    padding-bottom: 14px;
     display: flex;
     flex-direction: column;
-    gap: 11px;
+    gap: 9px;
 }
 
 .reg-pay-row {
@@ -590,20 +923,8 @@
 .reg-pay-row dt { min-width: 0; margin: 0; font-size: 13px; font-weight: 400; color: var(--reg-text-secondary); }
 .reg-pay-row dd { flex: none; margin: 0; font-family: var(--reg-font-numeric); font-variant-numeric: tabular-nums; font-size: 13.5px; font-weight: 500; color: var(--reg-text); }
 
-.reg-pay-summary hr { margin: 0; border: 0; height: 1px; background: var(--reg-border-box); }
-
-.reg-pay-total { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
-.reg-pay-total dt { margin: 0; font-size: 14px; font-weight: 600; color: var(--reg-text); }
-
-.reg-pay-total dd {
-    margin: 0;
-    font-family: var(--reg-font-numeric);
-    font-variant-numeric: tabular-nums;
-    font-size: 21px;
-    font-weight: 600;
-    color: var(--reg-primary);
-    letter-spacing: -.02em;
-}
+/* .reg-pay-total / .reg-pay-summary hr ถูกถอดออกแล้ว — ยอดรวมย้ายไปอยู่บนหัวแถบที่ย่อได้
+   (.reg-pay-collapse-value) จึงไม่มีแถวยอดรวมซ้ำในตารางอีก */
 
 .reg-method-tabs {
     display: flex;
@@ -635,15 +956,15 @@
     box-shadow: var(--reg-shadow-tab);
 }
 
+/* QR เป็น section หนึ่ง คั่นด้วยเส้นบางบนล่าง ไม่ครอบกล่อง */
 .reg-qr-box {
-    padding: 18px;
-    background: var(--reg-tint-strong);
-    border: 1px solid var(--reg-tint-line);
-    border-radius: var(--reg-r-box);
+    padding: 14px 0;
+    border-top: var(--reg-hairline);
+    border-bottom: var(--reg-hairline);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 11px;
+    gap: 9px;
 }
 
 .reg-qr-box .reg-qr-title { font-size: 13px; font-weight: 600; color: var(--reg-text); }
@@ -662,17 +983,16 @@
 
 .reg-qr-save { height: 38px; padding: 0 16px; }
 
+/* ข้อมูลบัญชีธนาคาร — แยกรายแถวด้วยเส้นบาง ไม่ครอบกล่อง */
 .reg-bank-box {
-    padding: 15px 16px;
-    background: var(--reg-surface-alt);
-    border: 1px solid var(--reg-border-box);
-    border-radius: var(--reg-r-box-sm);
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 11px;
 }
 
-.reg-bank-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.reg-bank-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: var(--reg-hairline); }
+.reg-bank-row:first-child { border-top: var(--reg-hairline); }
 .reg-bank-row dt { flex: none; margin: 0; font-size: 12.5px; font-weight: 400; color: var(--reg-text-support); }
 .reg-bank-value { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .reg-bank-value dd { min-width: 0; margin: 0; font-size: 13px; font-weight: 500; color: var(--reg-text); text-align: right; }
@@ -705,7 +1025,7 @@
     color: var(--reg-primary-hover);
 }
 
-.reg-slip { display: flex; flex-direction: column; gap: 9px; }
+.reg-slip { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: var(--reg-hairline); }
 
 .reg-slip-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .reg-slip-heading .reg-slip-hint { font-size: 12px; color: var(--reg-text-support); }
@@ -717,9 +1037,10 @@
     flex-direction: column;
     align-items: center;
     gap: 7px;
+    /* เป็น control สำหรับแนบไฟล์ จึงใช้ความมนเดียวกับช่องกรอก ไม่ใช่ทรง pill แบบปุ่ม */
     border: 1.5px dashed var(--reg-tint-line-strong);
     background: var(--reg-surface-input);
-    border-radius: var(--reg-r-box-sm);
+    border-radius: var(--reg-r-input);
     transition: border-color var(--reg-transition), background var(--reg-transition);
 }
 
@@ -739,14 +1060,14 @@
 .reg-dropzone .reg-dropzone-label { font-size: 13.5px; font-weight: 500; color: var(--reg-text-secondary); }
 .reg-dropzone .reg-dropzone-hint { font-size: 12px; color: var(--reg-text-support); }
 
+/* สลิปที่แนบแล้ว — แถวสถานะ ไม่ใช่กล่อง */
 .reg-slip-card {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 14px;
-    background: var(--reg-tint-strong);
-    border: 1px solid var(--reg-tint-line);
-    border-radius: var(--reg-r-box-sm);
+    padding: 12px 0;
+    border-top: var(--reg-hairline);
+    border-bottom: var(--reg-hairline);
 }
 
 .reg-slip-card .reg-slip-icon {
@@ -790,13 +1111,12 @@
 
 .reg-slip-remove:hover { color: var(--reg-error); }
 
-.reg-slip-note { font-size: 12px; line-height: 1.55; color: var(--reg-text-support); text-wrap: pretty; }
 
 /* ---------- หน้าจอ 6: สำเร็จ ---------- */
 
-.reg-screen-done { padding: 30px 24px 28px; display: flex; flex-direction: column; gap: 22px; }
+.reg-screen-done { padding: 26px 20px 28px; display: flex; flex-direction: column; gap: 20px; }
 
-.reg-done-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.reg-done-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: var(--reg-hairline); }
 
 .reg-done-hero .reg-check-circle { width: 76px; height: 76px; }
 
@@ -818,17 +1138,18 @@
     font-size: 14px;
 }
 
+/* สรุปการจองหลังลงทะเบียนสำเร็จ — ข้อมูลก้อนเดียวกับบล็อกประวัติ จึงใช้กติกาเดียวกัน
+   กรอบชั้นเดียว แยกรายแถวด้วยเส้นบาง และไม่มีกล่องซ้อนข้างใน */
 .reg-done-box {
-    padding: 16px 18px;
-    background: var(--reg-surface-alt);
-    border: 1px solid var(--reg-border-box);
+    padding: 0 14px;
+    border: 1px solid var(--reg-border);
     border-radius: var(--reg-r-box);
     display: flex;
     flex-direction: column;
-    gap: 13px;
 }
 
-.reg-done-row { display: flex; gap: 11px; }
+.reg-done-row { display: flex; gap: 11px; padding: 12px 0; border-bottom: var(--reg-hairline); }
+.reg-done-row:last-child { border-bottom: 0; }
 
 .reg-done-row .reg-done-icon {
     width: 30px;
@@ -837,8 +1158,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--reg-tint-tab);
-    border-radius: 9px;
     color: var(--reg-primary);
 }
 
@@ -846,16 +1165,15 @@
 .reg-done-row .reg-done-label { font-size: 12px; color: var(--reg-text-support); }
 .reg-done-row .reg-done-value { font-size: 13.5px; font-weight: 500; line-height: 1.5; color: var(--reg-text); text-wrap: pretty; }
 
-.reg-download-btn { height: var(--reg-h-input); background: var(--reg-tint-strong); font-size: 14px; border-radius: var(--reg-r-input); }
-.reg-download-btn:hover { background: var(--reg-tint); }
+.reg-download-btn { height: var(--reg-h-input); background: var(--reg-soft-bg); font-size: 14px; border-radius: var(--reg-r-pill); border-color: transparent; }
+.reg-download-btn:hover { background: #e3efdf; border-color: transparent; }
 
 /* ---------- Footer ปุ่มหลัก ---------- */
 
 .reg-footer {
     flex: none;
     padding: 14px 20px 18px;
-    border-top: 1px solid var(--reg-border-soft);
-    background: var(--reg-surface-alt);
+    border-top: var(--reg-hairline);
     display: flex;
     flex-direction: column;
     gap: 9px;
@@ -870,7 +1188,7 @@
 .reg-footer-note .reg-footer-note-value {
     font-family: var(--reg-font-numeric);
     font-variant-numeric: tabular-nums;
-    font-size: 15px;
+    font-size: 19px;
     font-weight: 600;
     color: var(--reg-primary);
 }
@@ -949,52 +1267,8 @@
 .reg-guest-progress span { flex: 1; height: 4px; background: #e0e7dd; border-radius: 2px; }
 .reg-guest-progress span.is-done { background: var(--reg-primary); }
 
-.reg-guest-saved {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding-top: 4px;
-    border-top: 1px solid var(--reg-border-soft);
-}
-
-.reg-guest-saved .reg-guest-saved-title { font-size: 12.5px; font-weight: 600; color: var(--reg-text-label); }
-
-.reg-guest-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 11px;
-    background: var(--reg-tint-strong);
-    border-radius: 10px;
-}
-
-.reg-guest-row .reg-guest-no {
-    width: 26px;
-    height: 26px;
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--reg-card-bg);
-    border-radius: 50%;
-    font-family: var(--reg-font-numeric);
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--reg-primary);
-}
-
-.reg-guest-row .reg-guest-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
-
-.reg-guest-row .reg-guest-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--reg-text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.reg-guest-row .reg-guest-meta { font-size: 11.5px; color: var(--reg-text-support); }
+/* บล็อกสรุป "ผู้ร่วมที่ระบุแล้ว" ในป๊อปอัปถูกถอดออก — กดปุ่มไปคนถัดไปได้เลย
+   สไตล์ .reg-guest-saved / .reg-guest-row จึงถูกลบตามไปด้วยไม่ให้เหลือโค้ดตาย */
 
 .reg-modal-foot {
     flex: none;

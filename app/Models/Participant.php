@@ -42,6 +42,12 @@ class Participant extends Model
         return $this->belongsTo(Option::class, 'source_channel_id');
     }
 
+    /** ช่วงอายุที่กรอกมาโดยตรง — ใช้เมื่อไม่รู้ปีเกิด ดู migration add_age_range_to_ptp_participants */
+    public function ageRange(): BelongsTo
+    {
+        return $this->belongsTo(Option::class, 'age_range_id');
+    }
+
     public function contactChannel(): BelongsTo
     {
         return $this->belongsTo(Option::class, 'contact_channel_id');
@@ -89,13 +95,18 @@ class Participant extends Model
         return $this->birth_year ? ($year ?? (int) date('Y')) - $this->birth_year : null;
     }
 
-    /** ป้ายช่วงอายุสำหรับรายงาน — เกณฑ์อยู่ใน config/farmconcept.php แก้ที่นั่นแล้วรายงานย้อนหลังเปลี่ยนตาม */
+    /**
+     * ป้ายช่วงอายุสำหรับรายงาน — เกณฑ์อยู่ใน config/farmconcept.php แก้ที่นั่นแล้วรายงานย้อนหลังเปลี่ยนตาม
+     *
+     * ปีเกิดมาก่อนเสมอเพราะคำนวณใหม่ได้ทุกปี ส่วน age_range_id เป็นค่าที่กรอกทับไว้
+     * ณ วันที่เก็บข้อมูล จึงใช้เฉพาะตอนไม่มีปีเกิดให้คำนวณ
+     */
     public function ageBand(?int $year = null): ?string
     {
         $age = $this->ageAt($year);
 
         if ($age === null) {
-            return null;
+            return $this->ageRange?->label;
         }
 
         foreach (config('farmconcept.age_bands') as $band) {

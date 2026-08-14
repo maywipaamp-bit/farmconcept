@@ -85,6 +85,7 @@ class PublicRegistrationController extends Controller
         $lineProfile = session(PublicLineLoginController::SESSION_KEY);
         $lineBooking = null;
         $linePrefill = null;
+        $lineHistory = [];
 
         if ($lineProfile) {
             $registrations = $this->service->findByLineUserId($activity, $lineProfile['userId']);
@@ -95,6 +96,18 @@ class PublicRegistrationController extends Controller
 
             $linePrefill = $this->service->lastContactForLineUser($lineProfile['userId']);
             $linePrefill['name'] = $linePrefill['name'] ?: $lineProfile['displayName'];
+
+            /* ประวัติกิจกรรมอื่นที่บัญชี LINE นี้เคยลงทะเบียน — แสดงบนหน้าจอ "ลงทะเบียนแล้ว" */
+            $lineHistory = $this->service
+                ->historyForLineUser($lineProfile['userId'], $activity->id)
+                ->map(fn (Registration $registration) => [
+                    'title' => $registration->activity->name,
+                    'date' => $this->presenter->thaiDate($registration->activity->start_date) ?: '-',
+                    'url' => route('public.activities.show', $registration->activity->code),
+                    'paymentLabel' => $registration->payment_status ?: 'ลงทะเบียนแล้ว',
+                ])
+                ->values()
+                ->all();
         }
 
         return view('public.activities.register', [
@@ -162,6 +175,7 @@ class PublicRegistrationController extends Controller
                     ] : null,
                     'prefill' => $linePrefill,
                     'booking' => $lineBooking,
+                    'history' => $lineHistory,
                 ],
             ],
         ]);

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
 use App\Http\Controllers\Admin\MasterData;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\TrackingRoundController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\PublicLineLoginController;
 use App\Http\Controllers\PublicPostSurveyController;
 use App\Http\Controllers\PublicQrController;
 use App\Http\Controllers\PublicRegistrationController;
+use App\Http\Controllers\PublicTrackingRoundQrController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -109,6 +111,16 @@ Route::get('/c/{token}', [PublicQrController::class, 'checkin'])
 Route::get('/s/{token}', [PublicQrController::class, 'postSurvey'])
     ->where('token', '[a-z0-9]{24}')
     ->name('public.qr.post-survey');
+
+/* QR ติดตามสุขภาพ — อันเดียวทั้งโครงการ ไม่ผูกกิจกรรม และไม่มีรหัสคนอยู่ใน URL
+   ต้องยืนยันตัวตนก่อนเสมอ ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของคนนั้น */
+Route::get('/h/{token}', [PublicTrackingRoundQrController::class, 'landing'])
+    ->where('token', '[a-z0-9]{24}')
+    ->name('public.tracking-round-qr');
+Route::get('/public/tracking-round-qr/verify', [PublicTrackingRoundQrController::class, 'verify'])
+    ->name('public.tracking-round-qr.verify');
+Route::post('/public/tracking-round-qr/submit', [PublicTrackingRoundQrController::class, 'submit'])
+    ->name('public.tracking-round-qr.submit');
 
 /* ข้อมูลกิจกรรมสาธารณะ — คืนเฉพาะรายการที่เผยแพร่ */
 Route::get('/api/public/activities', [PublicActivityController::class, 'index'])
@@ -303,8 +315,35 @@ Route::middleware('auth')->group(function () {
         Route::prefix('cohort')->name('cohort.')->middleware('menu:cohort')->group(function () {
             Route::get('/', [CohortController::class, 'index'])->name('index');
             Route::post('/', [CohortController::class, 'store'])->name('store');
+
+            /* สองเส้นนี้ต้องอยู่ก่อน /{cohortProfile} ไม่งั้น "lookups" จะถูกอ่านเป็นรหัสกลุ่มตัวอย่าง */
+            Route::get('/lookups', [CohortController::class, 'lookups'])->name('lookups');
+            Route::post('/upload-consent', [CohortController::class, 'uploadConsent'])->name('upload-consent');
+
             Route::get('/{cohortProfile}', [CohortController::class, 'show'])->name('show');
             Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
+        });
+
+        Route::redirect('/evaluations/rounds.html', '/admin/tracking-rounds');
+        Route::redirect('/evaluations/round-create.html', '/admin/tracking-rounds/create');
+        Route::redirect('/evaluations/round-detail.html', '/admin/tracking-rounds');
+
+        Route::prefix('tracking-rounds')->name('tracking-rounds.')->middleware('menu:evaluations-rounds')->group(function () {
+            Route::get('/', [TrackingRoundController::class, 'index'])->name('index');
+            Route::post('/', [TrackingRoundController::class, 'store'])->name('store');
+
+            /* สองเส้นนี้ต้องอยู่ก่อน /{trackingRound} ไม่งั้นจะถูกอ่านเป็นรหัสรอบ */
+            Route::get('/create', [TrackingRoundController::class, 'create'])->name('create');
+            Route::get('/eligible-members', [TrackingRoundController::class, 'eligibleMembers'])->name('eligible-members');
+
+            Route::get('/{trackingRound}', [TrackingRoundController::class, 'show'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('show');
+            Route::post('/{trackingRound}/send-notify', [TrackingRoundController::class, 'sendNotify'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('send-notify');
+            Route::patch('/{trackingRound}/cancel', [TrackingRoundController::class, 'cancel'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('cancel');
+            Route::post('/{trackingRound}/members/{member}/offline-log', [TrackingRoundController::class, 'offlineLog'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.offline-log');
         });
 
         /* ลิงก์ Legacy ส่งต่อไป clean URL เท่านั้น ไม่ใช้ .html เป็น URL หลัก */

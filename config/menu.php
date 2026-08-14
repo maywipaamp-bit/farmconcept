@@ -81,7 +81,14 @@ return [
                     'key' => 'evaluations-rounds',
                     'label' => 'รอบติดตาม',
                     'icon' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-                    'href' => 'admin/evaluations/rounds.html',
+                    'href' => 'admin/tracking-rounds',
+                    'alsoMatch' => [
+                        'admin/tracking-rounds/create',
+                        'admin/evaluations/rounds.html',
+                        'admin/evaluations/round-create.html',
+                        'admin/evaluations/round-detail.html',
+                    ],
+                    'alsoMatchPatterns' => ['^/admin/tracking-rounds/[A-Za-z0-9-]+$'],
                 ],
                 [
                     'key' => 'evaluations-responses',
@@ -206,6 +213,8 @@ return [
         'admin/activities/publish.html' => 'activities-list',
         'admin/evaluations/round-create.html' => 'evaluations-rounds',
         'admin/evaluations/round-detail.html' => 'evaluations-rounds',
+        'admin/tracking-rounds/create' => 'evaluations-rounds',
+        'admin/tracking-rounds/eligible-members' => 'evaluations-rounds',
         'admin/users/create.html' => 'users-list',
         'admin/profile.html' => null,   /* null = ทุกคนที่ล็อกอินแล้วเข้าได้ */
     ],

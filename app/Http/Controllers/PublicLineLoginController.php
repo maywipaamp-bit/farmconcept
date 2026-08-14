@@ -23,6 +23,21 @@ class PublicLineLoginController extends Controller
     {
     }
 
+    /**
+     * Callback URL ที่ส่งให้ LINE — ยึดจาก APP_URL เสมอ ไม่ใช่ host ของคำขอ
+     *
+     * LINE เทียบ redirect_uri แบบตรงตัวอักษรกับที่ลงทะเบียนไว้ใน Console
+     * ถ้าปล่อยให้สร้างจาก host ของคำขอ ค่าจะเปลี่ยนไปตามทางที่ผู้ใช้เข้ามา
+     * (localhost:8000 · 127.0.0.1 · www. กับไม่มี www.) แล้วต้องไล่ลงทะเบียนให้ครบทุกแบบ
+     * ตกหล่นแบบใดแบบหนึ่งจะกลายเป็น 400 invalid_request เฉพาะผู้ใช้บางกลุ่ม ซึ่งตามยาก
+     *
+     * ใช้ชื่อ route เป็นต้นทางของ path เพื่อไม่ให้ URL ไปเขียนซ้ำไว้สองที่
+     */
+    private function callbackUrl(): string
+    {
+        return rtrim((string) config('app.url'), '/').route('public.line.callback', absolute: false);
+    }
+
     /** ส่งผู้ใช้ไปหน้ายินยอมของ LINE — จำรหัสกิจกรรมไว้เพื่อพากลับมาที่เดิม */
     public function redirect(Request $request, string $activity): RedirectResponse
     {
@@ -32,7 +47,7 @@ class PublicLineLoginController extends Controller
             return redirect()->away($target);
         }
 
-        $authorize = $this->line->authorizeRequest(route('public.line.callback'));
+        $authorize = $this->line->authorizeRequest($this->callbackUrl());
 
         $request->session()->put('line_oauth', [
             'state' => $authorize['state'],
@@ -75,7 +90,8 @@ class PublicLineLoginController extends Controller
         }
 
         try {
-            $profile = $this->line->profileFromCode($code, route('public.line.callback'), (string) $oauth['nonce']);
+            /* ต้องเป็นค่าเดียวกับตอนขอ code เป๊ะ ๆ ไม่งั้น LINE ปฏิเสธการแลก token */
+            $profile = $this->line->profileFromCode($code, $this->callbackUrl(), (string) $oauth['nonce']);
         } catch (RuntimeException $e) {
             return redirect()->away($fallback)->with('lineError', $e->getMessage());
         }

@@ -49,8 +49,6 @@
     const guestName = document.getElementById('reg-guest-name');
     const guestAge = document.getElementById('reg-guest-age');
     const guestJob = document.getElementById('reg-guest-job');
-    const guestSaved = document.getElementById('reg-guest-saved');
-    const guestSavedList = document.getElementById('reg-guest-saved-list');
     const guestClose = document.getElementById('reg-guest-close');
     const guestBack = document.getElementById('reg-guest-back');
     const guestNext = document.getElementById('reg-guest-next');
@@ -190,6 +188,8 @@
             if (screens[key]) screens[key].hidden = key !== screen;
         });
         pane.classList.toggle('is-center', screen === 'check');
+        /* หัวหน้าจอเลือกชื่อเรื่อง/คำอธิบายตามหน้าจอที่กำลังอยู่ (ดู [data-for] ใน CSS) */
+        document.body.dataset.screen = screen;
         footerError.textContent = '';
         renderFooter();
         pane.scrollTop = 0;
@@ -241,6 +241,10 @@
 
     /* ---------- หน้าจอ 1: ตรวจสอบสิทธิ์ ---------- */
 
+    /* ข้อความเดียวใช้ทั้งตอนตั้งค่าเริ่มต้นและตอนรีเซ็ต จะได้ไม่หลุดไปคนละแบบ
+       เขียนแบบชวนกรอกใหม่ ไม่ใช่ตำหนิว่ากรอกผิด */
+    const CONTACT_HINT = 'ขอเป็นเบอร์มือถือ 10 หลัก หรืออีเมลที่ใช้งานได้นะคะ';
+
     function classifyContact(raw) {
         const value = raw.trim();
         const digits = value.replace(/\D/g, '');
@@ -283,6 +287,23 @@
         }
     }
 
+    /* ---------- ปุ่มย้อนกลับมุมซ้ายบน ----------
+       ย้อนทีละขั้นตามเส้นทางที่ผู้ใช้เดินมา ไม่ใช่กระเด็นออกจากหน้าลงทะเบียนทันที
+       หน้าจอที่ไม่มีขั้นก่อนหน้า (ตรวจสิทธิ์ · ลงทะเบียนแล้ว · สำเร็จ) ปล่อยให้ลิงก์ทำงานตามปกติ */
+    const PREVIOUS_SCREEN = { form: 'check', pay: 'form' };
+
+    const backLink = document.getElementById('reg-back');
+
+    if (backLink) {
+        backLink.addEventListener('click', function (event) {
+            const previous = PREVIOUS_SCREEN[state.screen];
+            if (!previous) return;
+
+            event.preventDefault();
+            showScreen(previous);
+        });
+    }
+
     /* ---------- เข้าสู่ระบบด้วย LINE ----------
        โปรไฟล์และการจองมาพร้อมหน้าตั้งแต่ฝั่งเซิร์ฟเวอร์แล้ว (อ่านจาก session)
        ตรงนี้จึงเหลือแค่พาไปหน้าจอที่ถูกต้องและเติมค่าที่รู้อยู่แล้วลงฟอร์ม */
@@ -313,7 +334,7 @@
     contactInput.addEventListener('input', function () {
         checkBtn.disabled = contactInput.value.trim() === '';
         contactError.hidden = true;
-        contactError.textContent = 'กรุณากรอกเบอร์โทรศัพท์หรืออีเมลให้ถูกต้อง';
+        contactError.textContent = CONTACT_HINT;
         contactInput.classList.remove('is-error');
     });
 
@@ -357,7 +378,7 @@
             seatCount.textContent = state.seats;
             seatLabel.textContent = state.seats === 1 ? 'มาคนเดียว' : 'มาด้วยกัน ' + state.seats + ' คน';
             seatNote.textContent = extra > 0
-                ? 'อีกขั้นตอนเดียว ขอชื่อเพื่อนอีก ' + extra + ' คน'
+                ? 'ขอชื่อเพื่อนอีก ' + extra + ' คน'
                 : 'ชวนเพื่อนมาด้วยได้ถึง ' + config.maxSeats + ' คน';
             seatMinus.disabled = state.seats <= 1;
             seatPlus.disabled = state.seats >= config.maxSeats;
@@ -443,18 +464,8 @@
             return '<span' + (i <= state.guestIndex ? ' class="is-done"' : '') + '></span>';
         }).join('');
 
-        const saved = state.guests.filter(Boolean);
-        guestSaved.hidden = saved.length === 0;
-        guestSavedList.innerHTML = saved.map(function (guest, i) {
-            const meta = [guest.jobLabel, guest.ageLabel].filter(Boolean).join(' · ');
-            return '<div class="reg-guest-row">' +
-                '<span class="reg-guest-no">' + (i + 2) + '</span>' +
-                '<div class="reg-guest-info">' +
-                '<span class="reg-guest-name">' + escapeHtml(guest.name) + '</span>' +
-                (meta ? '<span class="reg-guest-meta">' + escapeHtml(meta) + '</span>' : '') +
-                '</div></div>';
-        }).join('');
-
+        /* ไม่สรุปรายชื่อที่กรอกไปแล้วในป๊อปอัป — กดปุ่มไปคนถัดไปได้เลย
+           แถบความคืบหน้าด้านบนบอกอยู่แล้วว่ากรอกถึงคนที่เท่าไหร่ */
         const last = state.guestIndex >= extra - 1;
         guestNext.textContent = last
             ? (config.payment.required ? 'ไปหน้าชำระเงิน' : 'ยืนยันการลงทะเบียน')
