@@ -260,8 +260,8 @@
                 <span class="ac-label-info">
                 <label class="form-label">ช่วงเวลาเปิด–ปิดระบบ</label>
                 <button type="button" class="ac-info" tabindex="0"
-                        aria-label="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ"
-                        data-tip="เว้นว่างไว้ = ใช้ค่าเริ่มต้นของระบบ"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.2v.01M12 11.5v4.3"/></svg></button>
+                        aria-label="ระบบเติมให้อัตโนมัติจากรอบกิจกรรม — แก้ไขได้ทุกช่อง"
+                        data-tip="ระบบเติมให้อัตโนมัติจากรอบกิจกรรม — แก้ไขได้ทุกช่อง"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.2v.01M12 11.5v4.3"/></svg></button>
                 </span>
               </div>
               <div class="ac-windows" id="ac-windows"></div>
@@ -498,6 +498,8 @@
 
       is_published: publish,
       is_featured: !!state.pin,
+      /* ค่าว่าง = ส่ง 0 ให้ฝั่งเซิร์ฟเวอร์ต่อท้ายรายการหน้าเว็บสาธารณะเองตอนเผยแพร่ */
+      public_sort_order: state.sortOrder !== '' ? Math.max(0, parseInt(state.sortOrder, 10) || 0) : 0,
       /* กิจกรรมที่เผยแพร่อยู่แล้วไม่ควรถูกดันกลับเป็นฉบับร่างเพราะกดปุ่มบันทึกร่าง */
       status: publish
         ? (current.is_published ? current.status : 'เปิดรับสมัคร')

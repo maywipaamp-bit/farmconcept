@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/public-activities.css') }}">
+    {{-- หน้าที่ต้องการ CSS หรือ meta เพิ่มเติมต่อท้ายตรงนี้ — ต้องมาหลัง public-activities.css เสมอ --}}
+    @stack('head')
 </head>
 <body>
 <div class="public-app">

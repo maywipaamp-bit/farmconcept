@@ -158,7 +158,7 @@ class ActivityEvaluationQrTest extends TestCase
 
         $qr->update(['is_active' => true]);
         $this->get($qr->target_url)
-            ->assertRedirect('/activities/'.$activity->code.'?action=registration&qr='.$qr->token);
+            ->assertRedirect('/activities/'.$activity->code.'/register?qr='.$qr->token);
         $this->assertSame(1, $qr->fresh()->scan_count);
     }
 }

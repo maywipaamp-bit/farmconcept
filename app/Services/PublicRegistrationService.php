@@ -8,7 +8,9 @@ use App\Models\Consent;
 use App\Models\ConsentDocument;
 use App\Models\Form;
 use App\Models\Participant;
+use App\Models\PaymentSlip;
 use App\Models\Registration;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -27,6 +29,70 @@ class PublicRegistrationService
         $formatted = substr($phone, 0, 3).'-'.substr($phone, 3, 3).'-'.substr($phone, 6);
 
         return $activity->registrations()->whereIn('phone', [$phone, $formatted])->exists();
+    }
+
+    /**
+     * การจองทั้งหมดของเบอร์โทรหรืออีเมลนี้ในกิจกรรมนี้ — ใช้ตอบหน้าจอ "คุณลงทะเบียนแล้ว"
+     *
+     * @return Collection<int, Registration>
+     */
+    public function findByContact(Activity $activity, string $contact, bool $isPhone): Collection
+    {
+        $query = $activity->registrations()->orderBy('id');
+
+        if ($isPhone) {
+            $phone = $this->normalizePhone($contact);
+            $formatted = substr($phone, 0, 3).'-'.substr($phone, 3, 3).'-'.substr($phone, 6);
+
+            return $query->whereIn('phone', [$phone, $formatted])->get();
+        }
+
+        return $query->where('email', mb_strtolower($contact))->get();
+    }
+
+    /**
+     * การจองของบัญชี LINE นี้ในกิจกรรมนี้ — ใช้ตอนกลับมาจากหน้ายินยอมของ LINE
+     * เพื่อพาไปหน้าจอ "คุณลงทะเบียนแล้ว" โดยไม่ต้องให้กรอกเบอร์ซ้ำ
+     *
+     * @return Collection<int, Registration>
+     */
+    public function findByLineUserId(Activity $activity, string $lineUserId): Collection
+    {
+        $participantIds = Participant::query()
+            ->where('line_user_id', $lineUserId)
+            ->pluck('id');
+
+        if ($participantIds->isEmpty()) {
+            return collect();
+        }
+
+        return $activity->registrations()
+            ->whereIn('participant_id', $participantIds)
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * ข้อมูลติดต่อล่าสุดของบัญชี LINE นี้ — ใช้เติมฟอร์มให้คนที่เคยลงทะเบียนกิจกรรมอื่นมาแล้ว
+     *
+     * @return array{name: ?string, phone: ?string, email: ?string}
+     */
+    public function lastContactForLineUser(string $lineUserId): array
+    {
+        $participant = Participant::query()
+            ->where('line_user_id', $lineUserId)
+            ->latest('id')
+            ->first();
+
+        if (! $participant) {
+            return ['name' => null, 'phone' => null, 'email' => null];
+        }
+
+        return [
+            'name' => $participant->name,
+            'phone' => $this->normalizePhone((string) $participant->phone) ?: null,
+            'email' => $participant->registrations()->whereNotNull('email')->latest('id')->value('email'),
+        ];
     }
 
     public function registrationForm(Activity $activity): ?Form
@@ -51,11 +117,13 @@ class PublicRegistrationService
 
     /**
      * @param  array<string, mixed>  $data
+     * @param  array{userId: string, displayName: string, pictureUrl: ?string}|null  $lineProfile
+     *         โปรไฟล์ LINE ของผู้ลงทะเบียนหลัก — มาจาก session ไม่ใช่ค่าที่ผู้ใช้ส่งมาเอง
      * @return Collection<int, Registration>
      */
-    public function register(Activity $activity, array $data): Collection
+    public function register(Activity $activity, array $data, ?array $lineProfile = null): Collection
     {
-        return DB::transaction(function () use ($activity, $data): Collection {
+        return DB::transaction(function () use ($activity, $data, $lineProfile): Collection {
             $lockedActivity = Activity::query()->lockForUpdate()->findOrFail($activity->id);
             $lockedActivity->loadCount('registrations');
 
@@ -92,8 +160,9 @@ class PublicRegistrationService
                 ->latest('effective_date')
                 ->first();
 
-            return collect($data['names'])->map(function (string $name) use ($lockedActivity, $round, $phone, $consentDocument): Registration {
-                $participant = $this->participant($name, $phone);
+            return collect($data['participants'])->values()->map(function (array $person, int $index) use ($lockedActivity, $round, $phone, $consentDocument, $data, $lineProfile): Registration {
+                /* บัญชี LINE ผูกกับผู้ลงทะเบียนหลักเท่านั้น — ผู้ร่วมเพิ่มเป็นคนละคนที่ไม่ได้ล็อกอินเอง */
+                $participant = $this->participant($person['name'], $phone, $index === 0 ? $lineProfile : null);
 
                 Consent::create([
                     'participant_id' => $participant->id,
@@ -104,13 +173,20 @@ class PublicRegistrationService
                     'recorded_via' => 'registration',
                 ]);
 
+                /* ข้อมูลติดต่อและช่องทางที่ทราบข่าวเก็บที่ผู้ลงทะเบียนหลัก (แถวแรก) เท่านั้น
+                   ส่วนช่วงอายุ/อาชีพเป็นของรายบุคคล เก็บทุกแถว */
                 return Registration::create([
                     'code' => 'REG-'.Str::upper(Str::random(16)),
                     'activity_id' => $lockedActivity->id,
                     'activity_round_id' => $round?->id,
                     'participant_id' => $participant->id,
-                    'name' => $name,
+                    'name' => $person['name'],
                     'phone' => $phone,
+                    'email' => $index === 0 ? ($data['email'] ?? null) : null,
+                    'age_range_id' => $person['age_range_id'] ?? null,
+                    'occupation_id' => $person['occupation_id'] ?? null,
+                    'source_channel_id' => $index === 0 ? ($data['source_channel_id'] ?? null) : null,
+                    'dietary_note' => $index === 0 ? ($data['note'] ?? null) : null,
                     'registered_at' => now(),
                     'is_manual_entry' => false,
                 ]);
@@ -118,17 +194,80 @@ class PublicRegistrationService
         });
     }
 
-    private function participant(string $name, string $phone): Participant
+    /**
+     * แจ้งชำระเงินของการจองชุดเดียวกัน — สลิปแนบกับแถวผู้ลงทะเบียนหลัก
+     * และทุกแถวในชุดเปลี่ยนสถานะเป็น "รอตรวจสอบ" ให้เจ้าหน้าที่ตรวจต่อ
+     *
+     * @param  list<string>  $codes
+     * @return Collection<int, Registration>
+     */
+    public function notifyPayment(Activity $activity, array $codes, ?UploadedFile $slip): Collection
+    {
+        return DB::transaction(function () use ($activity, $codes, $slip): Collection {
+            $registrations = $activity->registrations()
+                ->whereIn('code', $codes)
+                ->lockForUpdate()
+                ->orderBy('id')
+                ->get();
+
+            if ($registrations->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'codes' => 'ไม่พบข้อมูลการจอง กรุณาลงทะเบียนใหม่อีกครั้ง',
+                ]);
+            }
+
+            if ($slip) {
+                /* ไฟล์สลิปเก็บนอก public/ ตามกติกาของ act_payment_slips
+                   ต้องเสิร์ฟผ่าน route ที่ตรวจสิทธิ์ฝั่ง backoffice เท่านั้น */
+                PaymentSlip::create([
+                    'registration_id' => $registrations->first()->id,
+                    'file_path' => $slip->store('payment-slips', 'local'),
+                    'amount' => (float) $activity->fee * $registrations->count(),
+                    'transferred_at' => now(),
+                    'status' => 'รอตรวจสอบ',
+                ]);
+            }
+
+            $activity->registrations()
+                ->whereIn('id', $registrations->pluck('id'))
+                ->update(['payment_status' => 'รอตรวจสอบ']);
+
+            /* อัปเดตค่าในหน่วยความจำให้ตรงกับที่เพิ่งเขียน ผู้เรียกจะได้ไม่ต้อง query ซ้ำ */
+            $registrations->each(fn (Registration $registration) => $registration->setAttribute('payment_status', 'รอตรวจสอบ'));
+
+            return $registrations;
+        });
+    }
+
+    /**
+     * @param  array{userId: string, displayName: string, pictureUrl: ?string}|null  $lineProfile
+     */
+    private function participant(string $name, string $phone, ?array $lineProfile = null): Participant
     {
         $formattedPhone = substr($phone, 0, 3).'-'.substr($phone, 3, 3).'-'.substr($phone, 6);
-        $participant = Participant::query()
+
+        /* คนที่เคยล็อกอิน LINE ไว้แล้วให้จับคู่ด้วยบัญชี LINE ก่อน เพราะเป็นตัวระบุที่ไม่เปลี่ยน
+           ต่างจากชื่อ+เบอร์ที่พิมพ์ต่างกันนิดเดียวก็กลายเป็นคนใหม่ */
+        $participant = null;
+
+        if ($lineProfile) {
+            $participant = Participant::query()
+                ->where('line_user_id', $lineProfile['userId'])
+                ->lockForUpdate()
+                ->first();
+        }
+
+        $participant ??= Participant::query()
             ->where('name', $name)
             ->whereIn('phone', [$phone, $formattedPhone])
             ->lockForUpdate()
             ->first();
 
         if ($participant) {
-            $participant->update(['consent_status' => 'ยินยอม']);
+            $participant->update([
+                'consent_status' => 'ยินยอม',
+                'phone' => $participant->phone ?: $phone,
+            ] + $this->lineColumns($lineProfile, $participant));
 
             return $participant;
         }
@@ -141,7 +280,46 @@ class PublicRegistrationService
             'name' => $name,
             'phone' => $phone,
             'consent_status' => 'ยินยอม',
-        ]);
+        ] + $this->lineColumns($lineProfile, null));
+    }
+
+    /**
+     * คอลัมน์บัญชี LINE ที่จะเขียนลงผู้เข้าร่วม
+     *
+     * line_user_id เป็น unique — ถ้าบัญชีนี้ถูกผูกกับผู้เข้าร่วมคนอื่นไปแล้ว
+     * ต้องไม่เขียนซ้ำ ไม่งั้นการบันทึกจะล้มทั้งรายการโดยที่ผู้ใช้ไม่เข้าใจว่าทำอะไรผิด
+     * (กรณีนี้เกิดได้เมื่อคนหนึ่งใช้ LINE ตัวเองลงทะเบียนแทนคนอื่นด้วยชื่อ-เบอร์คนละคน)
+     *
+     * @param  array{userId: string, displayName: string, pictureUrl: ?string}|null  $lineProfile
+     * @return array<string, mixed>
+     */
+    private function lineColumns(?array $lineProfile, ?Participant $participant): array
+    {
+        if (! $lineProfile) {
+            return [];
+        }
+
+        if ($participant?->line_user_id === $lineProfile['userId']) {
+            return [
+                'line_display_name' => $lineProfile['displayName'],
+                'line_picture_url' => $lineProfile['pictureUrl'],
+            ];
+        }
+
+        $takenByOther = Participant::query()
+            ->where('line_user_id', $lineProfile['userId'])
+            ->when($participant, fn ($query) => $query->whereKeyNot($participant->id))
+            ->exists();
+
+        if ($takenByOther || ($participant && $participant->line_user_id)) {
+            return [];
+        }
+
+        return [
+            'line_user_id' => $lineProfile['userId'],
+            'line_display_name' => $lineProfile['displayName'],
+            'line_picture_url' => $lineProfile['pictureUrl'],
+        ];
     }
 
     private function roundFor(Activity $activity, mixed $roundId): ?ActivityRound

@@ -5671,17 +5671,19 @@ button.multiselect:focus-visible {
 }
 
 /* ความกว้างขั้นต่ำ = ผลรวมคอลัมน์ + gap + padding ซ้ายขวา
-   996 + (9 × 12) + 40 = 1144 — พอดีกับพื้นที่เนื้อหาบนจอโน้ตบุ๊กทั่วไปโดยไม่ต้องเลื่อนข้าง */
+   828 + (8 × 10) + 32 = 940 — พอดีพื้นที่คอนเทนต์จอโน้ตบุ๊ก (~947px) โดยไม่ต้องเลื่อนข้าง
+   จอแคบกว่านั้น .table-scroll ยังเลื่อนข้างให้เป็น fallback */
 .grid-head,
-.grid-row { min-width: 1144px; }
+.grid-row { min-width: 940px; }
 
 .grid-head,
 .grid-row {
   display: grid;
-  /* # · ชื่อกิจกรรม · วันและเวลา · สถานที่ · ผู้ลงทะเบียน · เข้าร่วม · แบบประเมิน · สถานะ · ปรับปรุงล่าสุด · เมนู
-     ความกว้างรวมถูกบีบให้พอดีจอ ไม่ต้องเลื่อนแนวนอน — คอลัมน์ที่ยืดได้มีสองอันคือชื่อกับสถานที่ */
-  grid-template-columns: 44px minmax(180px, 1.4fr) 140px minmax(100px, 1fr) 92px 76px 88px 108px 124px 44px;
-  gap: 12px;
+  /* # · ชื่อกิจกรรม · วันและเวลา · สถานที่ · ผู้ลงทะเบียน · เข้าร่วม/ประเมิน · สถานะ+หน้าเว็บ · ปรับปรุงล่าสุด · เมนู
+     คู่ที่เนื้อหาเป็นเรื่องเดียวกันรวมช่องกัน (สถานะกับหน้าเว็บ · เข้าร่วมกับประเมิน)
+     เพื่อให้ตารางพอดีจอ — คอลัมน์ที่ยืดได้มีสองอันคือชื่อกับสถานที่ */
+  grid-template-columns: 40px minmax(150px, 1.4fr) 110px minmax(84px, 1fr) 76px 100px 118px 110px 40px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -7729,6 +7731,14 @@ button.multiselect:focus-visible {
 }
 
 .ac-toggle + .ac-toggle { border-top: 1px solid var(--color-border-soft); }
+
+/* ช่องลำดับการแสดงบนหน้าเว็บ — อยู่ปลายแถวตำแหน่งเดียวกับสวิตช์ กว้างพอสำหรับเลขไม่กี่หลัก */
+.ac-sort-input {
+  width: 112px;
+  flex: none;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 
 .ac-toggle-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 

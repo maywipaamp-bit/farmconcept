@@ -43,7 +43,7 @@
             @endif
 
             @if(!$checkin['requested'] && !$postSurvey['requested'] && $registration['enabled'])
-                <a class="registration-cta" href="#registration-form">ลงทะเบียนเข้าร่วม</a>
+                <a class="registration-cta" href="{{ $registration['registerUrl'] }}">ลงทะเบียนเข้าร่วม</a>
             @endif
         </div>
     </article>
@@ -158,84 +158,7 @@
             <h2>ยังไม่เปิด Check-in</h2>
             <p>กิจกรรมนี้ยังไม่อยู่ในช่วง Check-in หรือสิ้นสุดช่วง Check-in แล้ว</p>
         </section>
-    @elseif($registration['enabled'])
-        <section class="registration-card" id="registration-form" data-open="{{ $registration['open'] ? 'true' : 'false' }}">
-            <div class="registration-heading">
-                <span class="registration-step">1</span>
-                <div>
-                    <h2>ตรวจสอบเบอร์โทรศัพท์</h2>
-                    <p>ใช้ตรวจสอบว่าคุณยังไม่ได้ลงทะเบียนกิจกรรมนี้</p>
-                </div>
-            </div>
-
-            <form id="public-registration-form" novalidate>
-                @csrf
-                <div class="registration-field">
-                    <label for="registration-phone">เบอร์โทรศัพท์ <span>*</span></label>
-                    <div class="registration-phone-row">
-                        <input id="registration-phone" name="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="08X-XXX-XXXX" required>
-                        <button type="button" id="registration-check-phone">ตรวจสอบ</button>
-                    </div>
-                    <p class="registration-message" id="registration-phone-message" aria-live="polite"></p>
-                </div>
-
-                <div class="registration-details" id="registration-details" hidden>
-                    <div class="registration-heading is-sub">
-                        <span class="registration-step">2</span>
-                        <div>
-                            <h2>ข้อมูลผู้เข้าร่วม</h2>
-                            <p>กรอกชื่อให้ครบตามจำนวนที่นั่งที่ต้องการจอง</p>
-                        </div>
-                    </div>
-
-                    @if($registration['rounds']->count() > 1)
-                        <div class="registration-field">
-                            <label for="registration-round">รอบที่ต้องการสมัคร <span>*</span></label>
-                            <select id="registration-round" name="activity_round_id" required>
-                                <option value="">เลือกรอบกิจกรรม</option>
-                                @foreach($registration['rounds'] as $round)
-                                    <option value="{{ $round['id'] }}" @disabled($round['seatsLeft'] === 0)>
-                                        {{ $round['label'] }}{{ $round['seatsLeft'] !== null ? ' · เหลือ '.$round['seatsLeft'].' ที่นั่ง' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @elseif($registration['rounds']->count() === 1)
-                        <input type="hidden" name="activity_round_id" value="{{ $registration['rounds']->first()['id'] }}">
-                    @endif
-
-                    @if($registration['maxSeats'] > 1)
-                        <div class="registration-field">
-                            <label for="registration-seat-count">จำนวนที่นั่ง <span>*</span></label>
-                            <select id="registration-seat-count" name="seat_count">
-                                @for($seat = 1; $seat <= $registration['maxSeats']; $seat++)
-                                    <option value="{{ $seat }}">{{ $seat }} ที่นั่ง</option>
-                                @endfor
-                            </select>
-                        </div>
-                    @else
-                        <input type="hidden" id="registration-seat-count" name="seat_count" value="1">
-                    @endif
-
-                    <div id="registration-names"></div>
-
-                    <label class="registration-consent">
-                        <input type="checkbox" name="pdpa" value="1" required>
-                        <span>ยอมรับเงื่อนไขการเข้าร่วมกิจกรรมและนโยบาย PDPA <b>*</b></span>
-                    </label>
-
-                    <p class="registration-message" id="registration-form-message" aria-live="polite"></p>
-                    <button type="submit" class="registration-submit" id="registration-submit">ยืนยันการลงทะเบียน</button>
-                </div>
-
-                <div class="registration-success" id="registration-success" hidden role="status">
-                    <span class="registration-success-icon">✓</span>
-                    <h2>ลงทะเบียนสำเร็จ</h2>
-                    <p id="registration-success-message"></p>
-                </div>
-            </form>
-        </section>
-    @elseif($activity['requiresRegistration'])
+    @elseif(!$registration['enabled'] && $activity['requiresRegistration'])
         <section class="registration-card is-closed">
             <h2>ยังไม่เปิดรับลงทะเบียน</h2>
             <p>กิจกรรมนี้ยังไม่อยู่ในช่วงรับสมัคร หรือจำนวนที่นั่งเต็มแล้ว</p>
@@ -256,10 +179,5 @@
             window.TFC_PUBLIC_CHECKIN = @json($checkin);
         </script>
         <script src="@assetv('assets/js/public-checkin.js')" defer></script>
-    @elseif($registration['enabled'])
-        <script>
-            window.TFC_PUBLIC_REGISTRATION = @json($registration);
-        </script>
-        <script src="@assetv('assets/js/public-registration.js')" defer></script>
     @endif
 @endpush

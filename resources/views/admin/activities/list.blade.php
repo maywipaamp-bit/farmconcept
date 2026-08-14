@@ -234,6 +234,7 @@
     { label: 'เข้าร่วม', center: true },
     { label: 'แบบประเมิน', center: true },
     { label: 'สถานะ', center: true },
+    { label: 'หน้าเว็บ', center: true },
     { label: 'ปรับปรุงล่าสุด', center: true },
     { label: '' }
   ];
@@ -244,6 +245,20 @@
 
     var date = window.TFC.formatThaiDate(activity.updatedDate).replace(/\d{2}(\d{2})$/, '$1');
     return window.TFC.escapeHtml(activity.updatedTime ? date + ' | ' + activity.updatedTime : date);
+  }
+
+  /* คอลัมน์ "หน้าเว็บ" — ตอบสองคำถามในช่องเดียว: กิจกรรมนี้โผล่บนหน้าเว็บสาธารณะไหม
+     และถ้าโผล่ อยู่ลำดับที่เท่าไหร่ (เลขเดียวกับที่ผู้เข้าชมเห็นจริง ไม่ใช่ค่าดิบในฐาน)
+     ไม่โผล่ก็บอกเหตุผลเลย แอดมินจะได้รู้ว่าต้องแก้อะไร ไม่ต้องไล่เดาเอง */
+  function publicCell(activity) {
+    if (activity.publicRank) {
+      return '<div class="grid-center">' +
+        '<span class="badge badge-success" title="กำลังแสดงบนหน้าเว็บสาธารณะ เป็นลำดับที่ ' + activity.publicRank + '">ลำดับที่ ' + activity.publicRank + '</span>' +
+        '</div>';
+    }
+    var reason = activity.publicHiddenReason || 'ไม่แสดง';
+    return '<div class="grid-center"><span class="grid-dash">ไม่แสดง</span>' +
+      '<div class="grid-sub" title="' + window.TFC.escapeHtml(reason) + '">' + window.TFC.escapeHtml(reason) + '</div></div>';
   }
 
   function truncate(str, maxLen) {
@@ -282,6 +297,8 @@
       '<div class="grid-num grid-center">' + dash + '</div>' +
       '<div class="grid-num grid-center">' + dash + '</div>' +
       '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
+
+      publicCell(activity) +
 
       /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าอื่นในระบบ */
       '<div class="grid-center"><div>' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +

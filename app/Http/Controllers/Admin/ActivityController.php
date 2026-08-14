@@ -53,8 +53,19 @@ class ActivityController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        /* ลำดับจริงบนหน้าเว็บสาธารณะ (id => ลำดับที่ 1,2,3,…) — เรียงด้วยเงื่อนไขเดียวกับ
+           PublicActivityController เป๊ะ เพื่อให้เลขที่แอดมินเห็นตรงกับที่ผู้เข้าชมเห็นจริง */
+        $publicRanks = Activity::published()
+            ->where('visibility', 'สาธารณะ')
+            ->where('public_sort_order', '>', 0)
+            ->orderBy('public_sort_order')
+            ->orderBy('start_date')
+            ->pluck('id')
+            ->flip()
+            ->map(fn (int $index) => $index + 1);
+
         return view('admin.activities.list', [
-            'activities' => $activities->map(fn (Activity $a) => $this->toListRow($a)),
+            'activities' => $activities->map(fn (Activity $a) => $this->toListRow($a, $publicRanks->get($a->id))),
             'sessions' => $activities->mapWithKeys(fn (Activity $a) => [$a->code => $this->toSessions($a)]),
         ]);
     }
@@ -538,10 +549,15 @@ class ActivityController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function toListRow(Activity $activity): array
+    private function toListRow(Activity $activity, ?int $publicRank = null): array
     {
         return [
             'id' => $activity->code,
+            /* สถานะบนหน้าเว็บสาธารณะ — publicRank มีค่าเฉพาะตอนหน้ารายการส่งมาให้
+               (คำนวณจากรายการทั้งชุด) ส่วนเหตุผลที่ไม่แสดงอ่านได้จากตัวกิจกรรมเอง */
+            'publicRank' => $publicRank,
+            'publicSortOrder' => (int) $activity->public_sort_order,
+            'publicHiddenReason' => $publicRank === null ? $this->publicHiddenReason($activity) : null,
             'name' => $activity->name,
             'type' => $activity->type,
             'status' => $activity->status,
@@ -564,6 +580,26 @@ class ActivityController extends Controller
             'updatedDate' => $activity->updated_at?->toDateString(),
             'updatedTime' => $activity->updated_at?->format('H.i'),
         ];
+    }
+
+    /**
+     * เหตุผลที่กิจกรรมไม่แสดงบนหน้าเว็บสาธารณะ — เรียงตามเงื่อนไขของ scopeForPublicListing
+     *
+     * ไล่เช็คเงื่อนไขเดียวกับที่หน้าเว็บใช้กรองทีละข้อ แล้วบอกข้อแรกที่ไม่ผ่าน
+     * เพื่อให้แอดมินรู้ว่าต้องแก้อะไรกิจกรรมถึงจะโผล่ ไม่ใช่แค่รู้ว่า "ไม่แสดง"
+     */
+    private function publicHiddenReason(Activity $activity): string
+    {
+        $now = now();
+
+        return match (true) {
+            ! $activity->is_published => 'ยังไม่ได้เผยแพร่',
+            $activity->visibility !== 'สาธารณะ' => 'การมองเห็นไม่ใช่สาธารณะ',
+            $activity->publish_start_at && $activity->publish_start_at->gt($now) => 'ยังไม่ถึงช่วงเผยแพร่',
+            $activity->publish_end_at && $activity->publish_end_at->lt($now) => 'พ้นช่วงเผยแพร่แล้ว',
+            (int) $activity->public_sort_order <= 0 => 'ยังไม่กำหนดลำดับแสดง',
+            default => 'ไม่เข้าเงื่อนไขการแสดง',
+        };
     }
 
     /**

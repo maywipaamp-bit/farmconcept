@@ -38,6 +38,14 @@ class PublicQrController extends Controller
 
         $qr->increment('scan_count');
 
+        /* QR ลงทะเบียนพาเข้า flow ลงทะเบียนโดยตรง ไม่ต้องแวะหน้ารายละเอียดก่อน */
+        if ($action === 'registration') {
+            return redirect()->route('public.activities.register', [
+                'activity' => $qr->activity->code,
+                'qr' => $qr->token,
+            ]);
+        }
+
         return redirect()->route('public.activities.show', [
             'activity' => $qr->activity->code,
             'action' => $action,

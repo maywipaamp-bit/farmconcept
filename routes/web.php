@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
 use App\Http\Controllers\PublicActivityController;
 use App\Http\Controllers\PublicCheckinController;
+use App\Http\Controllers\PublicLineLoginController;
 use App\Http\Controllers\PublicPostSurveyController;
 use App\Http\Controllers\PublicQrController;
 use App\Http\Controllers\PublicRegistrationController;
@@ -48,10 +49,20 @@ Route::get('/activities/{activity}', [PublicActivityController::class, 'show'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->name('public.activities.show');
 
-Route::post('/activities/{activity}/registration/check-phone', [PublicRegistrationController::class, 'checkPhone'])
+/* flow ลงทะเบียน 6 ขั้นบนมือถือ — ตรวจสิทธิ์ · กรอกข้อมูล · ชำระเงิน · สำเร็จ */
+Route::get('/activities/{activity}/register', [PublicRegistrationController::class, 'page'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->name('public.activities.register');
+
+Route::post('/activities/{activity}/registration/check', [PublicRegistrationController::class, 'check'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->middleware('throttle:30,1')
-    ->name('public.activities.registration.check-phone');
+    ->name('public.activities.registration.check');
+
+Route::post('/activities/{activity}/registration/payment', [PublicRegistrationController::class, 'payment'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:10,1')
+    ->name('public.activities.registration.payment');
 
 Route::post('/activities/{activity}/registration', [PublicRegistrationController::class, 'store'])
     ->where('activity', '[A-Za-z0-9-]+')
@@ -72,6 +83,21 @@ Route::post('/activities/{activity}/post-survey', [PublicPostSurveyController::c
     ->where('activity', '[A-Za-z0-9-]+')
     ->middleware('throttle:10,1')
     ->name('public.activities.post-survey.store');
+
+/* เข้าสู่ระบบด้วย LINE ก่อนลงทะเบียน — callback ไม่มีรหัสกิจกรรมใน URL
+   เพราะ LINE ให้ลงทะเบียน Callback URL ไว้ล่วงหน้าเป็นค่าตายตัว รหัสกิจกรรมจึงฝากไว้ใน session */
+Route::get('/activities/{activity}/line/redirect', [PublicLineLoginController::class, 'redirect'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->middleware('throttle:20,1')
+    ->name('public.line.redirect');
+
+Route::get('/auth/line/callback', [PublicLineLoginController::class, 'callback'])
+    ->middleware('throttle:20,1')
+    ->name('public.line.callback');
+
+Route::post('/activities/{activity}/line/logout', [PublicLineLoginController::class, 'logout'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->name('public.line.logout');
 
 /* QR สาธารณะของกิจกรรม — token สุ่ม ไม่เปิดเผย activity id และ QR ที่ถูกปิดต้องได้หน้าอธิบายแทน 404 */
 Route::get('/r/{token}', [PublicQrController::class, 'registration'])

@@ -23,6 +23,7 @@ class ActivityService
     {
         return DB::transaction(function () use ($activity, $data, $actor): Activity {
             $activity->fill($this->columns($data));
+            $this->assignPublicSortOrder($activity);
             $changed = array_keys($activity->getDirty());
             $activity->updated_by = $actor->id;
             $activity->save();
@@ -79,6 +80,24 @@ class ActivityService
         $columns['fee'] = ($data['has_fee'] ?? false) ? ($data['fee'] ?? 0) : 0;
 
         return $columns;
+    }
+
+    /**
+     * กิจกรรมที่เผยแพร่ต้องมีลำดับแสดงบนหน้าเว็บเสมอ
+     *
+     * หน้าเว็บสาธารณะกรอง public_sort_order > 0 — ถ้าปล่อยเป็น 0 (ค่า default ของคอลัมน์)
+     * กิจกรรมที่กดเผยแพร่จากฟอร์มจะไม่โผล่บนหน้าเว็บเลยโดยไม่มีใครบอกเหตุผล
+     * จึงต่อท้ายรายการให้อัตโนมัติ (เลขมากสุด + 1) เมื่อเผยแพร่โดยยังไม่ได้กำหนดลำดับเอง
+     * ลำดับที่แอดมินตั้งไว้แล้วไม่ถูกแตะ และการยกเลิกเผยแพร่ไม่ล้างลำดับ
+     * เพื่อให้กลับมาเผยแพร่ใหม่แล้วอยู่ตำแหน่งเดิม
+     */
+    private function assignPublicSortOrder(Activity $activity): void
+    {
+        if (! $activity->is_published || (int) $activity->public_sort_order > 0) {
+            return;
+        }
+
+        $activity->public_sort_order = (int) Activity::withTrashed()->max('public_sort_order') + 1;
     }
 
     /**
@@ -185,6 +204,7 @@ class ActivityService
     {
         return DB::transaction(function () use ($data, $actor): Activity {
             $activity = new Activity($this->columns($data));
+            $this->assignPublicSortOrder($activity);
             $activity->code = $this->nextCode();
             $activity->created_by = $actor->id;
             $activity->updated_by = $actor->id;

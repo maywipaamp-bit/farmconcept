@@ -28,6 +28,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+     * LINE Login v2.1 — ใช้กับหน้าลงทะเบียนกิจกรรมของบุคคลทั่วไป
+     * ค่าทั้งสองมาจาก LINE Developers Console › Channel (LINE Login) › Basic settings
+     * ไม่ตั้งค่าไว้ = ปุ่ม "เข้าสู่ระบบด้วย LINE" จะไม่แสดง ระบบยังลงทะเบียนด้วยเบอร์โทรได้ตามปกติ
+     */
+    'line' => [
+        'channel_id' => env('LINE_LOGIN_CHANNEL_ID'),
+        'channel_secret' => env('LINE_LOGIN_CHANNEL_SECRET'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

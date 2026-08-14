@@ -37,6 +37,11 @@ class Registration extends Model
         return $this->belongsTo(Participant::class);
     }
 
+    public function ageRange(): BelongsTo
+    {
+        return $this->belongsTo(Option::class, 'age_range_id');
+    }
+
     public function occupation(): BelongsTo
     {
         return $this->belongsTo(Option::class, 'occupation_id');

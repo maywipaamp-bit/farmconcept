@@ -5,14 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\ActivityFormat;
 use App\Models\Form;
-use App\Services\PublicRegistrationService;
-use Carbon\CarbonInterface;
+use App\Services\PublicActivityPresenter;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicActivityController extends Controller
 {
+    public function __construct(private readonly PublicActivityPresenter $presenter)
+    {
+    }
+
     public function page(): View
     {
         $categories = ActivityFormat::active()
@@ -46,8 +50,13 @@ class PublicActivityController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $activity, PublicRegistrationService $registrationService): View
+    public function show(Request $request, string $activity): View|RedirectResponse
     {
+        /* ลิงก์เดิม ?action=registration (รวมถึง QR รุ่นแรก) ส่งต่อไปหน้าลงทะเบียนแบบใหม่ */
+        if ($request->query('action') === 'registration') {
+            return redirect()->route('public.activities.register', ['activity' => $activity]);
+        }
+
         $activity = Activity::forPublicListing()
             ->where('code', $activity)
             ->firstOrFail();
@@ -75,19 +84,7 @@ class PublicActivityController extends Controller
             'activity' => $this->present($activity),
             'registration' => [
                 'enabled' => $canRegister,
-                'open' => $canRegister && $request->query('action') === 'registration',
-                'maxSeats' => $registrationService->maxSeats($activity),
-                'checkPhoneUrl' => route('public.activities.registration.check-phone', $activity->code),
-                'storeUrl' => route('public.activities.registration.store', $activity->code),
-                'rounds' => $activity->rounds->map(fn ($round) => [
-                    'id' => $round->id,
-                    'label' => $this->thaiDate($round->round_date)
-                        .' · '.substr((string) $round->time_start, 0, 5)
-                        .'–'.substr((string) $round->time_end, 0, 5).' น.',
-                    'seatsLeft' => $round->capacity > 0
-                        ? max(0, $round->capacity - $round->registrations_count)
-                        : null,
-                ])->values(),
+                'registerUrl' => route('public.activities.register', $activity->code),
             ],
             'checkin' => [
                 'requested' => $checkinRequested,
@@ -106,66 +103,6 @@ class PublicActivityController extends Controller
 
     private function present(Activity $activity): array
     {
-        $round = $activity->rounds->first();
-        $date = $round?->round_date ?? $activity->start_date;
-        $startTime = $round?->time_start ? substr((string) $round->time_start, 0, 5) : null;
-        $endTime = $round?->time_end ? substr((string) $round->time_end, 0, 5) : null;
-        $timeLabel = $startTime
-            ? $startTime.($endTime ? '–'.$endTime : '').' น.'
-            : null;
-
-        return [
-            'code' => $activity->code,
-            'title' => $activity->name,
-            'description' => $activity->description,
-            'type' => $activity->type,
-            'category' => $activity->format?->name,
-            'categoryIcon' => $activity->format?->icon,
-            'image' => $activity->cover_image_path ? '/storage/'.ltrim($activity->cover_image_path, '/') : null,
-            'date' => $date?->toDateString(),
-            'dateLabel' => $this->thaiDate($date),
-            'startTime' => $startTime,
-            'endTime' => $endTime,
-            'timeLabel' => $timeLabel,
-            'scheduleLabel' => collect([$this->thaiDate($date), $timeLabel])->filter()->join(' · '),
-            'location' => $round?->location ?: '-',
-            'speaker' => $activity->instructors->pluck('name')->join(', ') ?: ($activity->organizer ?: '-'),
-            'fee' => (float) $activity->fee,
-            'isFree' => ! $activity->has_fee,
-            'priceLabel' => $activity->has_fee
-                ? number_format((float) $activity->fee, 0).' บาท / ท่าน'
-                : 'เข้าร่วมฟรี',
-            'isFeatured' => $activity->is_featured,
-            'registrationStartAt' => $activity->registration_start_at?->toIso8601String(),
-            'registrationEndAt' => $activity->registration_end_at?->toIso8601String(),
-            'registrationDeadlineLabel' => $activity->registration_end_at
-                ? 'ปิดรับสมัคร '.$this->thaiDateTime($activity->registration_end_at)
-                : null,
-            'canRegister' => $activity->acceptsRegistration(),
-            'requiresRegistration' => $activity->requires_registration,
-            'requiresCheckin' => $activity->requires_checkin,
-            'hasPostSurvey' => $activity->has_post_survey,
-            'seatsLeft' => $activity->seatsLeft(),
-            'sortOrder' => $activity->public_sort_order,
-        ];
-    }
-
-    private function thaiDate(?CarbonInterface $date): ?string
-    {
-        if (! $date) {
-            return null;
-        }
-
-        $days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-        $months = [1 => 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-        return $days[$date->dayOfWeek].' '
-            .$date->day.' '.$months[$date->month].' '
-            .str_pad((string) (($date->year + 543) % 100), 2, '0', STR_PAD_LEFT);
-    }
-
-    private function thaiDateTime(CarbonInterface $date): string
-    {
-        return $this->thaiDate($date).' · '.$date->format('H:i').' น.';
+        return $this->presenter->present($activity);
     }
 }

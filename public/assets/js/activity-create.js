@@ -129,7 +129,12 @@
     formReg: (formsReg()[0] || {}).id || '',
     formsPost: formsPost().slice(0, 1).map(function (f) { return f.id; }),
     windows: { reg: {}, chk: {}, srv: {} },
+    /* true = ช่วงเวลานั้นยังเป็นค่าอัตโนมัติที่คำนวณจากรอบกิจกรรม
+       ผู้ใช้แก้เองเมื่อไหร่จะพลิกเป็น false แล้วระบบเลิกเขียนทับช่วงนั้น */
+    winAuto: { reg: true, chk: true, srv: true },
     publish: false, pin: false,
+    /* ลำดับการแสดงบนหน้าเว็บสาธารณะ — ค่าว่าง = ให้ระบบต่อท้ายรายการเองตอนเผยแพร่ */
+    sortOrder: '',
     combo: null,
     dirty: false,
     savedAt: null
@@ -537,7 +542,62 @@
     return WINDOWS.filter(function (w) { return !!state.join[w.flag]; });
   }
 
+  /* ---------- ค่าเริ่มต้นของช่วงเวลาเปิด–ปิดระบบ ----------
+     กรอกวันจัดกิจกรรมแล้วระบบเติมช่วงเวลาที่เหลือให้ตามแนวปฏิบัติมาตรฐานของระบบอีเวนท์:
+       ลงทะเบียน  เปิดวันนี้ · ปิดเมื่อกิจกรรมเริ่ม
+       Check-in   เปิดก่อนรอบแรกเริ่ม 1 ชั่วโมง · ปิดเมื่อรอบสุดท้ายจบ
+       แบบประเมิน เปิดเมื่อรอบสุดท้ายจบ · ปิดหลังจากนั้น 7 วัน
+     ทุกช่องยังแก้เองได้ — แก้เมื่อไหร่ช่วงนั้นหยุดเป็นอัตโนมัติทันที (winAuto) */
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function todayIso() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function addDaysIso(iso, days) {
+    var p = iso.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + days);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function minusMinutes(time, mins) {
+    var p = time.split(':');
+    var total = Math.max(0, Number(p[0]) * 60 + Number(p[1]) - mins);
+    return pad2(Math.floor(total / 60)) + ':' + pad2(total % 60);
+  }
+
+  function windowDefaults() {
+    var slots = state.slots
+      .filter(function (s) { return s.date; })
+      .sort(function (a, b) { return a.date.localeCompare(b.date); });
+    if (!slots.length) return null;
+
+    var first = slots[0];
+    var last = slots[slots.length - 1];
+    var startT = first.start || '09:00';
+    var endT = last.end || '16:00';
+    var today = todayIso();
+
+    return {
+      /* กิจกรรมย้อนหลัง (บันทึกข้อมูลเก่า) ไม่ควรได้ช่วงลงทะเบียนที่เริ่มหลังจบ */
+      reg: { from: today < first.date ? today : first.date, fromT: '09:00', to: first.date, toT: startT },
+      chk: { from: first.date, fromT: minusMinutes(startT, 60), to: last.date, toT: endT },
+      srv: { from: last.date, fromT: endT, to: addDaysIso(last.date, 7), toT: '23:59' }
+    };
+  }
+
+  function applyWindowDefaults() {
+    var d = windowDefaults();
+    if (!d) return;
+    WINDOWS.forEach(function (w) {
+      if (!state.join[w.flag] || !state.winAuto[w.key]) return;
+      state.windows[w.key] = d[w.key];
+    });
+  }
+
   function renderWindows() {
+    applyWindowDefaults();
     var list = activeWindows();
     $('ac-windows').innerHTML = list.length
       ? list.map(function (w) {
@@ -553,8 +613,15 @@
               winInput(w.key, 'toT', 'time', v.toT) +
             '</div>' +
             '</div>';
-        }).join('')
+        }).join('') + windowAutoNote(list)
       : '<p class="ac-field-note">ยังไม่ได้ติ๊กขั้นตอนใดในรูปแบบการเข้าร่วม จึงไม่มีช่วงเวลาให้กำหนด</p>';
+  }
+
+  /* บอกให้รู้ว่าค่าที่เห็นมาจากไหน — ไม่งั้นช่องที่จู่ ๆ มีค่าเองจะดูเหมือนกรอกค้างไว้ */
+  function windowAutoNote(list) {
+    var hasAuto = list.some(function (w) { return state.winAuto[w.key]; });
+    if (!hasAuto || !windowDefaults()) return '';
+    return '<p class="ac-field-note">ระบบเติมช่วงเวลาให้อัตโนมัติจากรอบกิจกรรม — แก้ไขได้ทุกช่อง</p>';
   }
 
   function winInput(group, key, type, value) {
@@ -579,7 +646,21 @@
         '<button type="button" class="ac-switch' + (on ? ' is-on' : '') + '" role="switch" aria-checked="' + on + '"' +
           ' data-toggle="' + t.key + '" aria-label="' + esc(t.label) + '"><span></span></button>' +
         '</div>';
-    }).join('');
+    }).join('') + sortOrderFieldHtml();
+  }
+
+  /* ลำดับการแสดงบนหน้าเว็บสาธารณะ — โผล่เฉพาะตอนเปิดเผยแพร่ เพราะกิจกรรมที่ไม่เผยแพร่
+     ไม่มีที่ให้แสดงอยู่แล้ว · เว้นว่างได้ ระบบจะต่อท้ายรายการให้เองตอนบันทึก */
+  function sortOrderFieldHtml() {
+    if (!state.publish) return '';
+    return '<div class="ac-toggle">' +
+      '<div class="ac-toggle-text">' +
+        '<label class="ac-toggle-label" for="ac-sort-order">ลำดับการแสดงบนหน้าเว็บ</label>' +
+        '<span class="ac-toggle-hint">เลขน้อยขึ้นก่อน · เว้นว่าง = ระบบต่อท้ายรายการให้อัตโนมัติ</span>' +
+      '</div>' +
+      '<input type="number" class="input ac-sort-input" id="ac-sort-order" min="1" step="1"' +
+        ' inputmode="numeric" placeholder="อัตโนมัติ" value="' + esc(state.sortOrder) + '">' +
+      '</div>';
   }
 
   /* ---------- แผงขวา ---------- */
@@ -771,10 +852,36 @@
 
   /* input ของรอบกิจกรรมและช่วงเวลาถูกเรนเดอร์ใหม่ได้ จึงผูก event แบบ delegate */
   document.addEventListener('input', function (e) {
+    if (e.target.id === 'ac-sort-order') {
+      state.sortOrder = e.target.value;
+      state.dirty = true;
+      return;
+    }
+
     var slot = e.target.closest('[data-slot-id]');
     if (slot) {
       var row = state.slots.filter(function (s) { return String(s.id) === slot.getAttribute('data-slot-id'); })[0];
-      if (row) { row[slot.getAttribute('data-slot-key')] = fieldValue(slot); state.dirty = true; renderPreview(); renderChecklist(); }
+      if (!row) return;
+      var key = slot.getAttribute('data-slot-key');
+      row[key] = fieldValue(slot);
+      state.dirty = true;
+
+      /* เพิ่งเลือกวันที่และยังไม่ได้กรอกเวลา — เติมเวลาทำการมาตรฐานให้ก่อน (แก้ได้)
+         เขียนลงช่องใน DOM ตรง ๆ ไม่ re-render ทั้งแถว เพื่อไม่ให้โฟกัสหลุดจากช่องที่เพิ่งใช้ */
+      if (key === 'date' && row.date && !row.start && !row.end) {
+        row.start = '09:00';
+        row.end = '16:00';
+        var rowEl = slot.closest('.ac-slot-row');
+        ['start', 'end'].forEach(function (k) {
+          var el = rowEl && rowEl.querySelector('[data-slot-key="' + k + '"]');
+          if (el) { el.setAttribute('data-iso', row[k]); el.value = row[k] + ' น.'; }
+        });
+      }
+
+      /* วันเวลาของรอบเปลี่ยน = ช่วงเวลาเปิด–ปิดระบบที่เป็นค่าอัตโนมัติต้องขยับตาม */
+      if (key !== 'cap') renderWindows();
+      renderPreview();
+      renderChecklist();
       return;
     }
     var win = e.target.closest('[data-win-group]');
@@ -782,6 +889,8 @@
       var g = win.getAttribute('data-win-group');
       state.windows[g] = state.windows[g] || {};
       state.windows[g][win.getAttribute('data-win-key')] = fieldValue(win);
+      /* ผู้ใช้ลงมือแก้ช่วงนี้เองแล้ว — ระบบเลิกคำนวณทับให้ ไม่งั้นค่าที่แก้จะเด้งกลับ */
+      state.winAuto[g] = false;
       state.dirty = true;
     }
   });
@@ -890,7 +999,16 @@
 
     if (t.closest('#ac-add-slot')) {
       if (state.slots.length >= MAX_SLOTS) return;
-      state.slots.push({ id: state.nextSlotId++, date: '', start: '', end: '', cap: '' });
+      /* รอบใหม่เริ่มจากรอบก่อนหน้า + 1 วัน — รอบส่วนใหญ่จัดต่อเนื่องกันด้วยเวลาเดิม
+         (วันซ้ำกันไม่ได้อยู่แล้ว เพราะฐานข้อมูลใช้วันที่เป็นคีย์ของรอบ) กรอกทับได้ทุกช่อง */
+      var prev = state.slots[state.slots.length - 1] || {};
+      state.slots.push({
+        id: state.nextSlotId++,
+        date: prev.date ? addDaysIso(prev.date, 1) : '',
+        start: prev.start || '',
+        end: prev.end || '',
+        cap: prev.cap || ''
+      });
       state.dirty = true;
       renderSlots();
       return sync();
@@ -1074,6 +1192,18 @@
     state.windows.reg = windowFrom(a.registrationStart, a.registrationEnd);
     state.windows.chk = windowFrom(a.checkinStart, a.checkinEnd);
     state.windows.srv = windowFrom(a.surveyStart, a.surveyEnd);
+
+    /* ช่วงเวลาที่มีค่าอยู่แล้วเป็นของที่คนตั้งไว้ ระบบห้ามคำนวณทับ
+       ช่วงที่ยังว่างเท่านั้นที่ปล่อยให้เติมอัตโนมัติจากรอบกิจกรรมต่อไป */
+    function hasWin(w) { return !!(w && (w.from || w.fromT || w.to || w.toT)); }
+    state.winAuto = {
+      reg: !hasWin(state.windows.reg),
+      chk: !hasWin(state.windows.chk),
+      srv: !hasWin(state.windows.srv)
+    };
+
+    /* 0 = ยังไม่กำหนด แสดงเป็นช่องว่างให้อ่านว่า "อัตโนมัติ" ไม่ใช่เลข 0 ที่ดูเหมือนตั้งใจตั้ง */
+    state.sortOrder = a.publicSortOrder > 0 ? String(a.publicSortOrder) : '';
 
     /* รอบกิจกรรมมาจาก activitySessions ถ้ามี ไม่งั้นใช้วันเริ่มกับเวลาของตัวกิจกรรมเอง */
     var sessions = (mock.activitySessions || {})[a.id] || [];
