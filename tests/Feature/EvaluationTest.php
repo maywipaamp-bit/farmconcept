@@ -164,4 +164,57 @@ class EvaluationTest extends TestCase
         $this->actingAs($user)->get('/admin/evaluations/create.html?id='.$form->code)
             ->assertRedirect(route('admin.evaluations.edit', $form));
     }
+
+    public function test_ไม่สามารถแก้ไขแบบประเมินที่มีคำตอบแล้วและแจ้งข้อความทำสำเนา(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-RESP-1', 'name' => 'แบบประเมินมีคำตอบ',
+            'type' => Form::TYPE_REGISTRATION, 'status' => Form::STATUS_ACTIVE,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+        $question = $form->questions()->create([
+            'question_type' => 'text',
+            'text' => 'คำถามลงทะเบียน',
+            'sort_order' => 1,
+        ]);
+        \App\Models\Answer::create([
+            'question_id' => $question->id,
+            'response_type' => 'registration',
+            'response_id' => 1,
+            'text_value' => 'คำตอบทดสอบ',
+        ]);
+
+        $response = $this->actingAs($user)->putJson('/admin/evaluations/'.$form->code, [
+            'name' => 'พยายามแก้แบบเดิม',
+            'type' => Form::TYPE_REGISTRATION,
+            'status' => Form::STATUS_ACTIVE,
+            'registration_mode' => 'single',
+            'fields' => $this->registrationFields(),
+            'questions' => [
+                [
+                    'type' => 'text',
+                    'text' => 'คำถามลงทะเบียนแก้ใหม่',
+                    'is_required' => false,
+                    'sort_order' => 1,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('errors.form.0', 'แบบประเมินนี้มีคำตอบแล้ว จึงแก้ไขโครงสร้างเดิมไม่ได้ กรุณาทำสำเนาเป็นชุดใหม่');
+    }
+
+    public function test_ทำสำเนาแบบประเมินผ่าน_api_duplicate(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-DUP-1', 'name' => 'แบบประเมินต้นฉบับ',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_ACTIVE,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/admin/evaluations/'.$form->code.'/duplicate');
+        $response->assertCreated()->assertJsonPath('form.name', 'แบบประเมินต้นฉบับ (สำเนา)');
+    }
 }

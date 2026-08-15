@@ -31,7 +31,7 @@ class EvaluationService
     {
         if ($form->hasResponses()) {
             throw ValidationException::withMessages([
-                'form' => 'แบบประเมินนี้มีคำตอบแล้ว จึงแก้โครงสร้างเดิมไม่ได้ กรุณาทำสำเนาเป็นชุดใหม่',
+                'form' => 'แบบประเมินนี้มีคำตอบแล้ว จึงแก้ไขโครงสร้างเดิมไม่ได้ กรุณาทำสำเนาเป็นชุดใหม่',
             ]);
         }
 

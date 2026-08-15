@@ -67,6 +67,7 @@
     activeId: null,
     dirty: false,
     saving: false,
+    hasResponses: false,
     bookingMode: 'single',
     maxSeats: 5,
     registrationItems: [],
@@ -1027,12 +1028,65 @@
     $('ec-save').disabled = saving || checklist().some(function (item) { return !item.ok; });
   }
 
+  function updateHasResponsesUI() {
+    var notice = $('ec-has-responses-notice');
+    var dupBtn = $('ec-duplicate-btn');
+    var saveBtn = $('ec-save');
+
+    if (notice) notice.hidden = !state.hasResponses;
+    if (dupBtn) dupBtn.hidden = !state.hasResponses;
+    if (state.hasResponses && saveBtn) {
+      saveBtn.textContent = 'บันทึกทำสำเนาเป็นชุดใหม่';
+    }
+  }
+
+  function persistAsCopy(status, redirectAfter) {
+    if (state.saving) return Promise.resolve();
+    if (!state.name.trim()) {
+      if (window.TFC.showToast) window.TFC.showToast('กรุณาระบุชื่อชุดแบบประเมิน', 'error');
+      $('ec-name').focus();
+      return Promise.resolve();
+    }
+
+    setSaving(true);
+    var copyName = state.name.trim();
+    if (copyName.indexOf('(สำเนา)') === -1) {
+      copyName += ' (สำเนา)';
+      state.name = copyName;
+      if ($('ec-name')) $('ec-name').value = copyName;
+    }
+
+    var bodyPayload = payload(status);
+    bodyPayload.name = copyName;
+
+    return requestJson('/admin/evaluations', { method: 'POST', body: JSON.stringify(bodyPayload) })
+      .then(function (data) {
+        state.formCode = data.form.code;
+        state.status = data.form.status;
+        state.hasResponses = false;
+        state.dirty = false;
+        updateHasResponsesUI();
+        window.history.replaceState({}, '', '/admin/evaluations/' + encodeURIComponent(state.formCode) + '/edit');
+        if (window.TFC.showToast) window.TFC.showToast('ทำสำเนาและบันทึกเป็นชุดใหม่เรียบร้อย', 'success');
+        if (redirectAfter) window.setTimeout(function () { window.location.href = data.redirect; }, 450);
+        return data;
+      })
+      .catch(function (error) {
+        if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+      })
+      .finally(function () { setSaving(false); });
+  }
+
   function persist(status, redirectAfter) {
     if (state.saving) return Promise.resolve();
     if (!state.name.trim()) {
       if (window.TFC.showToast) window.TFC.showToast('กรุณาระบุชื่อชุดแบบประเมิน', 'error');
       $('ec-name').focus();
       return Promise.resolve();
+    }
+
+    if (state.hasResponses) {
+      return persistAsCopy(status, redirectAfter);
     }
 
     setSaving(true);
@@ -1050,7 +1104,15 @@
         return data;
       })
       .catch(function (error) {
-        if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+        if (error.message && (error.message.indexOf('ทำสำเนาเป็นชุดใหม่') !== -1 || error.message.indexOf('แบบประเมินนี้มีคำตอบแล้ว') !== -1)) {
+          state.hasResponses = true;
+          updateHasResponsesUI();
+          if (window.confirm(error.message + '\n\nคุณต้องการทำสำเนาเป็นชุดใหม่เพื่อบันทึกการเปลี่ยนแปลงนี้หรือไม่?')) {
+            return persistAsCopy(status, redirectAfter);
+          }
+        } else {
+          if (window.TFC.showToast) window.TFC.showToast(error.message, 'error');
+        }
       })
       .finally(function () { setSaving(false); });
   }
@@ -1086,6 +1148,13 @@
     if (!window.confirm('ยังไม่ได้บันทึกการเปลี่ยนแปลง ต้องการออกจากหน้านี้หรือไม่')) e.preventDefault();
   });
 
+  var dupBtn = $('ec-duplicate-btn');
+  if (dupBtn) {
+    dupBtn.addEventListener('click', function () {
+      persistAsCopy('draft', false);
+    });
+  }
+
   function applyLoadedForm(form) {
     state.formCode = form.code;
     state.status = form.status || 'draft';
@@ -1094,6 +1163,8 @@
     state.stage = STAGE_BY_TYPE[form.type] || 'หลังกิจกรรม';
     state.bookingMode = form.registration_mode || 'single';
     state.maxSeats = form.max_participants || 5;
+    state.hasResponses = !!form.has_responses;
+    updateHasResponsesUI();
 
     var fields = (form.fields || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; });
     if (fields.length) {

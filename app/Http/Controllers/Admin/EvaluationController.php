@@ -158,6 +158,7 @@ class EvaluationController extends Controller
             'description' => $form->description,
             'type' => $form->type,
             'status' => $form->status,
+            'has_responses' => $form->hasResponses(),
             'registration_mode' => $form->registration_mode,
             'max_participants' => $form->max_participants,
             'fields' => $form->fields->map(fn ($field) => [
