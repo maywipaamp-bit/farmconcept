@@ -23,6 +23,9 @@ class Activity extends Model
 
     public const TYPE_ACTIVITY = 'กิจกรรม';
 
+    /** ข่าวสาร/ประชาสัมพันธ์ — แสดงเฉพาะภาพ ชื่อเรื่อง คำอธิบาย ไม่มีราคา/ลงทะเบียน */
+    public const TYPE_NEWS = 'ข่าวสาร';
+
     protected $table = 'act_activities';
 
     /** ผูก {activity} ใน route กับคอลัมน์ code ไม่ใช่ id — URL จะได้อ่านออกและไม่เปิดเผยลำดับข้อมูล */
@@ -68,6 +71,11 @@ class Activity extends Model
     public function isEvent(): bool
     {
         return $this->type === self::TYPE_EVENT;
+    }
+
+    public function isNews(): bool
+    {
+        return $this->type === self::TYPE_NEWS;
     }
 
     /** อีเวนท์ที่เลือกเป็นแม่ได้ — ต้องเป็นอีเวนท์ และไม่ใช่ตัวเอง */

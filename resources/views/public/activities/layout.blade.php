@@ -38,7 +38,7 @@
             <button type="button" class="public-drawer-close" id="public-drawer-close" aria-label="ปิดเมนู">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-            <p class="public-drawer-heading">เมนู</p>
+            <img class="public-drawer-logo" src="{{ asset('assets/images/logo-farm.png') }}" alt="The Farm Concept">
 
             {{-- เมนูล้วน ๆ — ช่องทางติดต่อและโซเชียลมีหน้าของตัวเอง ("ติดต่อเรา")
                  ลิ้นชักนี้จะได้ทำหน้าที่เดียวคือพาไปหน้าอื่น ไม่ใช่กล่องรวมลิงก์ --}}

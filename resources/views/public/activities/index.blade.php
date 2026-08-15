@@ -19,7 +19,7 @@
     {{-- ปุ่ม All ฝั่งขวาของแต่ละหัวข้อ — เปิดรายการทั้งหมดของประเภทนั้นที่เผยแพร่อยู่ --}}
     <section class="activity-section" id="featured-activities-section" hidden>
         <div class="section-head">
-            <h2 class="section-heading"><span>★</span>Activities</h2>
+            <h2 class="section-heading">Activities</h2>
             <button type="button" class="section-all" data-list="activities">All</button>
         </div>
         <div class="promo-carousel" id="featured-activities-carousel"></div>
@@ -28,7 +28,7 @@
 
     <section class="activity-section" id="featured-events-section" hidden>
         <div class="section-head">
-            <h2 class="section-heading"><span>★</span>Events</h2>
+            <h2 class="section-heading">Events</h2>
             <button type="button" class="section-all" data-list="events">All</button>
         </div>
         <div class="promo-carousel event-carousel" id="featured-events-carousel"></div>
@@ -37,7 +37,7 @@
 
     <section class="activity-section" id="other-activities-section" hidden>
         <div class="section-head">
-            <h2 class="section-heading"><span>★</span>News &amp; Updates</h2>
+            <h2 class="section-heading">News &amp; Updates</h2>
             <button type="button" class="section-all" data-list="news">All</button>
         </div>
         <div class="other-carousel" id="other-activities-carousel">

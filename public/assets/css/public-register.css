@@ -88,11 +88,11 @@
 .reg-page button:active, .reg-modal button:active { transform: scale(.985); }
 /* :not(.reg-btn-line) สำคัญ — ปุ่ม LINE เป็น <a> ถ้าไม่กันไว้ กฎนี้ (.reg-page a = specificity สูงกว่า
    .reg-btn-line) จะทับสีขาวของปุ่ม กลายเป็นตัวหนังสือเขียวบนพื้นเขียวจนอ่านไม่ออก */
-/* .reg-hero-back กันไว้ด้วย — เป็น <a> เหมือนกัน แต่ตั้งใจให้เป็นสีข้อความรอง ไม่ใช่เขียว
-   ไม่กันไว้ กฎนี้จะชนะ .reg-hero-back เพราะ specificity สูงกว่า (2 คลาสจาก .reg-page + :not(),
-   ตัว .reg-hero-back เดี่ยว ๆ มีแค่ 1 คลาส) แล้วทับสีที่ตั้งใจไว้ */
-.reg-page a:not(.reg-btn-line):not(.reg-hero-back) { color: var(--reg-primary); text-decoration: none; }
-.reg-page a:not(.reg-btn-line):not(.reg-hero-back):hover { color: var(--reg-primary-hover); }
+/* .reg-hero-back และ .reg-hero-search กันไว้ด้วย — เป็น <a> เหมือนกัน แต่ตั้งใจให้เป็นสีข้อความรอง/ไอคอน ไม่ใช่เขียว
+   ไม่กันไว้ กฎนี้จะชนะเพราะ specificity สูงกว่า (2 คลาสจาก .reg-page + :not(),
+   ตัว .reg-hero-back/.reg-hero-search เดี่ยว ๆ มีแค่ 1 คลาส) แล้วทับสีที่ตั้งใจไว้ */
+.reg-page a:not(.reg-btn-line):not(.reg-hero-back):not(.reg-hero-search) { color: var(--reg-primary); text-decoration: none; }
+.reg-page a:not(.reg-btn-line):not(.reg-hero-back):not(.reg-hero-search):hover { color: var(--reg-primary-hover); }
 .reg-btn-line, .reg-btn-line:hover { color: #ffffff; text-decoration: none; }
 .reg-page ::placeholder, .reg-modal ::placeholder { color: #b8c2b6; }
 
@@ -205,10 +205,10 @@ body.is-register-page .public-footer {
 .reg-hero-title {
     position: relative;
     margin: 20px 0 0;
-    font-size: 21px;
-    font-weight: 700;
-    line-height: 1.35;
-    color: var(--reg-title);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--reg-text);
     text-wrap: pretty;
 }
 
@@ -246,12 +246,20 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
    เพราะไม่มีคำอธิบายยาวต่อท้ายที่ต้องเผื่อพื้นที่ไว้ */
 body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 
+/* ลดระยะห่างระหว่างหัวเรื่อง "ชำระค่าลงทะเบียน" กับแถบ "ยอดชำระทั้งสิ้น" ที่ตามมาด้านล่าง */
+body[data-screen="pay"] .reg-hero { padding-bottom: 8px; }
+
 /* ---------- ปุ่มดูรายละเอียดกิจกรรมในหัวหน้าจอ ---------- */
 
 /* ฝั่งขวาของแถวบน — กว้างได้ถึง 68% ของแถว เกินกว่านั้นชื่อกิจกรรมจะตัดด้วย ellipsis
    z-index สูงกว่า .reg-pane (1) เพื่อให้แผงที่กางออกมาลอยทับฟิลด์ได้
    (.reg-hero เป็น position: relative แต่ z-index: auto จึงไม่สร้าง stacking context ขังไว้) */
-.reg-hero-more { position: relative; z-index: 5; min-width: 0; max-width: 68%; margin-left: auto; }
+/* ซ่อนชื่อกิจกรรม/ปุ่มดูรายละเอียดที่ขึ้นข้างบน — เหลือแค่ปุ่ม "กลับ" ตามที่ขอ */
+.reg-hero-more { display: none; }
+
+/* ไอคอนค้นหาแทนที่มุมขวาบนที่ว่างไปหลังซ่อน .reg-hero-more
+   สีเดียวกับไอคอนค้นหาบนหน้ากิจกรรม (--dark-green ของ public-activities.css) */
+.reg-hero-search { flex: none; margin-left: auto; color: var(--reg-brand-dark); }
 
 /* ชื่อกิจกรรม + ลูกศร ไม่มีกรอบ — ลูกศรทำหน้าที่บอกว่ากดได้อยู่แล้ว */
 .reg-hero-more > summary {
@@ -324,16 +332,14 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 
 /* ---------- ฟิลด์ ---------- */
 
-.reg-field { display: flex; flex-direction: column; gap: 5px; }
+.reg-field { display: flex; flex-direction: column; gap: 4px; }
 
-/* 15px ให้เท่ากับตัวอักษรบนปุ่มหลัก (.reg-btn-primary) — ของเดิม 13px เล็กกว่าปุ่มจนดูเป็นคนละระดับ */
 .reg-field > label {
     display: flex;
     gap: 3px;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 13.5px;
+    font-weight: 500;
     color: var(--reg-text-label);
-    letter-spacing: .02em;
 }
 
 /* ดอกจันบังคับกรอกต้องเห็นชัดว่าเป็น "ต้องกรอก" ไม่ใช่จุดตกแต่งจาง ๆ */
@@ -343,9 +349,9 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 /* ขอบเข้มขึ้นและหนา 1.5px — บนพื้นหน้าสีขาว ช่องพื้นขาวขอบจางแทบมองไม่เห็นว่าตรงไหนกรอกได้ */
 .reg-input, .reg-select {
     width: 100%;
-    height: var(--reg-h-input);
+    height: 42px;
     padding: 0 14px;
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--reg-text);
     background: var(--reg-surface);
     border: 1.5px solid #BCCFC2;
@@ -354,7 +360,7 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
     transition: border-color var(--reg-transition), box-shadow var(--reg-transition), background var(--reg-transition);
 }
 
-.reg-select { padding: 0 10px; font-size: 13.5px; cursor: pointer; }
+.reg-select { padding: 0 10px; font-size: 13px; cursor: pointer; }
 
 .reg-input:focus, .reg-select:focus {
     border-color: var(--reg-focus-border);
@@ -760,12 +766,14 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 /* แถวสุดท้ายไม่ต้องมีเส้น ไม่งั้นจะไปซ้อนกับขอบล่างของกรอบจนดูหนาผิดปกติ */
 .reg-booking-row:last-child { border-bottom: 0; }
 
-.reg-booking-row dt { flex: none; margin: 0; font-size: 13px; font-weight: 400; color: var(--reg-text-support); }
+/* 13.5px ให้เท่ากับ .reg-history-title ของบล็อก "กิจกรรมอื่นที่คุณเคยลงทะเบียน"
+   ที่อยู่ใต้กันในหน้าเดียวกัน ไม่ให้ตัวอักษรสองบล็อกดูคนละขนาด */
+.reg-booking-row dt { flex: none; margin: 0; font-size: 13.5px; font-weight: 400; color: var(--reg-text-support); }
 
 .reg-booking-row dd {
     min-width: 0;
     margin: 0;
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 500;
     color: var(--reg-text);
     text-align: right;
@@ -810,7 +818,7 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 
 .reg-activity-info span { font-size: 12px; color: var(--reg-text-support); }
 
-.reg-form-fields { display: flex; flex-direction: column; gap: 12px; }
+.reg-form-fields { display: flex; flex-direction: column; gap: 8px; }
 
 /* จำนวนที่นั่ง — แถวควบคุม ไม่ใช่กล่อง ตัวปุ่ม stepper ยังมีสไตล์ของตัวเองได้
    เพราะเป็น control เหมือนช่องกรอก ไม่ใช่กล่องครอบเนื้อหา */
@@ -1076,7 +1084,6 @@ body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
 .reg-slip { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: var(--reg-hairline); }
 
 .reg-slip-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.reg-slip-heading .reg-slip-hint { font-size: 12px; color: var(--reg-text-support); }
 
 .reg-dropzone {
     width: 100%;

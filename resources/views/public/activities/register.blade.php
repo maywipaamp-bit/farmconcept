@@ -35,7 +35,8 @@
                 </a>
 
                 {{-- ชื่อกิจกรรมอยู่ฝั่งขวา และเป็นตัวกดเพื่อดูวันเวลา/สถานที่/ค่าเข้าร่วม
-                     ใช้ <details> แทนการเขียน JS เปิด/ปิดเอง — กดด้วยคีย์บอร์ดและ screen reader อ่านได้ในตัว --}}
+                     ใช้ <details> แทนการเขียน JS เปิด/ปิดเอง — กดด้วยคีย์บอร์ดและ screen reader อ่านได้ในตัว
+                     ซ่อนไว้ (.reg-hero-more { display:none } ใน public-register.css) เหลือแค่ปุ่ม "กลับ" ตามที่ขอ --}}
                 <details class="reg-hero-more">
                     <summary>
                         <span class="reg-hero-activity">{{ $config['activity']['title'] }}</span>
@@ -47,6 +48,12 @@
                         <span><b>ค่าเข้าร่วม</b>{{ $config['activity']['isFree'] ? 'เข้าร่วมฟรี ไม่มีค่าใช้จ่าย' : number_format($config['activity']['fee']).' บาท / ท่าน' }}</span>
                     </div>
                 </details>
+
+                {{-- มุมขวาบนเดิมว่างเปล่าเพราะ .reg-hero-more ถูกซ่อน — เติมไอคอนค้นหากิจกรรมแทน
+                     ให้ยังหาไปกิจกรรมอื่นได้จากกลางฟอร์มลงทะเบียนโดยไม่ต้องกดกลับก่อน --}}
+                <a class="round-icon-button reg-hero-search" href="{{ route('public.activities', ['search' => 1]) }}" aria-label="ค้นหากิจกรรม">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                </a>
             </div>
 
             {{-- หัวเรื่องเปลี่ยนตามหน้าจอที่กำลังอยู่ — JS ตั้ง data-screen ให้ที่ body --}}
@@ -237,7 +244,7 @@
 
                     <div class="reg-field">
                         <label for="reg-note">หมายเหตุ (ถ้ามี)</label>
-                        <input id="reg-note" class="reg-input" type="text" maxlength="255">
+                        <input id="reg-note" class="reg-input" type="text" maxlength="255" placeholder="เช่น มีผู้ติดตาม 2 คน">
                     </div>
 
                     @if(count($config['rounds']) > 0)
@@ -349,10 +356,6 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="reg-bank-row">
-                            <dt>ยอดที่ต้องโอน</dt>
-                            <div class="reg-bank-value"><dd class="num" id="reg-bank-amount"></dd></div>
-                        </div>
                         <span class="reg-copied-pill" id="reg-copied-pill" hidden>คัดลอกแล้ว วางในแอปธนาคารได้เลย</span>
                     </dl>
                 @endif
@@ -360,7 +363,6 @@
                 <div class="reg-slip">
                     <div class="reg-slip-heading">
                         <span class="reg-group-label">แนบสลิปการโอน</span>
-                        <span class="reg-slip-hint">ช่วยให้ยืนยันเร็วขึ้น</span>
                     </div>
                     <input type="file" id="reg-slip-input" accept="image/jpeg,image/png,image/webp" hidden>
                     <button type="button" class="reg-dropzone" id="reg-dropzone">
@@ -392,7 +394,6 @@
                         <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg>
                     </span>
                     <h2>ลงทะเบียนสำเร็จแล้ว!</h2>
-                    <p>ยินดีที่จะได้พบกันนะคะ เก็บภาพรายละเอียดการจองนี้ไว้ แล้วนำมาแสดงที่หน้างานได้เลย</p>
                     <span class="reg-code-pill" id="reg-done-code"></span>
                 </div>
 
@@ -400,7 +401,7 @@
 
                 <button type="button" class="reg-btn-outline reg-download-btn" id="reg-download">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
-                    <span>ดาวน์โหลดรายละเอียดการจอง</span>
+                    <span>ดาวน์โหลดรายละเอียด</span>
                 </button>
             </section>
         </div>

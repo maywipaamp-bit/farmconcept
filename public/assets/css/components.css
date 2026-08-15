@@ -7910,6 +7910,9 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   height: 100%;
   object-fit: cover;
 }
+/* base.css ตั้ง img { display: block } ไว้เป็น author rule ซึ่งชนะ [hidden] ของ UA stylesheet
+   เสมอไม่ว่า specificity เท่าไหร่ ถ้าไม่มีกฎนี้ รูปที่ยังไม่ได้อัปโหลด (src ว่าง) จะโผล่เป็นไอคอนรูปเสีย */
+.ac-preview-cover-image[hidden] { display: none; }
 .ac-preview-cover.is-filled {
   background: var(--color-primary-soft);
   border-bottom-color: var(--color-primary-soft-border);

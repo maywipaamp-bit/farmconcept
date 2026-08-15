@@ -162,7 +162,7 @@
               </div>
             </div>
 
-            <!-- หลักสูตรกำหนดรายชื่อวิทยากรที่เลือกได้ วางคู่กันให้เห็นความสัมพันธ์โดยไม่ต้องเลื่อนจอ -->
+            <!-- วิทยากรเลือกได้อิสระจากรายชื่อทั้งหมด ไม่ผูกกับหลักสูตร — วางคู่กันไว้เพราะยังเป็นข้อมูล "จัดที่ไหน เมื่อไหร่" ชุดเดียวกัน -->
             <div class="ac-field-row">
               <div class="ac-field ac-field-half">
                 <div class="ac-label-row">
@@ -180,7 +180,7 @@
               <div class="ac-field ac-field-half">
                 <div class="ac-label-row">
                   <label class="form-label">วิทยากร<span class="form-required">*</span></label>
-                  <span class="ac-hint">เฉพาะผู้สอนในหลักสูตรที่เลือก</span>
+                  <span class="ac-hint">เลือกได้อิสระ ไม่จำกัดตามหลักสูตร</span>
                 </div>
                 <div class="ac-combo" id="ac-host-combo">
                   <div class="ac-combo-control" id="ac-host-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">

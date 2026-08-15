@@ -59,6 +59,21 @@
   /* อีเวนท์ที่เลือกเป็นแม่ได้ — หน้าที่ต่อฐานข้อมูลจริงส่งมาให้ หน้า static เดิมไม่มี */
   var EVENTS = (mock.selectableEvents || []).map(function (e) { return e.name; });
 
+  /* วิทยากรเลือกได้อิสระ ไม่ผูกกับหลักสูตรที่เลือกไว้อีกต่อไป — ใช้รายชื่อทั้งหมดในระบบ
+     lookup.instructors เป็นตาราง ชื่อ->id ของวิทยากรทุกคน (ตั้งค่าไว้ก่อนไฟล์นี้โหลด ดู form.blade.php) */
+  var INSTRUCTORS = Object.keys((window.TFC_ACTIVITY_LOOKUP || {}).instructors || {});
+  if (!INSTRUCTORS.length) {
+    var seenInstructor = {};
+    CATALOG.forEach(function (p) {
+      p.courses.forEach(function (c) {
+        (c.teachers || []).forEach(function (teacher) {
+          var name = teacher && typeof teacher === 'object' ? teacher.name : teacher;
+          if (name && !seenInstructor[name]) { seenInstructor[name] = 1; INSTRUCTORS.push(name); }
+        });
+      });
+    });
+  }
+
   var FEES = ['ไม่มีค่าใช้จ่าย', 'มีค่าเข้าร่วม'];
   /* สามขั้นตอนที่เป็นอิสระต่อกัน ติ๊กแยกกันได้ทั้งหมด
      ที่ติ๊กไว้ที่นี่คือแหล่งความจริงเดียว — ฟิลด์เงื่อนไขและแถวช่วงเวลาข้างล่างอ่านจากชุดนี้
@@ -168,21 +183,9 @@
     if (i > -1) arr.splice(i, 1); else arr.push(value);
   }
 
-  /* วิทยากรที่เลือกได้ = รวมผู้สอนของหลักสูตรที่เลือกไว้ แบบไม่ซ้ำ */
+  /* วิทยากรเลือกได้อิสระจากรายชื่อทั้งหมด ไม่ต้องดึงตามหลักสูตรที่เลือกไว้อีกต่อไป */
   function teachersForCourses() {
-    var out = [];
-    CATALOG.forEach(function (p) {
-      p.courses.forEach(function (c) {
-        if (state.courses.indexOf(c.name) < 0) return;
-        c.teachers.forEach(function (teacher) {
-          /* Backend ส่ง { id, name } เพื่อใช้รหัสจริงตอนบันทึก
-             ยังรองรับข้อมูล static เดิมที่เป็นชื่อข้อความอย่างเดียว */
-          var name = teacher && typeof teacher === 'object' ? teacher.name : teacher;
-          if (name && out.indexOf(name) < 0) out.push(name);
-        });
-      });
-    });
-    return out;
+    return INSTRUCTORS.slice();
   }
 
   /* ---------- เช็กลิสต์ที่คุมปุ่มเผยแพร่และแถบความคืบหน้า ---------- */
@@ -350,8 +353,8 @@
     if (e.key === 'Escape') closeFormPreview();
   });
 
-  /* ตัวสร้าง combobox แบบเลือกได้หลายค่า ใช้ร่วมกันทุกช่องที่เป็นรายการชั้นเดียว
-     (หมวดหมู่ · กลุ่มเป้าหมาย) — หลักสูตรกับวิทยากรมีเงื่อนไขเฉพาะจึงยังแยกฟังก์ชันไว้
+  /* ตัวสร้าง combobox แบบเลือกได้หลายค่า ใช้กับกลุ่มเป้าหมาย
+     (หมวดหมู่เปลี่ยนเป็นเลือกค่าเดียวแล้ว ดู renderCatCombo — หลักสูตรกับวิทยากรมีเงื่อนไขเฉพาะจึงยังแยกฟังก์ชันไว้)
 
      cfg = { stateKey, valuesId, panelId, removeAttr, itemAttr, placeholder, options }
      options เป็นรายการ { value, icon } — icon เว้นว่างได้ */
@@ -421,16 +424,20 @@
     });
   }
 
+  /* หมวดหมู่เลือกได้ค่าเดียวเท่านั้น — เหมือน renderPickCombo แต่มีไอคอนนำหน้าตัวเลือก */
   function renderCatCombo() {
-    renderTagCombo({
-      stateKey: 'cats',
-      valuesId: 'ac-cat-values',
-      panelId: 'ac-cat-panel',
-      removeAttr: 'data-remove-cat',
-      itemAttr: 'data-cat',
-      placeholder: 'คลิกเพื่อเลือกหมวดหมู่',
-      options: CATS.map(function (c) { return { value: c.name, icon: c.icon }; })
-    });
+    var current = (state.cats || [])[0] || '';
+    var currentOpt = CATS.filter(function (c) { return c.name === current; })[0];
+
+    $('ac-cat-values').innerHTML = current
+      ? '<span class="ac-combo-single">' + (currentOpt && currentOpt.icon ? catIconSvg(currentOpt.icon) : '') + esc(current) + '</span>'
+      : '<span class="ac-combo-placeholder">คลิกเพื่อเลือกหมวดหมู่</span>';
+
+    $('ac-cat-panel').innerHTML = CATS.map(function (c) {
+      var on = c.name === current;
+      return '<button type="button" class="ac-combo-item is-plain' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-cat="' + esc(c.name) + '">' +
+        (c.icon ? catIconSvg(c.icon) : '') + esc(c.name) + (on ? tickHtml() : '') + '</button>';
+    }).join('');
   }
 
   function renderTargetCombo() {
@@ -476,7 +483,7 @@
             '<button type="button" class="ac-tag-x" data-remove-host="' + esc(h) + '" aria-label="เอา ' + esc(h) + ' ออก">' +
             '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></span>';
         }).join('')
-      : '<span class="ac-combo-placeholder">' + (state.courses.length ? 'คลิกเพื่อเลือกวิทยากร' : 'เลือกหลักสูตรก่อน') + '</span>';
+      : '<span class="ac-combo-placeholder">คลิกเพื่อเลือกวิทยากร</span>';
 
     $('ac-host-panel').innerHTML = opts.length
       ? opts.map(function (h) {
@@ -484,7 +491,7 @@
           return '<button type="button" class="ac-combo-item' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-host="' + esc(h) + '">' +
             markHtml(on, false) + esc(h) + '</button>';
         }).join('')
-      : '<span class="ac-combo-empty">เลือกหลักสูตรก่อน แล้วรายชื่อวิทยากรของหลักสูตรนั้นจะแสดงที่นี่</span>';
+      : '<span class="ac-combo-empty">ยังไม่มีวิทยากรในระบบ</span>';
   }
 
   /* หนึ่งรอบ = หนึ่งแถว ป้ายกำกับอยู่บนหัวตารางแถวเดียว ไม่ซ้ำทุกรอบ
@@ -923,15 +930,8 @@
 
     var pickMode = t.closest('[data-mode]');
     if (pickMode) { state.mode = pickMode.getAttribute('data-mode'); state.combo = null; touch(); return syncCombo(); }
-    /* ---- หมวดหมู่ / กลุ่มเป้าหมาย (combobox) ----
+    /* ---- กลุ่มเป้าหมาย (combobox หลายค่า) ----
        ปุ่มเอาแท็กออกต้องมาก่อนตัวควบคุม ไม่งั้นคลิกกากบาทจะไปโดนการเปิด/ปิดแผงแทน */
-    var rmCat = t.closest('[data-remove-cat]');
-    if (rmCat) {
-      e.stopPropagation();
-      toggleIn('cats', rmCat.getAttribute('data-remove-cat'));
-      return touch();
-    }
-
     var rmTarget = t.closest('[data-remove-target]');
     if (rmTarget) {
       e.stopPropagation();
@@ -942,9 +942,9 @@
     if (t.closest('#ac-cat-control')) { state.combo = state.combo === 'cat' ? null : 'cat'; return syncCombo(); }
     if (t.closest('#ac-target-control')) { state.combo = state.combo === 'target' ? null : 'target'; return syncCombo(); }
 
-    /* เลือกแล้วไม่ปิดแผง ผู้ใช้มักเลือกหลายค่าติดกัน — เหมือนหลักสูตรกับวิทยากร */
+    /* หมวดหมู่เลือกได้ค่าเดียว — เลือกแล้วปิดแผงทันทีเหมือนประเภท/สถานที่/รูปแบบ */
     var cat = t.closest('[data-cat]');
-    if (cat) { toggleIn('cats', cat.getAttribute('data-cat')); touch(); return syncCombo(); }
+    if (cat) { state.cats = [cat.getAttribute('data-cat')]; state.combo = null; touch(); return syncCombo(); }
 
     var target = t.closest('[data-target]');
     if (target) { toggleIn('targets', target.getAttribute('data-target')); touch(); return syncCombo(); }
@@ -961,7 +961,6 @@
     if (rmCourse) {
       e.stopPropagation();
       toggleIn('courses', rmCourse.getAttribute('data-remove-course'));
-      pruneHosts();
       return touch();
     }
 
@@ -978,7 +977,6 @@
     var course = t.closest('[data-course]');
     if (course) {
       toggleIn('courses', course.getAttribute('data-course'));
-      pruneHosts();
       touch();
       return syncCombo();
     }
@@ -1080,12 +1078,6 @@
     }
   });
 
-  /* เอาวิทยากรที่ไม่ได้อยู่ในหลักสูตรที่เหลือออก ไม่งั้นจะค้างเป็นชื่อที่เลือกไม่ได้แล้ว */
-  function pruneHosts() {
-    var allowed = teachersForCourses();
-    state.hosts = state.hosts.filter(function (h) { return allowed.indexOf(h) > -1; });
-  }
-
   function syncCombo() {
     [['kind', 'ac-kind-panel', 'ac-kind-control'],
      ['event', 'ac-event-panel', 'ac-event-control'],
@@ -1160,7 +1152,7 @@
       return CATS.some(function (c) { return c.name === value; });
     }
 
-    state.cats = (a.tags || []).filter(isKnownCat);
+    state.cats = (a.tags || []).filter(isKnownCat).slice(0, 1);
     if (!state.cats.length && isKnownCat(a.format)) state.cats = [a.format];
     state.place = PLACES.indexOf(a.area) > -1 ? a.area : PLACE_EMPTY;
     state.cover = !!a.coverImage;

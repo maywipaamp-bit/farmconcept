@@ -101,6 +101,14 @@
         return item.type === 'อีเว้นท์';
     }
 
+    function isNews(item) {
+        return item.type === 'ข่าวสาร';
+    }
+
+    function isActivity(item) {
+        return !isEvent(item) && !isNews(item);
+    }
+
     function icon(name) {
         const paths = {
             calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',
@@ -140,7 +148,20 @@
         '</a>';
     }
 
+    /* ข่าวสารไม่มีวัน/เวลา/ราคาให้ตัดสินใจแบบกิจกรรม — แค่ภาพ ชื่อเรื่อง คำอธิบายสั้น ๆ ก็พอ */
+    function newsCard(item) {
+        return '<a class="other-card is-news" href="' + detailUrl(item) + '">' +
+            '<div class="other-thumb"><img src="' + escapeHtml(item.image) + '" alt=""></div>' +
+            '<div class="other-body">' +
+                '<p class="other-title">' + escapeHtml(item.title) + '</p>' +
+                '<p class="other-desc">' + escapeHtml(item.description || '') + '</p>' +
+            '</div>' +
+        '</a>';
+    }
+
     function activityCard(item) {
+        if (isNews(item)) return newsCard(item);
+
         return '<a class="other-card" href="' + detailUrl(item) + '">' +
             /* ไม่มีป้ายหมวดหมู่บนรูปการ์ด — เหตุผลเดียวกับสไลด์ คือกรองหมวดจากแถบด้านบนอยู่แล้ว */
             '<div class="other-thumb"><img src="' + escapeHtml(item.image) + '" alt=""></div>' +
@@ -285,26 +306,26 @@
     }
 
     function recommendationItems() {
-        return activities.filter(function (item) { return !isEvent(item); }).slice(0, 4);
+        return activities.filter(isActivity).slice(0, 4);
     }
 
     function emptyState(message) {
         const recommendations = recommendationItems();
         return '<div class="empty-icon"><svg viewBox="0 0 96 96" fill="none" stroke="currentColor"><rect x="20" y="28" width="56" height="48" rx="8"/><path d="M31 18v20M65 18v20M20 43h56M34 57h12M53 57h9M34 67h9"/></svg></div>' +
             '<p class="empty-title">' + escapeHtml(message) + '</p>' +
-            (recommendations.length ? '<div class="recommendation-block"><h2 class="section-heading"><span>★</span>กิจกรรมแนะนำสำหรับคุณ</h2><div class="recommendation-grid">' + recommendations.map(activityCard).join('') + '</div></div>' : '');
+            (recommendations.length ? '<div class="recommendation-block"><h2 class="section-heading">กิจกรรมแนะนำสำหรับคุณ</h2><div class="recommendation-grid">' + recommendations.map(activityCard).join('') + '</div></div>' : '');
     }
 
     function renderSections() {
         const matched = activities.filter(matchesCategory);
-        const featuredActivities = matched.filter(function (item) { return !isEvent(item) && item.isFeatured; });
+        const featuredActivities = matched.filter(function (item) { return isActivity(item) && item.isFeatured; });
         const featuredEvents = matched.filter(function (item) { return isEvent(item) && item.isFeatured; });
-        const others = matched.filter(function (item) { return !isEvent(item) && item.sortOrder > 1; });
-        const hasResults = featuredActivities.length || featuredEvents.length || others.length;
+        const news = matched.filter(isNews);
+        const hasResults = featuredActivities.length || featuredEvents.length || news.length;
 
         renderPromo('featured-activities-section', 'featured-activities-carousel', 'featured-activities-dots', featuredActivities);
         renderPromo('featured-events-section', 'featured-events-carousel', 'featured-events-dots', featuredEvents);
-        renderOther(others);
+        renderOther(news);
 
         pageState.hidden = Boolean(hasResults);
         pageState.innerHTML = hasResults ? '' : emptyState(activities.length ? 'ไม่พบกิจกรรมในหมวดหมู่นี้' : 'ยังไม่มีกิจกรรมที่เผยแพร่');
@@ -343,9 +364,9 @@
        เงื่อนไขของแต่ละชุดต้องตรงกับที่ใช้สร้างหัวข้อนั้นบนหน้าแรก
        ไม่งั้นกด All แล้วได้รายการคนละชุดกับที่เพิ่งเห็นในสไลด์ */
     const LIST_KINDS = {
-        activities: { title: 'Activities', match: function (item) { return !isEvent(item); } },
+        activities: { title: 'Activities', match: isActivity },
         events: { title: 'Events', match: isEvent },
-        news: { title: 'News & Updates', match: function (item) { return !isEvent(item) && item.sortOrder > 1; } }
+        news: { title: 'News & Updates', match: isNews }
     };
 
     const listScreen = document.getElementById('list-screen');

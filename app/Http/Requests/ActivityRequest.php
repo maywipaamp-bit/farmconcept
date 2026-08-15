@@ -19,7 +19,7 @@ use Illuminate\Validation\Validator;
 class ActivityRequest extends FormRequest
 {
     /** ค่าที่อนุญาต — ต้องตรงกับ master list ฝั่งหน้าจอใน mock-data.js */
-    private const TYPES = ['กิจกรรม', 'อีเว้นท์'];
+    private const TYPES = ['กิจกรรม', 'อีเว้นท์', 'ข่าวสาร'];
 
     private const PARTICIPANT_TYPES = ['กลุ่มตัวอย่าง', 'กลุ่มทั่วไป'];
 

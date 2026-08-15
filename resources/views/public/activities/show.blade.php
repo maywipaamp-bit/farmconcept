@@ -13,6 +13,13 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             <span>กลับ</span>
         </a>
+
+        {{-- แชร์ลิงก์กิจกรรมนี้ — ใช้ Web Share API บนมือถือที่รองรับ (เปิดชีตแชร์ของเครื่อง)
+             เบราว์เซอร์ที่ไม่รองรับจะคัดลอกลิงก์ให้แทน แล้วโชว์ป้ายยืนยันสั้น ๆ --}}
+        <button type="button" class="round-icon-button detail-share" id="detail-share" aria-label="แชร์กิจกรรมนี้">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>
+        </button>
+        <span class="detail-share-pill" id="detail-share-pill" hidden>คัดลอกลิงก์แล้ว</span>
     </header>
 
     <article class="detail-card">
@@ -176,6 +183,39 @@
 @endsection
 
 @push('page-script')
+    <script>
+        (function () {
+            var shareBtn = document.getElementById('detail-share');
+            var pill = document.getElementById('detail-share-pill');
+            if (!shareBtn) return;
+
+            var pillTimer = null;
+            function showPill(text) {
+                pill.textContent = text;
+                pill.hidden = false;
+                clearTimeout(pillTimer);
+                pillTimer = setTimeout(function () { pill.hidden = true; }, 2200);
+            }
+
+            shareBtn.addEventListener('click', async function () {
+                var shareData = { title: document.title, url: location.href };
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                    } catch (error) {
+                        /* ผู้ใช้กดยกเลิกชีตแชร์ — ไม่ต้องทำอะไรต่อ */
+                    }
+                    return;
+                }
+                try {
+                    await navigator.clipboard.writeText(location.href);
+                    showPill('คัดลอกลิงก์แล้ว');
+                } catch (error) {
+                    showPill('คัดลอกลิงก์ไม่สำเร็จ');
+                }
+            });
+        })();
+    </script>
     @if($postSurvey['requested'] && $postSurvey['enabled'])
         <script>
             window.TFC_PUBLIC_POST_SURVEY = @json([

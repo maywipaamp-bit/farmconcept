@@ -214,7 +214,7 @@ window.TFC_MOCK = {
   ],
 
   /* ---------- Master list ของโมดูลจัดการกิจกรรม ---------- */
-  activityTypes: ['กิจกรรม', 'อีเว้นท์'],
+  activityTypes: ['กิจกรรม', 'อีเว้นท์', 'ข่าวสาร'],
   activityParticipantTypes: ['กลุ่มตัวอย่าง', 'กลุ่มทั่วไป'],
   activityDataSources: ['ลงทะเบียนออนไลน์', 'ลงทะเบียนหน้างาน', 'นำเข้าจากไฟล์', 'บันทึกโดยเจ้าหน้าที่'],
   activityVenueModes: ['จัดในพื้นที่ (Onsite)', 'ออนไลน์', 'ผสมผสาน (Hybrid)'],
