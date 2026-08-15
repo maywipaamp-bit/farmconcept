@@ -28,3 +28,4 @@ Thumbs.db
 
 # Claude Code local files (worktrees, dev server config)
 .claude/
+.composer.lock
