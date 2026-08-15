@@ -82,28 +82,20 @@ a { color: inherit; }
 .public-logo-link { display: inline-flex; align-items: center; justify-content: center; }
 .public-logo-link img { display: block; width: auto; height: 50px; object-fit: contain; }
 
-/* บีบให้ทุกหมวดหมู่พอดีจอเดียวเสมอ ไม่ต้องเลื่อนข้าง — ขนาดปุ่ม/ไอคอนเล็กพอ
-   ให้ 6 หมวด (รวม All) เรียงจบในความกว้างหน้าจอมือถือมาตรฐาน (~360-390px)
-   overflow-x ยังเปิดไว้เป็น fallback เผื่อเพิ่มหมวดหมู่จนเกินพอดี ไม่ใช่พฤติกรรมหลัก */
+/* ทุกหมวดหมู่ต้องพอดีความกว้างจอเสมอ — แต่ละปุ่ม flex แบ่งพื้นที่เท่ากัน
+   ไม่ใช้ความกว้างตายตัว (ของเดิม 48px แต่ชื่อยาวอย่าง WORKSHOP/COMMUNITY ล้นออกนอกช่อง
+   จนเบียดกันและดันแถวเกินขอบขวา) — ชื่อที่ยาวเกินช่องตัดด้วย ellipsis แทน */
 .category-bar {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     padding: 4px 0 6px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
 }
 
-/* ซ่อนแถบเลื่อน — บนมือถือไม่มีอยู่แล้ว ส่วนบนเดสก์ท็อปแถบจะไปกินพื้นที่ใต้ไอคอน */
-.category-bar::-webkit-scrollbar { display: none; }
-
-/* ไอคอนวงกลมด้านบน ชื่อหมวดอยู่ใต้ไอคอน — กว้างคงที่ต่อรายการให้ไอคอนเรียงตรงกัน */
+/* ไอคอนวงกลมด้านบน ชื่อหมวดอยู่ใต้ไอคอน */
 .category-button {
-    display: inline-flex;
-    flex: 0 0 auto;
-    width: 48px;
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
     flex-direction: column;
     align-items: center;
     gap: 5px;
@@ -114,9 +106,15 @@ a { color: inherit; }
     font-size: 9.5px;
     line-height: 1.3;
     text-align: center;
-    white-space: nowrap;
-    scroll-snap-align: start;
     transition: color .15s;
+}
+
+/* ชื่อหมวดกินได้เต็มช่องของตัวเอง เกินกว่านั้นตัดด้วย ellipsis ไม่ล้นไปเบียดช่องข้าง */
+.category-button > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .category-icon {
@@ -487,7 +485,8 @@ a { color: inherit; }
   text-decoration: none;
 }
 .qr-unavailable-action:hover { background: var(--primary-hover); }
-.detail-hero { position: relative; height: 250px; border-radius: 16px; overflow: hidden; background-position: center; background-size: cover; }
+/* สัดส่วนภาพและความมนตาม handoff — เงาอ่อนใต้รูปยกภาพให้ลอยจากพื้นขาว */
+.detail-hero { position: relative; aspect-ratio: 519/303; border-radius: 20px; overflow: hidden; background-position: center; background-size: cover; box-shadow: 0 6px 24px rgba(20, 66, 31, .12); }
 .detail-hero.has-fallback { background: var(--primary-soft) url('../images/logo-farm.png') center/180px auto no-repeat; }
 /* ---------- ส่วนหัวของหน้ารายละเอียด ----------
    ใช้ภาษาเดียวกับหัวหน้าจอลงทะเบียน: พื้นไล่สี + ปุ่ม "< กลับ" มุมซ้าย
@@ -510,9 +509,18 @@ body.is-detail-page { background-color: var(--background); }
    พื้นเขียวซ้อนเข้าไปอีกชั้นทำให้สีตีกันและรูปดูจมลงไปกับพื้น */
 body.is-home-page { background-color: var(--background); }
 
-.detail-head { position: relative; display: flex; align-items: center; padding: 14px 0 10px; }
+/* grid 3 คอลัมน์ — ชื่อหน้าอยู่กึ่งกลางจอจริง ปุ่มกลับ/แชร์ประกบซ้ายขวา */
+.detail-head {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 16px 0 12px;
+}
 
-.detail-share { margin-left: auto; }
+.detail-head-title { font-size: 16px; font-weight: 600; color: var(--text-primary); text-align: center; }
+
+.detail-share { justify-self: end; color: var(--text-primary); }
 
 /* ป้ายยืนยันลอยใต้ปุ่มแชร์ — โผล่ตอนคัดลอกลิงก์สำเร็จ (เบราว์เซอร์ที่ไม่รองรับ Web Share API) แล้วหายเอง */
 .detail-share-pill {
@@ -538,12 +546,12 @@ body.is-home-page { background-color: var(--background); }
 
 .detail-back {
     display: inline-flex;
+    justify-self: start;
     align-items: center;
-    gap: 4px;
-    margin-left: -6px;
-    padding: 6px 10px 6px 4px;
+    gap: 6px;
+    padding: 0;
     border-radius: var(--radius-pill);
-    color: var(--dark-green);
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
@@ -551,19 +559,33 @@ body.is-home-page { background-color: var(--background); }
 
 .detail-back:hover { color: var(--primary-hover); }
 .detail-back:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.detail-category-badge { position: absolute; bottom: 14px; left: 14px; display: inline-flex; }
-.detail-body { padding: 20px 0 24px; }
-.detail-body h1 { margin: 0 0 10px; font-size: 18px; line-height: 1.45; font-weight: 600; }
-.detail-meta { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; color: var(--text-secondary); font-size: 13.5px; }
-.detail-meta svg { width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; stroke-width: 1.8; }
-.detail-price { color: var(--dark-green); }
-.baht-icon { display: inline-flex; width: 17px; justify-content: center; }
-.detail-description { margin: 0 0 14px; color: var(--text-secondary); }
+/* badge บนหน้ารายละเอียด — พื้นทึบ #57ab45 (ต่างจาก badge โปร่งบนการ์ดหน้าแรก)
+   ขนาดตัวอักษรเท่ากับ badge บนการ์ดหน้ากิจกรรม (12/600) ให้สเกลเดียวกันทั้งฝั่ง */
+.detail-category-badge {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    display: inline-flex;
+    padding: 5px 14px;
+    background: #57ab45;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+}
+.detail-body { padding: 18px 0 22px; }
+/* สเกลอิงหน้ากิจกรรม — หัวข้อใหญ่สุดของฝั่งผู้เข้าร่วมคือ 18px เนื้อหา 13.5px */
+.detail-body h1 { margin: 0 0 8px; font-size: 18px; line-height: 1.45; font-weight: 600; color: var(--text-primary); }
+.detail-meta { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0; color: var(--text-secondary); font-size: 13.5px; }
+.detail-meta svg { width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; stroke-width: 1.8; color: var(--primary-hover); }
+.detail-price { color: var(--text-secondary); }
+.baht-icon { display: inline-flex; width: 17px; justify-content: center; color: var(--primary-hover); }
+.detail-description { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--text-secondary); }
 /* ไม่มีพื้นหลัง — วางเรียงต่อจากบรรทัดข้อมูลอื่นของกิจกรรม ใช้สีข้อความบอกความเร่งด่วนพอ */
-.deadline-note { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: #B45309; font-size: 13.5px; }
-.deadline-note svg { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 1.8; }
-/* ทรงและสีชุดเดียวกับปุ่มในหน้าลงทะเบียน — pill ทุกใบ เขียวแบรนด์ ตัวหนังสือขาว
-   เพื่อให้ปุ่ม "ลงทะเบียนเข้าร่วม" ที่กดจากหน้านี้ กับปุ่มในหน้าถัดไปเป็นภาษาเดียวกัน */
+.deadline-note { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: #b06a00; font-size: 13.5px; font-weight: 600; }
+.deadline-note svg { width: 17px; height: 17px; flex: 0 0 17px; stroke-width: 1.8; }
+/* ปุ่มหลัก — สี่เหลี่ยมขอบมน 14px เงาอ่อน ขนาดสัมพันธ์กับสเกลหน้ากิจกรรม */
 .registration-cta,
 .registration-submit,
 .registration-phone-row button {
@@ -571,15 +593,25 @@ body.is-home-page { background-color: var(--background); }
     min-height: 48px;
     align-items: center;
     justify-content: center;
+    padding: 13px;
     border: 1px solid var(--primary);
-    border-radius: var(--radius-pill);
+    border-radius: 14px;
     background: var(--primary);
     color: #fff;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
 }
-.registration-cta { width: 100%; margin-top: 18px; }
+.registration-cta { width: 100%; margin-top: 18px; box-shadow: 0 6px 16px rgba(52, 199, 89, .25); }
+
+/* โทนสีหน้ารายละเอียดตาม handoff — เขียวชุดเดียวกับ flow ลงทะเบียน (คนละเฉดกับเขียวการ์ดหน้าแรก) */
+body.is-detail-page .detail-body h1 { color: #123c1c; }
+body.is-detail-page .detail-description { color: #2c5e3a; }
+body.is-detail-page .detail-meta { color: #1c4f2a; }
+body.is-detail-page .detail-meta svg,
+body.is-detail-page .baht-icon { color: #2c7a44; }
+body.is-detail-page .registration-cta { background: #34c759; border-color: #34c759; }
+body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color: #2bb14e; }
 .registration-cta:hover,
 .registration-submit:hover,
 .registration-phone-row button:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
@@ -690,7 +722,7 @@ body.is-home-page { background-color: var(--background); }
 
 @media (max-width: 370px) {
     .public-app { width: min(100% - 20px, 420px); }
-    .category-button { width: 44px; font-size: 9px; }
+    .category-button { font-size: 9px; }
     .category-icon { width: 32px; height: 32px; }
     .detail-body { padding: 18px 0 22px; }
 }
@@ -699,7 +731,7 @@ body.is-home-page { background-color: var(--background); }
    หมวดหมู่กิจกรรมก็ต้องพอดีแถวเดียวในความกว้างนี้เสมอ ไม่ล้นและไม่ต้องขยายทั้งหน้า */
 @media (min-width: 640px) {
     .category-bar { justify-content: center; gap: 14px; }
-    .category-button { width: 56px; font-size: 11px; }
+    .category-button { flex: 0 1 64px; font-size: 11px; }
     .category-icon { width: 42px; height: 42px; }
     .category-icon svg { width: 18px; height: 18px; }
 }

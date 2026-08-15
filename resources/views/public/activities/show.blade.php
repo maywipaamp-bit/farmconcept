@@ -8,16 +8,18 @@
 @section('content')
     {{-- แถบ "< กลับ" แบบเดียวกับหัวหน้าจอลงทะเบียน ใช้แทน topbar ของ layout ที่ถูกซ่อนไว้
          ปุ่มย้อนกลับจึงมีปุ่มเดียวและอยู่ตำแหน่งเดิมตลอดทั้งเส้นทาง --}}
+    {{-- แถวบน: กลับซ้าย · ชื่อหน้ากลาง · แชร์ขวา (grid 3 คอลัมน์ให้ชื่ออยู่กึ่งกลางจอจริง) --}}
     <header class="detail-head">
         <a class="detail-back" href="{{ route('public.activities') }}">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             <span>กลับ</span>
         </a>
+        <span class="detail-head-title">รายละเอียดกิจกรรม</span>
 
         {{-- แชร์ลิงก์กิจกรรมนี้ — ใช้ Web Share API บนมือถือที่รองรับ (เปิดชีตแชร์ของเครื่อง)
              เบราว์เซอร์ที่ไม่รองรับจะคัดลอกลิงก์ให้แทน แล้วโชว์ป้ายยืนยันสั้น ๆ --}}
         <button type="button" class="round-icon-button detail-share" id="detail-share" aria-label="แชร์กิจกรรมนี้">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.6 6.8-4.1M8.6 13.4l6.8 4.1"/></svg>
         </button>
         <span class="detail-share-pill" id="detail-share-pill" hidden>คัดลอกลิงก์แล้ว</span>
     </header>

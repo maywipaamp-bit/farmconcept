@@ -21,7 +21,7 @@ class ActivityQrController extends Controller
     /** สร้างภาพ PNG ที่สแกนได้จริงจาก URL และ token ที่บันทึกไว้ของกิจกรรม */
     public function show(Request $request, Activity $activity, string $purpose): Response
     {
-        $this->authorize('update', $activity);
+        $this->authorize('viewQr', $activity);
         abort_unless(in_array($purpose, self::PURPOSES, true), 404);
 
         $storedQr = $activity->qrCodes()->where('purpose', $purpose)->firstOrFail();

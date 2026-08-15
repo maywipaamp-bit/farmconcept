@@ -16,9 +16,6 @@
     };
 
     const footer = document.getElementById('reg-footer');
-    const footerNote = document.getElementById('reg-footer-note');
-    const footerNoteLabel = document.getElementById('reg-footer-note-label');
-    const footerNoteValue = document.getElementById('reg-footer-note-value');
     const footerError = document.getElementById('reg-footer-error');
     const primaryBtn = document.getElementById('reg-primary-btn');
     const secondaryBtn = document.getElementById('reg-secondary-btn');
@@ -37,11 +34,7 @@
     const noteInput = document.getElementById('reg-note');
     const roundSelect = document.getElementById('reg-round');
     const consentInput = document.getElementById('reg-consent');
-    const seatLabel = document.getElementById('reg-seat-label');
-    const seatNote = document.getElementById('reg-seat-note');
-    const seatCount = document.getElementById('reg-seat-count');
-    const seatMinus = document.getElementById('reg-seat-minus');
-    const seatPlus = document.getElementById('reg-seat-plus');
+    const seatSelect = document.getElementById('reg-seat-select');
 
     const guestModal = document.getElementById('reg-guest-modal');
     const guestSubtitle = document.getElementById('reg-guest-subtitle');
@@ -63,7 +56,6 @@
     const copiedPill = document.getElementById('reg-copied-pill');
     const bankAmount = document.getElementById('reg-bank-amount');
     const payFeeLabel = document.getElementById('reg-pay-fee-label');
-    const payFeeValue = document.getElementById('reg-pay-fee-value');
     const payTotal = document.getElementById('reg-pay-total');
     const slipInput = document.getElementById('reg-slip-input');
     const dropzone = document.getElementById('reg-dropzone');
@@ -206,7 +198,6 @@
 
         footer.hidden = false;
         secondaryBtn.hidden = true;
-        footerNote.hidden = true;
         primaryBtn.disabled = false;
 
         if (screen === 'found' || screen === 'done') {
@@ -217,14 +208,12 @@
         }
 
         if (screen === 'form') {
-            footerNote.hidden = false;
-            footerNoteLabel.textContent = 'ยอดรวม ' + state.seats + ' ที่นั่ง';
-            footerNoteValue.textContent = config.activity.isFree ? 'เข้าร่วมฟรี' : fmtBaht(totalAmount());
-
+            /* ไม่มีแถว "ยอดรวม" เหนือปุ่มแล้ว — ยอดอยู่บนตัวปุ่มที่เดียว ผู้ใช้เห็นตรงจุดที่กำลังจะกด */
+            const total = config.activity.isFree ? '' : ' · ' + totalAmount().toLocaleString('th-TH') + ' บาท';
             if (extraSeats() > 0) {
-                primaryBtn.textContent = 'ถัดไป · ระบุผู้ร่วม ' + extraSeats() + ' คน';
+                primaryBtn.textContent = 'ถัดไป · ระบุผู้ร่วม ' + extraSeats() + ' คน' + total;
             } else {
-                primaryBtn.textContent = config.payment.required ? 'ไปหน้าชำระเงิน' : 'ยืนยันการลงทะเบียน';
+                primaryBtn.textContent = (config.payment.required ? 'ไปหน้าชำระเงิน' : 'ยืนยันการลงทะเบียน') + total;
             }
             primaryBtn.disabled = !formUnlocked();
             return;
@@ -432,32 +421,22 @@
 
     /* ---------- หน้าจอ 3: กรอกข้อมูล ---------- */
 
+    /* ปุ่มปลดล็อกเมื่อครบ ชื่อ + เบอร์โทร 10 หลัก + ติ๊กยอมรับเงื่อนไข */
     function formUnlocked() {
-        return nameInput.value.trim() !== '' && consentInput.checked;
+        return nameInput.value.trim() !== ''
+            && isValidPhone(phoneInput.value.replace(/\D/g, ''))
+            && consentInput.checked;
     }
 
     function syncSeatUi() {
-        const extra = extraSeats();
-        if (seatCount) {
-            seatCount.textContent = state.seats;
-            seatLabel.textContent = state.seats === 1 ? 'มาคนเดียว' : 'มาด้วยกัน ' + state.seats + ' คน';
-            seatNote.textContent = extra > 0
-                ? 'ขอชื่อเพื่อนอีก ' + extra + ' คน'
-                : 'ชวนเพื่อนมาด้วยได้ถึง ' + config.maxSeats + ' คน';
-            seatMinus.disabled = state.seats <= 1;
-            seatPlus.disabled = state.seats >= config.maxSeats;
-        }
+        if (seatSelect) seatSelect.value = state.seats;
         renderFooter();
     }
 
-    if (seatMinus) {
-        seatMinus.addEventListener('click', function () {
-            state.seats = Math.max(1, state.seats - 1);
+    if (seatSelect) {
+        seatSelect.addEventListener('change', function () {
+            state.seats = Math.min(config.maxSeats, Math.max(1, Number(seatSelect.value) || 1));
             state.guests.length = extraSeats();
-            syncSeatUi();
-        });
-        seatPlus.addEventListener('click', function () {
-            state.seats = Math.min(config.maxSeats, state.seats + 1);
             syncSeatUi();
         });
     }
@@ -468,6 +447,7 @@
         phoneInput.value = normalizePhone(phoneInput.value);
         phoneError.hidden = true;
         phoneInput.classList.remove('is-error');
+        renderFooter();
     });
 
     function validateForm() {
@@ -638,9 +618,8 @@
     /* ---------- หน้าจอ 5: ชำระเงิน ---------- */
 
     function renderPay() {
-        payFeeLabel.textContent = 'ค่าลงทะเบียน ' + fmtBaht(config.payment.amountPerSeat) + ' × ' + state.seats + ' ที่นั่ง';
-        payFeeValue.textContent = fmtBaht(totalAmount());
-        payTotal.textContent = fmtBaht(totalAmount());
+        payFeeLabel.textContent = state.seats + ' ที่นั่ง × ' + config.payment.amountPerSeat.toLocaleString('th-TH') + ' บาท';
+        payTotal.textContent = totalAmount().toLocaleString('th-TH') + ' บาท';
         if (bankAmount) bankAmount.textContent = fmtBaht(totalAmount());
     }
 

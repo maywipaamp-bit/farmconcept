@@ -6709,7 +6709,8 @@ button.multiselect:focus-visible {
   border-radius: var(--radius-input);
 }
 
-.ci-qr-img { width: 80%; height: 80%; color: var(--color-text-strong); }
+/* object-fit กัน QR ยืดเมื่อภาพจากเซิร์ฟเวอร์ไม่ได้เป็นสี่เหลี่ยมจัตุรัสพอดี */
+.ci-qr-img { width: 80%; height: 80%; object-fit: contain; color: var(--color-text-strong); }
 
 .ci-qr-status { display: flex; align-items: center; gap: var(--space-2); }
 
@@ -6718,6 +6719,10 @@ button.multiselect:focus-visible {
   color: var(--color-success-text);
   white-space: nowrap;
 }
+
+/* นอกช่วงเวลาเช็คอิน — QR ยังแสดงอยู่แต่สแกนแล้วไม่ผ่าน ต้องบอกให้เห็นก่อนที่คนจะต่อคิว */
+.ci-qr-status.is-offline .ci-dot { background: var(--color-warning); }
+.ci-qr-status.is-offline .ci-qr-status-text { color: var(--color-warning-text); }
 
 .ci-qr-actions {
   display: flex;
@@ -13662,6 +13667,144 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   border-color: var(--brand-600);
 }
 
+/* ---------- แผงสรุปผล ----------
+   ตัวเลขทุกตัวมาจากคำตอบชุดเดียวกับตารางด้านล่าง ไม่ใช่ค่าสรุปที่เก็บแยกไว้
+   ใช้ .card ของระบบเป็นกรอบ เพิ่มเฉพาะการจัดวางกับแถบสัดส่วนที่หน้านี้ต้องการ */
+.ar-summary { margin-bottom: var(--sp-6); }
+.ar-summary:empty { display: none; }
+
+.ar-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.ar-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+}
+
+.ar-kpi-label {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-secondary);
+}
+
+.ar-kpi-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  font-family: var(--font-numeric);
+  font-size: var(--fs-n-lg);
+  line-height: 1.2;
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.ar-kpi-value.is-success { color: var(--status-success-text); }
+.ar-kpi-value.is-warning { color: var(--status-warning-text); }
+.ar-kpi-value.is-danger { color: var(--status-danger-text); }
+
+.ar-kpi-unit {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  color: var(--text-muted);
+}
+
+/* บรรทัดที่บอก "ตัวเลขนี้แปลว่าอะไร" — ยาวได้ ตัดบรรทัดแทนการตัดท้าย */
+.ar-kpi-note {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-secondary);
+}
+
+.ar-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.ar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+}
+
+.ar-panel-title {
+  font-size: var(--fs-card-title);
+  line-height: var(--lh-card-title);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.ar-panel-empty {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* แถบสัดส่วน — ใช้ทั้งการกระจายดาวและคะแนนรายข้อ โครงเดียวกันจึงไม่แยกสองชุด */
+.ar-bar { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+
+.ar-bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.ar-bar-label {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ar-bar-value {
+  flex: none;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ar-bar-value.is-low { color: var(--status-warning-text); }
+
+.ar-bar-track {
+  height: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.ar-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--brand-500);
+  border-radius: var(--r-pill);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* ข้อที่คะแนนต่ำกว่าเกณฑ์เปลี่ยนเป็นโทนเตือน ไม่ใช่โทนอันตราย — ยังไม่ใช่เรื่องต้องรีบ */
+.ar-bar-fill.is-low { background: var(--status-warning-border); }
+
 /* ---------- แถบหมายเหตุเหนือตาราง ----------
    ไม่ใช่คำเตือน แต่เป็นเหตุผลว่าทำไมตารางถึงไม่มีชื่อคน จึงใช้โทนกลางไม่ใช่สีเหลือง */
 .ar-note {
@@ -13758,6 +13901,13 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   color: var(--status-danger-text);
   background: var(--bg-surface);
   border-color: var(--status-danger-border);
+}
+
+/* ตอบแบบประเมินแต่ไม่มีข้อให้คะแนนเลย — ไม่ใช่คะแนนต่ำ จึงไม่ใช้สีเชิงความหมาย */
+.ar-score.is-none {
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border-color: var(--border-default);
 }
 
 .ar-cell {

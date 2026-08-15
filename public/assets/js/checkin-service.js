@@ -174,12 +174,35 @@ window.TFC.checkinService = (function () {
      ชั้นขนส่งข้อมูล — จุดเดียวที่ต้องแก้เมื่อมี backend จริง
      ทุกฟังก์ชันคืน Promise เสมอ หน้าจอจึงไม่รู้ว่าข้อมูลมาจากไหน
      --------------------------------------------------------------- */
+  function csrf() {
+    var tag = document.querySelector('meta[name="csrf-token"]');
+    return tag ? tag.getAttribute('content') : '';
+  }
+
+  /* ข้อความจาก validation ของ Laravel (422) เป็นข้อความที่เขียนให้คนอ่านอยู่แล้ว
+     จึงส่งต่อขึ้นหน้าจอตรง ๆ — สถานะอื่นไม่ส่งต่อ เพราะอาจมีรายละเอียดภายในระบบติดมา */
+  function fail(res, path) {
+    return res.json().then(function (body) {
+      var first = body && body.errors && Object.keys(body.errors)[0];
+      var message = res.status === 422 ? ((first && body.errors[first][0]) || body.message) : '';
+      var error = new Error(message || ('checkin api ' + res.status + ' ' + path));
+      error.status = res.status;
+      throw error;
+    }, function () {
+      throw new Error('checkin api ' + res.status + ' ' + path);
+    });
+  }
+
   function request(path, options) {
     return fetch(API_BASE + path, Object.assign({
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf()
+      },
       credentials: 'same-origin'
     }, options || {})).then(function (res) {
-      if (!res.ok) throw new Error('checkin api ' + res.status + ' ' + path);
+      if (!res.ok) return fail(res, path);
       return res.json();
     });
   }

@@ -1,13 +1,15 @@
-/* TheFarmConcept — หน้าผู้ลงทะเบียน (admin/activities/registrants.html)
+/* TheFarmConcept — หน้าผู้ลงทะเบียน (admin/activities/registrants)
 
-   ทุกอย่างในหน้านี้แยกตาม activity_id — รายชื่อ ตัวเลข ยอดเงิน และที่นั่งที่รับได้
-   เปลี่ยนกิจกรรมแล้วคำนวณใหม่ทั้งหมด ไม่มีตัวเลขที่พิมพ์ทับไว้
+   ทุกอย่างในหน้านี้แยกตามกิจกรรม — รายชื่อ ตัวเลข ยอดเงิน และที่นั่งที่รับได้
+   ข้อมูลมาจากฐานข้อมูลผ่าน window.TFC_REGISTRANTS ที่ Blade ฉีดไว้ ไม่มีตัวเลขที่พิมพ์ทับไว้
+   เปลี่ยนกิจกรรมคือโหลดหน้าใหม่พร้อม ?id= เพื่อให้ตัวเลขทุกใบมาจากคำถามเดียวกันที่เซิร์ฟเวอร์
 
-   หมายเหตุสำหรับตอนต่อ backend:
-   การยืนยัน/ปฏิเสธสลิป และการยกเลิกเช็คอิน ต้องบันทึก audit log (ใคร ทำอะไร กับใคร เมื่อไหร่)
-   ที่ฝั่ง server ทุกครั้ง ไฟล์นี้เรียก logAudit() ไว้เป็นจุดต่อ แต่ยังเขียนลง console เท่านั้น */
+   การยืนยัน/ปฏิเสธสลิป และการเช็คอิน/ยกเลิก เขียนลงฐานจริงที่ RegistrantController
+   ซึ่งบันทึก audit log (ใคร ทำอะไร กับใคร เมื่อไหร่) ให้ในคำขอเดียวกัน */
 (function () {
-  var mock = window.TFC_MOCK;
+  var data = window.TFC_REGISTRANTS;
+  if (!data) return;
+
   var esc = window.TFC.escapeHtml;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -17,7 +19,6 @@
 
   /* นิยามฟิลด์ของแบบฟอร์มลงทะเบียน — โมดัลรายละเอียดเรนเดอร์จากรายการนี้
      ไม่ได้ไล่เขียนทีละช่องในหน้าจอ เพิ่ม/ลดฟิลด์ในแบบฟอร์มแล้วโมดัลตามเอง
-     ตอนต่อ backend ให้ดึงรายการนี้มาจาก API ของแบบฟอร์มแทนค่าคงที่
 
      group = หัวข้อกลุ่มที่ฟิลด์นี้สังกัด · full = ค่ายาว ให้กินเต็มแถวจะได้ไม่ตัดบรรทัดกลางคัน */
   var REG_FORM_FIELDS = [
@@ -37,69 +38,41 @@
     { key: 'registeredAt', label: 'ลงทะเบียนเมื่อ', group: 'การลงทะเบียน', full: true }
   ];
 
-  var activities = mock.activities || [];
-  var params = new URLSearchParams(location.search);
-
-  /* ถ้าไม่ได้ระบุ ?id= เลือกกิจกรรมที่เก็บค่าใช้จ่ายก่อน เพราะเป็นกรณีที่หน้านี้มีงานให้ทำจริง */
-  var activity = activities.filter(function (a) { return a.id === params.get('id'); })[0]
-    || activities.filter(function (a) { return a.hasFee; })[0]
-    || activities[0];
+  var activities = data.activities || [];
+  var activity = data.activity;
+  var rows = data.rows || [];
 
   var state = { tab: 'ทั้งหมด', q: '', searchOpen: false, pickerOpen: false, page: 1, pageSize: PAGE_SIZES[0] };
-  var rows = [];
   var slipTarget = null;
   var undoTarget = null;
 
-  function logAudit(action, target, detail) {
-    /* จุดต่อ audit log — ตอนมี backend ให้เปลี่ยนเป็น POST /audit-logs */
-    console.info('[audit]', {
-      actor: (mock.currentUser && mock.currentUser.name) || 'ผู้ดูแลระบบ',
-      action: action, activityId: activity.id, target: target, detail: detail || '', at: new Date().toISOString()
+  var csrf = document.querySelector('meta[name="csrf-token"]');
+
+  /* ทุกคำขอที่เปลี่ยนข้อมูลผ่านทางนี้ทางเดียว — โยน Error พร้อมข้อความจากเซิร์ฟเวอร์ให้ผู้เรียกจัดการ */
+  function send(url, method, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : '',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': method
+      },
+      body: JSON.stringify(body || {})
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (payload) {
+        if (!res.ok) throw new Error(payload.message || 'ทำรายการไม่สำเร็จ กรุณาลองใหม่');
+        return payload;
+      });
     });
   }
 
-  /* ---------- ข้อมูลของกิจกรรมที่เลือก ---------- */
-  function sessionsOf(act) { return mock.activitySessions[act.id] || []; }
-
-  function capacityOf(act) {
-    var s = sessionsOf(act);
-    return s.length ? s.reduce(function (n, x) { return n + (x.capacity || 0); }, 0) : (act.capacity || 0);
+  function endpoint(name, code) {
+    return data.endpoints[name].replace(':code', encodeURIComponent(code));
   }
 
-  function roundNameOf(act, reg) {
-    var s = sessionsOf(act);
-    if (s.length <= 1) return 'รอบเดียว';
-    var i = s.map(function (x) { return x.date; }).indexOf(reg.session);
-    return 'รอบ ' + (i < 0 ? 1 : i + 1);
-  }
-
-  function buildRows(act) {
-    return (mock.activityRegistrations[act.id] || []).map(function (r, i) {
-      var walkIn = !!r.manualEntry;
-      return {
-        id: r.id,
-        code: (walkIn ? 'WLK-' : 'REG-') + act.id.slice(-3) + '-' + String(i + 1).padStart(3, '0'),
-        name: r.name,
-        phone: r.phone,
-        email: r.email,
-        gender: r.gender,
-        ageRange: r.ageRange,
-        occupation: r.occupation,
-        sourceChannel: r.sourceChannel,
-        interests: (r.interests || []).join(', '),
-        dietaryNote: r.dietaryNote || '',
-        area: act.area || '-',
-        round: roundNameOf(act, r),
-        registeredAt: r.registeredAtISO
-          ? window.TFC.formatThaiDate(r.registeredAtISO.slice(0, 10)) + ' · ' + r.registeredAtISO.slice(11) + ' น.'
-          : window.TFC.formatThaiDate(r.registeredAt),
-        /* กิจกรรมฟรีไม่มีสถานะการเงินให้ตรวจ ใช้ "ไม่มีค่าใช้จ่าย" แทน */
-        pay: act.hasFee ? r.paymentStatus : FREE,
-        amount: act.hasFee ? (act.fee || 0) : 0,
-        checkedIn: r.checkinStatus === 'เข้าร่วมแล้ว',
-        checkedInAt: r.checkedInAt || ''
-      };
-    });
+  function toast(message, tone) {
+    if (window.TFC.showToast) window.TFC.showToast(message, tone);
   }
 
   function filtered() {
@@ -132,12 +105,10 @@
           '<span class="rg-picker-title">เลือกกิจกรรม</span>' +
           activities.map(function (a) {
             var on = a.id === activity.id;
-            /* จำนวนคนนับจากรายชื่อจริงของกิจกรรมนั้น ไม่ใช่ค่าที่เขียนไว้ในข้อมูลกิจกรรม */
-            var n = (mock.activityRegistrations[a.id] || []).length;
             return '<button type="button" class="rg-picker-item' + (on ? ' is-on' : '') +
               '" role="option" aria-selected="' + on + '" data-activity="' + esc(a.id) + '">' +
               '<span class="rg-picker-item-name">' + esc(a.name) + '</span>' +
-              '<span class="rg-picker-item-meta">' + esc(window.TFC.formatThaiDate(a.startDate)) + ' · ' + n + ' คน</span>' +
+              '<span class="rg-picker-item-meta">' + esc(a.startDateLabel || '-') + ' · ' + a.registered + ' คน</span>' +
               '</button>';
           }).join('') +
         '</div>' +
@@ -163,7 +134,7 @@
   function renderStats() {
     var paid = rows.filter(function (r) { return r.pay === 'ชำระแล้ว'; });
     var waiting = rows.filter(function (r) { return r.pay === 'รอตรวจสอบ'; });
-    var cap = capacityOf(activity);
+    var cap = activity.capacity || 0;
     /* ยอดที่รับแล้วนับเฉพาะรายการที่สถานะ "ชำระแล้ว" เท่านั้น */
     var received = paid.reduce(function (n, r) { return n + r.amount; }, 0);
     var outstanding = rows.filter(function (r) { return r.pay !== 'ชำระแล้ว' && r.pay !== FREE; })
@@ -230,7 +201,7 @@
       '<div class="rg-cell">' + esc(r.round) + '</div>' +
       '<div class="rg-amount ' + amountClass + '">' + esc(amountText) + '</div>' +
       '<div>' +
-        '<button type="button" class="rg-pay ' + PAY_CLASS[r.pay] + '" data-slip="' + esc(r.id) + '">' +
+        '<button type="button" class="rg-pay ' + (PAY_CLASS[r.pay] || '') + '" data-slip="' + esc(r.id) + '">' +
           '<span class="rg-pay-dot"></span>' + esc(r.pay) +
         '</button>' +
       '</div>' +
@@ -289,19 +260,14 @@
     slipTarget = r;
 
     $('rg-slip-title').textContent = 'สลิปการชำระเงิน · ' + r.name;
-
-    $('rg-slip-image').innerHTML = r.pay === FREE
-      ? '<span class="rg-slip-none">กิจกรรมนี้ไม่มีค่าใช้จ่าย จึงไม่มีสลิป</span>'
-      : '<span class="rg-slip-thumb">' +
-          '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>' +
-          '<span>slip-' + esc(r.code.toLowerCase()) + '.jpg</span></span>';
+    $('rg-slip-image').innerHTML = slipImageHtml(r);
 
     /* สองค่าแรกสั้น วางคู่กันได้ · อีกสองค่ายาว ให้กินเต็มแถว */
     var facts = [
       { label: 'ยอดที่ต้องชำระ', value: r.amount > 0 ? baht(r.amount) + ' บาท' : FREE },
       { label: 'สถานะปัจจุบัน', value: r.pay },
-      { label: 'โอนเมื่อ', value: r.pay === FREE ? '—' : r.registeredAt, full: true },
-      { label: 'บัญชีปลายทาง', value: 'กสิกรไทย 012-3-45678-9 · The Farm Concept', full: true }
+      { label: 'โอนเมื่อ', value: r.pay === FREE ? '—' : ((r.slip && r.slip.transferredAt) || 'ยังไม่มีการแจ้งโอน'), full: true },
+      { label: 'บัญชีปลายทาง', value: data.paymentAccount || 'ยังไม่ได้ตั้งค่าบัญชีรับชำระ', full: true }
     ];
     $('rg-slip-facts').innerHTML = facts.map(function (f) {
       return '<div class="field-view' + (f.full ? ' is-full' : '') + '">' +
@@ -315,6 +281,16 @@
         '<button type="button" class="btn btn-primary" id="rg-slip-confirm">ยืนยันการชำระเงิน</button>';
 
     window.TFC.openModal('rg-slip-modal');
+  }
+
+  /* ไฟล์สลิปเก็บนอก public/ ลิงก์ที่ได้จึงเป็น route ที่ตรวจสิทธิ์ ไม่ใช่ path ของไฟล์ */
+  function slipImageHtml(r) {
+    if (r.pay === FREE) return '<span class="rg-slip-none">กิจกรรมนี้ไม่มีค่าใช้จ่าย จึงไม่มีสลิป</span>';
+    if (!r.slip) return '<span class="rg-slip-none">ยังไม่มีสลิปแนบเข้ามาสำหรับรายการนี้</span>';
+
+    return '<a class="rg-slip-thumb" href="' + esc(r.slip.url) + '" target="_blank" rel="noopener">' +
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>' +
+      '<span>' + esc(r.slip.name) + '</span></a>';
   }
 
   /* ---------- โมดัลรายละเอียด ---------- */
@@ -354,22 +330,14 @@
       return renderActivityLine();
     }
 
+    /* เปลี่ยนกิจกรรมคือโหลดหน้าใหม่ ตัวเลขสรุปและรายชื่อจึงมาจากฐานข้อมูลชุดเดียวกันเสมอ */
     var pick = t.closest('[data-activity]');
     if (pick) {
-      var next = activities.filter(function (a) { return a.id === pick.getAttribute('data-activity'); })[0];
+      var nextId = pick.getAttribute('data-activity');
       state.pickerOpen = false;
-      if (!next || next.id === activity.id) return renderActivityLine();
-      activity = next;
-      rows = buildRows(activity);
-      state.tab = 'ทั้งหมด';
-      state.q = '';
-      $('rg-query').value = '';
-      state.page = 1;
-      history.replaceState(null, '', location.pathname + '?id=' + encodeURIComponent(activity.id));
-      renderActivityLine();
-      renderStats();
-      renderTabs();
-      return render();
+      if (nextId === activity.id) return renderActivityLine();
+      location.search = '?id=' + encodeURIComponent(nextId);
+      return;
     }
 
     var tab = t.closest('[data-tab]');
@@ -401,18 +369,7 @@
     if (detail) return openDetail(detail.getAttribute('data-detail'));
 
     var checkin = t.closest('[data-checkin]');
-    if (checkin) {
-      var cr = rowById(checkin.getAttribute('data-checkin'));
-      if (!cr) return;
-      var now = new Date();
-      cr.checkedIn = true;
-      cr.checkedInAt = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-      logAudit('checkin', cr.code, cr.checkedInAt);
-      renderStats();
-      render();
-      if (window.TFC.showToast) window.TFC.showToast('เช็คอิน ' + cr.name + ' แล้ว', 'success');
-      return;
-    }
+    if (checkin) return doCheckin(checkin, rowById(checkin.getAttribute('data-checkin')));
 
     var undo = t.closest('[data-undo]');
     if (undo) {
@@ -437,31 +394,74 @@
     }
   });
 
-  function settleSlip(status) {
-    if (!slipTarget) return;
-    slipTarget.pay = status;
-    logAudit(status === 'ชำระแล้ว' ? 'payment_confirm' : 'payment_reject', slipTarget.code, status);
-    window.TFC.closeModal('rg-slip-modal');
-    renderStats();
-    render();
-    if (window.TFC.showToast) {
-      window.TFC.showToast(status === 'ชำระแล้ว'
-        ? 'ยืนยันการชำระเงินของ ' + slipTarget.name + ' แล้ว'
-        : 'ทำเครื่องหมายสลิปของ ' + slipTarget.name + ' ว่าไม่ถูกต้อง', status === 'ชำระแล้ว' ? 'success' : 'warning');
-    }
-    slipTarget = null;
+  /* ปุ่มเข้าสถานะรอทันทีที่กด กันกดซ้ำระหว่างรอเซิร์ฟเวอร์ แล้วค่อยอัปเดตแถวเมื่อบันทึกสำเร็จ
+     ไม่ใช้ optimistic update เพราะเซิร์ฟเวอร์เป็นคนกำหนดเวลาเช็คอิน ไม่ใช่นาฬิกาของเครื่องหน้างาน */
+  function doCheckin(button, row) {
+    if (!row || button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'กำลังบันทึก…';
+
+    send(endpoint('checkin', row.code), 'POST')
+      .then(function (payload) {
+        row.checkedIn = true;
+        row.checkedInAt = payload.checkedInAt;
+        renderStats();
+        render();
+        toast(payload.message, 'success');
+      })
+      .catch(function (err) {
+        button.disabled = false;
+        button.textContent = 'เช็คอิน';
+        toast(err.message, 'danger');
+      });
   }
 
-  $('rg-undo-ok').addEventListener('click', function () {
-    if (!undoTarget) return;
-    logAudit('checkin_undo', undoTarget.code, undoTarget.checkedInAt);
-    undoTarget.checkedIn = false;
-    undoTarget.checkedInAt = '';
-    window.TFC.closeModal('rg-undo-modal');
-    renderStats();
-    render();
-    if (window.TFC.showToast) window.TFC.showToast('ยกเลิกเช็คอิน ' + undoTarget.name + ' แล้ว', 'info');
-    undoTarget = null;
+  function settleSlip(status) {
+    if (!slipTarget) return;
+    var target = slipTarget;
+    var buttons = ['rg-slip-confirm', 'rg-slip-reject'].map($).filter(Boolean);
+    buttons.forEach(function (b) { b.disabled = true; });
+    if ($('rg-slip-confirm')) $('rg-slip-confirm').textContent = 'กำลังบันทึก…';
+
+    send(endpoint('payment', target.code), 'PATCH', { status: status })
+      .then(function (payload) {
+        target.pay = payload.pay;
+        window.TFC.closeModal('rg-slip-modal');
+        renderStats();
+        render();
+        toast(payload.message, status === 'ชำระแล้ว' ? 'success' : 'warning');
+        slipTarget = null;
+      })
+      .catch(function (err) {
+        buttons.forEach(function (b) { b.disabled = false; });
+        if ($('rg-slip-confirm')) $('rg-slip-confirm').textContent = 'ยืนยันการชำระเงิน';
+        toast(err.message, 'danger');
+      });
+  }
+
+  var undoBtn = $('rg-undo-ok');
+
+  undoBtn.addEventListener('click', function () {
+    if (!undoTarget || undoBtn.disabled) return;
+    var target = undoTarget;
+    undoBtn.disabled = true;
+    undoBtn.textContent = 'กำลังยกเลิก…';
+
+    send(endpoint('checkin', target.code), 'DELETE')
+      .then(function (payload) {
+        target.checkedIn = false;
+        target.checkedInAt = '';
+        window.TFC.closeModal('rg-undo-modal');
+        renderStats();
+        render();
+        toast(payload.message, 'info');
+        undoTarget = null;
+      })
+      .catch(function (err) { toast(err.message, 'danger'); })
+      .finally(function () {
+        undoBtn.disabled = false;
+        undoBtn.textContent = 'ยืนยันยกเลิก';
+      });
   });
 
   $('rg-query').addEventListener('input', function () {
@@ -486,11 +486,18 @@
   });
 
   $('rg-add').addEventListener('click', function () {
-    if (window.TFC.showToast) window.TFC.showToast('เพิ่มผู้ลงทะเบียนด้วยตนเอง — เชื่อมกับฟอร์มลงทะเบียนในขั้นถัดไป', 'info');
+    toast('เพิ่มผู้ลงทะเบียนด้วยตนเอง — เชื่อมกับฟอร์มลงทะเบียนในขั้นถัดไป', 'info');
   });
 
   /* ---------- เริ่มต้น ---------- */
-  rows = buildRows(activity);
+  /* ยังไม่มีกิจกรรมที่เปิดรับลงทะเบียนเลย — บอกให้ไปสร้างก่อน ไม่ปล่อยหน้าว่างเปล่า */
+  if (!activity) {
+    $('rg-activity-line').innerHTML = '<span class="rg-activity-name">ยังไม่มีกิจกรรมที่เปิดรับลงทะเบียน</span>';
+    $('rg-rows').innerHTML = EMPTY_HTML;
+    ['rg-export', 'rg-add'].forEach(function (id) { $(id).disabled = true; });
+    return;
+  }
+
   renderActivityLine();
   renderStats();
   renderTabs();

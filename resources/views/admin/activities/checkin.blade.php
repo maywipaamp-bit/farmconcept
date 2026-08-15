@@ -1,139 +1,109 @@
-<!DOCTYPE html>
-<html lang="th" class="is-preload">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Check-in | TheFarmConcept</title>
-<link rel="icon" type="image/png" href="../../assets/images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../../assets/css/standard/tokens.css">
-<link rel="stylesheet" href="../../assets/css/standard/base.css">
-<link rel="stylesheet" href="../../assets/css/tokens.css">
-<link rel="stylesheet" href="../../assets/css/base.css">
-<link rel="stylesheet" href="../../assets/css/layout.css">
-<link rel="stylesheet" href="../../assets/css/components.css">
-<link rel="stylesheet" href="../../assets/css/utilities.css">
-<link rel="stylesheet" href="../../assets/css/responsive.css">
-<link rel="stylesheet" href="../../assets/css/typography-spec.css">
-<link rel="stylesheet" href="../../assets/css/sidebar-shell.css">
-</head>
-<body>
+@extends('layouts.admin')
 
-<div class="app-shell">
-<script>(function(){try{if(localStorage.getItem('tfc-subnav-collapsed')==='1'){document.currentScript.parentElement.classList.add('is-subnav-collapsed');}}catch(e){}})();</script>
-  <!-- เมนูสองชั้น (แถบไอคอน + แผงเมนูย่อย) สร้างจาก window.TFC_MENU ที่กรองสิทธิ์มาแล้ว -->
-  <div id="sidebar-shell" data-nav-base="../../"></div>
+@section('title', 'Check-in')
 
-  <script src="../../assets/js/mock-data.js"></script>
-  <script src="../../assets/js/menu-config.js"></script>
-  <script src="../../assets/js/sidebar-render.js"></script>
+@section('content')
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/admin/dashboard">แดชบอร์ด</a> <span>/</span>
+    <a href="/admin/activities/list">จัดการกิจกรรม</a> <span>/</span>
+    <span class="is-current">Check-in</span>
+  </nav>
 
-  <div class="app-main">
-    <main class="content">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../dashboard.html">แดชบอร์ด</a> <span>/</span>
-        <a href="list.html">จัดการกิจกรรม</a> <span>/</span>
-        <span class="is-current">Check-in</span>
-      </nav>
-      <!-- 1. หัวหน้า: ชื่อหน้า + กิจกรรมที่กำลังเช็คอิน + ปุ่มเปลี่ยนกิจกรรม
-           ปุ่ม Walk-in อยู่มุมขวาบน — เป็นงานที่เจ้าหน้าที่ต้องหยิบใช้ได้ทันทีโดยไม่ต้องเลื่อนจอ -->
-      <div class="ci-head">
-        <div class="ci-head-main">
-          <h1 class="ci-title">Check-in</h1>
-          <div class="ci-subline">
-            <span class="ci-act-name" id="ci-act-name"></span>
-            <span class="ci-act-meta" id="ci-act-meta"></span>
-            <div class="act-picker">
-              <button type="button" class="act-picker-btn" id="act-picker-btn" aria-expanded="false" aria-haspopup="listbox">
-                <span>เปลี่ยนกิจกรรม</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4 4 4-4"/></svg>
-              </button>
-              <div class="act-picker-panel" id="act-picker-panel" role="listbox" aria-label="เลือกกิจกรรม" hidden></div>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="btn ci-btn ci-walkin-btn" data-open-modal="ci-walkin-modal">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>
-          เพิ่มผู้เข้าร่วมหน้างาน (Walk-in)
-        </button>
-      </div>
-
-      <!-- 2. สองคอลัมน์: จุดสแกน (ซ้าย) + สรุป/ตัวกรอง แล้วตามด้วยรายชื่อ (ขวา) -->
-      <div class="ci-columns">
-        <section class="card ci-scan" aria-label="จุดสแกนเช็คอิน">
-          <span class="ci-panel-title">ให้ผู้เข้าร่วมสแกนเพื่อเช็คอิน</span>
-
-          <div class="ci-qr-box">
-            <div class="ci-qr" id="ci-qr"></div>
-            <div class="ci-qr-status">
-              <span class="ci-dot"></span>
-              <span class="ci-qr-status-text">เปิดรับการสแกนอยู่</span>
-            </div>
-            <div class="ci-qr-actions">
-              <button type="button" class="btn ci-btn" id="ci-fullscreen">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg>
-                แสดงเต็มจอ
-              </button>
-              <button type="button" class="btn ci-btn" id="ci-download">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
-                ดาวน์โหลด QR
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div class="ci-list-col">
-          <!-- การ์ดบนสุดฝั่งรายชื่อ: ความคืบหน้าอย่างเดียว
-               ตัวกรองกับช่องค้นหาอยู่ในหัวการ์ดรายชื่อ เพราะเป็นเครื่องมือของรายชื่อโดยตรง -->
-          <section class="card ci-board" aria-label="สรุปการเช็คอิน">
-            <div class="ci-board-top">
-              <div class="ci-summary-figure">
-                <span class="ci-summary-value" id="ci-done">0</span>
-                <span class="ci-summary-total" id="ci-total">จาก 0 คน</span>
-              </div>
-              <div class="ci-summary-progress">
-                <div class="ci-progress"><span id="ci-bar" style="width: 0%"></span></div>
-                <div class="ci-progress-labels">
-                  <span class="ci-progress-pct" id="ci-pct">เช็คอินแล้ว 0%</span>
-                  <span id="ci-pending">ยังไม่มา 0 คน</span>
-                </div>
-              </div>
-              <div class="ci-live" id="ci-live">
-                <span class="ci-dot"></span>
-                <span class="ci-live-text" id="ci-live-text">เชื่อมต่ออยู่ · อัปเดตอัตโนมัติ</span>
-              </div>
-            </div>
-
-          </section>
-
-          <section class="card ci-list-card" aria-label="รายชื่อผู้เข้าร่วม">
-            <!-- ตัวกรองซ้าย · ค้นหาขวา — อยู่ในหัวการ์ดเดียวกับรายชื่อ ไม่แยกการ์ด -->
-            <div class="ci-list-head">
-              <div class="ci-seg" id="ci-seg" role="tablist" aria-label="กรองรายชื่อ"></div>
-              <div class="search-input ci-search">
-                <span class="search-input-icon">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
-                </span>
-                <!-- type="text" + inputmode="search" ไม่ใช่ type="search" เพราะ input[type=search]
-                     แถมปุ่มล้างค่าของเบราว์เซอร์มาเอง ซึ่งไม่มีในแบบและชนกับไอคอนแว่นขยาย
-                     ส่วน inputmode ยังทำให้คีย์บอร์ดมือถือขึ้นปุ่มค้นหาให้ตามเดิม -->
-                <input type="text" inputmode="search" class="input" id="ci-search" autocomplete="off"
-                       aria-label="ค้นหาผู้เข้าร่วม — ใช้กรณีสแกนไม่ได้ เจ้าหน้าที่ค้นหาให้"
-                       placeholder="ค้นหาชื่อ เบอร์โทร หรือรหัสลงทะเบียน">
-              </div>
-            </div>
-            <div class="ci-list" id="ci-list"></div>
-            <div class="ci-list-foot" id="ci-pagination"></div>
-          </section>
+  {{-- 1. หัวหน้า: ชื่อหน้า + กิจกรรมที่กำลังเช็คอิน + ปุ่มเปลี่ยนกิจกรรม
+       ปุ่ม Walk-in อยู่มุมขวาบน — เป็นงานที่เจ้าหน้าที่ต้องหยิบใช้ได้ทันทีโดยไม่ต้องเลื่อนจอ --}}
+  <div class="ci-head">
+    <div class="ci-head-main">
+      <h1 class="ci-title">Check-in</h1>
+      <div class="ci-subline">
+        <span class="ci-act-name" id="ci-act-name"></span>
+        <span class="ci-act-meta" id="ci-act-meta"></span>
+        <div class="act-picker">
+          <button type="button" class="act-picker-btn" id="act-picker-btn" aria-expanded="false" aria-haspopup="listbox">
+            <span>เปลี่ยนกิจกรรม</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4 4 4-4"/></svg>
+          </button>
+          <div class="act-picker-panel" id="act-picker-panel" role="listbox" aria-label="เลือกกิจกรรม" hidden></div>
         </div>
       </div>
-    </main>
+    </div>
+    <button type="button" class="btn ci-btn ci-walkin-btn" data-open-modal="ci-walkin-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></svg>
+      เพิ่มผู้เข้าร่วมหน้างาน (Walk-in)
+    </button>
   </div>
-</div>
 
-<!-- Popup ยืนยันยกเลิกการเช็คอิน -->
+  {{-- 2. สองคอลัมน์: จุดสแกน (ซ้าย) + สรุป/ตัวกรอง แล้วตามด้วยรายชื่อ (ขวา) --}}
+  <div class="ci-columns">
+    <section class="card ci-scan" aria-label="จุดสแกนเช็คอิน">
+      <span class="ci-panel-title">ให้ผู้เข้าร่วมสแกนเพื่อเช็คอิน</span>
+
+      <div class="ci-qr-box" id="ci-qr-box">
+        <div class="ci-qr" id="ci-qr"></div>
+        <div class="ci-qr-status" id="ci-qr-status">
+          <span class="ci-dot"></span>
+          <span class="ci-qr-status-text" id="ci-qr-status-text">เปิดรับการสแกนอยู่</span>
+        </div>
+        <div class="ci-qr-actions">
+          <button type="button" class="btn ci-btn" id="ci-fullscreen">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg>
+            แสดงเต็มจอ
+          </button>
+          <button type="button" class="btn ci-btn" id="ci-download">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
+            ดาวน์โหลด QR
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="ci-list-col">
+      {{-- การ์ดบนสุดฝั่งรายชื่อ: ความคืบหน้าอย่างเดียว
+           ตัวกรองกับช่องค้นหาอยู่ในหัวการ์ดรายชื่อ เพราะเป็นเครื่องมือของรายชื่อโดยตรง --}}
+      <section class="card ci-board" aria-label="สรุปการเช็คอิน">
+        <div class="ci-board-top">
+          <div class="ci-summary-figure">
+            <span class="ci-summary-value" id="ci-done">0</span>
+            <span class="ci-summary-total" id="ci-total">จาก 0 คน</span>
+          </div>
+          <div class="ci-summary-progress">
+            <div class="ci-progress"><span id="ci-bar" style="width: 0%"></span></div>
+            <div class="ci-progress-labels">
+              <span class="ci-progress-pct" id="ci-pct">เช็คอินแล้ว 0%</span>
+              <span id="ci-pending">ยังไม่มา 0 คน</span>
+            </div>
+          </div>
+          <div class="ci-live" id="ci-live">
+            <span class="ci-dot"></span>
+            <span class="ci-live-text" id="ci-live-text">เชื่อมต่ออยู่ · อัปเดตอัตโนมัติ</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card ci-list-card" aria-label="รายชื่อผู้เข้าร่วม">
+        {{-- ตัวกรองซ้าย · ค้นหาขวา — อยู่ในหัวการ์ดเดียวกับรายชื่อ ไม่แยกการ์ด --}}
+        <div class="ci-list-head">
+          <div class="ci-seg" id="ci-seg" role="tablist" aria-label="กรองรายชื่อ"></div>
+          <div class="search-input ci-search">
+            <span class="search-input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+            </span>
+            {{-- type="text" + inputmode="search" ไม่ใช่ type="search" เพราะ input[type=search]
+                 แถมปุ่มล้างค่าของเบราว์เซอร์มาเอง ซึ่งไม่มีในแบบและชนกับไอคอนแว่นขยาย
+                 ส่วน inputmode ยังทำให้คีย์บอร์ดมือถือขึ้นปุ่มค้นหาให้ตามเดิม --}}
+            <input type="text" inputmode="search" class="input" id="ci-search" autocomplete="off"
+                   aria-label="ค้นหาผู้เข้าร่วม — ใช้กรณีสแกนไม่ได้ เจ้าหน้าที่ค้นหาให้"
+                   placeholder="ค้นหาชื่อ เบอร์โทร หรือรหัสลงทะเบียน">
+          </div>
+        </div>
+        <div class="ci-list" id="ci-list"></div>
+        <div class="ci-list-foot" id="ci-pagination"></div>
+      </section>
+    </div>
+  </div>
+@endsection
+
+@section('modals')
+{{-- Popup ยืนยันยกเลิกการเช็คอิน --}}
 <div class="modal-overlay" id="ci-undo-modal">
   <div class="modal ci-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ci-undo-title">
     <div class="ci-confirm">
@@ -152,7 +122,7 @@
   </div>
 </div>
 
-<!-- Popup เพิ่มผู้เข้าร่วมหน้างาน (Walk-in) -->
+{{-- Popup เพิ่มผู้เข้าร่วมหน้างาน (Walk-in) --}}
 <div class="modal-overlay" id="ci-walkin-modal">
   <div class="modal ci-walkin-modal" role="dialog" aria-modal="true" aria-labelledby="ci-walkin-title">
     <div class="modal-header">
@@ -206,7 +176,7 @@
   </div>
 </div>
 
-<!-- Popup แสดง QR ให้ผู้เข้าร่วมสแกนที่หน้างาน -->
+{{-- Popup แสดง QR ให้ผู้เข้าร่วมสแกนที่หน้างาน --}}
 <div class="modal-overlay" id="ci-qr-modal">
   <div class="modal ci-qr-modal" role="dialog" aria-modal="true" aria-labelledby="ci-qr-modal-title">
     <div class="modal-header">
@@ -220,34 +190,38 @@
     </div>
   </div>
 </div>
+@endsection
 
-<script src="../../assets/js/data-service.js"></script>
-<script src="../../assets/js/checkin-service.js"></script>
-<script src="../../assets/js/navigation.js"></script>
-<script src="../../assets/js/modal.js"></script>
-<script src="../../assets/js/profile-modal.js"></script>
-<script src="../../assets/js/action-menu.js"></script>
-<script src="../../assets/js/index-layout.js"></script>
-<script src="../../assets/js/toast.js"></script>
-<script src="../../assets/js/form.js"></script>
-<script src="../../assets/js/activity-module.js"></script>
-<script src="../../assets/js/app.js"></script>
+@push('scripts')
+{{-- ต้องมาก่อน page-script — สคริปต์ของหน้าเรียก TFC.checkinService ตอน parse
+     checkinApiBase ทำให้ service ยิงไปที่ /admin/activities/... แทนข้อมูลตัวอย่างในเครื่อง
+     ตั้งค่าไว้ก่อนโหลดไฟล์ เพราะ service อ่านค่านี้ตอนถูกประกาศครั้งเดียว --}}
+<script>
+  window.TFC_CONFIG = Object.assign({}, window.TFC_CONFIG, {
+    checkinApiBase: '/admin',
+    /* ยังไม่มี WebSocket — service จะถอยไป polling ให้เอง */
+    checkinPollMs: 6000
+  });
+</script>
+<script src="@assetv('assets/js/checkin-service.js')"></script>
+@endpush
+
+@push('page-script')
 <script>
 (function () {
-  var mock = window.TFC_MOCK;
   var esc = window.TFC.escapeHtml;
-  /* ทุกการอ่าน/เขียนสถานะเช็คอินผ่าน service ตัวเดียว — หน้านี้ไม่แตะ TFC_MOCK ตรง ๆ
-     ต่อ backend จริงเมื่อไหร่ ไฟล์นี้ไม่ต้องแก้ (ดู assets/js/checkin-service.js) */
+  /* ทุกการอ่าน/เขียนสถานะเช็คอินผ่าน service ตัวเดียว — หน้านี้ไม่ยิง fetch เอง
+     รูปของ URL และ payload อยู่ใน assets/js/checkin-service.js ที่เดียว */
   var svc = window.TFC.checkinService;
 
   var params = new URLSearchParams(location.search);
-  var activities = mock.activities || [];
+  var activities = @json($activities);
+  var AGE_RANGES = @json($ageRanges);
 
   /* กิจกรรมที่กำลังเช็คอิน — รับผ่าน ?id= จากหน้ารายการกิจกรรม
-     ถ้าไม่ระบุ ให้เลือกกิจกรรมที่ "กำลังดำเนินการ" ก่อน เพราะเป็นกรณีที่หน้านี้มีงานจริง */
+     ถ้าไม่ระบุ ใช้ตัวที่เซิร์ฟเวอร์เลือกไว้ให้ (กิจกรรมที่อยู่ในช่วงเช็คอินก่อน) */
   var activity = activities.filter(function (a) { return a.id === params.get('id'); })[0]
-    || activities.filter(function (a) { return a.status === 'กำลังดำเนินการ'; })[0]
-    || activities.filter(function (a) { return a.status === 'เปิดรับสมัคร'; })[0]
+    || activities.filter(function (a) { return a.id === @json($selectedId); })[0]
     || activities[0];
 
   var FILTERS = [
@@ -265,9 +239,8 @@
     pageSize: PAGE_SIZES[0],
     snap: { rounds: [], people: [] },
     undoId: null,
-    age: (mock.registrationOptions.ageRanges || [])[1] || '',
-    stopRealtime: null,
-    stopDemoScans: null
+    age: AGE_RANGES[1] || AGE_RANGES[0] || '',
+    stopRealtime: null
   };
 
   function byId(id) { return document.getElementById(id); }
@@ -280,13 +253,22 @@
     return FILTERS.filter(function (f) { return f.key === key; })[0] || FILTERS[0];
   }
 
+  /* ยังไม่มีกิจกรรมที่เปิดเช็คอินเลย — บอกให้ชัดแทนที่จะปล่อยหน้าว่างให้เดา */
+  if (!activity) {
+    byId('ci-act-name').textContent = 'ยังไม่มีกิจกรรมที่เปิดใช้งาน Check-in';
+    byId('ci-act-meta').textContent = 'เปิดสวิตช์ Check-in ที่หน้าแก้ไขกิจกรรมก่อน';
+    byId('act-picker-btn').disabled = true;
+    byId('ci-list').innerHTML = '<div class="ci-empty"><span class="ci-empty-title">ยังไม่มีข้อมูลให้แสดง</span></div>';
+    return;
+  }
+
   /* ---------- 1. หัวหน้า + แผงเลือกกิจกรรม ---------- */
   function activityMeta(a) {
     return window.TFC.formatThaiDate(a.startDate) + ' · ' + (a.time || '-') + ' น. · ' + (a.area || '-');
   }
 
   function activitySeats(a) {
-    return (mock.activityRegistrations[a.id] || []).length + ' คน';
+    return a.registeredCount + ' คน';
   }
 
   function renderHead() {
@@ -345,14 +327,14 @@
 
   /* เรียงตามเวลาเช็คอิน ใหม่ → เก่า คนที่ยังไม่มาต่อท้าย (คงลำดับลงทะเบียนเดิม)
      เจ้าหน้าที่ที่หน้างานต้องเห็นคนที่เพิ่งสแกนเข้ามาก่อน ไม่ใช่ไล่หาในลำดับลงทะเบียน
-     เวลาเก็บเป็น HH:MM ของวันเดียวกัน จึงเทียบเป็นข้อความได้ตรง ๆ */
+     เทียบด้วย checkedInAtIso ไม่ใช่ HH:MM เพราะกิจกรรมที่กินหลายวันจะเรียงผิด */
   function visible() {
     var q = state.search.trim().toLowerCase();
     return state.snap.people.filter(filterOf(state.filter).match).filter(function (p) {
       if (!q) return true;
       return (p.name + ' ' + p.phone + ' ' + p.code).toLowerCase().indexOf(q) > -1;
     }).sort(function (a, b) {
-      if (a.checkedInAt && b.checkedInAt) return b.checkedInAt.localeCompare(a.checkedInAt);
+      if (a.checkedInAt && b.checkedInAt) return b.checkedInAtIso.localeCompare(a.checkedInAtIso);
       if (a.checkedInAt) return -1;
       if (b.checkedInAt) return 1;
       return 0;
@@ -386,8 +368,7 @@
       '</div>';
   }
 
-  /* รายชื่อยาวเป็นร้อยคน จึงแบ่งหน้าเสมอ ไม่งั้นการ์ดยืดจนปุ่มด้านบนตกจอ
-     ตอนต่อ backend ให้เปลี่ยนเป็นขอทีละหน้า (WHERE + LIMIT/OFFSET) แทนการตัดที่ frontend */
+  /* รายชื่อยาวเป็นร้อยคน จึงแบ่งหน้าเสมอ ไม่งั้นการ์ดยืดจนปุ่มด้านบนตกจอ */
   function renderList() {
     var list = visible();
     var pageCount = Math.max(1, Math.ceil(list.length / state.pageSize));
@@ -421,28 +402,26 @@
   function resetPage() { state.page = 1; }
 
   /* ---------- 4. QR ----------
-     ต้นแบบยังไม่มี backend ออก token ให้ จึงวาด QR เป็น SVG จากรหัสกิจกรรม
-     เมื่อต่อ backend จริง ให้แทนทั้งฟังก์ชันนี้ด้วย <img src="{{qrUrl}}"> ที่ผูก token หมดอายุ */
-  function qrSvg(seed) {
-    var n = 25, cells = '', h = 0, i;
-    for (i = 0; i < seed.length; i++) h = (h * 131 + seed.charCodeAt(i)) >>> 0;
-    for (i = 0; i < n * n; i++) {
-      h = (h * 1103515245 + 12345) >>> 0;
-      if ((h >>> 16) % 100 < 46) cells += '<rect x="' + (i % n) + '" y="' + Math.floor(i / n) + '" width="1" height="1"/>';
-    }
-    [[0, 0], [n - 7, 0], [0, n - 7]].forEach(function (pos) {
-      cells += '<rect x="' + pos[0] + '" y="' + pos[1] + '" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/>' +
-        '<rect x="' + (pos[0] + 2) + '" y="' + (pos[1] + 2) + '" width="3" height="3"/>';
-    });
-    return '<svg class="ci-qr-img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n +
-      '" fill="currentColor" role="img" aria-label="QR เช็คอิน ' + esc(activity.name) + '">' + cells + '</svg>';
+     ภาพมาจาก /admin/activities/{code}/qr/checkin ซึ่งวาดจาก token จริงใน act_qr_codes
+     กิจกรรมที่ยังไม่เผยแพร่จะไม่มีแถว QR ที่เปิดใช้งาน — ซ่อนกล่องไปเลยดีกว่าโชว์รูปเสีย */
+  function qrUrl(download) {
+    return '/admin/activities/' + encodeURIComponent(activity.id) + '/qr/checkin' + (download ? '?download=1' : '');
   }
 
   function renderQr() {
-    var svg = qrSvg(activity.id);
-    byId('ci-qr').innerHTML = svg;
-    byId('ci-qr-large').innerHTML = svg;
+    byId('ci-qr-box').hidden = !activity.hasCheckinQr;
+
+    if (!activity.hasCheckinQr) return;
+
+    var img = '<img class="ci-qr-img" src="' + esc(qrUrl(false)) + '" alt="QR เช็คอิน ' + esc(activity.name) + '">';
+    byId('ci-qr').innerHTML = img;
+    byId('ci-qr-large').innerHTML = img;
     byId('ci-qr-modal-title').textContent = activity.name;
+
+    byId('ci-qr-status').classList.toggle('is-offline', !activity.openForCheckin);
+    byId('ci-qr-status-text').textContent = activity.openForCheckin
+      ? 'เปิดรับการสแกนอยู่'
+      : 'ยังไม่ถึงช่วงเวลาสแกน';
   }
 
   /* ---------- 5. โหลดข้อมูลของกิจกรรมที่เลือก ----------
@@ -475,15 +454,7 @@
 
   function listen() {
     if (state.stopRealtime) state.stopRealtime();
-    if (state.stopDemoScans) state.stopDemoScans();
     state.stopRealtime = svc.subscribe(activity.id, onRealtime);
-    /* เครื่องจำลอง "ผู้เข้าร่วมสแกน QR เอง" ปิดไว้เป็นค่าเริ่มต้น
-       เดิมเปิดไว้ตลอด ทำให้คนถูกเช็คอินเองเรื่อย ๆ ทุก 20 วินาทีโดยไม่มีใครกด
-       ซึ่งบนหน้าจอแยกไม่ออกจากบั๊ก และทำให้ตัวเลขสรุปเชื่อถือไม่ได้
-       ต้องการดูว่าเส้นทาง realtime ทำงานจริงให้เปิดด้วย ?live=demo */
-    state.stopDemoScans = params.get('live') === 'demo'
-      ? svc.simulateScans(activity.id, 20000)
-      : function () {};
   }
 
   function switchActivity(id) {
@@ -493,6 +464,7 @@
     activity = next;
     state.filter = 'all';
     state.search = '';
+    state.snap = { rounds: [], people: [] };
     resetPage();
     byId('ci-search').value = '';
     history.replaceState(null, '', location.pathname + '?id=' + encodeURIComponent(activity.id));
@@ -538,10 +510,10 @@
         .then(function (person) {
           toast('เช็คอิน ' + person.name + ' เวลา ' + person.checkedInAt + ' น. แล้ว', 'success');
           return refresh();
-        })['catch'](function () {
+        })['catch'](function (err) {
           check.disabled = false;
           check.textContent = 'เช็คอิน';
-          toast('บันทึกเช็คอินไม่สำเร็จ กรุณาลองใหม่', 'danger');
+          toast(err.message || 'บันทึกเช็คอินไม่สำเร็จ กรุณาลองใหม่', 'danger');
         });
       return;
     }
@@ -569,7 +541,7 @@
   });
 
   /* ---------- 8. ยกเลิกการเช็คอิน ----------
-     เซิร์ฟเวอร์ต้องเขียน audit log (ใคร ยกเลิกของใคร เมื่อไหร่) พร้อมกับล้างเวลาเช็คอิน
+     เซิร์ฟเวอร์เขียน act_checkin_logs ในทรานแซกชันเดียวกับการล้างเวลาเช็คอิน
      ถ้าเขียน log ไม่สำเร็จถือว่าคำสั่งล้มเหลว หน้าจอจะไม่เปลี่ยนสถานะให้ */
   byId('ci-undo-ok').addEventListener('click', function () {
     var button = this;
@@ -584,8 +556,8 @@
         window.TFC.closeModal('ci-undo-modal');
         toast('ยกเลิกเช็คอิน ' + result.audit.registrationName + ' แล้ว · บันทึกผู้ทำรายการไว้ในระบบ', 'info');
         return refresh();
-      })['catch'](function () {
-        toast('ยกเลิกไม่สำเร็จ — ระบบยังบันทึกประวัติการแก้ไขไม่ได้', 'danger');
+      })['catch'](function (err) {
+        toast(err.message || 'ยกเลิกไม่สำเร็จ — ระบบยังบันทึกประวัติการแก้ไขไม่ได้', 'danger');
       })
       .then(function () {
         button.disabled = false;
@@ -613,8 +585,7 @@
   }
 
   function renderAgeChips() {
-    var ranges = mock.registrationOptions.ageRanges || [];
-    byId('ci-walkin-age').innerHTML = ranges.map(function (label) {
+    byId('ci-walkin-age').innerHTML = AGE_RANGES.map(function (label) {
       return '<button type="button" class="ci-chip' + (state.age === label ? ' is-active' : '') +
         '" aria-pressed="' + (state.age === label) + '" data-age="' + esc(label) + '">' + esc(label) + '</button>';
     }).join('');
@@ -650,12 +621,12 @@
     }).then(function (person) {
       window.TFC.closeModal('ci-walkin-modal');
       walkForm.reset();
-      state.age = (mock.registrationOptions.ageRanges || [])[1] || '';
+      state.age = AGE_RANGES[1] || AGE_RANGES[0] || '';
       renderAgeChips();
-      toast('เพิ่ม ' + person.name + ' (' + person.code + ') และเช็คอินเวลา ' + person.checkedInAt + ' น. แล้ว', 'success');
+      toast('เพิ่ม ' + person.name + ' และเช็คอินเวลา ' + person.checkedInAt + ' น. แล้ว', 'success');
       return refresh();
-    })['catch'](function () {
-      toast('บันทึกผู้เข้าร่วมหน้างานไม่สำเร็จ กรุณาลองใหม่', 'danger');
+    })['catch'](function (err) {
+      toast(err.message || 'บันทึกผู้เข้าร่วมหน้างานไม่สำเร็จ กรุณาลองใหม่', 'danger');
     }).then(function () {
       walkSave.textContent = 'บันทึกและเช็คอิน';
       syncWalkInSave();
@@ -680,17 +651,13 @@
     window.TFC.openModal('ci-qr-modal');
   });
 
+  /* ดาวน์โหลดจาก endpoint เดียวกับที่แสดงผล ต่อ ?download=1 ให้เซิร์ฟเวอร์ตั้ง
+     Content-Disposition — ไม่ต้องประกอบไฟล์เองที่ฝั่งเบราว์เซอร์ */
   byId('ci-download').addEventListener('click', function () {
-    var svg = byId('ci-qr').querySelector('svg');
-    if (!svg) return;
-    var blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
-    var url = URL.createObjectURL(blob);
+    if (!activity.hasCheckinQr) return;
     var link = document.createElement('a');
-    link.href = url;
-    link.download = 'checkin-qr-' + activity.id + '.svg';
+    link.href = qrUrl(true);
     link.click();
-    URL.revokeObjectURL(url);
-    toast('ดาวน์โหลด QR ของ ' + activity.name + ' แล้ว', 'success');
   });
 
   /* ---------- เริ่มทำงาน ---------- */
@@ -701,5 +668,4 @@
   refresh();
 })();
 </script>
-</body>
-</html>
+@endpush

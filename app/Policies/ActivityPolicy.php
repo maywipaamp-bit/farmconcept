@@ -37,6 +37,36 @@ class ActivityPolicy
     }
 
     /**
+     * เช็คอินหน้างาน — สิทธิ์คนละตัวกับการแก้ไขกิจกรรม
+     *
+     * เจ้าหน้าที่หน้างานมีสิทธิ์เมนู Check-in อย่างเดียวได้ ไม่จำเป็นต้องแก้กิจกรรมเป็น
+     * กิจกรรมที่ยกเลิกแล้วเช็คอินไม่ได้ ไม่งั้นจะมีคนเข้าร่วมกิจกรรมที่ระบบบอกว่าไม่เกิดขึ้น
+     */
+    public function checkIn(User $user, Activity $activity): Response
+    {
+        if (! $user->canAccessMenu('activities-checkin')) {
+            return Response::deny('ไม่มีสิทธิ์เช็คอินผู้เข้าร่วม');
+        }
+
+        return $activity->status === Activity::STATUS_CANCELLED
+            ? Response::deny('กิจกรรมนี้ถูกยกเลิกแล้ว เช็คอินไม่ได้')
+            : Response::allow();
+    }
+
+    /**
+     * ดู QR ของกิจกรรม — เปิดให้ทั้งคนที่แก้กิจกรรมได้และเจ้าหน้าที่หน้างาน
+     *
+     * QR ชี้ไป URL สาธารณะที่ใครสแกนก็เปิดได้อยู่แล้ว การจำกัดให้แคบกว่าสิทธิ์เมนู
+     * มีผลแค่ทำให้หน้าจอที่ต้องใช้ QR ใช้ไม่ได้
+     */
+    public function viewQr(User $user, Activity $activity): Response
+    {
+        return $user->canAccessMenu('activities-list') || $user->canAccessMenu('activities-checkin')
+            ? Response::allow()
+            : Response::deny('ไม่มีสิทธิ์ดู QR ของกิจกรรม');
+    }
+
+    /**
      * ลบกิจกรรมได้เฉพาะที่ยังเป็นฉบับร่าง
      *
      * เผยแพร่แล้วแปลว่ามีคนเห็นและลงทะเบียนได้ การลบทิ้งจะทำให้ข้อมูลผู้เข้าร่วมหายไปด้วย

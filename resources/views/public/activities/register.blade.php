@@ -26,6 +26,7 @@
         {{-- หัวหน้าจอบนพื้นไล่สี — บอกว่ากำลังลงทะเบียนกิจกรรมไหนและมีทางกลับ
              ชื่อเรื่องกับคำอธิบายจะซ่อนเองเมื่อไม่ได้อยู่หน้าจอแรก (คุมด้วยคลาสที่ JS สลับให้) --}}
         <header class="reg-hero">
+            {{-- แถวบน: ปุ่มกลับชิดซ้าย ชื่อหน้าจออยู่กึ่งกลางจริง (grid 3 คอลัมน์ ช่องขวาว่างไว้ถ่วงให้สมดุล) --}}
             <div class="reg-hero-top">
                 {{-- ยังเป็นลิงก์จริงไปหน้ากิจกรรม เพื่อให้ใช้ได้แม้ JS ไม่ทำงาน
                      ส่วน JS จะดักไว้ให้ย้อนกลับทีละขั้นตอนก่อน แล้วค่อยออกจากหน้านี้เมื่อไม่มีขั้นก่อนหน้า --}}
@@ -33,36 +34,17 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                     <span>กลับ</span>
                 </a>
-
-                {{-- ชื่อกิจกรรมอยู่ฝั่งขวา และเป็นตัวกดเพื่อดูวันเวลา/สถานที่/ค่าเข้าร่วม
-                     ใช้ <details> แทนการเขียน JS เปิด/ปิดเอง — กดด้วยคีย์บอร์ดและ screen reader อ่านได้ในตัว
-                     ซ่อนไว้ (.reg-hero-more { display:none } ใน public-register.css) เหลือแค่ปุ่ม "กลับ" ตามที่ขอ --}}
-                <details class="reg-hero-more">
-                    <summary>
-                        <span class="reg-hero-activity">{{ $config['activity']['title'] }}</span>
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                    </summary>
-                    <div class="reg-hero-more-body">
-                        <span><b>เมื่อไหร่</b>{{ $config['activity']['scheduleLabel'] ?: '-' }}</span>
-                        <span><b>ที่ไหน</b>{{ $config['activity']['location'] ?: '-' }}</span>
-                        <span><b>ค่าเข้าร่วม</b>{{ $config['activity']['isFree'] ? 'เข้าร่วมฟรี ไม่มีค่าใช้จ่าย' : number_format($config['activity']['fee']).' บาท / ท่าน' }}</span>
-                    </div>
-                </details>
-
-                {{-- มุมขวาบนเดิมว่างเปล่าเพราะ .reg-hero-more ถูกซ่อน — เติมไอคอนค้นหากิจกรรมแทน
-                     ให้ยังหาไปกิจกรรมอื่นได้จากกลางฟอร์มลงทะเบียนโดยไม่ต้องกดกลับก่อน --}}
-                <a class="round-icon-button reg-hero-search" href="{{ route('public.activities', ['search' => 1]) }}" aria-label="ค้นหากิจกรรม">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                </a>
+                {{-- ชื่อหน้ากลางเปลี่ยนตามหน้าจอ — หน้าชำระเงินขึ้น "ชำระเงิน" หน้าอื่นเป็น "ลงทะเบียนเข้าร่วม" --}}
+                <h1 class="reg-hero-screen-title">
+                    <span data-title-for="pay">ชำระเงิน</span>
+                    <span data-title-for="default">ลงทะเบียนเข้าร่วม</span>
+                </h1>
+                <span class="reg-hero-top-spacer" aria-hidden="true"></span>
             </div>
 
             {{-- หัวเรื่องเปลี่ยนตามหน้าจอที่กำลังอยู่ — JS ตั้ง data-screen ให้ที่ body --}}
             <h1 class="reg-hero-title" data-for="check">ลงทะเบียนเข้าร่วมกิจกรรม</h1>
             <p class="reg-hero-desc" data-for="check">แค่กรอกเบอร์โทรหรืออีเมล เราจะเช็คให้ว่าคุณเคยลงทะเบียนไว้แล้วหรือยัง</p>
-
-            {{-- หัวเรื่องอย่างเดียว ไม่มีบรรทัดอธิบาย — หน้าจอจะได้เริ่มที่ฟิลด์แรกเร็วขึ้น --}}
-            <h1 class="reg-hero-title" data-for="form">กรอกข้อมูลผู้ลงทะเบียน</h1>
-            <h1 class="reg-hero-title" data-for="pay">ชำระค่าลงทะเบียน</h1>
         </header>
 
         <div class="reg-pane is-center" id="reg-pane">
@@ -181,18 +163,26 @@
 
             {{-- หน้าจอ 3 — กรอกข้อมูลผู้ลงทะเบียนหลัก --}}
             <section class="reg-screen-form" data-screen="form" hidden>
-                {{-- ชื่อกิจกรรม วันเวลา และค่าเข้าร่วม ย้ายไปอยู่ในหัวหน้าจอ (พร้อมปุ่ม "ดูรายละเอียด")
-                     จึงไม่ต้องมีการ์ดกิจกรรมซ้ำอีกก้อนที่นี่ --}}
+                {{-- สรุปกิจกรรมที่กำลังลงทะเบียน — ชื่อ/วันเวลาซ้าย ราคาขวา คั่นจากฟอร์มด้วยเส้นบางด้านล่าง --}}
+                <div class="reg-activity-summary">
+                    <div class="reg-activity-summary-text">
+                        <span class="reg-activity-name">{{ $config['activity']['title'] }}</span>
+                        <span class="reg-activity-meta">{{ collect([$config['activity']['scheduleLabel'] ?: null, $config['activity']['location'] ?: null])->filter()->join(' · ') ?: '-' }}</span>
+                    </div>
+                    <span class="reg-activity-fee">{{ $config['activity']['isFree'] ? 'ฟรี' : number_format($config['activity']['fee']).' ฿/ท่าน' }}</span>
+                </div>
+
                 <div class="reg-form-fields">
+                    <p class="reg-fieldset-title">ข้อมูลผู้ลงทะเบียน</p>
                     <div class="reg-field">
+                        {{-- label ยังอยู่ใน DOM เพื่อ screen reader แต่ซ่อนไว้ทางสายตา — ใช้ placeholder
+                             สีเทาในช่องแทนตามที่ขอ ไม่ต้องมีลาเบลลอยเหนือช่องแล้ว --}}
                         <label for="reg-name"><span>ชื่อ - นามสกุล</span><span class="reg-star">*</span></label>
-                        {{-- ไม่ใส่ placeholder — ป้ายชื่อช่องบอกอยู่แล้วว่าต้องกรอกอะไร
-                             ข้อความตัวอย่างจาง ๆ ในช่องทำให้ดูเหมือนกรอกไว้แล้วและอ่านสับสนกับค่าจริง --}}
-                        <input id="reg-name" class="reg-input" type="text" maxlength="160" autocomplete="name">
+                        <input id="reg-name" class="reg-input" type="text" maxlength="160" autocomplete="name" placeholder="ชื่อ - นามสกุล *">
                     </div>
                     <div class="reg-field">
                         <label for="reg-phone"><span>เบอร์โทรศัพท์</span><span class="reg-star">*</span></label>
-                        <input id="reg-phone" class="reg-input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel">
+                        <input id="reg-phone" class="reg-input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="เบอร์โทรศัพท์ *">
                         <span class="reg-error-text" id="reg-phone-error" hidden>กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก</span>
                     </div>
                     {{-- แสดงเสมอ ไม่ผูกกับสวิตช์ "เปิดใช้อีเมล" ของแบบลงทะเบียน
@@ -200,7 +190,7 @@
                          อีเมลที่เพิ่งกรอกจะหายไปเงียบ ๆ · สวิตช์ของแบบฟอร์มยังคุมว่าบังคับกรอกหรือไม่ --}}
                     <div class="reg-field">
                         <label for="reg-email"><span>อีเมล</span>@if($config['fields']['email']['required'])<span class="reg-star">*</span>@endif</label>
-                        <input id="reg-email" class="reg-input" type="email" maxlength="160" autocomplete="email">
+                        <input id="reg-email" class="reg-input" type="email" maxlength="160" autocomplete="email" placeholder="อีเมล{{ $config['fields']['email']['required'] ? ' *' : '' }}">
                     </div>
 
                     @if($config['fields']['age_range']['enabled'] || $config['fields']['occupation']['enabled'])
@@ -209,7 +199,7 @@
                                 <div class="reg-field">
                                     <label for="reg-age"><span>ช่วงอายุ</span>@if($config['fields']['age_range']['required'])<span class="reg-star">*</span>@endif</label>
                                     <select id="reg-age" class="reg-select">
-                                        <option value="">เลือกช่วงอายุ</option>
+                                        <option value="">เลือกช่วงอายุ{{ $config['fields']['age_range']['required'] ? ' *' : '' }}</option>
                                         @foreach($config['options']['ageRanges'] as $option)
                                             <option value="{{ $option['id'] }}">{{ $option['label'] }}</option>
                                         @endforeach
@@ -220,7 +210,7 @@
                                 <div class="reg-field">
                                     <label for="reg-job"><span>อาชีพ</span>@if($config['fields']['occupation']['required'])<span class="reg-star">*</span>@endif</label>
                                     <select id="reg-job" class="reg-select">
-                                        <option value="">เลือกอาชีพ</option>
+                                        <option value="">เลือกอาชีพ{{ $config['fields']['occupation']['required'] ? ' *' : '' }}</option>
                                         @foreach($config['options']['occupations'] as $option)
                                             <option value="{{ $option['id'] }}">{{ $option['label'] }}</option>
                                         @endforeach
@@ -234,7 +224,7 @@
                         <div class="reg-field">
                             <label for="reg-source"><span>ช่องทางที่ทราบข่าวกิจกรรม</span>@if($config['fields']['source_channel']['required'])<span class="reg-star">*</span>@endif</label>
                             <select id="reg-source" class="reg-select">
-                                <option value="">เลือกช่องทาง</option>
+                                <option value="">ช่องทางที่ทราบข่าวกิจกรรม{{ $config['fields']['source_channel']['required'] ? ' *' : '' }}</option>
                                 @foreach($config['options']['sources'] as $option)
                                     <option value="{{ $option['id'] }}">{{ $option['label'] }}</option>
                                 @endforeach
@@ -242,16 +232,11 @@
                         </div>
                     @endif
 
-                    <div class="reg-field">
-                        <label for="reg-note">หมายเหตุ (ถ้ามี)</label>
-                        <input id="reg-note" class="reg-input" type="text" maxlength="255" placeholder="เช่น มีผู้ติดตาม 2 คน">
-                    </div>
-
                     @if(count($config['rounds']) > 0)
                         <div class="reg-field">
                             <label for="reg-round"><span>รอบที่ต้องการสมัคร</span><span class="reg-star">*</span></label>
                             <select id="reg-round" class="reg-select">
-                                <option value="">เลือกรอบกิจกรรม</option>
+                                <option value="">รอบที่ต้องการสมัคร *</option>
                                 @foreach($config['rounds'] as $round)
                                     <option value="{{ $round['id'] }}" @disabled($round['seatsLeft'] === 0)>
                                         {{ $round['label'] }}{{ $round['seatsLeft'] !== null ? ' · เหลือ '.$round['seatsLeft'].' ที่นั่ง' : '' }}
@@ -261,22 +246,25 @@
                         </div>
                     @endif
 
+                    {{-- มาหลายคน — เลือกจาก dropdown แทนปุ่ม +/− เดิม ให้เข้าชุดกับฟิลด์เลือกค่าอื่น ๆ ในหน้านี้
+                         ตัวเลือกสุดท้ายเป็น "ขึ้นไป" เพราะเกินจำนวนนี้ต้องติดต่อผู้จัดเป็นกรณีไป --}}
                     @if($config['maxSeats'] > 1)
+                        <p class="reg-fieldset-title">จำนวนที่นั่ง</p>
                         <div class="reg-field">
-                            <label id="reg-seat-heading">จำนวนที่นั่งที่ต้องการ</label>
-                            <div class="reg-seat-box" role="group" aria-labelledby="reg-seat-heading">
-                                <div class="reg-seat-text">
-                                    <span class="reg-seat-label" id="reg-seat-label">มาคนเดียว</span>
-                                    <span class="reg-seat-note" id="reg-seat-note"></span>
-                                </div>
-                                <div class="reg-stepper">
-                                    <button type="button" id="reg-seat-minus" aria-label="ลดจำนวน">−</button>
-                                    <span class="reg-seat-count" id="reg-seat-count">1</span>
-                                    <button type="button" id="reg-seat-plus" aria-label="เพิ่มจำนวน">+</button>
-                                </div>
-                            </div>
+                            <label for="reg-seat-select">จำนวนที่นั่ง</label>
+                            <select id="reg-seat-select" class="reg-select">
+                                @for ($i = 1; $i <= $config['maxSeats']; $i++)
+                                    <option value="{{ $i }}">{{ $i }} ที่นั่ง{{ $i === $config['maxSeats'] ? 'ขึ้นไป' : '' }}</option>
+                                @endfor
+                            </select>
                         </div>
                     @endif
+
+                    <p class="reg-fieldset-title">ข้อมูลเพิ่มเติม</p>
+                    <div class="reg-field">
+                        <label for="reg-note">ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+                        <textarea id="reg-note" class="reg-textarea" maxlength="255" rows="2" placeholder="เช่น มีผู้ติดตาม 2 คน / คาดหวังอะไรในกิจกรรมนี้"></textarea>
+                    </div>
 
                     <label class="reg-consent">
                         <input type="checkbox" id="reg-consent">
@@ -287,27 +275,14 @@
 
             {{-- หน้าจอ 5 — ชำระเงิน --}}
             <section class="reg-screen-pay" data-screen="pay" hidden>
-                {{-- หัวเรื่องย้ายไปอยู่บนหัวหน้าจอเหมือนหน้าจออื่นแล้ว
-                     ตรงนี้เหลือแถบยอดที่ย่อไว้ — เห็นยอดรวมทันที กดกางดูที่มาได้ถ้าอยากรู้
-                     (ค่าธรรมเนียมกับส่วนลดเป็น 0 เสมอ กางเฉพาะตอนอยากตรวจก็พอ) --}}
-                <details class="reg-pay-collapse">
-                    <summary>
-                        <span class="reg-pay-collapse-label">ยอดชำระทั้งสิ้น</span>
-                        <span class="reg-pay-collapse-value num" id="reg-pay-total"></span>
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                    </summary>
-                    <dl class="reg-pay-summary">
-                        <div class="reg-pay-row">
-                            <dt id="reg-pay-fee-label">ค่าลงทะเบียน</dt>
-                            <dd id="reg-pay-fee-value"></dd>
-                        </div>
-                        {{-- ตัด "ค่าธรรมเนียมระบบ" ออก — เป็น 0 เสมอ ไม่ได้ให้ข้อมูลอะไรกับผู้จ่าย --}}
-                        <div class="reg-pay-row">
-                            <dt>ส่วนลด</dt>
-                            <dd>0 ฿</dd>
-                        </div>
-                    </dl>
-                </details>
+                {{-- แถบสรุปยอด — ชื่อกิจกรรม + "n ที่นั่ง × ราคา" ซ้าย ยอดรวมขวา --}}
+                <div class="reg-pay-summary-bar">
+                    <div class="reg-pay-summary-text">
+                        <span class="reg-pay-summary-name">{{ $config['activity']['title'] }}</span>
+                        <span class="reg-pay-summary-calc" id="reg-pay-fee-label"></span>
+                    </div>
+                    <span class="reg-pay-summary-total num" id="reg-pay-total"></span>
+                </div>
 
                 {{-- โอนเข้าบัญชีเป็นค่าเริ่มต้น — คนส่วนใหญ่โอนจากแอปธนาคารโดยตรง
                      QR เป็นทางเลือกที่กดสลับได้ หน้าจึงสั้นลงเพราะไม่ต้องโชว์รูป QR ตั้งแต่แรก --}}
@@ -323,8 +298,9 @@
                         </button>
                     </div>
 
-                    <div class="reg-qr-box" id="reg-qr-panel" hidden
-                        <span class="reg-qr-title">สแกนคิวอาร์เพื่อชำระเงิน</span>
+                    {{-- QR ใหญ่เต็มกว้างในกรอบมน — หัวบอกว่าเป็น PromptPay ของใคร ไม่มีข้อความอื่นรก --}}
+                    <div class="reg-qr-box" id="reg-qr-panel" hidden>
+                        <span class="reg-qr-title">PromptPay · {{ $config['payment']['accountName'] ?: 'The Farm Concept' }}</span>
                         <div class="reg-qr-image">
                             <img src="{{ $config['payment']['qrUrl'] }}" alt="QR Code สำหรับชำระเงิน">
                         </div>
@@ -367,10 +343,12 @@
                     <input type="file" id="reg-slip-input" accept="image/jpeg,image/png,image/webp" hidden>
                     <button type="button" class="reg-dropzone" id="reg-dropzone">
                         <span class="reg-dropzone-icon">
-                            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         </span>
-                        <span class="reg-dropzone-label">แตะเพื่อเลือกรูปสลิป</span>
-                        <span class="reg-dropzone-hint">ถ่ายจากมือถือได้เลย · JPG หรือ PNG</span>
+                        <span class="reg-dropzone-text">
+                            <span class="reg-dropzone-label">แนบสลิปการโอนเงิน</span>
+                            <span class="reg-dropzone-hint">ถ่ายจากมือถือได้เลย · JPG หรือ PNG</span>
+                        </span>
                     </button>
                     <div class="reg-slip-card" id="reg-slip-card" hidden>
                         <span class="reg-slip-icon">
@@ -407,10 +385,6 @@
         </div>
 
         <footer class="reg-footer" id="reg-footer" hidden>
-            <div class="reg-footer-note" id="reg-footer-note" hidden>
-                <span class="reg-footer-note-label" id="reg-footer-note-label"></span>
-                <span class="reg-footer-note-value" id="reg-footer-note-value"></span>
-            </div>
             <p class="reg-footer-error" id="reg-footer-error" aria-live="polite"></p>
             <button type="button" class="reg-btn-primary" id="reg-primary-btn"></button>
             <button type="button" class="reg-btn-secondary" id="reg-secondary-btn" hidden></button>

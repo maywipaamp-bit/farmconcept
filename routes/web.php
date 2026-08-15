@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityCheckinController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\ActivityQrController;
+use App\Http\Controllers\Admin\ActivityResponseController;
 use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
 use App\Http\Controllers\Admin\MasterData;
+use App\Http\Controllers\Admin\RegistrantController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TrackingRoundController;
 use App\Http\Controllers\Admin\UserController;
@@ -186,9 +189,55 @@ Route::middleware('auth')->group(function () {
                 ->middleware('menu:activities-list')
                 ->name('create');
 
+            /* หน้า Check-in หน้างาน — ต้องอยู่ก่อน /{activity}/... ด้วยเหตุผลเดียวกับ /list และ /create
+               เมนู Check-in เป็นสิทธิ์คนละตัวกับเมนูจัดการกิจกรรม เจ้าหน้าที่หน้างานจึงเข้าได้
+               โดยไม่ต้องให้สิทธิ์แก้ไขกิจกรรมตามไปด้วย */
+            Route::redirect('/checkin.html', '/admin/activities/checkin');
+
+            Route::get('/checkin', [ActivityCheckinController::class, 'index'])
+                ->middleware('menu:activities-checkin')
+                ->name('checkin');
+
+            /* ชุด endpoint JSON ของหน้าเช็คอิน — รูป URL ต้องตรงกับ assets/js/checkin-service.js
+               ที่ตั้ง checkinApiBase = '/admin' ไว้ (ดู checkin.blade.php) */
+            Route::middleware('menu:activities-checkin')->name('checkin.')->group(function () {
+                Route::get('/{activity}/checkin', [ActivityCheckinController::class, 'snapshot'])->name('snapshot');
+                Route::post('/{activity}/checkin', [ActivityCheckinController::class, 'store'])->name('store');
+                Route::get('/{activity}/checkin/audit', [ActivityCheckinController::class, 'audit'])->name('audit');
+                Route::delete('/{activity}/checkin/{registration}', [ActivityCheckinController::class, 'destroy'])
+                    ->where('registration', '[A-Za-z0-9-]+')->name('destroy');
+                Route::post('/{activity}/walk-ins', [ActivityCheckinController::class, 'walkIn'])->name('walk-ins');
+            });
+
             Route::post('/', [ActivityController::class, 'store'])
                 ->middleware('menu:activities-list')
                 ->name('store');
+
+            /* ผู้ลงทะเบียน — ย้ายจากหน้า static แล้ว
+               ต้องมาก่อน /{activity} ไม่งั้น "registrants" จะถูกอ่านเป็นรหัสกิจกรรม
+               ผูก {registration} ด้วย code ไม่ใช่ id ตัวเลข URL จึงไม่บอกลำดับข้อมูลในฐาน */
+            Route::redirect('/registrants.html', '/admin/activities/registrants');
+
+            Route::prefix('registrants')->name('registrants.')
+                ->middleware('menu:activities-registrants')->group(function () {
+                    Route::get('/', [RegistrantController::class, 'index'])->name('index');
+                    Route::patch('/{registration:code}/payment', [RegistrantController::class, 'updatePayment'])->name('payment');
+                    Route::post('/{registration:code}/checkin', [RegistrantController::class, 'checkin'])->name('checkin');
+                    Route::delete('/{registration:code}/checkin', [RegistrantController::class, 'undoCheckin'])->name('checkin.undo');
+                    Route::get('/{registration:code}/slip/{slip}', [RegistrantController::class, 'slip'])->name('slip');
+                });
+
+            /* ประเมินกิจกรรม — ย้ายจากหน้า static แล้ว
+               ต้องมาก่อน /{activity} ด้วยเหตุผลเดียวกับ registrants
+               กิจกรรมที่ดูอยู่ส่งเป็น ?id=<code> ไม่ใช่ส่วนของ path จึงไม่ชนกับ {activity} */
+            Route::redirect('/responses.html', '/admin/activities/responses');
+
+            Route::prefix('responses')->name('responses.')
+                ->middleware('menu:activities-responses')->group(function () {
+                    Route::get('/', [ActivityResponseController::class, 'index'])->name('index');
+                    Route::get('/data', [ActivityResponseController::class, 'data'])->name('data');
+                    Route::get('/summary', [ActivityResponseController::class, 'summary'])->name('summary');
+                });
 
             /* {activity} ผูกกับคอลัมน์ code ผ่าน Activity::getRouteKeyName()
                ต้องมาหลัง /list และ /create ไม่งั้นสองคำนี้จะถูกตีความเป็นรหัสกิจกรรม */
@@ -209,9 +258,10 @@ Route::middleware('auth')->group(function () {
                 ->middleware('menu:activities-list')
                 ->name('cover.destroy');
 
+            /* ไม่ผูก middleware:menu เพราะหน้าที่ต้องใช้ QR มีทั้งเมนูจัดการกิจกรรมและเมนู Check-in
+               สิทธิ์ตรวจที่ ActivityPolicy::viewQr ซึ่งรู้จักทั้งสองเมนู */
             Route::get('/{activity}/qr/{purpose}', [ActivityQrController::class, 'show'])
                 ->where('purpose', 'public|checkin|post_survey')
-                ->middleware('menu:activities-list')
                 ->name('qr.show');
 
             Route::put('/{activity}', [ActivityController::class, 'update'])
