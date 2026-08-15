@@ -43,6 +43,10 @@ class ActivityController extends Controller
         /* forList() ใส่ eager load + withCount ให้แล้ว จึงไม่เกิด N+1 ตอนวาดคอลัมน์
            โปรแกรม/พื้นที่/วิทยากร และไม่ต้องนับผู้ลงทะเบียนทีละแถว */
         $activities = Activity::forList()
+            ->withCount([
+                'registrations as checked_in_count' => fn ($q) => $q->whereNotNull('checked_in_at'),
+                'satisfactionResponses as responses_count',
+            ])
             ->with([
                 'rounds:id,activity_id,round_date,time_start,time_end,location,capacity',
                 'parentEvent:id,code,name',
@@ -563,6 +567,8 @@ class ActivityController extends Controller
             'status' => $activity->status,
             'capacity' => $activity->capacity,
             'registered' => $activity->registrations_count,
+            'checkedIn' => (int) ($activity->checked_in_count ?? 0),
+            'responses' => (int) ($activity->responses_count ?? 0),
             'startDate' => $activity->start_date?->toDateString(),
             'endDate' => $activity->end_date?->toDateString(),
             'hasFee' => $activity->has_fee,

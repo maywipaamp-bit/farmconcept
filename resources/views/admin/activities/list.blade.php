@@ -274,7 +274,8 @@
       : '';
     var cap = activity.capacity || 0;
     var reg = activity.registered || 0;
-    var dash = '<span class="grid-dash">—</span>';
+    var checkedIn = activity.checkedIn || 0;
+    var responses = activity.responses || 0;
     var respText = responsible(activity).join(' · ');
 
     return '<div class="grid-row" data-id="' + activity.id + '">' +
@@ -291,10 +292,10 @@
 
       '<div class="grid-soft">' + window.TFC.escapeHtml(areasOf(activity).join(' · ') || '-') + '</div>' +
 
-      '<div class="grid-center grid-strong">' + reg + '/' + cap + '</div>' +
+      '<div class="grid-center grid-strong">' + (cap > 0 ? (reg + '/' + cap) : (reg ? reg : '—')) + '</div>' +
 
-      /* เข้าร่วมกับแบบประเมินยังไม่มีข้อมูลจริง — รวมช่องเดียวรอไว้ ให้ตารางไม่กว้างเกินจอ */
-      '<div class="grid-num grid-center">' + dash + ' · ' + dash + '</div>' +
+      /* เข้าร่วมกับแบบประเมิน */
+      '<div class="grid-num grid-center">เช็คอิน ' + checkedIn + ' · ประเมิน ' + responses + '</div>' +
 
       /* สถานะบรรทัดบน การแสดงบนหน้าเว็บบรรทัดล่าง — เรื่องเดียวกันอ่านคู่กัน */
       '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
@@ -315,8 +316,11 @@
 
   function menuItems(activity) {
     var items = [
-      { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: '/admin/activities/detail.html?id=' + activity.id },
-      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: '/admin/activities/' + activity.id + '/edit', perm: 'activities' }
+      { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: '/admin/activities/' + activity.id + '/edit' },
+      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: '/admin/activities/' + activity.id + '/edit', perm: 'activities' },
+      { key: 'act-registrants-' + activity.id, label: 'ผู้ลงทะเบียน', icon: 'users', href: '/admin/activities/registrants?id=' + activity.id },
+      { key: 'act-checkin-' + activity.id, label: 'Check-in', icon: 'checkin', href: '/admin/activities/checkin?id=' + activity.id },
+      { key: 'act-eval-' + activity.id, label: 'ประเมินกิจกรรม', icon: 'star', href: '/admin/activities/responses?id=' + activity.id }
     ];
     if (canDelete(activity)) {
       items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',
