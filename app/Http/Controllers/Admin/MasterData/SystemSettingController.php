@@ -7,8 +7,10 @@ use App\Models\ActivityLog;
 use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SystemSettingController extends Controller
@@ -63,7 +65,13 @@ class SystemSettingController extends Controller
 
             if ($request->hasFile('logo')) {
                 if ($oldPath) Storage::disk('public')->delete($oldPath);
-                $this->set('organization_logo_path', $request->file('logo')->store('system-settings', 'public'), 'image');
+                $logoFile = $request->file('logo');
+                if ($logoFile instanceof UploadedFile) {
+                    $newLogoPath = $this->storeLogoFile($logoFile);
+                    if ($newLogoPath) {
+                        $this->set('organization_logo_path', $newLogoPath, 'image');
+                    }
+                }
             }
 
             ActivityLog::create([
@@ -74,6 +82,30 @@ class SystemSettingController extends Controller
         });
 
         return back()->with('success', 'บันทึกตั้งค่าระบบแล้ว');
+    }
+
+    private function storeLogoFile(UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png');
+        $path = 'system-settings/'.Str::random(40).'.'.$extension;
+        $temporaryPath = $file->getRealPath() ?: $file->getPathname();
+
+        if ($temporaryPath && file_exists($temporaryPath)) {
+            $contents = @file_get_contents($temporaryPath);
+            if ($contents !== false && Storage::disk('public')->put($path, $contents)) {
+                return $path;
+            }
+        }
+
+        try {
+            return $file->store('system-settings', 'public') ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     private function set(string $key, ?string $value, string $type): void

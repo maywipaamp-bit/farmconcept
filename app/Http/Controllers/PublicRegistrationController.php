@@ -313,7 +313,7 @@ class PublicRegistrationController extends Controller
 
         return match ($registrations->first()->payment_status) {
             'ชำระแล้ว' => 'ชำระแล้ว '.$amount,
-            'รอตรวจสอบ' => 'แจ้งชำระแล้ว '.$amount,
+            'รอตรวจสอบ' => 'แจ้งชำระแล้ว '.$amount.' · รอตรวจสอบ',
             default => 'ยังไม่ชำระ '.$amount,
         };
     }

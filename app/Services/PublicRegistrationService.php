@@ -13,6 +13,7 @@ use App\Models\Registration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -249,9 +250,17 @@ class PublicRegistrationService
             if ($slip) {
                 /* ไฟล์สลิปเก็บนอก public/ ตามกติกาของ act_payment_slips
                    ต้องเสิร์ฟผ่าน route ที่ตรวจสิทธิ์ฝั่ง backoffice เท่านั้น */
+                $filePath = $this->storeSlipFile($slip);
+
+                if (! $filePath) {
+                    throw ValidationException::withMessages([
+                        'slip' => 'ไม่สามารถบันทึกไฟล์สลิปได้ กรุณาตรวจสอบไฟล์แล้วลองใหม่อีกครั้ง',
+                    ]);
+                }
+
                 PaymentSlip::create([
                     'registration_id' => $registrations->first()->id,
-                    'file_path' => $slip->store('payment-slips', 'local'),
+                    'file_path' => $filePath,
                     'amount' => (float) $activity->fee * $registrations->count(),
                     'transferred_at' => now(),
                     'status' => 'รอตรวจสอบ',
@@ -267,6 +276,36 @@ class PublicRegistrationService
 
             return $registrations;
         });
+    }
+
+    /**
+     * บันทึกไฟล์สลิปการโอนเงินลงในดิสก์ local อย่างปลอดภัย
+     *
+     * บน Windows IIS / PHP บางสภาพแวดล้อม getRealPath() อาจคืนค่าว่างหรือ false
+     * ส่งผลให้ store() เรียก fopen("") แล้วเกิด ValueError: Path must not be empty
+     */
+    private function storeSlipFile(UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png');
+        $path = 'payment-slips/'.Str::random(40).'.'.$extension;
+        $temporaryPath = $file->getRealPath() ?: $file->getPathname();
+
+        if ($temporaryPath && file_exists($temporaryPath)) {
+            $contents = @file_get_contents($temporaryPath);
+            if ($contents !== false && Storage::disk('local')->put($path, $contents)) {
+                return $path;
+            }
+        }
+
+        try {
+            return $file->store('payment-slips', 'local') ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

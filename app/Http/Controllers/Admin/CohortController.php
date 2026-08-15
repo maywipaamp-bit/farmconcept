@@ -15,10 +15,13 @@ use App\Models\TargetGroup;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CohortController extends Controller
 {
@@ -102,12 +105,43 @@ class CohortController extends Controller
         ], ['file' => 'ไฟล์ใบยินยอม']);
 
         $file = $request->file('file');
+        $path = $this->storeConsentFile($file);
+
+        if (! $path) {
+            throw ValidationException::withMessages([
+                'file' => 'ไม่สามารถบันทึกไฟล์ใบยินยอมได้ กรุณาตรวจสอบไฟล์แล้วลองใหม่อีกครั้ง',
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'path' => $file->store(CohortRequest::CONSENT_DIR, 'local'),
+            'path' => $path,
             'name' => $file->getClientOriginalName(),
         ]);
+    }
+
+    private function storeConsentFile(UploadedFile $file): ?string
+    {
+        if (! $file->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf');
+        $path = CohortRequest::CONSENT_DIR.'/'.Str::random(40).'.'.$extension;
+        $temporaryPath = $file->getRealPath() ?: $file->getPathname();
+
+        if ($temporaryPath && file_exists($temporaryPath)) {
+            $contents = @file_get_contents($temporaryPath);
+            if ($contents !== false && Storage::disk('local')->put($path, $contents)) {
+                return $path;
+            }
+        }
+
+        try {
+            return $file->store(CohortRequest::CONSENT_DIR, 'local') ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function store(CohortRequest $request): JsonResponse
