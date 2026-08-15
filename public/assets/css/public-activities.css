@@ -5,11 +5,11 @@
  * แก้ที่ตัวแปรชุดนี้ที่เดียว โครงหน้าและเลย์เอาต์ทั้งหมดคงเดิม
  */
 :root {
-    --primary: #5FA052;
-    --primary-hover: #4A7F3E;
+    --primary: #6BCB4D;
+    --primary-hover: #55B23A;
     --primary-soft: #EDF5EA;
     --dark-green: #35522C;
-    --background: #FAFBF8;
+    --background: #FFFFFF;
     --surface: #FFFFFF;
     --border: #DCE5D8;
     --text-primary: #1F2C20;
@@ -38,22 +38,27 @@ button { cursor: pointer; }
 a { color: inherit; }
 [hidden] { display: none !important; }
 
+/* flex column ทำให้ footer อยู่ท้ายจอเสมอเมื่อเนื้อหาสั้นกว่า viewport
+   ส่วนเนื้อหายาวก็ยังเลื่อนตามปกติ — main ยืดกิน space ที่เหลือ */
 .public-app {
+    display: flex;
+    flex-direction: column;
     width: min(100% - 32px, 420px);
     min-height: 100vh;
     margin: 0 auto;
 }
 
+.public-app > main { flex: 1 0 auto; }
+
 .public-topbar {
     display: flex;
-    min-height: 64px;
+    min-height: 56px;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 4px 0;
 }
 
-/* ไม่มีพื้นวงกลม — วางบนพื้นไล่สีของหัวหน้าตรง ๆ
-   พื้นขาวเดิม (#F5F8F4) ทำให้เห็นเป็นวงกลมขาวลอยตัดกับพื้นเขียว */
+/* ไม่มีพื้นวงกลม — วางบนพื้นหน้าตรง ๆ */
 .round-icon-button {
     display: inline-flex;
     width: 36px;
@@ -69,19 +74,20 @@ a { color: inherit; }
     text-decoration: none;
 }
 
-.round-icon-button:hover { background: rgba(255, 255, 255, .45); color: var(--primary-hover); }
+/* พื้นหน้าเป็นสีขาวแล้ว hover ที่เป็นขาวโปร่งจึงมองไม่เห็น ใช้เขียวจางแทน */
+.round-icon-button:hover { background: var(--primary-soft); color: var(--primary-hover); }
 .round-icon-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .round-icon-button svg { width: 18px; height: 18px; }
 
 .public-logo-link { display: inline-flex; align-items: center; justify-content: center; }
 .public-logo-link img { display: block; width: auto; height: 50px; object-fit: contain; }
 
-/* เลื่อนข้างได้เมื่อหมวดหมู่เยอะหรือชื่อยาว — ของเดิมบีบทุกปุ่มให้พอดีจอด้วย flex: 1
-   พอมีหมวดหมู่ชื่อยาว (WORKSHOP · COMMUNITY) ตัวอักษรจะล้นมาชนกันเพราะ nowrap
-   และเพิ่มหมวดหมู่ใหม่ในระบบเมื่อไหร่ก็ยิ่งแน่นขึ้นเรื่อย ๆ */
+/* บีบให้ทุกหมวดหมู่พอดีจอเดียวเสมอ ไม่ต้องเลื่อนข้าง — ขนาดปุ่ม/ไอคอนเล็กพอ
+   ให้ 6 หมวด (รวม All) เรียงจบในความกว้างหน้าจอมือถือมาตรฐาน (~360-390px)
+   overflow-x ยังเปิดไว้เป็น fallback เผื่อเพิ่มหมวดหมู่จนเกินพอดี ไม่ใช่พฤติกรรมหลัก */
 .category-bar {
     display: flex;
-    gap: 14px;
+    gap: 6px;
     padding: 4px 0 6px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -93,52 +99,254 @@ a { color: inherit; }
 /* ซ่อนแถบเลื่อน — บนมือถือไม่มีอยู่แล้ว ส่วนบนเดสก์ท็อปแถบจะไปกินพื้นที่ใต้ไอคอน */
 .category-bar::-webkit-scrollbar { display: none; }
 
-/* ชิปแนวนอน — ไอคอนกับชื่ออยู่ในเม็ดเดียวกัน กว้างตามชื่อ ไม่บีบให้เท่ากันทุกอัน
-   ชื่อยาวจึงไม่ถูกตัดหรือชนกัน และเลื่อนข้างดูที่เหลือได้ */
+/* ไอคอนวงกลมด้านบน ชื่อหมวดอยู่ใต้ไอคอน — กว้างคงที่ต่อรายการให้ไอคอนเรียงตรงกัน */
 .category-button {
     display: inline-flex;
     flex: 0 0 auto;
+    width: 48px;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 8px 15px 8px 11px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: none;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 9.5px;
     line-height: 1.3;
+    text-align: center;
     white-space: nowrap;
     scroll-snap-align: start;
-    transition: background .15s, border-color .15s, color .15s;
+    transition: color .15s;
 }
 
-.category-button:hover { border-color: var(--primary); color: var(--primary-hover); }
-
-/* ไอคอนอยู่ในชิปแล้ว จึงไม่ต้องมีกล่อง/พื้นหลังของตัวเอง */
 .category-icon {
     display: flex;
+    width: 36px;
+    height: 36px;
     flex: none;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
-}
-
-.category-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
-/* ชิปที่เลือกใช้เขียวจาง + ขอบเขียว แทนสีเต็มใบ
-   ยังแยกออกชัดว่ากำลังกรองหมวดไหน แต่ไม่แย่งสายตาไปจากรูปกิจกรรมซึ่งเป็นพระเอกของหน้า */
-.category-button.is-active {
+    border-radius: 50%;
     background: var(--primary-soft);
-    border-color: var(--primary);
-    color: var(--primary-hover);
-    font-weight: 600;
+    color: var(--dark-green);
+    transition: background .15s, color .15s;
 }
 
-.category-button.is-active .category-icon { color: var(--primary); }
+.category-icon svg { width: 16px; height: 16px; stroke-width: 1.8; }
+
+/* หมวดที่เลือก: วงกลมเขียวทึบ ไอคอนขาว ชื่อเป็นเขียวเข้มตัวหนา */
+.category-button.is-active { color: var(--dark-green); font-weight: 600; }
+
+.category-button.is-active .category-icon {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(107, 203, 77, .28);
+}
+
+.category-button:hover .category-icon { background: var(--primary); color: #fff; }
 .category-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
 
-.activity-section { margin-top: 12px; }
-.section-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
+.activity-section { margin-top: 8px; }
+
+/* หัวข้อซ้าย ปุ่ม All ขวา อยู่บรรทัดเดียวกัน */
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+
+.section-heading { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; line-height: 1.35; }
 .section-heading span { color: var(--primary); }
+
+.section-all {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px 4px 10px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.section-all:hover { background: var(--primary-soft); color: var(--primary-hover); }
+.section-all:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- หน้าเกี่ยวกับเรา ----------
+   เป็นหน้าอ่านล้วน จึงคุมความยาวบรรทัดและระยะห่างย่อหน้าให้อ่านต่อเนื่องสบาย
+   ไม่มีกรอบหรือการ์ด ตามภาษาเดียวกับหน้าอื่นฝั่งผู้เข้าร่วม */
+.about-page { padding: 6px 0 28px; }
+
+/* ---------- เฮด (ข้อความล้วน — ภาพถูกถอดออกชั่วคราวจนกว่าจะมีรูปจริง) ---------- */
+
+.about-hero { padding-top: 4px; }
+
+.about-hero-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--text-primary);
+    text-wrap: pretty;
+}
+
+/* คำเน้นกลางประโยค hero — ใช้สีแบรนด์แทนการเพิ่มขนาดตัวอักษร */
+.about-accent { color: var(--primary-hover); }
+
+.about-hero-desc {
+    margin: 14px 0 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+    text-wrap: pretty;
+}
+
+/* ---------- eyebrow นำหัวข้อ — ใช้ทั้งบล็อกเนื้อหาและหัวข้อสี่เสาหลัก ---------- */
+
+.about-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--primary-hover);
+}
+
+.about-eyebrow::before { content: '— '; }
+
+/* ---------- บล็อกหัวข้อ + ข้อความ ---------- */
+
+.about-block { margin: 28px 0; }
+
+.about-block-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+    text-wrap: pretty;
+}
+
+/* ---------- สี่เสาหลัก ---------- */
+
+.about-pillars { margin: 28px 0; }
+
+.about-pillar-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.about-pillar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.about-pillar-icon {
+    display: flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--dark-green);
+}
+
+.about-pillar-icon svg { width: 18px; height: 18px; }
+.about-pillar-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.about-pillar-desc { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+
+/* แถบภาพบรรยากาศ (.about-gallery) ถูกถอดออกพร้อมกับภาพทั้งหน้า
+   เมื่อมีรูปจริงค่อยเพิ่มกลับทั้ง section */
+
+/* ---------- ปิดท้ายจัดกลาง ---------- */
+
+.about-closing {
+    margin: 32px 0 0;
+    text-align: center;
+}
+
+/* สโคปด้วย .about-closing เพื่อให้ specificity สูงกว่า .about-page p ที่ประกาศทีหลัง */
+.about-closing .about-closing-lead {
+    margin: 0;
+    color: var(--dark-green);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+
+.about-closing .about-closing-sub {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+
+.about-page p {
+    margin: 0 0 14px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    line-height: 1.75;
+    text-wrap: pretty;
+}
+
+.about-page strong { color: var(--text-primary); font-weight: 600; }
+
+/* ---------- ช่องทางติดต่อ (ใช้ในหน้า "ติดต่อเรา") ---------- */
+
+.about-contact { margin-top: 30px; }
+
+.about-contact-title {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.about-contact-list { display: flex; flex-direction: column; }
+
+.about-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.about-contact-icon {
+    display: flex;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--dark-green);
+}
+
+.about-contact-icon svg { width: 17px; height: 17px; }
+
+/* ข้อความบรรทัดเดียว ตัดขึ้นบรรทัดใหม่ได้ถ้ายาว (เช่นที่อยู่) */
+.about-contact-text { min-width: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-primary); }
+
+.about-contact-item:hover .about-contact-icon { background: var(--primary); color: #fff; }
+
+/* หน้า "ติดต่อเรา" ไม่มีหัวหน้าแบบ about — ให้รายการติดต่อขึ้นชิดบนเลย */
+.is-contact-page .about-contact { margin-top: 4px; }
+
+/* ---------- หน้ารายการทั้งหมด (กดจากปุ่ม All) ---------- */
+
+.list-title { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.35; color: var(--text-primary); }
+
+.list-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-bottom: 24px; }
+
+/* การ์ดในหน้ารายการกว้างกว่าบนหน้าแรก (2 คอลัมน์แทน 3) จึงคืนขนาดรูปและตัวอักษรให้อ่านสบายขึ้น */
+.list-grid .other-thumb { height: 108px; }
+.list-grid .other-title { font-size: 12.5px; -webkit-line-clamp: 2; }
+.list-grid .other-meta { font-size: 11.5px; }
 
 .promo-carousel, .other-carousel {
     position: relative;
@@ -164,16 +372,31 @@ a { color: inherit; }
 
 .promo-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .promo-slide::after { position: absolute; inset: 0; content: ''; background: linear-gradient(90deg, rgba(0,0,0,.73), rgba(0,0,0,.42) 52%, rgba(0,0,0,.05)); }
+/* สไลด์อีเวนท์ใช้ม่านขาวเพื่อให้ตัวอักษรสีเข้มอ่านออก แต่ของเดิมทึบเกือบทึบ (.94 ยาวถึง 52%)
+   ภาพเลยซีดและเนื้อหาดูจมไปกับพื้น — ลดความทึบและให้จางเร็วขึ้น
+   แล้วชดเชยความอ่านง่ายด้วยเงาขาวบาง ๆ ใต้ตัวอักษรแทน */
 .promo-slide.is-event { color: var(--text-primary); }
-.promo-slide.is-event::after { background: linear-gradient(90deg, rgba(255,255,255,.94), rgba(255,255,255,.54) 52%, rgba(255,255,255,.04)); }
+
+.promo-slide.is-event::after {
+    background: linear-gradient(90deg, rgba(255, 255, 255, .82) 0%, rgba(255, 255, 255, .34) 46%, rgba(255, 255, 255, 0) 78%);
+}
+
+.promo-slide.is-event .promo-title,
+.promo-slide.is-event .promo-meta {
+    text-shadow: 0 1px 3px rgba(255, 255, 255, .85);
+}
+
+.promo-slide.is-event .promo-title { font-weight: 700; }
 .promo-content { position: absolute; z-index: 1; inset: 12px 14px; display: flex; flex-direction: column; }
 /* ป้ายหมวดหมู่บนรูป — โปร่งแสงให้เห็นภาพด้านหลัง
    ใช้ blur ช่วยให้ตัวอักษรขาวยังอ่านออกแม้รูปด้านหลังจะสว่างหรือลายเยอะ */
+/* ป้ายหมวดหมู่ชิดขวาของรูป — ฝั่งซ้ายเป็นที่ของชื่อกิจกรรมและข้อมูลวันเวลา
+   วางไว้ฝั่งเดียวกันแล้วสายตาต้องกวาดสลับไปมา */
 .activity-badge {
-    align-self: flex-start;
+    align-self: flex-end;
     padding: 4px 11px;
     border-radius: 999px;
-    background: rgba(95, 160, 82, .55);
+    background: rgba(107, 203, 77, .55);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     color: #fff;
@@ -183,24 +406,44 @@ a { color: inherit; }
 .promo-title { max-width: 82%; margin: auto 0 2px; font-size: 13.5px; font-weight: 600; line-height: 1.5; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .promo-meta { display: flex; align-items: center; gap: 4px; margin-top: 1px; font-size: 12px; }
 .promo-meta svg { width: 12px; height: 12px; flex: 0 0 12px; stroke-width: 1.8; }
-.promo-price { color: var(--primary); font-weight: 500; }
+/* ราคาต้องเด่นกว่าบรรทัดวันเวลา — เป็นข้อมูลที่คนใช้ตัดสินใจก่อนกดเข้าไปดู
+   บนสไลด์ใช้พื้นทึบเพราะข้อความวางบนรูปที่สีไม่แน่นอน ตัวอักษรสีเขียวเปล่า ๆ จะจมหาย
+   ทรงวงรีขอบมนเต็ม (pill) blur ยังต้องมี เพราะรูปด้านหลังมีทั้งสว่างและลายเยอะ ถ้าโปร่งเฉย ๆ ตัวอักษรขาวจะอ่านไม่ออก */
+.promo-price {
+    align-self: flex-start;
+    margin-top: 5px;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(107, 203, 77, .62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.promo-price svg { display: none; }
+
+/* ปุ่ม "ลงทะเบียน" บนสไลด์ถูกถอดออกแล้ว — ทั้งสไลด์เป็นลิงก์ไปหน้ารายละเอียดอยู่แล้ว
+   จึงไม่ต้องมีปุ่มซ้อนอีกชั้น สไตล์ .promo-cta ถูกลบตามไปด้วยไม่ให้เหลือโค้ดตาย */
 
 .carousel-dots { display: flex; min-height: 13px; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; }
 .carousel-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: var(--border); transition: width .15s, background .15s; }
 .carousel-dot.is-active { width: 20px; background: var(--primary); }
 
 .other-track { align-items: stretch; }
-.other-page { display: grid; min-width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.other-card { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: inherit; text-decoration: none; box-shadow: 0 4px 12px rgba(15,23,42,.05); }
-.other-thumb { position: relative; height: 112px; overflow: hidden; }
+.other-page { display: grid; min-width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.other-card { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: inherit; text-decoration: none; box-shadow: 0 4px 12px rgba(40, 70, 36, .06); }
+.other-thumb { position: relative; height: 86px; overflow: hidden; }
 .other-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.other-thumb .activity-badge { position: absolute; bottom: 6px; left: 6px; padding: 3px 8px; font-size: 11px; }
+.other-thumb .activity-badge { position: absolute; bottom: 6px; right: 6px; padding: 3px 8px; font-size: 11px; }
 .other-body { padding: 8px; }
-.other-title { overflow: hidden; margin: 0 0 4px; color: var(--text-primary); font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+/* การ์ดแคบลง ชื่อจึงขึ้นได้สองบรรทัดแทนการตัดทิ้งตั้งแต่บรรทัดแรก */
+.other-title { display: -webkit-box; overflow: hidden; margin: 0 0 4px; color: var(--text-primary); font-size: 11.5px; font-weight: 500; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .other-meta { display: flex; min-width: 0; align-items: center; gap: 4px; margin: 2px 0; color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
 .other-meta span { overflow: hidden; text-overflow: ellipsis; }
 .other-meta svg { width: 11px; height: 11px; flex: 0 0 11px; stroke-width: 1.8; }
-.other-price { margin-top: 3px; color: var(--dark-green); font-size: 12px; font-weight: 500; }
+.other-price { margin-top: 5px; color: var(--primary-hover); font-size: 13px; font-weight: 700; }
 
 .page-state { padding: 54px 16px 24px; text-align: center; color: var(--text-secondary); }
 .empty-icon { display: flex; width: 120px; height: 120px; align-items: center; justify-content: center; margin: 0 auto 14px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
@@ -257,13 +500,14 @@ body.is-detail-page .public-topbar { display: none; }
    ต้องอยู่ที่ body ไม่ใช่ .public-app — เพราะ .public-app กว้างแค่คอลัมน์เนื้อหา (มีขอบซ้ายขวาข้างละ 16px)
    ถ้าไล่สีที่นั่น แถบเขียวจะมีขอบตัดตรงเป็นสี่เหลี่ยมลอยอยู่กลางจอ แทนที่จะเป็นพื้นหลังของทั้งหน้า
    และไล่ยาว 320px จบที่สีพื้นพอดี รอยต่อจึงมองไม่เห็น */
-body.is-detail-page,
-body.is-home-page {
-    background-image: linear-gradient(180deg, #CDE8C5 0%, #E4F3DF 45%, var(--background) 100%);
-    background-repeat: no-repeat;
-    background-size: 100% 320px;
-    background-color: var(--background);
-}
+/* ไม่มีพื้นไล่สีเขียวแล้ว — ใช้พื้นเรียบเหมือนหน้าหลัก
+   ส่วนหัวยังเป็นแถบ "‹ กลับ" เหมือนเดิม แค่ไม่มีพื้นสีรองอยู่ข้างหลัง */
+body.is-detail-page { background-color: var(--background); }
+
+/* หน้าหลักไม่ใช้พื้นไล่สีเขียว — ปล่อยเป็นพื้นเรียบ
+   เพราะเนื้อหาส่วนบนเป็นชิปหมวดหมู่เขียวเข้มกับรูปกิจกรรมสีจัดอยู่แล้ว
+   พื้นเขียวซ้อนเข้าไปอีกชั้นทำให้สีตีกันและรูปดูจมลงไปกับพื้น */
+body.is-home-page { background-color: var(--background); }
 
 .detail-head { display: flex; align-items: center; padding: 14px 0 10px; }
 
@@ -409,17 +653,19 @@ body.is-home-page {
 .public-drawer-close svg { width: 14px; height: 14px; }
 .public-drawer-heading { margin: 0; padding: 2px 40px 0 10px; color: var(--text-primary); font-size: 16px; font-weight: 600; line-height: 1.35; }
 .public-menu-group-label { margin: 18px 0 4px; padding: 4px 10px 0; color: var(--text-secondary); font-size: 10.5px; letter-spacing: .06em; }
-.public-menu-group { display: grid; }
-.public-menu-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: inherit; text-decoration: none; }
+.public-menu-group { display: grid; margin-top: 22px; }
+/* เหลือไม่กี่รายการแล้ว จึงขยายให้กดง่ายและอ่านเป็นเมนูจริง ๆ (มีลูกศรบอกว่าไปหน้าอื่น) */
+.public-menu-link { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 12px; color: inherit; text-decoration: none; }
 .public-menu-link:hover, .public-menu-link:focus-visible { background: var(--primary-soft); outline: none; }
-.public-menu-icon { display: flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
-.public-menu-icon svg { width: 14px; height: 14px; }
-.public-menu-text { min-width: 0; flex: 1; color: var(--text-primary); font-size: 12px; font-weight: 500; }
+.public-menu-icon { display: flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); color: var(--dark-green); }
+.public-menu-icon svg { width: 16px; height: 16px; }
+.public-menu-text { min-width: 0; flex: 1; color: var(--text-primary); font-size: 14px; font-weight: 500; }
+.public-menu-link:hover .public-menu-icon { background: var(--primary); color: #fff; }
 .public-footer { padding: 20px 0 16px; color: var(--text-secondary); font-size: 12px; text-align: center; }
 
 @media (max-width: 370px) {
     .public-app { width: min(100% - 20px, 420px); }
-    /* ชิปเลื่อนข้างได้อยู่แล้ว จึงไม่ต้องย่อตัวอักษรลงจนอ่านยากเมื่อจอแคบ ลดแค่ระยะในเม็ด */
-    .category-button { font-size: 12.5px; padding: 7px 13px 7px 10px; }
+    .category-button { width: 44px; font-size: 9px; }
+    .category-icon { width: 32px; height: 32px; }
     .detail-body { padding: 18px 0 22px; }
 }

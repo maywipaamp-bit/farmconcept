@@ -167,9 +167,10 @@
             <p>กิจกรรมนี้ยังไม่อยู่ในช่วง Check-in หรือสิ้นสุดช่วง Check-in แล้ว</p>
         </section>
     @elseif(!$registration['enabled'] && $activity['requiresRegistration'])
+        {{-- บอกสาเหตุจริงว่าปิดเพราะอะไร ไม่ใช่ข้อความรวมทุกกรณีเหมือนเดิม --}}
         <section class="registration-card is-closed">
-            <h2>ยังไม่เปิดรับลงทะเบียน</h2>
-            <p>กิจกรรมนี้ยังไม่อยู่ในช่วงรับสมัคร หรือจำนวนที่นั่งเต็มแล้ว</p>
+            <h2>{{ $registration['closed']['title'] }}</h2>
+            <p>{{ $registration['closed']['message'] }}</p>
         </section>
     @endif
 @endsection

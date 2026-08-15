@@ -104,31 +104,54 @@
     function icon(name) {
         const paths = {
             calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',
+            clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
             pin: '<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/>'
         };
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">' + paths[name] + '</svg>';
+    }
+
+    /* แยก "วันที่ · เวลา" ที่เซิร์ฟเวอร์ประกอบมาแล้ว ออกเป็นสองส่วนสำหรับการ์ดแคบ
+       ไม่มีตัวคั่นก็ถือว่าทั้งก้อนเป็นวันที่ */
+    function splitSchedule(item) {
+        const label = String(item.scheduleLabel || '').trim();
+        const at = label.indexOf(' · ');
+        if (at === -1) return { date: label || '-', time: '' };
+        return { date: label.slice(0, at), time: label.slice(at + 3) };
+    }
+
+    /* ป้ายราคาบนการ์ด/สไลด์แคบ — ตัด "/ ท่าน" ออก เหลือแค่ตัวเลขให้กระชับ
+       ราคาแบบเต็มพร้อมหน่วยยังใช้ item.priceLabel ตรง ๆ ในหน้ารายละเอียด/ลงทะเบียน */
+    function shortPrice(item) {
+        return String(item.priceLabel || '').replace(/\s*\/\s*ท่าน\s*$/, '');
     }
 
     function promoSlide(item) {
         return '<a class="promo-slide' + (isEvent(item) ? ' is-event' : '') + '" href="' + detailUrl(item) + '">' +
             '<img src="' + escapeHtml(item.image) + '" alt="">' +
             '<div class="promo-content">' +
-                '<span class="activity-badge">' + escapeHtml(item.category || item.type) + '</span>' +
+                /* ไม่แสดงป้ายหมวดหมู่บนสไลด์ — ผู้ใช้กรองหมวดจากแถบด้านบนอยู่แล้ว
+                   ป้ายซ้ำอีกจุดบนรูปเลยเป็นข้อมูลที่ไม่ได้ใช้และบังภาพ */
                 '<p class="promo-title">' + escapeHtml(item.title) + '</p>' +
+                /* ไม่แสดงสถานที่ในหน้ารายการ — ดูได้ในหน้ารายละเอียด
+                   หน้านี้ต้องการแค่ "อะไร เมื่อไหร่ ราคาเท่าไหร่" พอให้ตัดสินใจกดเข้าไปดู */
                 '<span class="promo-meta">' + icon('calendar') + escapeHtml(item.scheduleLabel || '-') + '</span>' +
-                '<span class="promo-meta">' + icon('pin') + escapeHtml(item.location || '-') + '</span>' +
-                '<span class="promo-meta promo-price">฿ ' + escapeHtml(item.priceLabel) + '</span>' +
+                '<span class="promo-meta promo-price">฿ ' + escapeHtml(shortPrice(item)) + '</span>' +
             '</div>' +
         '</a>';
     }
 
     function activityCard(item) {
         return '<a class="other-card" href="' + detailUrl(item) + '">' +
-            '<div class="other-thumb"><img src="' + escapeHtml(item.image) + '" alt=""><span class="activity-badge">' + escapeHtml(item.category || item.type) + '</span></div>' +
+            /* ไม่มีป้ายหมวดหมู่บนรูปการ์ด — เหตุผลเดียวกับสไลด์ คือกรองหมวดจากแถบด้านบนอยู่แล้ว */
+            '<div class="other-thumb"><img src="' + escapeHtml(item.image) + '" alt=""></div>' +
             '<div class="other-body">' +
                 '<p class="other-title">' + escapeHtml(item.title) + '</p>' +
-                '<div class="other-meta">' + icon('calendar') + '<span>' + escapeHtml(item.scheduleLabel || '-') + '</span></div>' +
-                '<div class="other-meta">' + icon('pin') + '<span>' + escapeHtml(item.location || '-') + '</span></div>' +
+                /* การ์ดแคบลงเหลือสามคอลัมน์ จึงแยกวันกับเวลาเป็นคนละบรรทัด
+                   ถ้ารวมเป็นบรรทัดเดียวจะถูกตัดกลางคันจนอ่านเวลาไม่ออก */
+                '<div class="other-meta">' + icon('calendar') + '<span>' + escapeHtml(splitSchedule(item).date) + '</span></div>' +
+                (splitSchedule(item).time
+                    ? '<div class="other-meta">' + icon('clock') + '<span>' + escapeHtml(splitSchedule(item).time) + '</span></div>'
+                    : '') +
                 '<div class="other-price">฿ ' + escapeHtml(item.priceLabel) + '</div>' +
             '</div>' +
         '</a>';
@@ -249,7 +272,8 @@
         }
 
         const pages = [];
-        for (let index = 0; index < items.length; index += 2) pages.push(items.slice(index, index + 2));
+        /* สามใบต่อหน้า ให้ตรงกับกริดสามคอลัมน์ของ .other-page */
+        for (let index = 0; index < items.length; index += 3) pages.push(items.slice(index, index + 3));
         track.innerHTML = pages.map(function (page) {
             return '<div class="other-page">' + page.map(activityCard).join('') + '</div>';
         }).join('');
@@ -314,6 +338,51 @@
             return '<a class="search-result" href="' + detailUrl(item) + '"><img src="' + escapeHtml(item.image) + '" alt=""><div class="search-result-body"><p class="search-result-title">' + escapeHtml(item.title) + '</p><p class="search-result-date">' + escapeHtml(item.scheduleLabel || '-') + '</p></div></a>';
         }).join('');
     }
+
+    /* ---------- รายการทั้งหมดของแต่ละหัวข้อ (ปุ่ม All) ----------
+       เงื่อนไขของแต่ละชุดต้องตรงกับที่ใช้สร้างหัวข้อนั้นบนหน้าแรก
+       ไม่งั้นกด All แล้วได้รายการคนละชุดกับที่เพิ่งเห็นในสไลด์ */
+    const LIST_KINDS = {
+        activities: { title: 'Activities', match: function (item) { return !isEvent(item); } },
+        events: { title: 'Events', match: isEvent },
+        news: { title: 'News & Updates', match: function (item) { return !isEvent(item) && item.sortOrder > 1; } }
+    };
+
+    const listScreen = document.getElementById('list-screen');
+    const listTitle = document.getElementById('list-title');
+    const listResults = document.getElementById('list-results');
+
+    function openList(kind) {
+        const config = LIST_KINDS[kind];
+        if (!config || !listScreen) return;
+
+        /* ไม่กรองด้วยหมวดหมู่ที่เลือกอยู่ — ปุ่มนี้คือ "ดูทั้งหมดของประเภทนี้" ตามที่ป้ายบอก */
+        const items = activities.filter(config.match);
+
+        listTitle.textContent = config.title;
+        listResults.innerHTML = items.length
+            ? items.map(activityCard).join('')
+            : '<div class="page-state">' + emptyState('ยังไม่มีรายการในหัวข้อนี้') + '</div>';
+
+        listScreen.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeList() {
+        if (!listScreen) return;
+        listScreen.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.section-all');
+        if (trigger) return openList(trigger.dataset.list);
+        if (event.target.closest('#list-back')) closeList();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && listScreen && !listScreen.hidden) closeList();
+    });
 
     function openSearch() {
         searchScreen.hidden = false;

@@ -53,11 +53,9 @@
             <h1 class="reg-hero-title" data-for="check">ลงทะเบียนเข้าร่วมกิจกรรม</h1>
             <p class="reg-hero-desc" data-for="check">แค่กรอกเบอร์โทรหรืออีเมล เราจะเช็คให้ว่าคุณเคยลงทะเบียนไว้แล้วหรือยัง</p>
 
+            {{-- หัวเรื่องอย่างเดียว ไม่มีบรรทัดอธิบาย — หน้าจอจะได้เริ่มที่ฟิลด์แรกเร็วขึ้น --}}
             <h1 class="reg-hero-title" data-for="form">กรอกข้อมูลผู้ลงทะเบียน</h1>
-            <p class="reg-hero-desc" data-for="form">อีกนิดเดียว กรอกข้อมูลสั้นๆ แล้วไปชำระเงินได้เลย</p>
-
             <h1 class="reg-hero-title" data-for="pay">ชำระค่าลงทะเบียน</h1>
-            <p class="reg-hero-desc" data-for="pay">ชำระภายใน 30 นาที ระบบจะยืนยันที่นั่งให้เมื่อได้รับเงิน</p>
         </header>
 
         <div class="reg-pane is-center" id="reg-pane">
@@ -304,19 +302,21 @@
                     </dl>
                 </details>
 
+                {{-- โอนเข้าบัญชีเป็นค่าเริ่มต้น — คนส่วนใหญ่โอนจากแอปธนาคารโดยตรง
+                     QR เป็นทางเลือกที่กดสลับได้ หน้าจึงสั้นลงเพราะไม่ต้องโชว์รูป QR ตั้งแต่แรก --}}
                 @if($config['payment']['qrUrl'])
                     <div class="reg-method-tabs" role="tablist" aria-label="วิธีชำระเงิน">
-                        <button type="button" class="reg-method-tab is-active" id="reg-tab-qr" role="tab" aria-selected="true">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
-                            <span>สแกน QR</span>
-                        </button>
-                        <button type="button" class="reg-method-tab" id="reg-tab-bank" role="tab" aria-selected="false">
+                        <button type="button" class="reg-method-tab is-active" id="reg-tab-bank" role="tab" aria-selected="true">
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M5 10V7l7-4 7 4v3M4 10v9h16v-9M9 14v5m6-5v5"/></svg>
                             <span>โอนเข้าบัญชี</span>
                         </button>
+                        <button type="button" class="reg-method-tab" id="reg-tab-qr" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
+                            <span>สแกน QR</span>
+                        </button>
                     </div>
 
-                    <div class="reg-qr-box" id="reg-qr-panel">
+                    <div class="reg-qr-box" id="reg-qr-panel" hidden
                         <span class="reg-qr-title">สแกนคิวอาร์เพื่อชำระเงิน</span>
                         <div class="reg-qr-image">
                             <img src="{{ $config['payment']['qrUrl'] }}" alt="QR Code สำหรับชำระเงิน">
@@ -330,7 +330,8 @@
                 @endif
 
                 @if($config['payment']['accountNumber'])
-                    <dl class="reg-bank-box" id="reg-bank-panel" style="margin:0" @if($config['payment']['qrUrl']) hidden @endif>
+                    {{-- แสดงตั้งแต่แรกเสมอ — โอนเข้าบัญชีเป็นวิธีชำระเริ่มต้นแล้ว --}}
+                    <dl class="reg-bank-box" id="reg-bank-panel" style="margin:0">
                         <div class="reg-bank-row">
                             <dt>ธนาคาร</dt>
                             <div class="reg-bank-value"><dd>{{ $config['payment']['bankName'] }}</dd></div>
@@ -415,12 +416,33 @@
         </footer>
     </div>
 
+    {{-- popup แจ้งว่าเบอร์/อีเมลนี้ลงทะเบียนกิจกรรมนี้ไว้แล้ว — โผล่ทันทีที่กรอกเสร็จ
+         ไม่ต้องรอกดส่งแล้วค่อยเจอ error ตอนท้าย --}}
+    <div class="reg-modal" id="reg-dup-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reg-dup-title">
+        <div class="reg-modal-card reg-dup-card">
+            <div class="reg-modal-head">
+                <div class="reg-modal-titles">
+                    <h2 id="reg-dup-title">เคยลงทะเบียนแล้ว</h2>
+                    <p id="reg-dup-text"></p>
+                </div>
+                <button type="button" class="reg-modal-close" id="reg-dup-close" aria-label="ปิด">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="reg-modal-foot">
+                <button type="button" class="reg-btn-secondary" id="reg-dup-edit">แก้ไขข้อมูล</button>
+                <button type="button" class="reg-btn-primary" id="reg-dup-view">ดูประวัติการลงทะเบียน</button>
+            </div>
+        </div>
+    </div>
+
     {{-- หน้าจอ 4 — popup ผู้ร่วมเพิ่ม --}}
     <div class="reg-modal" id="reg-guest-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reg-guest-title">
         <div class="reg-modal-card">
             <div class="reg-modal-head">
                 <div class="reg-modal-titles">
                     <h2 id="reg-guest-title">ข้อมูลผู้ร่วมเพิ่ม</h2>
+                    {{-- บอกว่ากรอกถึงคนที่เท่าไหร่ — แถบ progress กับคำชวนถูกตัดออกให้ป๊อปอัปโล่งขึ้น --}}
                     <p id="reg-guest-subtitle"></p>
                 </div>
                 <button type="button" class="reg-modal-close" id="reg-guest-close" aria-label="ปิด">
@@ -428,7 +450,6 @@
                 </button>
             </div>
             <div class="reg-modal-body">
-                <div class="reg-guest-progress" id="reg-guest-progress"></div>
                 <div class="reg-field">
                     <label for="reg-guest-name"><span>ชื่อ - นามสกุล</span><span class="reg-star is-strong">*</span></label>
                     <input id="reg-guest-name" class="reg-input is-bright" type="text" maxlength="160" placeholder="เช่น สมชาย ใจดี">

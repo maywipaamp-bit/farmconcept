@@ -47,6 +47,12 @@ Route::get('/activities', [PublicActivityController::class, 'page'])
 
 Route::redirect('/activities.html', '/activities', 301);
 
+/* หน้าประวัติความเป็นมา — เนื้อหาคงที่ ไม่ต้องมีคอนโทรลเลอร์ */
+Route::view('/about', 'public.activities.about')->name('public.about');
+
+/* หน้าช่องทางติดต่อ — แยกออกมาจากท้ายหน้าเกี่ยวกับเรา */
+Route::view('/contact', 'public.activities.contact')->name('public.contact');
+
 Route::get('/activities/{activity}', [PublicActivityController::class, 'show'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->name('public.activities.show');

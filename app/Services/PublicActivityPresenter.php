@@ -46,9 +46,7 @@ class PublicActivityPresenter
             'isFeatured' => $activity->is_featured,
             'registrationStartAt' => $activity->registration_start_at?->toIso8601String(),
             'registrationEndAt' => $activity->registration_end_at?->toIso8601String(),
-            'registrationDeadlineLabel' => $activity->registration_end_at
-                ? 'ปิดรับสมัคร '.$this->thaiDateTime($activity->registration_end_at)
-                : null,
+            'registrationDeadlineLabel' => $this->registrationDeadlineLabel($activity->registration_end_at),
             'canRegister' => $activity->acceptsRegistration(),
             'requiresRegistration' => $activity->requires_registration,
             'requiresCheckin' => $activity->requires_checkin,
@@ -75,5 +73,34 @@ class PublicActivityPresenter
     public function thaiDateTime(CarbonInterface $date): string
     {
         return $this->thaiDate($date).' · '.$date->format('H:i').' น.';
+    }
+
+    /**
+     * นับถอยหลังแบบภาษาพูด — "อีก 5 วันจะปิดรับสมัคร" แทนวันที่/เวลาตรง ๆ
+     * ใกล้ปิดมากขึ้นก็ลดหน่วยลง (วัน → ชั่วโมง → นาที) ให้ยังกะเวลาที่เหลือได้จริง
+     */
+    public function registrationDeadlineLabel(?CarbonInterface $end): ?string
+    {
+        if (! $end) {
+            return null;
+        }
+
+        $now = now();
+
+        if ($end->isPast()) {
+            return 'ปิดรับสมัครแล้ว';
+        }
+
+        if (($days = (int) floor($now->diffInDays($end))) >= 1) {
+            return "อีก {$days} วันจะปิดรับสมัคร";
+        }
+
+        if (($hours = (int) floor($now->diffInHours($end))) >= 1) {
+            return "อีก {$hours} ชั่วโมงจะปิดรับสมัคร";
+        }
+
+        $minutes = max(1, (int) floor($now->diffInMinutes($end)));
+
+        return "อีก {$minutes} นาทีจะปิดรับสมัคร";
     }
 }

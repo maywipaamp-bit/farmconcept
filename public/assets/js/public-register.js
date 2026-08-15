@@ -45,7 +45,6 @@
 
     const guestModal = document.getElementById('reg-guest-modal');
     const guestSubtitle = document.getElementById('reg-guest-subtitle');
-    const guestProgress = document.getElementById('reg-guest-progress');
     const guestName = document.getElementById('reg-guest-name');
     const guestAge = document.getElementById('reg-guest-age');
     const guestJob = document.getElementById('reg-guest-job');
@@ -232,9 +231,6 @@
         }
 
         if (screen === 'pay') {
-            footerNote.hidden = false;
-            footerNoteLabel.textContent = 'ยอดชำระ';
-            footerNoteValue.textContent = fmtBaht(totalAmount());
             primaryBtn.textContent = 'แจ้งชำระเงินแล้ว';
         }
     }
@@ -289,8 +285,8 @@
 
     /* ---------- ปุ่มย้อนกลับมุมซ้ายบน ----------
        ย้อนทีละขั้นตามเส้นทางที่ผู้ใช้เดินมา ไม่ใช่กระเด็นออกจากหน้าลงทะเบียนทันที
-       หน้าจอที่ไม่มีขั้นก่อนหน้า (ตรวจสิทธิ์ · ลงทะเบียนแล้ว · สำเร็จ) ปล่อยให้ลิงก์ทำงานตามปกติ */
-    const PREVIOUS_SCREEN = { form: 'check', pay: 'form' };
+       หน้าจอกรอกข้อมูลเป็นจุดเริ่มแล้ว (หน้าจอตรวจสอบสิทธิ์ถูกปิดไว้) กดกลับ = ออกไปหน้ากิจกรรม */
+    const PREVIOUS_SCREEN = { pay: 'form' };
 
     const backLink = document.getElementById('reg-back');
 
@@ -303,6 +299,74 @@
             showScreen(previous);
         });
     }
+
+    /* ---------- ตรวจการลงทะเบียนซ้ำระหว่างกรอกฟอร์ม ----------
+       หน้าจอตรวจสอบสิทธิ์ถูกปิดไปแล้ว จึงย้ายการตรวจมาไว้ตอนกรอกเบอร์/อีเมลเสร็จ (blur)
+       เจอว่าเคยลงทะเบียนแล้วขึ้น popup ทันที ดีกว่าปล่อยให้กรอกจนจบแล้วค่อยโดนปฏิเสธตอนส่ง */
+
+    const dupModal = document.getElementById('reg-dup-modal');
+    const dupText = document.getElementById('reg-dup-text');
+    const dupView = document.getElementById('reg-dup-view');
+    const dupEdit = document.getElementById('reg-dup-edit');
+    const dupClose = document.getElementById('reg-dup-close');
+
+    /* จำค่าที่ตรวจแล้ว — จะได้ไม่เด้ง popup ซ้ำทุกครั้งที่โฟกัสออกจากช่องเดิมโดยไม่ได้แก้อะไร */
+    const dupChecked = {};
+
+    function openDupModal(label) {
+        if (!dupModal) return;
+        dupText.textContent = label + 'นี้ลงทะเบียนกิจกรรมนี้ไว้แล้ว';
+        dupModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDupModal() {
+        if (!dupModal) return;
+        dupModal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    dupClose?.addEventListener('click', closeDupModal);
+    dupEdit?.addEventListener('click', closeDupModal);
+
+    dupView?.addEventListener('click', function () {
+        closeDupModal();
+        renderFound();
+        showScreen('found');
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && dupModal && !dupModal.hidden) closeDupModal();
+    });
+
+    function bindDuplicateCheck(input, label, toContact) {
+        if (!input) return;
+
+        input.addEventListener('blur', function () {
+            const contact = toContact(input.value);
+            if (!contact || dupChecked[contact] !== undefined) return;
+
+            postJson(config.urls.check, { contact: contact })
+                .then(function (result) {
+                    dupChecked[contact] = Boolean(result.registered);
+                    if (!result.registered) return;
+                    state.booking = result.booking;
+                    openDupModal(label);
+                })
+                /* ตรวจไม่ได้ (เน็ตล่ม ฯลฯ) ไม่ต้องขวางการกรอก — ฝั่งเซิร์ฟเวอร์กันซ้ำตอนบันทึกอีกชั้นอยู่แล้ว */
+                .catch(function () {});
+        });
+    }
+
+    bindDuplicateCheck(phoneInput, 'เบอร์โทรศัพท์', function (value) {
+        const digits = normalizePhone(value);
+        return isValidPhone(digits) ? digits : null;
+    });
+
+    bindDuplicateCheck(emailInput, 'อีเมล', function (value) {
+        const email = String(value || '').trim().toLowerCase();
+        return isValidEmail(email) ? email : null;
+    });
 
     /* ---------- เข้าสู่ระบบด้วย LINE ----------
        โปรไฟล์และการจองมาพร้อมหน้าตั้งแต่ฝั่งเซิร์ฟเวอร์แล้ว (อ่านจาก session)
@@ -458,14 +522,13 @@
 
     function renderGuestModal() {
         const extra = extraSeats();
-        guestSubtitle.textContent = 'เพื่อนคนที่ ' + (state.guestIndex + 1) + ' จาก ' + extra + ' คน · กรอกไม่นานเลยค่ะ';
+        /* บอกตำแหน่งเฉพาะตอนมีผู้ร่วมหลายคน — คนเดียวไม่ต้องบอกว่า "คนที่ 1 จาก 1" */
+        guestSubtitle.textContent = extra > 1
+            ? 'เพื่อนคนที่ ' + (state.guestIndex + 1) + ' จาก ' + extra + ' คน'
+            : '';
 
-        guestProgress.innerHTML = Array.from({ length: Math.max(1, extra) }, function (_, i) {
-            return '<span' + (i <= state.guestIndex ? ' class="is-done"' : '') + '></span>';
-        }).join('');
-
-        /* ไม่สรุปรายชื่อที่กรอกไปแล้วในป๊อปอัป — กดปุ่มไปคนถัดไปได้เลย
-           แถบความคืบหน้าด้านบนบอกอยู่แล้วว่ากรอกถึงคนที่เท่าไหร่ */
+        /* ไม่สรุปรายชื่อที่กรอกไปแล้วและไม่มีแถบ progress — กดปุ่มไปคนถัดไปได้เลย
+           ตำแหน่งบอกในบรรทัดใต้หัวข้อ (เฉพาะตอนมีหลายคน) */
         const last = state.guestIndex >= extra - 1;
         guestNext.textContent = last
             ? (config.payment.required ? 'ไปหน้าชำระเงิน' : 'ยืนยันการลงทะเบียน')
@@ -866,6 +929,9 @@
         renderFound();
         showScreen('found');
     } else {
-        showScreen('check');
+        /* เข้าหน้ากรอกข้อมูลทันที — หน้าจอตรวจสอบสิทธิ์ถูกปิดไว้
+           การกันลงทะเบียนซ้ำย้ายไปตรวจตอนกรอกเบอร์/อีเมลในฟอร์มแทน (ดู bindDuplicateCheck) */
+        fillFromLine();
+        showScreen('form');
     }
 })();

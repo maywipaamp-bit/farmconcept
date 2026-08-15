@@ -5,14 +5,14 @@
 
 :root {
     /* สีแบรนด์ตามสเปกหน้าลงทะเบียน — เขียว / เขียวเข้ม / เหลือง */
-    --reg-primary: #5FA052;
-    --reg-primary-hover: #4A7F3E;
+    --reg-primary: #6BCB4D;
+    --reg-primary-hover: #55B23A;
     /* เขียวจางในโทนเดียวกับปุ่ม stepper ที่กดไม่ได้ ไม่ใช่เทาอมเขียวคนละชุดแบบเดิม */
     --reg-primary-disabled: #C9DDC3;
     --reg-brand-dark: #35522C;
     --reg-brand-yellow: #F5D014;
-    --reg-focus-border: #5FA052;
-    --reg-focus-ring: rgba(95, 160, 82, .18);
+    --reg-focus-border: #6BCB4D;
+    --reg-focus-ring: rgba(107, 203, 77, .18);
 
     /* โทนของหัวหน้าจอและฟอร์ม */
     --reg-hero-from: #CDE8C5;
@@ -31,11 +31,11 @@
     --reg-tint-line: #d6e9d1;
     --reg-tint-line-strong: #bcdcb4;
 
-    --reg-page-bg: #FAFBF8;
+    --reg-page-bg: #FFFFFF;
     --reg-card-bg: #ffffff;
-    --reg-surface: #fafbf9;
-    --reg-surface-alt: #fbfcfa;
-    --reg-surface-input: #f7faf4;
+    --reg-surface: #ffffff;
+    --reg-surface-alt: #ffffff;
+    --reg-surface-input: #ffffff;
     --reg-border: #e4e7e0;
     --reg-border-soft: #f0f3ee;
     --reg-border-input: #e5ebe0;
@@ -43,7 +43,7 @@
     --reg-border-card: #eceee9;
     --reg-border-secondary: #dbe3d8;
 
-    --reg-text: #1f2c20;
+    --reg-text: #1F2C20;
     --reg-text-secondary: #4a564a;
     --reg-text-label: #55624f;
     --reg-text-support: #5c6b58;
@@ -51,6 +51,8 @@
     --reg-text-icon: #7d8a7c;
     --reg-error: #c0504f;
     --reg-error-border: #e0a3a2;
+    /* สีแบรนด์จริงของ LINE — เก็บไว้เผื่อวันที่ต้องทำปุ่มตามคู่มือของ LINE
+       ตอนนี้ปุ่ม "เข้าสู่ระบบด้วย LINE" ใช้เขียวแบรนด์ของเราตามที่ออกแบบไว้ */
     --reg-line: #06c755;
 
     --reg-font: "Prompt", sans-serif;
@@ -86,8 +88,11 @@
 .reg-page button:active, .reg-modal button:active { transform: scale(.985); }
 /* :not(.reg-btn-line) สำคัญ — ปุ่ม LINE เป็น <a> ถ้าไม่กันไว้ กฎนี้ (.reg-page a = specificity สูงกว่า
    .reg-btn-line) จะทับสีขาวของปุ่ม กลายเป็นตัวหนังสือเขียวบนพื้นเขียวจนอ่านไม่ออก */
-.reg-page a:not(.reg-btn-line) { color: var(--reg-primary); text-decoration: none; }
-.reg-page a:not(.reg-btn-line):hover { color: var(--reg-primary-hover); }
+/* .reg-hero-back กันไว้ด้วย — เป็น <a> เหมือนกัน แต่ตั้งใจให้เป็นสีข้อความรอง ไม่ใช่เขียว
+   ไม่กันไว้ กฎนี้จะชนะ .reg-hero-back เพราะ specificity สูงกว่า (2 คลาสจาก .reg-page + :not(),
+   ตัว .reg-hero-back เดี่ยว ๆ มีแค่ 1 คลาส) แล้วทับสีที่ตั้งใจไว้ */
+.reg-page a:not(.reg-btn-line):not(.reg-hero-back) { color: var(--reg-primary); text-decoration: none; }
+.reg-page a:not(.reg-btn-line):not(.reg-hero-back):hover { color: var(--reg-primary-hover); }
 .reg-btn-line, .reg-btn-line:hover { color: #ffffff; text-decoration: none; }
 .reg-page ::placeholder, .reg-modal ::placeholder { color: #b8c2b6; }
 
@@ -148,15 +153,13 @@ body.is-register-page .public-footer {
 
 /* ---------- หัวหน้าจอบนพื้นไล่สี ---------- */
 
-/* วงกลมตกแต่งมุมขวาบนวาดด้วย radial-gradient แทนการวาง element จริง
-   เพราะ element ที่ล้นขอบต้องใช้ overflow: hidden คุม ซึ่งจะไปตัดแผงรายละเอียดที่ลอยออกนอกหัวหน้าจอด้วย */
+/* ไม่มีพื้นไล่สีเขียวและวงกลมตกแต่งแล้ว — พื้นเรียบชุดเดียวกับทั้งหน้า
+   ระยะล่างลดลงเพราะไม่ต้องเผื่อพื้นที่ให้ฟอร์มซ้อนขึ้นไปบนพื้นสีอีกต่อไป */
 .reg-hero {
     position: relative;
     flex: none;
-    padding: 18px 20px 42px;
-    background:
-        radial-gradient(circle 74px at calc(100% + 34px) -46px, rgba(255, 255, 255, .35) 0 74px, transparent 74px),
-        linear-gradient(180deg, var(--reg-hero-from) 0%, var(--reg-hero-mid) 55%, var(--reg-page-bg) 100%);
+    padding: 18px 20px 14px;
+    background: transparent;
 }
 
 /* align-items: flex-start เพื่อให้ตอนกาง "ดูรายละเอียด" แผงจะดันความสูงของแถวลงมาเอง
@@ -175,9 +178,13 @@ body.is-register-page .public-footer {
     border: 0;
     border-radius: var(--reg-r-pill);
     background: none;
-    color: var(--reg-brand-dark);
+    /* ปกติไม่ใช้สีเขียว — เป็นสีข้อความรองเฉย ๆ เขียวสงวนไว้ให้ปุ่มลงมือทำจริงเท่านั้น */
+    color: var(--reg-text-secondary);
     font-size: 14px;
     font-weight: 500;
+    /* ต้องประกาศเอง — พอกันออกจากกฎ .reg-page a:not(...) ด้านบน (ที่ตั้ง text-decoration: none
+       ไว้ให้ลิงก์ทั้งหมด) ก็หลุด rule นั้นไปด้วย เหลือขีดเส้นใต้ default ของ <a> ค้างอยู่ */
+    text-decoration: none;
 }
 
 .reg-hero-back:hover { color: var(--reg-primary-hover); }
@@ -235,6 +242,10 @@ body:not([data-screen="check"]):not([data-screen="form"]):not([data-screen="pay"
 body[data-screen="form"] .reg-hero,
 body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 
+/* หน้าชำระเงินหัวเรื่องชิดแถวบนมากกว่าปกติ — ไม่ต้องเผื่อระยะเท่าหน้ากรอกข้อมูล
+   เพราะไม่มีคำอธิบายยาวต่อท้ายที่ต้องเผื่อพื้นที่ไว้ */
+body[data-screen="pay"] .reg-hero-title { margin-top: 10px; }
+
 /* ---------- ปุ่มดูรายละเอียดกิจกรรมในหัวหน้าจอ ---------- */
 
 /* ฝั่งขวาของแถวบน — กว้างได้ถึง 68% ของแถว เกินกว่านั้นชื่อกิจกรรมจะตัดด้วย ellipsis
@@ -242,13 +253,14 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
    (.reg-hero เป็น position: relative แต่ z-index: auto จึงไม่สร้าง stacking context ขังไว้) */
 .reg-hero-more { position: relative; z-index: 5; min-width: 0; max-width: 68%; margin-left: auto; }
 
+/* ชื่อกิจกรรม + ลูกศร ไม่มีกรอบ — ลูกศรทำหน้าที่บอกว่ากดได้อยู่แล้ว */
 .reg-hero-more > summary {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
-    border-radius: var(--reg-r-pill);
-    background: rgba(255, 255, 255, .72);
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
     color: var(--reg-brand-dark);
     font-size: 12px;
     font-weight: 500;
@@ -260,7 +272,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 /* ซ่อนสามเหลี่ยมเริ่มต้นของ <details> ทั้งสองสายเบราว์เซอร์ — ใช้ไอคอน chevron ของเราแทน */
 .reg-hero-more > summary::-webkit-details-marker { display: none; }
 .reg-hero-more > summary::marker { content: ""; }
-.reg-hero-more > summary:hover { background: #ffffff; }
+.reg-hero-more > summary:hover { color: var(--reg-primary-hover); }
 .reg-hero-more[open] > summary svg { transform: rotate(180deg); }
 .reg-hero-more > summary svg { flex: none; transition: transform var(--reg-transition); }
 
@@ -314,10 +326,11 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 
 .reg-field { display: flex; flex-direction: column; gap: 5px; }
 
+/* 15px ให้เท่ากับตัวอักษรบนปุ่มหลัก (.reg-btn-primary) — ของเดิม 13px เล็กกว่าปุ่มจนดูเป็นคนละระดับ */
 .reg-field > label {
     display: flex;
     gap: 3px;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--reg-text-label);
     letter-spacing: .02em;
@@ -327,6 +340,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 .reg-field .reg-star,
 .reg-field .reg-star.is-strong { color: #E0693C; font-weight: 500; }
 
+/* ขอบเข้มขึ้นและหนา 1.5px — บนพื้นหน้าสีขาว ช่องพื้นขาวขอบจางแทบมองไม่เห็นว่าตรงไหนกรอกได้ */
 .reg-input, .reg-select {
     width: 100%;
     height: var(--reg-h-input);
@@ -334,7 +348,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     font-size: 14px;
     color: var(--reg-text);
     background: var(--reg-surface);
-    border: 1px solid var(--reg-border);
+    border: 1.5px solid #BCCFC2;
     border-radius: var(--reg-r-input);
     outline: none;
     transition: border-color var(--reg-transition), box-shadow var(--reg-transition), background var(--reg-transition);
@@ -370,14 +384,15 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     line-height: 1.55;
 }
 
+/* เรียงลงทีละช่องตามลำดับ — ไม่จับคู่สองคอลัมน์
+   ทุกช่องจึงกว้างเท่ากันหมดและกรอกไล่จากบนลงล่างทางเดียว */
 .reg-field-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
 }
 
 .reg-field-grid > .reg-field { min-width: 0; }
-.reg-field-grid.is-single { grid-template-columns: minmax(0, 1fr); }
 
 /* ---------- ปุ่ม ---------- */
 
@@ -399,8 +414,12 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 
 .reg-btn-primary:hover { background: var(--reg-primary-hover); }
 
+/* ใช้สีเขียวเดิมแล้วลด opacity แทนการสลับไปพื้นเขียวจางแยกต่างหาก (--reg-primary-disabled เดิม)
+   เพราะพื้นจางกับตัวอักษรขาวคอนทราสต์ต่ำมากจนดูเป็นปุ่มสีเทาจาง ไม่เหมือนปุ่มหลักของหน้าอีกต่อไป
+   ลด opacity ทั้งก้อนแทน — พื้นกับตัวอักษรจางลงเท่ากัน ปุ่มจึงยังอ่านออกว่าเป็นสีเขียวเดิม แค่กดไม่ได้ */
 .reg-btn-primary:disabled {
-    background: var(--reg-primary-disabled);
+    background: var(--reg-primary);
+    opacity: .48;
     cursor: not-allowed;
     transform: none;
 }
@@ -457,9 +476,9 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 
 /* ---------- หน้าจอ 1: ตรวจสอบสิทธิ์ ---------- */
 
-/* ฟอร์มซ้อนขึ้นไปบนพื้นไล่สี ไม่มีการ์ดหรือกรอบคั่น — ให้อ่านต่อเนื่องจากหัวหน้าจอ */
+/* ไม่มีการ์ดหรือกรอบคั่น อ่านต่อเนื่องจากหัวหน้าจอ
+   ไม่ต้องซ้อนขึ้นไปด้วย margin ติดลบแล้ว เพราะไม่มีพื้นไล่สีให้ซ้อนทับ */
 .reg-screen-check {
-    margin-top: -28px;
     padding: 0 20px 28px;
     display: flex;
     flex-direction: column;
@@ -512,12 +531,12 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     transition: background var(--reg-transition), color var(--reg-transition);
 }
 
-.reg-btn-soft:hover:not(:disabled) { background: #e3efdf; }
-.reg-btn-soft:disabled { color: #9db894; cursor: not-allowed; transform: none; }
+.reg-btn-soft:hover:not(:disabled) { background: #E3EFDF; }
+.reg-btn-soft:disabled { color: #9DB894; cursor: not-allowed; transform: none; }
 
 /* ปุ่มหลักของหน้า — ใช้เขียวแบรนด์ชุดเดียวกับปุ่มในหน้ากิจกรรม/รายละเอียด ไม่ใช่เขียวของ LINE
    หมายเหตุ: LINE มีข้อกำหนดเรื่องสี/โลโก้ของปุ่ม "Log in with LINE" อยู่
-   ถ้าวันหน้าต้องส่ง channel ให้ LINE ตรวจ อาจต้องกลับไปใช้ #06C755 ตามคู่มือของเขา */
+   ถ้าวันหน้าต้องส่ง channel ให้ LINE ตรวจ อาจต้องกลับไปใช้ #6BCB4D ตามคู่มือของเขา */
 .reg-btn-line {
     display: flex;
     align-items: center;
@@ -527,7 +546,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     border: 0;
     border-radius: var(--reg-r-pill);
     background: var(--reg-primary);
-    box-shadow: 0 6px 16px rgba(95, 160, 82, .28);
+    box-shadow: 0 6px 16px rgba(107, 203, 77, .28);
     font-size: 14.5px;
     font-weight: 600;
     color: #ffffff;
@@ -803,9 +822,9 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     padding: 4px 0;
 }
 
-.reg-seat-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.reg-seat-text .reg-seat-label { font-size: 13.5px; font-weight: 500; color: var(--reg-text); }
-.reg-seat-text .reg-seat-note { font-size: 12px; color: var(--reg-text-support); }
+.reg-seat-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.reg-seat-label { font-size: 14px; font-weight: 500; color: var(--reg-text); }
+.reg-seat-note { font-size: 12px; color: var(--reg-text-support); }
 
 /* ปุ่มเพิ่ม/ลดเป็นวงกลมสีแบรนด์ — เป็น control ที่ต้องกดง่ายด้วยนิ้ว จึงคุมขนาดไว้ 32px */
 .reg-stepper {
@@ -853,13 +872,42 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     user-select: none;
 }
 
+/* วาดช่องติ๊กเองด้วย appearance: none แทนของเบราว์เซอร์ — ของเดิมใช้แค่ accent-color
+   ซึ่งมีผลเฉพาะตอนติ๊กแล้ว ก่อนติ๊กเป็นกรอบเทาบางของเบราว์เซอร์ที่มองแทบไม่เห็น
+   (และบางเบราว์เซอร์/เอนจิน ไม่รับ border ที่ตั้งเองบน checkbox แบบ native เลยด้วยซ้ำ) */
 .reg-consent input {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
     width: 17px;
     height: 17px;
     margin: 2px 0 0;
     flex: none;
-    accent-color: var(--reg-primary);
+    border: 1.5px solid var(--reg-primary);
+    border-radius: 4px;
+    background: var(--reg-card-bg);
     cursor: pointer;
+    transition: background var(--reg-transition), border-color var(--reg-transition);
+}
+
+.reg-consent input:checked { background: var(--reg-primary); }
+
+/* เครื่องหมายถูก — วาดด้วยเส้นขอบสองด้านหมุน 45° แทนไอคอน SVG แยกไฟล์ */
+.reg-consent input:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.reg-consent input:focus-visible {
+    outline: 2px solid var(--reg-primary);
+    outline-offset: 2px;
 }
 
 .reg-consent span {
@@ -1006,7 +1054,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     align-items: center;
     justify-content: center;
     border: 0;
-    background: var(--reg-tint-tab);
+    background: transparent;
     border-radius: 9px;
     color: var(--reg-text-support);
     transition: background var(--reg-transition), color var(--reg-transition);
@@ -1166,7 +1214,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
 .reg-done-row .reg-done-value { font-size: 13.5px; font-weight: 500; line-height: 1.5; color: var(--reg-text); text-wrap: pretty; }
 
 .reg-download-btn { height: var(--reg-h-input); background: var(--reg-soft-bg); font-size: 14px; border-radius: var(--reg-r-pill); border-color: transparent; }
-.reg-download-btn:hover { background: #e3efdf; border-color: transparent; }
+.reg-download-btn:hover { background: #E3EFDF; border-color: transparent; }
 
 /* ---------- Footer ปุ่มหลัก ---------- */
 
@@ -1263,9 +1311,7 @@ body[data-screen="pay"] .reg-hero { padding-bottom: 18px; }
     gap: 18px;
 }
 
-.reg-guest-progress { display: flex; gap: 7px; }
-.reg-guest-progress span { flex: 1; height: 4px; background: #e0e7dd; border-radius: 2px; }
-.reg-guest-progress span.is-done { background: var(--reg-primary); }
+/* แถบ progress ของป๊อปอัปผู้ร่วมเพิ่มถูกถอดออก — ตำแหน่งบอกในบรรทัดใต้หัวข้อแทน */
 
 /* บล็อกสรุป "ผู้ร่วมที่ระบุแล้ว" ในป๊อปอัปถูกถอดออก — กดปุ่มไปคนถัดไปได้เลย
    สไตล์ .reg-guest-saved / .reg-guest-row จึงถูกลบตามไปด้วยไม่ให้เหลือโค้ดตาย */
