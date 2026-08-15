@@ -11098,6 +11098,52 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   min-width: 0;
 }
 
+/* สไตล์เฉพาะ input type file สำหรับ Cohort Modal */
+.co-field input[type="file"].input,
+.co-form-grid input[type="file"].input,
+.modal.co-add input[type="file"].input,
+#co-add-modal .modal-body input[type="file"].input {
+  padding: 0.375rem 0.75rem;
+  height: auto;
+  min-height: 38px;
+  overflow: hidden;
+}
+
+.co-field input[type="file"].input::file-selector-button,
+.co-form-grid input[type="file"].input::file-selector-button,
+.modal.co-add input[type="file"].input::file-selector-button,
+#co-add-modal .modal-body input[type="file"].input::file-selector-button,
+.co-field input[type="file"].input::-webkit-file-upload-button,
+.co-form-grid input[type="file"].input::-webkit-file-upload-button,
+.modal.co-add input[type="file"].input::-webkit-file-upload-button,
+#co-add-modal .modal-body input[type="file"].input::-webkit-file-upload-button {
+  padding: 0.375rem 0.75rem;
+  margin: -0.375rem 0.75rem -0.375rem -0.75rem;
+  margin-inline-end: 0.75rem;
+  color: #374151;
+  background-color: #F3F4F6;
+  border: 0;
+  border-inline-end: 1px solid #D1D5DB;
+  border-radius: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.co-field input[type="file"].input::file-selector-button:hover,
+.co-form-grid input[type="file"].input::file-selector-button:hover,
+.modal.co-add input[type="file"].input::file-selector-button:hover,
+#co-add-modal .modal-body input[type="file"].input::file-selector-button:hover,
+.co-field input[type="file"].input::-webkit-file-upload-button:hover,
+.co-form-grid input[type="file"].input::-webkit-file-upload-button:hover,
+.modal.co-add input[type="file"].input::-webkit-file-upload-button:hover,
+#co-add-modal .modal-body input[type="file"].input::-webkit-file-upload-button:hover {
+  background-color: #E5E7EB;
+  color: #1F2937;
+}
+
 /* ---------- ตาราง ---------- */
 .co-table-card { padding: 0; overflow: hidden; }
 
