@@ -150,9 +150,10 @@
     draft: '<path d="M5 4.5h9l4.5 4.5v10.5H5z"/><path d="M14 4.5V9h4.5"/>'
   };
 
-  /* ลบได้เฉพาะชุดที่ยังไม่มีคำตอบ — ชุดที่มีคำตอบแล้วต้องเก็บไว้เพื่อไม่ให้ข้อมูลที่เก็บมากำพร้า */
+  /* ลบได้เฉพาะชุดที่ยังไม่มีคำตอบและไม่ได้ผูกกับกิจกรรม — เกณฑ์เดียวกับ EvaluationService::destroy
+     ชุดที่มีคำตอบแล้วต้องเก็บไว้เพื่อไม่ให้ข้อมูลที่เก็บมากำพร้า สถานะไม่ใช่เกณฑ์ */
   function menuHtml(f) {
-    var canDelete = f.answers === 0 && f.status === 'ฉบับร่าง';
+    var canDelete = f.answers === 0 && !f.linked;
     var moves = statusMoves(f);
 
     return '<div class="el-menu" role="menu">' +
@@ -179,7 +180,7 @@
       /* เหตุผลที่ลบไม่ได้ย้ายไปอยู่ใน title แทนบรรทัดอธิบาย เพื่อให้เมนูสะอาด
          แต่ยังชี้เมาส์อ่านได้ว่าทำไมปุ่มถึงกดไม่ลง */
       '<button type="button" class="el-menu-item is-danger" role="menuitem" data-delete="' + f.id + '"' +
-        (canDelete ? '' : ' disabled title="ลบได้เฉพาะฉบับร่างที่ยังไม่มีคำตอบ"') + '>' +
+        (canDelete ? '' : ' disabled title="ลบได้เฉพาะชุดที่ยังไม่มีคำตอบและไม่ได้ผูกกับกิจกรรม"') + '>' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5.5h5V7M7 7l.8 12h8.4L17 7"/></svg>' +
         'ลบแบบประเมิน</button>' +
       '</div>';

@@ -105,7 +105,9 @@ class PublicTrackingRoundQrController extends Controller
         if ($matches->isEmpty()) {
             return redirect()
                 ->route('public.tracking-round-qr.register')
-                ->with('prefillPhone', $this->digits($data['phone']));
+                ->with('prefillPhone', $this->digits($data['phone']))
+                /* บอกเหตุผลที่ถูกพามาหน้านี้ ไม่งั้นคนที่ตั้งใจแค่เข้าสู่ระบบจะงงว่าทำไมเจอฟอร์มลงทะเบียน */
+                ->with('phoneNotFound', true);
         }
 
         RateLimiter::clear($key);
@@ -222,10 +224,9 @@ class PublicTrackingRoundQrController extends Controller
             return $qr;
         }
 
-        $request->session()->reflash();
-
+        /* ไม่ reflash — เบอร์ที่เติมให้กับข้อความแจ้งควรอยู่แค่ครั้งแรกที่ถูกพามา
+           กดรีเฟรชแล้วต้องหาย ส่วนกรณี validation error ฟอร์มเติมกลับด้วย old() อยู่แล้ว */
         return view('public.tracking-round.register', [
-            
             'phone' => $request->session()->get('prefillPhone', ''),
             'lineName' => $request->session()->get(PublicLineLoginController::SESSION_KEY)['name'] ?? '',
             'genders' => config('farmconcept.genders'),

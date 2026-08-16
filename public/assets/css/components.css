@@ -2419,6 +2419,9 @@ dd { margin: 0; }
   font-size: var(--font-size-small);
 }
 
+/* display: flex ด้านบนชนะ [hidden] ของเบราว์เซอร์ — alert ที่หน้าจอสั่งซ่อนต้องซ่อนจริง */
+.alert[hidden] { display: none; }
+
 .alert-icon {
   flex-shrink: 0;
   display: flex;

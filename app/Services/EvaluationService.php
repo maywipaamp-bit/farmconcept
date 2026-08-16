@@ -97,9 +97,11 @@ class EvaluationService
 
     public function destroy(Form $form): void
     {
-        if ($form->status !== Form::STATUS_DRAFT || $form->activities()->exists() || $form->hasResponses()) {
+        /* สถานะไม่ใช่เกณฑ์ — ชุดที่เผยแพร่แล้วแต่ยังไม่มีใครตอบและไม่ได้ผูกกิจกรรม ลบได้
+           เกณฑ์จริงคือข้อมูลที่จะกำพร้า: คำตอบที่เก็บมาแล้ว กับกิจกรรมที่อ้างชุดนี้อยู่ */
+        if ($form->activities()->exists() || $form->hasResponses()) {
             throw ValidationException::withMessages([
-                'form' => 'ลบได้เฉพาะฉบับร่างที่ยังไม่ถูกผูกกับกิจกรรมและยังไม่มีคำตอบ',
+                'form' => 'ลบได้เฉพาะแบบประเมินที่ยังไม่มีคำตอบและยังไม่ถูกผูกกับกิจกรรม',
             ]);
         }
 

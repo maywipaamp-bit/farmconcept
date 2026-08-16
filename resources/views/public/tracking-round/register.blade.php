@@ -6,6 +6,10 @@
     <section class="detail-card tr-card">
         <h1 class="tr-login-title">ลงทะเบียนกลุ่มตัวอย่าง</h1>
 
+        @if(session('phoneNotFound'))
+            <div class="tr-notice" role="status">ไม่พบเบอร์นี้ในระบบ กรุณาลงทะเบียนก่อน</div>
+        @endif
+
         {{-- error กล่องเดียว ไล่ตามลำดับฟิลด์บนลงล่าง ผู้ใช้จะได้แก้ทีละอย่างไม่ต้องกวาดหาทั้งหน้า --}}
         @if($errors->any())
             <div class="tr-error" role="alert">{{ $errors->first() }}</div>

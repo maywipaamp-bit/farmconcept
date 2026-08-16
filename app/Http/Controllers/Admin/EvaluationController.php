@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EvaluationRequest;
+use App\Models\Answer;
 use App\Models\Form;
 use App\Services\EvaluationService;
 use Illuminate\Contracts\View\View;
@@ -101,7 +102,7 @@ class EvaluationController extends Controller
 
         return response()->json([
             'message' => 'เปลี่ยนสถานะแบบประเมินเรียบร้อย',
-            'form' => $this->listPayload($form->fresh()->loadCount(['questions', 'satisfactionResponses', 'surveyResponses'])),
+            'form' => $this->listPayload($form->fresh()->loadCount(['questions', 'satisfactionResponses', 'surveyResponses', 'activities'])),
         ]);
     }
 
@@ -118,6 +119,14 @@ class EvaluationController extends Controller
         $answers = match ($form->type) {
             Form::TYPE_POST_ACTIVITY => (int) ($form->satisfaction_responses_count ?? 0),
             Form::TYPE_HEALTH_FOLLOW_UP => (int) ($form->survey_responses_count ?? 0),
+            /* แบบลงทะเบียนเก็บคำตอบเป็นรายข้อใน evl_answers ไม่มีตาราง response ของตัวเอง
+               นับผู้ตอบจาก response_id ไม่ใช่จำนวนแถว เพื่อให้เลขตรงกับจำนวนคน
+               ถ้าปล่อยเป็น 0 ปุ่มลบจะเปิดให้กดทั้งที่ server ปฏิเสธเพราะมีคำตอบจริง */
+            Form::TYPE_REGISTRATION => Answer::query()
+                ->where('response_type', 'registration')
+                ->whereIn('question_id', $form->questions->pluck('id'))
+                ->distinct()
+                ->count('response_id'),
             default => 0,
         };
 
@@ -131,6 +140,7 @@ class EvaluationController extends Controller
             'status' => $this->statusLabel($form->status),
             'q' => (int) ($form->questions_count ?? $form->questions->where('question_type', '!=', 'section')->count()),
             'answers' => $answers,
+            'linked' => (int) ($form->activities_count ?? $form->activities()->count()) > 0,
             'updated' => $form->updated_at?->format('d/m/Y H:i') ?? '-',
             'edit_url' => route('admin.evaluations.edit', $form),
             'api_url' => route('admin.evaluations.show', $form),
@@ -187,7 +197,7 @@ class EvaluationController extends Controller
     {
         return Form::query()
             ->with(['questions.options'])
-            ->withCount(['questions', 'satisfactionResponses', 'surveyResponses'])
+            ->withCount(['questions', 'satisfactionResponses', 'surveyResponses', 'activities'])
             ->orderByDesc('id')
             ->get()
             ->map(fn (Form $form) => $this->listPayload($form))

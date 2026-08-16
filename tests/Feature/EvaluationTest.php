@@ -116,7 +116,7 @@ class EvaluationTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('questions');
     }
 
-    public function test_ลบได้เฉพาะฉบับร่างที่ยังไม่มีคำตอบ(): void
+    public function test_ลบได้เมื่อยังไม่มีคำตอบ_สถานะไม่ใช่เกณฑ์(): void
     {
         $user = $this->admin();
         $draft = Form::create([
@@ -124,13 +124,31 @@ class EvaluationTest extends TestCase
             'status' => Form::STATUS_DRAFT, 'created_by' => $user->id, 'updated_by' => $user->id,
         ]);
         $active = Form::create([
-            'code' => 'EVL-TEST-ACTIVE', 'name' => 'เปิดใช้ลบไม่ได้', 'type' => Form::TYPE_HEALTH_FOLLOW_UP,
+            'code' => 'EVL-TEST-ACTIVE', 'name' => 'เปิดใช้แต่ยังไม่มีคำตอบ ลบได้', 'type' => Form::TYPE_HEALTH_FOLLOW_UP,
             'status' => Form::STATUS_ACTIVE, 'created_by' => $user->id, 'updated_by' => $user->id,
         ]);
+        $answered = Form::create([
+            'code' => 'EVL-TEST-ANSWERED', 'name' => 'มีคำตอบแล้วลบไม่ได้', 'type' => Form::TYPE_REGISTRATION,
+            'status' => Form::STATUS_DRAFT, 'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+        $question = $answered->questions()->create([
+            'question_type' => 'text',
+            'text' => 'คำถามลงทะเบียน',
+            'sort_order' => 1,
+        ]);
+        \App\Models\Answer::create([
+            'question_id' => $question->id,
+            'response_type' => 'registration',
+            'response_id' => 1,
+            'text_value' => 'คำตอบทดสอบ',
+        ]);
 
-        $this->actingAs($user)->deleteJson('/admin/evaluations/'.$active->code)->assertUnprocessable();
+        $this->actingAs($user)->deleteJson('/admin/evaluations/'.$answered->code)->assertUnprocessable();
+        $this->actingAs($user)->deleteJson('/admin/evaluations/'.$active->code)->assertOk();
         $this->actingAs($user)->deleteJson('/admin/evaluations/'.$draft->code)->assertOk();
         $this->assertDatabaseMissing('evl_forms', ['id' => $draft->id]);
+        $this->assertDatabaseMissing('evl_forms', ['id' => $active->id]);
+        $this->assertDatabaseHas('evl_forms', ['id' => $answered->id]);
     }
 
     public function test_หน้ารายการสร้างและแก้ไขใช้_clean_url_และผ่านสิทธิ์เมนู(): void
