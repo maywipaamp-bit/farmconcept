@@ -22,10 +22,10 @@
             </div>
 
             <div class="registration-field">
-                <label for="tr-proxy-prefix">ชื่อจริง 3 ตัวอักษรแรก <span>*</span></label>
+                <label for="tr-proxy-prefix">รหัสบุคคลผู้ถูกประเมิน <span>*</span></label>
                 <input type="text" id="tr-proxy-prefix" name="name_prefix" class="tr-prefix-input"
-                       maxlength="3" autocomplete="off" value="{{ old('name_prefix') }}" required>
-                <span class="tr-field-hint">เช่น ผู้ถูกประเมินชื่อ “สมหญิง” ให้กรอก “สมห”</span>
+                       maxlength="6" autocomplete="off" value="{{ old('name_prefix') }}" required>
+                <span class="tr-field-hint">เช่น P0002</span>
             </div>
 
             <button type="submit" class="tr-primary-button tr-form-submit">ยืนยันตัวตน</button>

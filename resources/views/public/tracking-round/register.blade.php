@@ -18,11 +18,8 @@
         <form method="POST" action="{{ route('public.tracking-round-qr.register.submit') }}" novalidate>
             @csrf
 
-            <div class="registration-field">
-                <label for="tr-name">ชื่อ-นามสกุล <span>*</span></label>
-                <input type="text" id="tr-name" name="name" autocomplete="name"
-                       placeholder="เช่น สมหญิง ใจดี" value="{{ old('name', $lineName) }}" required>
-            </div>
+            {{-- ไม่เก็บชื่อเลย — ระบบออกรหัสบุคคล (เช่น P0001) ให้เป็นชื่อในระบบแทน
+                 ผู้ตอบใช้รหัสนี้คู่กับเบอร์โทรตอนเข้าระบบครั้งถัดไป --}}
 
             {{-- เบอร์ที่กรอกไว้ตอนยืนยันตัวตนถูกเติมมาให้แล้ว ไม่ต้องพิมพ์ซ้ำ --}}
             <div class="registration-field">
@@ -42,13 +39,14 @@
                 </select>
             </div>
 
-            {{-- รายชื่อพื้นที่มาจาก master data ไม่ได้เขียนรายชื่อชุมชนตายไว้ในหน้าจอ --}}
+            {{-- ตัวเลือกช่วงอายุมาจาก master data (mst_options กลุ่ม age_range) ชุดเดียวกับแบบลงทะเบียนกิจกรรม
+                 ไม่ถามปีเกิดเพราะระบุตัวได้ง่ายและทำให้คนอึดอัด — ช่วงอายุพอสำหรับการวิเคราะห์ --}}
             <div class="registration-field">
-                <label for="tr-area">พื้นที่ / ชุมชน <span>*</span></label>
-                <select id="tr-area" name="area_id" required>
-                    <option value="" disabled @selected(! old('area_id'))>เลือกพื้นที่ / ชุมชน</option>
-                    @foreach($areas as $area)
-                        <option value="{{ $area->id }}" @selected(old('area_id') == $area->id)>{{ $area->name }}</option>
+                <label for="tr-age-range">ช่วงอายุ <span>*</span></label>
+                <select id="tr-age-range" name="age_range_id" required>
+                    <option value="" disabled @selected(! old('age_range_id'))>เลือกช่วงอายุ</option>
+                    @foreach($ageRanges as $range)
+                        <option value="{{ $range->id }}" @selected(old('age_range_id') == $range->id)>{{ $range->label }}</option>
                     @endforeach
                 </select>
             </div>

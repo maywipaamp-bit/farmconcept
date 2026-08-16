@@ -148,14 +148,13 @@ class TrackingRoundQrTest extends TestCase
         );
     }
 
-    /** ฟอร์มลงทะเบียนบังคับ ช่วงอายุ และพื้นที่ ด้วย — ทั้งคู่มาจาก master data */
+    /** ฟอร์มลงทะเบียนไม่เก็บชื่อ — ระบบใช้รหัสบุคคลเป็นชื่อในระบบแทน */
     private function registerPayload(array $overrides = []): array
     {
         return array_merge([
-            'name' => 'สมชาย ใจดี',
             'phone' => '0899999999',
             'gender' => 'female',
-            'area_id' => $this->area()->id,
+            'age_range_id' => $this->option('age_range', 'AGE-1', '60 ปีขึ้นไป')->id,
             'consent' => 1,
         ], $overrides);
     }
@@ -196,7 +195,7 @@ class TrackingRoundQrTest extends TestCase
         $this->get($this->url('/choose'))
             ->assertOk()
             ->assertSee('ยืนยันตัวตน')
-            ->assertSee('ชื่อจริง 5 ตัวอักษรแรก');
+            ->assertSee('รหัสบุคคล');
 
         $this->confirmName()->assertRedirect($this->url('/home'));
 
@@ -236,7 +235,7 @@ class TrackingRoundQrTest extends TestCase
             ->post($this->url('/verify'), ['phone' => '081-234-5678'])
             ->assertOk()
             ->assertSee('ยืนยันตัวตน')
-            ->assertSee('ชื่อจริง 5 ตัวอักษรแรก')
+            ->assertSee('รหัสบุคคล')
             ->assertDontSee('สมชาย')
             ->assertDontSee('มานี')
             ->assertDontSee('สมช')
@@ -258,7 +257,8 @@ class TrackingRoundQrTest extends TestCase
         $this->post($this->url('/choose'), ['name_prefix' => 'สมชา'])
             ->assertRedirect($this->url('/home'));
 
-        $this->get($this->url('/home'))->assertOk()->assertSee('สมชาย ใจดี');
+        /* แดชบอร์ดไม่แสดงชื่อ — หน้าจอเปิดในที่สาธารณะได้ ใช้รหัสกลุ่มตัวอย่างแทน */
+        $this->get($this->url('/home'))->assertOk()->assertDontSee('สมชาย ใจดี');
     }
 
     public function test_a_name_from_a_different_phone_cannot_get_in(): void
@@ -316,11 +316,13 @@ class TrackingRoundQrTest extends TestCase
 
         /* รหัสรูปแบบเดียวกับที่แอดมินเพิ่มจากหลังบ้าน — ตัวออกรหัสตัวเดียวกัน */
         $this->assertSame('P0001', $participant->person_code);
+        /* ไม่เก็บชื่อ — รหัสบุคคลถูกใช้เป็นชื่อในระบบ และเป็นกุญแจยืนยันตัวตนชั้นที่สอง */
+        $this->assertSame('P0001', $participant->name);
         $this->assertSame('089-999-9999', $participant->phone);
 
-        /* เพศกับพื้นที่ถูกบันทึกจริง ไม่ได้ปล่อยว่างให้เจ้าหน้าที่มาตามเก็บทีหลัง */
+        /* เพศกับช่วงอายุถูกบันทึกจริง ไม่ได้ปล่อยว่างให้เจ้าหน้าที่มาตามเก็บทีหลัง */
         $this->assertSame('female', $participant->gender);
-        $this->assertSame($this->area()->id, $participant->area_id);
+        $this->assertSame($this->option('age_range', 'AGE-1', '60 ปีขึ้นไป')->id, $participant->age_range_id);
 
         $this->assertSame(
             ['ก่อนเข้าร่วม', '3 เดือน'],
@@ -335,8 +337,10 @@ class TrackingRoundQrTest extends TestCase
 
         $this->followingRedirects()->get($this->url('/home'))
             ->assertOk()
-            ->assertSee('สมชาย ใจดี')
-            ->assertSee('ชุมชนสวนหลวง');
+            /* แดชบอร์ดทักทายด้วยรหัสบุคคล — รหัสเดียวกับที่ใช้เข้าระบบ
+               และต้องบอกรหัสหลังลงทะเบียนหนึ่งครั้ง เพราะเป็นกุญแจเข้าระบบครั้งถัดไป */
+            ->assertSee('P0001')
+            ->assertSee('รหัสบุคคลของคุณคือ');
     }
 
     public function test_dashboard_shows_the_due_round_progress_and_coordinator(): void
@@ -366,14 +370,18 @@ class TrackingRoundQrTest extends TestCase
         $this->member('P0001', '081-234-5678');
         $this->signInWithPhone('0812345678');
 
-        $this->get($this->url('/home'))->assertOk()->assertSee('เชื่อมต่อ LINE');
+        /* ยังไม่เชื่อม — เห็นปุ่มชวนเชื่อม ไม่เห็นป้ายว่าเชื่อมแล้ว */
+        $this->get($this->url('/home'))->assertOk()
+            ->assertSee('เชื่อมต่อ LINE')
+            ->assertDontSee('เชื่อมต่อ LINE แล้ว');
 
         $this->post($this->url('/sign-out'));
 
         $this->member('P0002', '081-234-5679', 'U-line-2');
         $this->signInWithPhone('0812345679');
 
-        $this->get($this->url('/home'))->assertOk()->assertDontSee('เชื่อมต่อ LINE');
+        /* เชื่อมแล้ว — ปุ่มชวนหาย เหลือป้ายสถานะบอกว่าเชื่อมแล้ว */
+        $this->get($this->url('/home'))->assertOk()->assertSee('เชื่อมต่อ LINE แล้ว');
     }
 
     public function test_notification_switch_belongs_to_the_person_and_can_be_turned_off(): void
@@ -397,7 +405,7 @@ class TrackingRoundQrTest extends TestCase
         $this->template();
 
         $this->post($this->url('/register'), [])
-            ->assertSessionHasErrors(['name', 'phone', 'gender', 'area_id', 'consent']);
+            ->assertSessionHasErrors(['phone', 'gender', 'age_range_id', 'consent']);
 
         $this->assertSame(0, Participant::count());
     }
@@ -406,7 +414,7 @@ class TrackingRoundQrTest extends TestCase
     {
         $this->member('P0001', '081-234-5678');
 
-        $this->post($this->url('/register'), $this->registerPayload(['name' => 'คนใหม่', 'phone' => '0812345678']))
+        $this->post($this->url('/register'), $this->registerPayload(['phone' => '0812345678']))
             ->assertRedirect($this->url())
             ->assertSessionHasErrors('phone');
 
@@ -577,9 +585,10 @@ class TrackingRoundQrTest extends TestCase
         /* ข้ามลำดับไม่ได้ — คำตอบแต่ละรอบต้องเทียบก่อน–หลังกันได้ ข้ามรอบแล้วชุดข้อมูลใช้ไม่ได้ */
         $this->get($this->url('/rounds/'.$second->id.'/survey'))->assertNotFound();
 
+        /* รอบที่ล็อกแสดงป้าย "ยังไม่เปิด" เฉย ๆ — คำอธิบายเงื่อนไขถูกตัดออกตามคำขอ */
         $this->get($this->url('/rounds'))
             ->assertOk()
-            ->assertSee('ทำรอบก่อนหน้าให้ครบก่อน');
+            ->assertDontSee('ทำรอบก่อนหน้าให้ครบก่อน');
 
         $this->post($this->url('/rounds/'.$first->id.'/survey'), ['answer_'.$rating->id => 4])
             ->assertRedirect($this->url('/rounds/'.$first->id.'/done'));
@@ -750,7 +759,8 @@ class TrackingRoundQrTest extends TestCase
 
         $this->post($this->url('/proxy/stop'))->assertRedirect($this->url('/home'));
 
-        $this->get($this->url('/home'))->assertOk()->assertSee('ผู้ร่วม P0001');
+        /* กลับมาเป็นแดชบอร์ดของตัวเอง — ดูจากรหัสบุคคลในคำทักทาย เพราะหน้านี้ไม่แสดงชื่อแล้ว */
+        $this->get($this->url('/home'))->assertOk()->assertSee('P0001')->assertDontSee('P0002');
     }
 
     public function test_proxy_requires_being_signed_in_first(): void

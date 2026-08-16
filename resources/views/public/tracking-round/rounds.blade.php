@@ -41,8 +41,7 @@
                             @elseif($open)
                                 ครบกำหนด @thaidate($round->due_date) · ใช้เวลา 5 นาที
                             @else
-                                {{-- ล็อกเพราะลำดับ ไม่ใช่เพราะวันที่ — ต้องบอกเงื่อนไขที่ปลดล็อกได้จริง --}}
-                                ครบกำหนด @thaidate($round->due_date) · ทำรอบก่อนหน้าให้ครบก่อน
+                                ครบกำหนด @thaidate($round->due_date)
                             @endif
                         </p>
 

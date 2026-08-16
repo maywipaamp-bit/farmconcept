@@ -89,9 +89,11 @@
   }
 
   function personCell(p) {
+    /* รหัสใต้ชื่อเป็นรหัสกลุ่มตัวอย่าง (CHT-xxxx) — รหัสเดียวกับที่ใช้ในรายงานวิจัย
+       ชื่อยังแสดงเพราะหน้านี้เป็นงานปฏิบัติการ (โทรตาม/แจ้งเตือน) และอาจเป็นนามแฝงอยู่แล้ว */
     return '<div class="fb-name-cell">' +
       '<a class="fb-name" href="{{ url('admin/cohort') }}/' + p.cohortId + '">' + esc(p.name) + '</a>' +
-      '<span class="fb-pid">' + esc(p.pid) + '</span>' +
+      '<span class="fb-pid">' + esc(p.cohortCode || p.pid) + '</span>' +
       '</div>';
   }
 

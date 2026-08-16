@@ -46,22 +46,23 @@ class TrackingRoundService
      * รอบติดตามถูกสร้างให้ครบทุกรอบที่เปิดใช้งาน นับจากวันที่ลงทะเบียนเป็นวันฐาน
      */
     public function selfRegister(
-        string $name,
         string $phone,
         ?string $lineUserId = null,
         ?string $gender = null,
-        ?int $areaId = null,
+        ?int $ageRangeId = null,
     ): CohortProfile {
-        return DB::transaction(function () use ($name, $phone, $lineUserId, $gender, $areaId): CohortProfile {
+        return DB::transaction(function () use ($phone, $lineUserId, $gender, $ageRangeId): CohortProfile {
             $personCode = $this->personCodes->next(lock: true);
 
+            /* ไม่เก็บชื่อ — ใช้รหัสบุคคลเป็นชื่อในระบบ โครงสร้างตารางคงเดิม
+               รหัสนี้ยังทำหน้าที่ชั้นยืนยันตัวตนคู่กับเบอร์ตอนเข้าระบบ (matchesNamePrefix) */
             $participant = Participant::create([
                 'code' => $personCode,
                 'person_code' => $personCode,
-                'name' => $name,
+                'name' => $personCode,
                 'phone' => $phone,
                 'gender' => $gender,
-                'area_id' => $areaId,
+                'age_range_id' => $ageRangeId,
                 'consent_status' => 'ยินยอม',
                 'line_user_id' => $lineUserId,
             ]);
@@ -446,6 +447,9 @@ class TrackingRoundService
             'id' => $round->id,
             'memberId' => $member?->id,
             'pid' => $participant->person_code ?? $participant->code,
+            /* รหัสกลุ่มตัวอย่าง (CHT-xxxx) คือรหัสที่ใช้แทนตัวตนในบริบทงานวิจัย
+               หน้าผลติดตามและ export ต้องอ้างรหัสนี้ ไม่ใช่ชื่อหรือรหัสบุคคล */
+            'cohortCode' => ($member?->cohortProfile ?? $round->cohortProfile)->cohort_code,
             'cohortId' => $round->cohort_profile_id,
             'name' => $participant->name,
             'phone' => $participant->phone ?? '',

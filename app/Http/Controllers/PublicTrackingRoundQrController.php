@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Area;
 use App\Models\FollowUpRound;
+use App\Models\Option;
 use App\Models\Participant;
 use App\Models\QrCode;
 use App\Models\TargetGroup;
@@ -190,7 +190,7 @@ class PublicTrackingRoundQrController extends Controller
 
         $data = $request->validate(
             ['name_prefix' => ['required', 'string', 'max:20']],
-            ['name_prefix.required' => 'กรุณากรอกชื่อจริง 5 ตัวอักษรแรก']
+            ['name_prefix.required' => 'กรุณากรอกรหัสบุคคล หรือชื่อที่ลงทะเบียนไว้']
         );
 
         /* จับคู่เองจากชื่อที่พิมพ์ ไม่รับ id จากฟอร์ม — ฟอร์มไม่เคยรู้ว่ามีใครอยู่ในเบอร์นี้
@@ -202,7 +202,7 @@ class PublicTrackingRoundQrController extends Controller
         $request->session()->reflash();
 
         if ($matches->isEmpty()) {
-            return back()->withErrors(['name_prefix' => 'ชื่อจริงไม่ตรงกับข้อมูลของเบอร์นี้ กรุณาตรวจสอบอีกครั้ง']);
+            return back()->withErrors(['name_prefix' => 'ชื่อไม่ตรงกับที่ลงทะเบียนไว้ของเบอร์นี้ กรุณาตรวจสอบอีกครั้ง']);
         }
 
         /* เบอร์เดียวมีสองคนที่ชื่อขึ้นต้นเหมือนกัน — เดาให้ไม่ได้ เพราะเดาผิดคือคำตอบลงผิดคน */
@@ -228,10 +228,9 @@ class PublicTrackingRoundQrController extends Controller
            กดรีเฟรชแล้วต้องหาย ส่วนกรณี validation error ฟอร์มเติมกลับด้วย old() อยู่แล้ว */
         return view('public.tracking-round.register', [
             'phone' => $request->session()->get('prefillPhone', ''),
-            'lineName' => $request->session()->get(PublicLineLoginController::SESSION_KEY)['name'] ?? '',
             'genders' => config('farmconcept.genders'),
-            /* รายชื่อพื้นที่มาจาก master data ไม่ได้เขียนรายชื่อชุมชนตายไว้ในหน้าจอ */
-            'areas' => Area::orderBy('name')->get(['id', 'name']),
+            /* ตัวเลือกช่วงอายุมาจาก master data ชุดเดียวกับแบบลงทะเบียนกิจกรรม */
+            'ageRanges' => Option::group('age_range')->active()->get(['id', 'label']),
         ]);
     }
 
@@ -246,19 +245,19 @@ class PublicTrackingRoundQrController extends Controller
         $request->merge(['phone' => $this->digits($request->input('phone'))]);
 
         /* ลำดับกฎตรงกับลำดับฟิลด์บนหน้าจอ เพราะหน้านี้แสดง error ทีละข้อความเดียว
-           ผู้ใช้จะได้แก้ไล่จากบนลงล่าง ไม่ใช่กระโดดไปมา */
+           ผู้ใช้จะได้แก้ไล่จากบนลงล่าง ไม่ใช่กระโดดไปมา
+           ไม่รับชื่อ — ระบบออกรหัสบุคคลให้เป็นชื่อในระบบแทน */
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:160'],
             'phone' => ['required', 'regex:/^0[689]\d{8}$/'],
             'gender' => ['required', Rule::in(array_keys(config('farmconcept.genders')))],
-            'area_id' => ['required', 'integer', 'exists:mst_areas,id'],
+            'age_range_id' => ['required', 'integer',
+                Rule::exists('mst_options', 'id')->where('option_group', 'age_range')->where('is_active', true)],
             'consent' => ['required', 'accepted'],
         ], [
-            'name.required' => 'กรุณากรอกชื่อ-นามสกุล',
             'phone.required' => 'กรุณากรอกเบอร์โทรศัพท์',
             'phone.regex' => 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก',
             'gender.required' => 'กรุณาเลือกเพศ',
-            'area_id.required' => 'กรุณาเลือกพื้นที่/ชุมชน',
+            'age_range_id.required' => 'กรุณาเลือกช่วงอายุ',
             'consent.accepted' => 'กรุณายินยอมให้ใช้ข้อมูลเพื่อการวิจัย',
         ]);
 
@@ -270,11 +269,10 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         $profile = $this->rounds->selfRegister(
-            trim($data['name']),
             $this->formatPhone($data['phone']),
             $request->session()->get(PublicLineLoginController::SESSION_KEY)['userId'] ?? null,
             $data['gender'],
-            (int) $data['area_id'],
+            (int) $data['age_range_id'],
         );
 
         return $this->signIn($request, $profile->participant)
@@ -300,6 +298,9 @@ class PublicTrackingRoundQrController extends Controller
         if ($participant === null) {
             return redirect()->route('public.tracking-round-qr');
         }
+
+        /* ป้ายบนหัวแสดงรหัสกลุ่มตัวอย่าง — โหลดล่วงหน้าเพราะระบบปิด lazy loading */
+        $participant->loadMissing('cohortProfile');
 
         $all = $this->allRoundsFor($participant);
         $due = $this->rounds->openRoundsFor($participant);
@@ -418,7 +419,7 @@ class PublicTrackingRoundQrController extends Controller
             'name_prefix' => ['required', 'string', 'max:20'],
         ], [
             'phone.required' => 'กรุณากรอกเบอร์โทร 10 หลัก',
-            'name_prefix.required' => 'กรุณากรอกชื่อจริง 3 ตัวอักษรแรก',
+            'name_prefix.required' => 'กรุณากรอกรหัสบุคคลผู้ถูกประเมิน',
         ]);
 
         $target = $this->participantsByPhone($data['phone'])

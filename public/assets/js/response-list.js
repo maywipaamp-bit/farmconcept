@@ -128,11 +128,12 @@
   /* ส่งออกตามเงื่อนไขที่กรองอยู่ ไม่ใช่ทั้งตาราง — เรียก query() โดยไม่ส่งหน้า จึงได้ครบทุกหน้า */
   $('rl-export').addEventListener('click', function () {
     var all = S.query({ round: state.round, keyword: state.keyword });
+    /* ไฟล์ผลตอบเป็นข้อมูลวิจัย — อ้างคนด้วยรหัสกลุ่มตัวอย่างเท่านั้น ไม่ใส่ชื่อ */
     window.TFC.exportCsv(
       'ตอบแบบประเมิน.csv',
-      ['ลำดับ', 'ชื่อ-นามสกุล', 'รหัสบุคคล', 'รอบติดตาม', 'แบบประเมิน', 'วันเวลาที่ตอบ'],
+      ['ลำดับ', 'รหัสกลุ่มตัวอย่าง', 'รอบติดตาม', 'แบบประเมิน', 'วันเวลาที่ตอบ'],
       all.rows.map(function (row, i) {
-        return [i + 1, row.name, row.pid, row.round, row.form, S.fmtDateTime(row)];
+        return [i + 1, row.cohortCode || row.pid, row.round, row.form, S.fmtDateTime(row)];
       })
     );
   });

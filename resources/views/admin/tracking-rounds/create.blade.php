@@ -227,7 +227,7 @@
         '<div class="fb-cell fb-nums fb-no">' + (start + i + 1) + '</div>' +
         '<div class="fb-name-cell">' +
           '<span class="fb-name">' + esc(p.name) + '</span>' +
-          '<span class="fb-pid">' + esc(p.pid) + '</span>' +
+          '<span class="fb-pid">' + esc(p.cohortCode || p.pid) + '</span>' +
         '</div>' +
         '<div class="fb-cell fb-nums">' + esc(p.phone) + '</div>' +
         '<div class="fb-cell">' + esc(p.target) + '</div>' +
@@ -392,12 +392,14 @@
     }
 
     if (t.closest('#rc-export')) {
+      /* ไฟล์ที่หลุดออกนอกระบบอ้างคนด้วยรหัสกลุ่มตัวอย่างเท่านั้น ไม่มีชื่อ-เบอร์
+         งานโทรตามให้เปิดดูในหน้าจอซึ่งจำกัดสิทธิ์อยู่แล้ว ไม่ใช่จากไฟล์ที่ส่งต่อกันได้ */
       var rows = search.rows.map(function (p, i) {
-        return [i + 1, p.pid, p.name, p.phone, p.target, p.round,
+        return [i + 1, p.cohortCode || p.pid, p.target, p.round,
           fmt(p.due), p.state, p.line ? 'LINE' : 'ยังไม่ผูก LINE'];
       });
       window.TFC.exportCsv('รายชื่อรอบติดตาม.csv',
-        ['#', 'รหัสบุคคล', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'กลุ่มเป้าหมาย', 'รอบที่ติดตาม',
+        ['#', 'รหัสกลุ่มตัวอย่าง', 'กลุ่มเป้าหมาย', 'รอบที่ติดตาม',
          'ครบกำหนด', 'สถานะติดตาม', 'ช่องทางแจ้งเตือน'], rows);
       return;
     }
