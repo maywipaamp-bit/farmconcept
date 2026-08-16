@@ -40,14 +40,26 @@
           <button type="button" class="co-link" id="rc-msg-reset">คืนค่าเริ่มต้น</button>
         </div>
         <textarea class="input fb-msg" id="rc-msg" rows="4"></textarea>
-        <span class="fb-msg-hint">ใช้ตัวแปร {{ implode(' · ', $placeholders) }} ระบบจะแทนค่าให้รายคน</span>
+        {{-- ตัวแปรเป็นปุ่มกดแทรก ไม่ใช่ข้อความให้พิมพ์ตาม — พิมพ์เองผิดวรรณยุกต์เดียวระบบก็ไม่แทนค่าให้ --}}
+        <div class="fb-msg-hint">
+          แตะเพื่อแทรกตัวแปร (ระบบแทนค่าให้รายคน):
+          @foreach($placeholders as $placeholder)
+            <button type="button" class="cd-mini-btn" data-insert="{{ $placeholder }}">{{ $placeholder }}</button>
+          @endforeach
+        </div>
       </div>
       <div class="fb-msg-col">
         <span class="co-field-label">ตัวอย่างที่ผู้รับเห็น</span>
+        {{-- โครงเดียวกับการ์ด Flex ที่ส่งจริง (LinePushService::pushSurveyInvite) — แก้ฝั่งนั้นต้องแก้ฝั่งนี้ตาม --}}
         <div class="cd-line-preview">
           <div class="cd-bubble">
-            <span class="cd-bubble-text" id="rc-bubble"></span>
-            <span class="cd-bubble-btn">ทำแบบประเมิน</span>
+            <span class="cd-bubble-hero" aria-hidden="true">💚</span>
+            <span class="cd-bubble-title">แบบประเมินสุขภาวะ</span>
+            <span class="cd-bubble-text is-center" id="rc-bubble"></span>
+            <span class="cd-bubble-meta" id="rc-bubble-round"></span>
+            <span class="cd-bubble-due" id="rc-bubble-due"></span>
+            <span class="cd-bubble-fine">ใช้เวลาประมาณ 5 นาที · คำตอบถูกเก็บเป็นความลับ และรายงานเป็นภาพรวมเท่านั้น</span>
+            <span class="cd-bubble-btn">เริ่มทำแบบประเมิน</span>
           </div>
         </div>
       </div>
@@ -295,12 +307,17 @@
     return tpl
       .replace(/\{ชื่อ\}/g, p.name)
       .replace(/\{รอบ\}/g, p.round)
-      .replace(/\{วันครบกำหนด\}/g, fmt(p.due));
+      .replace(/\{วันครบกำหนด\}/g, fmt(p.due))
+      .replace(/\{ลิงก์\}/g, @json(rtrim((string) config('app.url'), '/').'/health'));
   }
 
   function renderMsg() {
     if ($('rc-msg').value !== form.msg) $('rc-msg').value = form.msg;
-    $('rc-bubble').textContent = fillMsg(form.msg, sampleMember());
+    var p = sampleMember();
+    $('rc-bubble').textContent = fillMsg(form.msg, p);
+    /* รอบกับวันครบกำหนดบนการ์ดมาจากข้อมูลรายคน ไม่ใช่จากข้อความ — พรีวิวใช้คนแรกในผลค้นหา */
+    $('rc-bubble-round').textContent = 'รอบติดตาม ' + p.round;
+    $('rc-bubble-due').textContent = 'ตอบได้ถึงวันที่ ' + fmt(p.due);
   }
 
   /* ---------- แถบล่าง ---------- */
@@ -410,6 +427,21 @@
       var p = Number(pg.getAttribute('data-page'));
       if (p < 1) return;
       return runSearch(p);
+    }
+
+    /* ปุ่มแทรกตัวแปร — แทรกตรงตำแหน่งเคอร์เซอร์ในกล่องข้อความ แล้วอัปเดตพรีวิวทันที */
+    var insertBtn = t.closest('[data-insert]');
+    if (insertBtn) {
+      var ta = $('rc-msg');
+      var token = insertBtn.getAttribute('data-insert');
+      var start = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+      var end = ta.selectionEnd == null ? ta.value.length : ta.selectionEnd;
+      ta.value = ta.value.slice(0, start) + token + ta.value.slice(end);
+      form.msg = ta.value;
+      ta.focus();
+      ta.setSelectionRange(start + token.length, start + token.length);
+      $('rc-bubble').textContent = fillMsg(form.msg, sampleMember());
+      return;
     }
 
     if (t.closest('#rc-msg-reset')) { form.msg = DEFAULT_MSG; return renderMsg(); }

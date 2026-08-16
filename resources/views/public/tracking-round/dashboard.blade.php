@@ -45,6 +45,10 @@
             <div class="tr-notice is-success" role="status">เชื่อม LINE เรียบร้อยแล้ว · จะได้รับแจ้งเตือนรอบถัดไปทาง LINE</div>
         @endif
 
+        @if(session('lineConflict'))
+            <div class="tr-notice" role="status">บัญชี LINE นี้ถูกผูกกับผู้ใช้อื่นไว้แล้ว จึงเชื่อมให้ไม่ได้ — กรุณาติดต่อเจ้าหน้าที่</div>
+        @endif
+
         {{-- การ์ดเดียวในหน้าที่ใช้สีเขียว — สิ่งที่ต้องทำตอนนี้ ที่เหลือเป็นข้อมูลประกอบ --}}
         <div class="tr-due-card{{ $dueRound ? '' : ' is-empty' }}">
             <div class="tr-due-head">
@@ -78,33 +82,16 @@
         </div>
 
         {{-- สวิตช์แจ้งเตือน — เป็นค่าของแต่ละคน เพราะเป็นการยินยอมรับข้อความส่วนบุคคล
-             ยังไม่เชื่อม LINE = กดไม่ได้และแสดงเป็นปิด เพราะเปิดไปข้อความก็ส่งไม่ถึงจริง --}}
+             ยังไม่เชื่อม LINE: สวิตช์แสดงเป็นปิด กดแล้วพาไปเชื่อม LINE เลย (จัดการที่ toggleNotify)
+             ไม่มีปุ่มเชื่อมแยก — สวิตช์คือทางเข้าเดียว --}}
         @php($linked = filled($participant->line_user_id))
         <form method="POST" action="{{ route('public.tracking-round-qr.notify') }}" class="tr-row-form">
             @csrf
-            <button type="submit" class="tr-toggle-row" @disabled(! $linked)
+            <button type="submit" class="tr-toggle-row"
                     aria-pressed="{{ $linked && $participant->line_notify ? 'true' : 'false' }}">
                 <span class="tr-info-text">แจ้งเตือนรอบถัดไปผ่าน LINE</span>
                 <span class="tr-toggle{{ $linked && $participant->line_notify ? ' is-on' : '' }}" aria-hidden="true"><i></i></span>
             </button>
         </form>
-
-        {{-- ยังไม่ได้เชื่อม LINE = เปิดสวิตช์ไปก็ส่งไม่ถึง ต้องมีทางเชื่อมให้กดตรงนี้เลย
-             ไม่ใช่บอกว่า "ยังไม่ได้เชื่อม" แล้วปล่อยให้ไปหาทางเอง --}}
-        @unless($linked)
-            <a class="tr-line-outline" href="{{ route('public.tracking-round-qr.line') }}">
-                <svg class="tr-line-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2.5c5.24 0 9.5 3.46 9.5 7.72 0 1.54-.6 2.94-1.7 4.2-1.6 1.85-4.3 4.1-5.9 5.06-1.05.63-.94-.28-.9-.55l.15-.9c.04-.28.07-.7-.04-.97-.12-.3-.6-.46-.95-.53-4.7-.62-8.16-3.9-8.16-7.31C4 5.96 8.26 2.5 12 2.5Zm-2.9 5.6a.3.3 0 0 0-.3.3v3.9c0 .17.13.3.3.3h.62c.16 0 .3-.13.3-.3v-3.9a.3.3 0 0 0-.3-.3H9.1Zm-2.6 0a.3.3 0 0 0-.3.3v3.9c0 .17.14.3.3.3h2.02c.17 0 .3-.13.3-.3v-.62a.3.3 0 0 0-.3-.3H7.42V8.4a.3.3 0 0 0-.3-.3H6.5Zm4.72 0a.3.3 0 0 0-.3.3v3.9c0 .17.14.3.3.3h.62c.17 0 .3-.13.3-.3v-2.1l1.72 2.33.05.05h.02l.03.02h.66c.17 0 .3-.13.3-.3v-3.9a.3.3 0 0 0-.3-.3h-.62a.3.3 0 0 0-.3.3v2.1L13.3 8.24l-.04-.05h-.03l-.02-.02h-.66l-.02-.01h-.03l-.02-.01h-.62Zm5.3 0a.3.3 0 0 0-.3.3v3.9c0 .17.13.3.3.3h2.03c.16 0 .3-.13.3-.3v-.62a.3.3 0 0 0-.3-.3h-1.11v-.43h1.11c.16 0 .3-.13.3-.3v-.62a.3.3 0 0 0-.3-.3h-1.11v-.43h1.11c.16 0 .3-.14.3-.3V8.4a.3.3 0 0 0-.3-.3h-2.03Z"/>
-                </svg>
-                เชื่อมต่อ LINE
-            </a>
-            <p class="tr-hint-center">เชื่อมแล้วจะได้รับแจ้งเตือนรอบถัดไป และเข้าระบบครั้งหน้าไม่ต้องกรอกเบอร์</p>
-        @else
-            {{-- เชื่อมแล้วบอกให้รู้ชัด ๆ — ไม่ใช่ปุ่ม แค่สถานะ จะได้ไม่มีใครกดเชื่อมซ้ำ --}}
-            <div class="tr-line-outline is-linked">
-                <svg class="tr-line-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
-                เชื่อมต่อ LINE แล้ว
-            </div>
-        @endunless
     </section>
 @endsection

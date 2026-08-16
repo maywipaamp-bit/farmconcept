@@ -29,6 +29,65 @@ class LinePushService
      */
     public function pushText(string $lineUserId, string $message): bool
     {
+        return $this->push($lineUserId, [['type' => 'text', 'text' => $message]]);
+    }
+
+    /**
+     * ส่งการ์ดชวนทำแบบประเมิน — หัวเรื่อง เนื้อความของแอดมิน รอบ/วันครบกำหนด และปุ่มกดใหญ่
+     *
+     * เป็น Flex Message เพราะข้อความ text ล้วนทำปุ่มไม่ได้ และ buttons template
+     * จำกัดเนื้อความ 160 ตัวอักษรซึ่งข้อความไทยของโครงการยาวเกินแทบทุกครั้ง
+     * โครงเลียนแบบการ์ดสำรวจของ LINE เอง: ภาพจำ (อีโมจิ) → หัวเรื่อง → เนื้อความ →
+     * ข้อมูลรอบแบบโครงสร้าง → คำชี้แจงสั้น → ปุ่มเดียวเต็มความกว้าง
+     * สีอ้างชุดแบรนด์ของระบบ (AGENTS.md): เขียวหลัก #81C060 · เขียวเข้ม #2F6D45
+     */
+    public function pushSurveyInvite(string $lineUserId, string $message, string $roundName, string $dueDate, string $url): bool
+    {
+        return $this->push($lineUserId, [[
+            'type' => 'flex',
+            /* altText คือบรรทัดที่เด้งบนแถบแจ้งเตือนของมือถือ — LINE จำกัด 400 ตัวอักษร */
+            'altText' => mb_substr($message, 0, 400),
+            'contents' => [
+                'type' => 'bubble',
+                'body' => [
+                    'type' => 'box',
+                    'layout' => 'vertical',
+                    'paddingAll' => '20px',
+                    'contents' => [
+                        ['type' => 'text', 'text' => '💚', 'size' => 'xxl', 'align' => 'center'],
+                        ['type' => 'text', 'text' => 'แบบประเมินสุขภาวะ', 'weight' => 'bold', 'size' => 'lg',
+                            'align' => 'center', 'color' => '#2F6D45', 'margin' => 'md'],
+                        ['type' => 'text', 'text' => $message, 'wrap' => true, 'size' => 'sm',
+                            'color' => '#6B7280', 'align' => 'center', 'margin' => 'lg'],
+                        ['type' => 'separator', 'margin' => 'xl'],
+                        ['type' => 'text', 'text' => 'รอบติดตาม '.$roundName, 'size' => 'xs',
+                            'color' => '#9CA3AF', 'align' => 'center', 'margin' => 'xl'],
+                        ['type' => 'text', 'text' => 'ตอบได้ถึงวันที่ '.$dueDate, 'weight' => 'bold', 'size' => 'md',
+                            'color' => '#2F6D45', 'align' => 'center', 'margin' => 'sm'],
+                        ['type' => 'text', 'wrap' => true, 'size' => 'xxs', 'color' => '#9CA3AF',
+                            'align' => 'center', 'margin' => 'xl',
+                            'text' => 'ใช้เวลาประมาณ 5 นาที · คำตอบถูกเก็บเป็นความลับ และรายงานเป็นภาพรวมเท่านั้น'],
+                    ],
+                ],
+                'footer' => [
+                    'type' => 'box',
+                    'layout' => 'vertical',
+                    'paddingAll' => '12px',
+                    'contents' => [[
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'color' => '#81C060',
+                        'height' => 'md',
+                        'action' => ['type' => 'uri', 'label' => 'เริ่มทำแบบประเมิน', 'uri' => $url],
+                    ]],
+                ],
+            ],
+        ]]);
+    }
+
+    /** @param  array<int, array<string, mixed>>  $messages */
+    private function push(string $lineUserId, array $messages): bool
+    {
         if (! $this->isConfigured()) {
             return false;
         }
@@ -37,7 +96,7 @@ class LinePushService
             ->asJson()
             ->post(self::PUSH_URL, [
                 'to' => $lineUserId,
-                'messages' => [['type' => 'text', 'text' => $message]],
+                'messages' => $messages,
             ]);
 
         if ($response->failed()) {

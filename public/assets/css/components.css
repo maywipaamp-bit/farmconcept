@@ -12021,6 +12021,14 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   white-space: pre-line;
 }
 
+/* ส่วนประกอบของการ์ดพรีวิว — โครงเดียวกับ Flex ที่ส่งจริงใน LinePushService::pushSurveyInvite */
+.cd-bubble-hero { font-size: 28px; line-height: 1; text-align: center; }
+.cd-bubble-title { font-size: var(--font-size-body); font-weight: var(--font-weight-semibold); color: var(--color-primary-dark, #2F6D45); text-align: center; }
+.cd-bubble-text.is-center { color: var(--color-text-secondary); text-align: center; }
+.cd-bubble-meta { padding-top: var(--space-3); border-top: 1px solid var(--color-border-soft); font-size: var(--font-size-caption); color: var(--color-text-muted); text-align: center; }
+.cd-bubble-due { font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); color: var(--color-primary-dark, #2F6D45); text-align: center; }
+.cd-bubble-fine { font-size: 11px; color: var(--color-text-muted); text-align: center; text-wrap: pretty; }
+
 .cd-bubble-btn {
   display: block;
   text-align: center;
@@ -12534,6 +12542,9 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 .fb-msg { box-sizing: border-box; width: 100%; min-width: 0; resize: vertical; }
 
 .fb-msg-hint { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+
+/* ปุ่มแทรกตัวแปรในคำใบ้ใต้กล่องข้อความ — เรียงต่อบรรทัดเดียว เว้นช่องพอให้แตะถูก */
+.fb-msg-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
 /* ---------- แถบปุ่มล่าง ---------- */
 .fb-bottombar {

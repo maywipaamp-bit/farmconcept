@@ -87,6 +87,44 @@ class LineCheckCommand extends Command
         $this->line('   1) Callback URL ตรงกับด้านบนเป๊ะ ๆ (ห้ามมี / ปิดท้าย)');
         $this->line('   2) channel เปิดใช้ประเภทแอปแบบ "Web app" ไว้แล้ว');
 
+        return $this->checkMessaging();
+    }
+
+    /**
+     * ฝั่งส่งแจ้งเตือน (Messaging API) — คนละ channel กับ Login
+     *
+     * token ตรวจกับ /v2/bot/info ได้ตรง ๆ เพราะมีเฉพาะ Messaging API channel ที่เรียกสำเร็จ
+     * ถ้าไม่ตั้ง ระบบรอบติดตามจะบันทึกทุกคนเป็น "ส่งไม่สำเร็จ" — ต้องเห็นจากคำสั่งนี้ก่อนไปงมในหน้าจอ
+     */
+    private function checkMessaging(): int
+    {
+        $token = (string) config('services.line.messaging_token');
+
+        $this->line('');
+        $this->line('ตรวจการตั้งค่า LINE Messaging API (แจ้งเตือนรอบติดตาม)');
+        $this->line(str_repeat('─', 46));
+
+        if ($token === '') {
+            $this->warn('△ ยังไม่ได้ตั้ง LINE_MESSAGING_CHANNEL_ACCESS_TOKEN ใน .env');
+            $this->line('  ระบบจะบันทึกการแจ้งเตือน LINE ทุกคนเป็น "ส่งไม่สำเร็จ"');
+            $this->line('  วิธีตั้ง: LINE Developers Console → channel ชนิด Messaging API');
+            $this->line('  → แท็บ Messaging API → Issue channel access token (long-lived) แล้วคัดลอกมาใส่');
+
+            return self::SUCCESS;
+        }
+
+        $bot = Http::withToken($token)->timeout(10)->get('https://api.line.me/v2/bot/info');
+
+        if ($bot->failed()) {
+            $this->error('✗ token ใช้ไม่ได้ — LINE ตอบ: '.$bot->status().' '.(string) $bot->json('message'));
+            $this->warn('  ออก token ใหม่จากแท็บ Messaging API ของ channel แล้วใส่แทนของเดิม');
+
+            return self::FAILURE;
+        }
+
+        $this->info('✓ Messaging API พร้อมส่ง — บอท: '.$bot->json('displayName').' ('.$bot->json('basicId').')');
+        $this->line('  ผู้รับต้องเป็นเพื่อนกับบอทนี้ด้วย ไม่งั้น LINE จะปฏิเสธการส่งรายคน');
+
         return self::SUCCESS;
     }
 }

@@ -1391,13 +1391,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-line-outline:hover { background: #F2FBF5; }
 .tr-line-outline .tr-line-icon { color: #06C755; }
 
-/* สถานะ "เชื่อมแล้ว" — หน้าตาเดียวกับปุ่มแต่เป็นพื้นเขียวจาง อ่านออกทันทีว่าไม่ใช่สิ่งที่ต้องกด */
-.tr-line-outline.is-linked { border-color: #B8E8C8; background: #F2FBF5; }
-.tr-line-outline.is-linked .tr-line-check { width: 16px; height: 16px; color: #06A548; }
-
-/* สวิตช์แจ้งเตือนตอนยังไม่เชื่อม LINE — กดไม่ได้ และหน้าตาต้องบอกแบบนั้น */
-.tr-toggle-row:disabled { opacity: .55; cursor: not-allowed; }
-
 .tr-hint-center { margin: 7px 0 0; color: var(--text-muted); font-size: 11.5px; line-height: 1.45; text-align: center; text-wrap: pretty; }
 
 /* select ของเบราว์เซอร์ใช้ฟอนต์ระบบปฏิบัติการ ไม่ใช่ฟอนต์ของหน้า

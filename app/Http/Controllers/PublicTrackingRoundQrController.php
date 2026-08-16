@@ -148,6 +148,15 @@ class PublicTrackingRoundQrController extends Controller
             return $this->signIn($request, $participant);
         }
 
+        /* บัญชี LINE นี้ยังไม่ถูกผูกกับใคร และคนกดล็อกอินค้างอยู่แล้ว (มาจากสวิตช์บนแดชบอร์ด)
+           — ผูกให้ทันทีแล้วพากลับแดชบอร์ด ไม่ใช่ไล่ไปกรอกเบอร์ซ้ำเหมือนคนแปลกหน้า
+           การผูกและเงื่อนไขกันผูกซ้อนอยู่ใน signIn() ที่เดียว */
+        $current = $this->verifiedParticipant($request);
+
+        if ($current !== null) {
+            return $this->signIn($request, $current);
+        }
+
         /* ยังไม่มีใครผูกบัญชี LINE นี้ — ต้องแยกสองกรณีให้ออก คนที่เคยลงทะเบียนด้วยเบอร์ไว้แล้ว
            กับคนที่ยังไม่เคยลงทะเบียนเลย ทั้งคู่ต้องยืนยันเบอร์ก่อน แล้วระบบจะผูก LINE ให้เอง
            ผลักไปหน้าลงทะเบียนตรง ๆ ไม่ได้ เพราะคนกลุ่มแรกจะกรอกเบอร์เดิมแล้วโดนปฏิเสธวนอยู่อย่างนั้น */
@@ -228,7 +237,8 @@ class PublicTrackingRoundQrController extends Controller
            กดรีเฟรชแล้วต้องหาย ส่วนกรณี validation error ฟอร์มเติมกลับด้วย old() อยู่แล้ว */
         return view('public.tracking-round.register', [
             'phone' => $request->session()->get('prefillPhone', ''),
-            'genders' => config('farmconcept.genders'),
+            /* หน้าลงทะเบียนกลุ่มตัวอย่างให้เลือกแค่หญิง/ชาย — ชุดเต็มใน config ยังใช้ที่หน้าอื่นตามเดิม */
+            'genders' => collect(config('farmconcept.genders'))->only(['female', 'male'])->all(),
             /* ตัวเลือกช่วงอายุมาจาก master data ชุดเดียวกับแบบลงทะเบียนกิจกรรม */
             'ageRanges' => Option::group('age_range')->active()->get(['id', 'label']),
         ]);
@@ -249,7 +259,8 @@ class PublicTrackingRoundQrController extends Controller
            ไม่รับชื่อ — ระบบออกรหัสบุคคลให้เป็นชื่อในระบบแทน */
         $data = $request->validate([
             'phone' => ['required', 'regex:/^0[689]\d{8}$/'],
-            'gender' => ['required', Rule::in(array_keys(config('farmconcept.genders')))],
+            /* รับเฉพาะค่าที่หน้าจอนี้มีให้เลือกจริง ไม่ใช่ชุดเต็มของระบบ */
+            'gender' => ['required', Rule::in(['female', 'male'])],
             'age_range_id' => ['required', 'integer',
                 Rule::exists('mst_options', 'id')->where('option_group', 'age_range')->where('is_active', true)],
             'consent' => ['required', 'accepted'],
@@ -370,6 +381,12 @@ class PublicTrackingRoundQrController extends Controller
 
         if ($participant === null) {
             return redirect()->route('public.tracking-round-qr');
+        }
+
+        /* ยังไม่เชื่อม LINE — เปิดสวิตช์ไปข้อความก็ส่งไม่ถึง พาไปเชื่อมเลยแทนที่จะ toggle ค่าเปล่า ๆ
+           กลับมาจาก LINE แล้ว line_notify เป็นค่าเริ่มต้น (เปิด) อยู่แล้ว ตรงกับความตั้งใจของคนกด */
+        if (blank($participant->line_user_id)) {
+            return redirect()->route('public.tracking-round-qr.line');
         }
 
         $participant->update(['line_notify' => ! $participant->line_notify]);
@@ -583,9 +600,12 @@ class PublicTrackingRoundQrController extends Controller
            ต้องให้เจ้าหน้าที่ตรวจก่อน ไม่ใช่ให้ใครก็ได้ที่รู้เบอร์มาเปลี่ยนปลายทางแจ้งเตือน */
         $lineUserId = $request->session()->get(PublicLineLoginController::SESSION_KEY)['userId'] ?? null;
 
-        $justLinked = $lineUserId
-            && blank($participant->line_user_id)
-            && ! Participant::where('line_user_id', $lineUserId)->exists();
+        /* ผูกไม่ได้เพราะ LINE นี้เป็นของคนอื่น — ต้องบอกผู้ใช้ตรง ๆ ไม่ใช่เงียบ
+           ไม่งั้นเขาจะกดเชื่อมวนไปเรื่อย ๆ โดยไม่รู้ว่าติดอะไร */
+        $ownedByOther = $lineUserId
+            && Participant::where('line_user_id', $lineUserId)->where('id', '!=', $participant->id)->exists();
+
+        $justLinked = $lineUserId && blank($participant->line_user_id) && ! $ownedByOther;
 
         if ($justLinked) {
             $participant->update(['line_user_id' => $lineUserId]);
@@ -593,7 +613,8 @@ class PublicTrackingRoundQrController extends Controller
 
         return redirect()
             ->route('public.tracking-round-qr.dashboard')
-            ->with('lineLinked', $justLinked);
+            ->with('lineLinked', $justLinked)
+            ->with('lineConflict', $ownedByOther && blank($participant->line_user_id));
     }
 
     /** เจ้าของ session — คนที่ยืนยันตัวตนไว้ คืน null ถ้ายังไม่ยืนยันหรือระเบียนหายไปแล้ว */

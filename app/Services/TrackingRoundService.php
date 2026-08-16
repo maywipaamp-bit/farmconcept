@@ -51,6 +51,14 @@ class TrackingRoundService
         ?string $gender = null,
         ?int $ageRangeId = null,
     ): CohortProfile {
+        /* บัญชี LINE หนึ่งผูกได้กับคนเดียว (unique ที่ฐานข้อมูล) — ถ้า LINE ใน session
+           ถูกผูกกับคนอื่นไว้แล้ว เช่น ลงทะเบียนให้คนในบ้านต่อกันโดยไม่สลับบัญชี
+           ให้ลงทะเบียนคนใหม่แบบไม่ผูก LINE แทนที่จะล้มทั้งรายการด้วย duplicate key
+           (withTrashed เพราะ unique index นับรวมแถวที่ soft delete ด้วย) */
+        if ($lineUserId !== null && Participant::withTrashed()->where('line_user_id', $lineUserId)->exists()) {
+            $lineUserId = null;
+        }
+
         return DB::transaction(function () use ($phone, $lineUserId, $gender, $ageRangeId): CohortProfile {
             $personCode = $this->personCodes->next(lock: true);
 
@@ -173,7 +181,7 @@ class TrackingRoundService
      * และตาราง evl_round_batch_members ก็มี unique (batch_id, follow_up_round_id) อยู่แล้ว
      * ซึ่งเป็นกติกาเดียวกันในระดับรอบเดียว
      *
-     * @param  array{from: string, to: string, targetGroupIds?: array<int>, page?: int, pageSize?: int, excludeBatchId?: int|null}  $filters
+     * @param  array{from: string, to: string, targetGroupIds?: array<int>, page?: int, pageSize?: int}  $filters
      */
     public function eligible(array $filters): array
     {
@@ -233,17 +241,9 @@ class TrackingRoundService
                 $targetGroupIds !== [],
                 fn (Builder $q) => $q->whereIn('ptp_participants.target_group_id', $targetGroupIds)
             )
-            ->whereNotExists(function ($q) use ($filters): void {
-                $q->select(DB::raw(1))
-                    ->from('evl_round_batch_members')
-                    ->join('evl_round_batches', 'evl_round_batches.id', '=', 'evl_round_batch_members.batch_id')
-                    ->whereColumn('evl_round_batch_members.follow_up_round_id', 'ptp_follow_up_rounds.id')
-                    ->where('evl_round_batches.state', '!=', RoundBatch::STATE_CANCELLED)
-                    ->when(
-                        filled($filters['excludeBatchId'] ?? null),
-                        fn ($sub) => $sub->where('evl_round_batches.id', '!=', $filters['excludeBatchId'])
-                    );
-            })
+            /* ใบที่เคยอยู่ในรอบอื่นแล้ว "ยังเลือกซ้ำได้" — ตั้งใจให้เปิดรอบใหม่ตามคนเดิมซ้ำได้
+               (เตือนครั้งที่สองของใบเดียวกัน) ตัวกันข้อความถล่มคือเงื่อนไข answered_at ด้านบน:
+               คนที่ตอบแล้วหลุดจากรายชื่อเอง และ notify() ในรอบเดียวกันก็ไม่ส่งซ้ำคนที่ส่งสำเร็จแล้ว */
             ->select('ptp_follow_up_rounds.*');
     }
 
@@ -328,7 +328,15 @@ class TrackingRoundService
             }
 
             $message = $this->fillTemplate($batch->notification_template, $participant, $member->followUpRound);
-            $ok = $this->push->pushText($lineUserId, $message);
+            /* ส่งเป็นการ์ดมีปุ่มกดเสมอ — รอบกับวันครบกำหนดขึ้นบนการ์ดเป็นโครงสร้างอยู่แล้ว
+               แอดมินจึงไม่ต้องพะวงว่าลืมใส่ตัวแปรในข้อความ */
+            $ok = $this->push->pushSurveyInvite(
+                $lineUserId,
+                $message,
+                $member->followUpRound->name,
+                $this->thaiDate($member->followUpRound->due_date),
+                $this->healthUrl(),
+            );
 
             $member->update([
                 'notified_at' => now(),
@@ -400,12 +408,24 @@ class TrackingRoundService
             /* ชื่อรอบมาจากใบของคนนั้น ซึ่ง snapshot มาจากหน้าตั้งค่ารอบประเมิน — ไม่ได้เขียนตายไว้ */
             '{รอบ}' => $round->name,
             '{วันครบกำหนด}' => $this->thaiDate($round->due_date),
+            '{ลิงก์}' => $this->healthUrl(),
         ]);
     }
 
     public function defaultTemplate(): string
     {
         return config('farmconcept.tracking_round.default_message');
+    }
+
+    /**
+     * ลิงก์หน้าแบบประเมิน — ปลายทางของปุ่มบนการ์ดและตัวแปร {ลิงก์}
+     *
+     * ยึด APP_URL เสมอ ไม่ใช่ host ของคำขอ เพราะข้อความถูกส่งนอกบริบท HTTP ได้ (คิวรัน/สั่งจาก CLI)
+     * คนที่เชื่อม LINE แล้วเปิดลิงก์นี้จะกดปุ่ม LINE เข้าได้เลยโดยไม่ต้องกรอกเบอร์
+     */
+    public function healthUrl(): string
+    {
+        return rtrim((string) config('app.url'), '/').'/health';
     }
 
     /**

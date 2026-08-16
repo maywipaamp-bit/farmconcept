@@ -364,24 +364,20 @@ class TrackingRoundQrTest extends TestCase
             ->assertDontSee('โครงการพัฒนาพื้นที่ต้นแบบ');
     }
 
-    /** ปุ่มชวนเชื่อม LINE เป็นของคนที่ยังไม่เชื่อมเท่านั้น — คนที่เชื่อมแล้วเห็นแล้วสับสน */
-    public function test_the_link_line_button_is_only_for_people_who_have_not_linked_yet(): void
+    /** ไม่มีปุ่มเชื่อม LINE แยกแล้ว — สวิตช์แจ้งเตือนคือทางเข้าเดียว กดตอนยังไม่เชื่อมจะพาไปเชื่อมเลย */
+    public function test_the_notify_switch_sends_unlinked_people_to_line_first(): void
     {
-        $this->member('P0001', '081-234-5678');
+        $round = $this->member('P0001', '081-234-5678');
+        $participant = $round->cohortProfile->participant;
         $this->signInWithPhone('0812345678');
 
-        /* ยังไม่เชื่อม — เห็นปุ่มชวนเชื่อม ไม่เห็นป้ายว่าเชื่อมแล้ว */
-        $this->get($this->url('/home'))->assertOk()
-            ->assertSee('เชื่อมต่อ LINE')
-            ->assertDontSee('เชื่อมต่อ LINE แล้ว');
+        /* แดชบอร์ดไม่มีปุ่มชวนเชื่อมแล้ว */
+        $this->get($this->url('/home'))->assertOk()->assertDontSee('เชื่อมต่อ LINE');
 
-        $this->post($this->url('/sign-out'));
-
-        $this->member('P0002', '081-234-5679', 'U-line-2');
-        $this->signInWithPhone('0812345679');
-
-        /* เชื่อมแล้ว — ปุ่มชวนหาย เหลือป้ายสถานะบอกว่าเชื่อมแล้ว */
-        $this->get($this->url('/home'))->assertOk()->assertSee('เชื่อมต่อ LINE แล้ว');
+        /* กดสวิตช์ตอนยังไม่เชื่อม — ถูกพาไปหน้าเชื่อม LINE และค่าแจ้งเตือนต้องไม่ถูกสลับ */
+        $before = $participant->fresh()->line_notify;
+        $this->post($this->url('/notify'))->assertRedirect($this->url('/line'));
+        $this->assertSame($before, $participant->fresh()->line_notify);
     }
 
     public function test_notification_switch_belongs_to_the_person_and_can_be_turned_off(): void
@@ -408,6 +404,43 @@ class TrackingRoundQrTest extends TestCase
             ->assertSessionHasErrors(['phone', 'gender', 'age_range_id', 'consent']);
 
         $this->assertSame(0, Participant::count());
+    }
+
+    /** กดสวิตช์เชื่อม LINE จากแดชบอร์ดขณะล็อกอินอยู่ — ขากลับต้องผูกให้ทันที ไม่ไล่ไปกรอกเบอร์ซ้ำ */
+    public function test_line_return_links_the_signed_in_person_without_asking_for_the_phone_again(): void
+    {
+        $round = $this->member('P0001', '081-234-5678');
+        $participant = $round->cohortProfile->participant;
+        $this->signInWithPhone('0812345678');
+
+        /* จำลองกลับมาจาก LINE ด้วยบัญชีที่ยังไม่เคยผูกกับใคร */
+        $this->withSession([
+            \App\Http\Controllers\PublicLineLoginController::SESSION_KEY => [
+                'userId' => 'U-new-line', 'displayName' => 'ผู้ใช้ LINE', 'pictureUrl' => null, 'email' => null,
+            ],
+        ])->get($this->url('/line/return'))
+            ->assertRedirect($this->url('/home'));
+
+        $this->assertSame('U-new-line', $participant->fresh()->line_user_id);
+    }
+
+    /** เชื่อม LINE ไว้แล้วมาลงทะเบียนคนใหม่ต่อ — ต้องไม่ล้มเพราะ LINE ถูกผูกกับคนแรกไปแล้ว */
+    public function test_registering_a_second_person_with_a_lingering_line_session_does_not_crash(): void
+    {
+        $this->template();
+        $this->member('P0001', '081-234-5678', 'U-line-1');
+
+        $this->withSession([
+            \App\Http\Controllers\PublicLineLoginController::SESSION_KEY => [
+                'userId' => 'U-line-1', 'displayName' => 'ผู้ใช้ LINE', 'pictureUrl' => null, 'email' => null,
+            ],
+        ])->post($this->url('/register'), $this->registerPayload())
+            ->assertRedirect($this->url('/home'));
+
+        /* คนใหม่ถูกสร้างสำเร็จโดยไม่ผูก LINE — บัญชีเดิมยังอยู่กับคนแรก */
+        $new = Participant::where('phone', '089-999-9999')->firstOrFail();
+        $this->assertNull($new->line_user_id);
+        $this->assertSame('U-line-1', Participant::where('code', 'P0001')->firstOrFail()->line_user_id);
     }
 
     public function test_self_registration_refuses_a_phone_that_already_exists(): void

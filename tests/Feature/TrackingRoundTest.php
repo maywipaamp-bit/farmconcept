@@ -175,7 +175,9 @@ class TrackingRoundTest extends TestCase
         $this->assertSame('ติดตามพิเศษ ก่อนปิดโครงการ', $body['rows'][0]['round']);
     }
 
-    public function test_a_person_already_pulled_into_another_round_is_not_offered_again(): void
+    /** เปลี่ยนกติกา: ใบที่เคยอยู่ในรอบอื่นแล้วยังเลือกซ้ำได้ — เปิดรอบใหม่ตามคนเดิมซ้ำได้
+        ตัวกันข้อความถล่มคือคนที่ตอบแล้วหลุดจากรายชื่อเอง (answered_at) */
+    public function test_a_person_already_pulled_into_another_round_can_be_offered_again(): void
     {
         $admin = $this->admin();
         $group = $this->targetGroup('TG-1', 'ผู้สูงอายุ');
@@ -186,13 +188,11 @@ class TrackingRoundTest extends TestCase
         ]))->assertOk();
 
         $body = $this->eligible($admin, ['from' => '2026-08-01', 'to' => '2026-08-31']);
-        $this->assertSame(0, $body['total'], 'คนที่ถูกดึงเข้ารอบอื่นแล้วต้องไม่ถูกเสนอซ้ำ ไม่งั้นได้แจ้งเตือนสองครั้ง');
+        $this->assertSame(1, $body['total'], 'ใบที่อยู่ในรอบอื่นแล้วต้องยังถูกเสนอ เพื่อเปิดรอบตามซ้ำได้');
 
-        /* ยกเลิกรอบเดิมแล้วต้องกลับมาเลือกได้ */
-        $batch = RoundBatch::firstOrFail();
-        $this->actingAs($admin)->patchJson('/admin/tracking-rounds/'.$batch->code.'/cancel')->assertOk();
-
-        $this->assertSame(1, $this->eligible($admin, ['from' => '2026-08-01', 'to' => '2026-08-31'])['total']);
+        /* แต่ใบที่ตอบแล้วต้องหลุดจากรายชื่อ — นี่คือตัวกันแจ้งเตือนคนที่จบธุระแล้ว */
+        $round->update(['answered_at' => now()]);
+        $this->assertSame(0, $this->eligible($admin, ['from' => '2026-08-01', 'to' => '2026-08-31'])['total']);
     }
 
     public function test_saving_a_draft_stores_members_without_sending_any_notification(): void
@@ -265,13 +265,21 @@ class TrackingRoundTest extends TestCase
             'notify' => true,
         ]))->assertOk();
 
+        /* ส่งเป็นการ์ด Flex — เนื้อความ (แทนตัวแปรแล้ว) อยู่ใน body รอบ/วันครบกำหนดเป็นบรรทัดโครงสร้าง
+           และปุ่มพาไปหน้าแบบประเมินอยู่ใน footer */
         Http::assertSent(function ($request) {
-            $text = $request['messages'][0]['text'];
+            $message = $request['messages'][0];
+            $card = json_encode($message['contents'], JSON_UNESCAPED_UNICODE);
+            $text = $message['contents']['body']['contents'][2]['text'] ?? '';
+            $button = $message['contents']['footer']['contents'][0]['action'] ?? [];
 
-            return str_contains($text, 'ผู้ร่วม PID-0001')
-                && str_contains($text, 'ติดตามครั้งที่สาม')
-                && str_contains($text, '12 ส.ค. 2569')
-                && ! str_contains($text, '{');
+            return $message['type'] === 'flex'
+                && str_contains($text, 'ผู้ร่วม PID-0001')
+                && ! str_contains($text, '{')
+                && str_contains($card, 'รอบติดตาม ติดตามครั้งที่สาม')
+                && str_contains($card, 'ตอบได้ถึงวันที่ 12 ส.ค. 2569')
+                && $button['label'] === 'เริ่มทำแบบประเมิน'
+                && str_ends_with($button['uri'], '/health');
         });
     }
 
@@ -387,8 +395,9 @@ class TrackingRoundTest extends TestCase
         ])->assertRedirect($base.'/home');
 
         /* ทั้งสองรอบอยู่ในรายการ แต่กดทำได้เฉพาะรอบที่เปิดอยู่
-           รอบที่ยังไม่ถึงกำหนดต้องเห็นว่ามีอยู่ ไม่ใช่หายไปเฉย ๆ จนคิดว่าตกหล่น */
-        $this->get($base.'/home')->assertOk()->assertSee($participant->name);
+           รอบที่ยังไม่ถึงกำหนดต้องเห็นว่ามีอยู่ ไม่ใช่หายไปเฉย ๆ จนคิดว่าตกหล่น
+           แดชบอร์ดไม่แสดงชื่อแล้ว — ยืนยันว่าเข้าถูกคนจากรหัสบุคคลในคำทักทาย */
+        $this->get($base.'/home')->assertOk()->assertSee($participant->person_code);
 
         $this->get($base.'/rounds')
             ->assertOk()
