@@ -100,11 +100,23 @@
 
   function requestJson(url, options) {
     options = options || {};
-    options.headers = Object.assign({
+
+    var headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': csrfToken()
-    }, options.headers || {});
+    };
+
+    /* IIS บนเซิร์ฟเวอร์ปลายทางดัก PUT / PATCH / DELETE ไว้ตั้งแต่ก่อนถึง PHP (WebDAVModule)
+       ส่งเป็น POST แล้วบอกเมธอดจริงผ่านหัวข้อนี้ Laravel อ่านให้เองตั้งแต่ชั้น Request */
+    var method = (options.method || 'GET').toUpperCase();
+    if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+      headers['X-HTTP-Method-Override'] = method;
+      options.method = 'POST';
+      if (!options.body) options.body = '{}';
+    }
+
+    options.headers = Object.assign(headers, options.headers || {});
 
     return fetch(url, options).then(function (response) {
       return response.json().catch(function () { return {}; }).then(function (data) {

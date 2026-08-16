@@ -217,4 +217,67 @@ class EvaluationTest extends TestCase
         $response = $this->actingAs($user)->postJson('/admin/evaluations/'.$form->code.'/duplicate');
         $response->assertCreated()->assertJsonPath('form.name', 'แบบประเมินต้นฉบับ (สำเนา)');
     }
+
+    /**
+     * IIS บนเซิร์ฟเวอร์ปลายทางดัก PUT / PATCH / DELETE ไว้ตั้งแต่ก่อนถึง PHP (WebDAVModule)
+     * ตอบ 405 พร้อม Allow: GET, HEAD, OPTIONS, TRACE — บนเครื่องที่รันด้วย Herd ไม่เจอเพราะไม่มีโมดูลนี้
+     *
+     * หน้าจอจึงส่งเป็น POST แล้วบอกเมธอดจริงผ่านหัวข้อ X-HTTP-Method-Override
+     * เทสต์นี้คุมว่าเส้นทางนั้นยังใช้ได้จริง ถ้าวันหนึ่ง Laravel เลิกอ่านหัวข้อนี้จะได้รู้ทันที
+     */
+    public function test_เปลี่ยนสถานะและลบผ่าน_post_ที่แนบ_method_override_ได้(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-OVERRIDE-1', 'name' => 'แบบประเมินทดสอบเมธอด',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_ACTIVE,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/admin/evaluations/'.$form->code.'/status',
+                ['status' => Form::STATUS_INACTIVE],
+                ['X-HTTP-Method-Override' => 'PATCH'])
+            ->assertOk();
+
+        $this->assertSame(Form::STATUS_INACTIVE, $form->fresh()->status);
+
+        /* ลบก็ต้องผ่านเส้นทางเดียวกันได้ — ต้องเป็นฉบับร่างก่อนถึงลบได้ตามกติกาเดิม */
+        $form->update(['status' => Form::STATUS_DRAFT]);
+
+        $this->actingAs($user)
+            ->postJson('/admin/evaluations/'.$form->code, [], ['X-HTTP-Method-Override' => 'DELETE'])
+            ->assertOk();
+
+        $this->assertDatabaseMissing('evl_forms', ['id' => $form->id]);
+    }
+
+    /** แบบประเมินที่ยังไม่ถูกนำไปใช้ (ยังไม่มีคำตอบ) ต้องแก้ไขได้ แม้จะเปิดใช้งานอยู่ */
+    public function test_แบบประเมินที่เปิดใช้งานแต่ยังไม่มีคำตอบยังแก้ไขได้(): void
+    {
+        $user = $this->admin();
+        $form = Form::create([
+            'code' => 'EVL-EDIT-1', 'name' => 'แบบประเมินที่ยังไม่มีใครตอบ',
+            'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_ACTIVE,
+            'created_by' => $user->id, 'updated_by' => $user->id,
+        ]);
+        $form->questions()->create([
+            'sort_order' => 1, 'question_type' => 'rating', 'text' => 'คำถามเดิม', 'is_required' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->putJson('/admin/evaluations/'.$form->code, [
+                'name' => 'แก้ชื่อแล้ว',
+                'type' => Form::TYPE_HEALTH_FOLLOW_UP,
+                'status' => Form::STATUS_ACTIVE,
+                'fields' => [],
+                'questions' => [
+                    ['type' => 'rating', 'text' => 'คำถามใหม่', 'is_required' => true, 'sort_order' => 1, 'options' => []],
+                ],
+            ])
+            ->assertOk();
+
+        $this->assertSame('แก้ชื่อแล้ว', $form->fresh()->name);
+        $this->assertSame('คำถามใหม่', $form->fresh()->questions()->first()->text);
+    }
 }

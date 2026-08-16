@@ -62,10 +62,8 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         return view('public.tracking-round.identify', [
-            
             'lineEnabled' => $this->line->isConfigured(),
             'projectName' => config('farmconcept.tracking_round.project_name'),
-            'assurances' => config('farmconcept.tracking_round.assurances'),
             'disclosures' => config('farmconcept.tracking_round.disclosures'),
         ]);
     }

@@ -947,12 +947,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 /* ---------- กล่องความเชื่อมั่น ---------- */
 .tr-trust { margin-bottom: 16px; padding: 15px 17px; border-radius: 14px; background: var(--surface-muted); }
-.tr-trust-list { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 0; list-style: none; }
-.tr-trust-list li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; text-wrap: pretty; }
-
-.tr-trust-check { position: relative; width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; border-radius: 50%; background: var(--primary-soft); }
-.tr-trust-check::after { position: absolute; top: 4px; left: 6px; width: 4px; height: 8px; border: solid var(--dark-green); border-width: 0 2px 2px 0; transform: rotate(45deg); content: ""; }
-
 .tr-trust-more { margin-top: 12px; }
 .tr-trust-more summary { color: var(--dark-green); font-size: 12.5px; cursor: pointer; list-style: none; }
 .tr-trust-more summary::-webkit-details-marker { display: none; }
@@ -1106,11 +1100,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 /* กล่องความเชื่อมั่น — พื้นเขียวอ่อนตามภาพ ไม่ใช่เทา */
 .tr-trust { margin-bottom: 12px; padding: 12px 13px; border-radius: 12px; background: var(--primary-soft); }
-.tr-trust-list { gap: 7px; }
-.tr-trust-list li { gap: 8px; font-size: 12px; line-height: 1.45; }
-.tr-trust-check { width: 15px; height: 15px; flex: 0 0 15px; margin-top: 1px; background: #fff; }
-.tr-trust-check::after { top: 3px; left: 5px; width: 3.5px; height: 7px; }
-
 .tr-trust-more { margin-top: 9px; }
 .tr-trust-more summary { font-size: 12px; text-decoration: underline; }
 .tr-trust-more[open] summary { margin-bottom: 8px; }
@@ -1182,10 +1171,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-about-project { margin: 0 0 10px; color: var(--text-primary); font-size: 13.5px; font-weight: 600; line-height: 1.45; text-wrap: pretty; }
 .tr-about-note { margin: 8px 0 0; color: var(--text-secondary); font-size: 11.5px; line-height: 1.55; text-wrap: pretty; }
 
-/* รายการความเชื่อมั่นย้ายเข้ามาอยู่ในกล่องที่กดเปิด จึงไม่ต้องมีพื้นสีของตัวเองแล้ว */
-.tr-about .tr-trust-list { gap: 6px; }
-.tr-about .tr-trust-check { background: var(--primary-soft); }
-
 /* ไอคอน LINE จริง ไม่ใช่รูปทรงที่วาดด้วย CSS */
 .tr-line-icon { width: 21px; height: 21px; flex: 0 0 21px; }
 
@@ -1196,22 +1181,17 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
    บังคับซ่อนเนื้อหาใน <details> ที่ยังไม่เปิด
 
    เบราว์เซอร์ซ่อนให้เองด้วยกฎ details:not([open]) > *:not(summary) { display:none }
-   ที่มาจาก user-agent stylesheet — แต่กฎของเรา (.tr-trust-list / .tr-person-confirm)
-   ที่ตั้ง display: flex เป็น author style ซึ่งชนะ user-agent เสมอ เนื้อหาเลยโผล่ตลอดเวลา
-   ต้องเขียนทับกลับเองด้วยกฎที่เจาะจงกว่า
+   ที่มาจาก user-agent stylesheet — แต่กฎของเราที่ตั้ง display: flex เป็น author style
+   ซึ่งชนะ user-agent เสมอ เนื้อหาเลยโผล่ตลอดเวลา ต้องเขียนทับกลับเองด้วยกฎที่เจาะจงกว่า
    -------------------------------------------------------------------------- */
 .tr-about:not([open]) > *:not(summary),
-.tr-person:not([open]) > *:not(summary),
 .tr-user-menu:not([open]) > *:not(summary) { display: none; }
 
 /* ==========================================================================
    รอบที่สาม — คำชี้แจงบนแดชบอร์ด · ไทม์ไลน์รอบ · ปุ่มขนาดเดียวกันทั้งระบบ
    ========================================================================== */
 
-/* ---------- คำชี้แจงการใช้ข้อมูล (ใช้ทั้งหน้าเข้าสู่ระบบและแดชบอร์ด) ---------- */
-.tr-assurance { margin-bottom: 12px; padding: 12px 13px; border-radius: 12px; background: var(--primary-soft); }
-.tr-assurance .tr-trust-list { gap: 7px; }
-
+/* ---------- คำชี้แจงการใช้ข้อมูล ---------- */
 .tr-disclosure { margin-top: 9px; }
 .tr-disclosure summary { color: var(--dark-green); font-size: 12px; text-decoration: underline; cursor: pointer; list-style: none; }
 .tr-disclosure summary::-webkit-details-marker { display: none; }
@@ -1222,9 +1202,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 .tr-disclosure-list { margin: 9px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
 .tr-disclosure-list li { color: var(--text-secondary); font-size: 11.5px; line-height: 1.55; text-wrap: pretty; }
-
-/* กล่องในหน้าเข้าสู่ระบบซ้อนอยู่ใน details อีกชั้น ไม่ต้องมีพื้นสีของตัวเองอีก */
-.tr-about .tr-assurance { margin-bottom: 0; padding: 0; background: none; }
 
 .tr-toggle-note { display: block; margin-top: 2px; color: var(--text-muted); font-size: 11px; line-height: 1.4; }
 
@@ -1368,7 +1345,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-about summary:hover { color: var(--text-primary); }
 .tr-about[open] summary { margin-bottom: 10px; }
 
-.tr-about .tr-trust-list { gap: 7px; margin-top: 10px; }
 .tr-about .tr-disclosure-list { margin-top: 10px; }
 
 /* ลิงก์ใต้ฟอร์มกลับไปใช้รูปแบบเดิม — ขีดเส้นใต้ตลอด */

@@ -165,14 +165,30 @@ window.TFC.followUpTemplateService = (function () {
   function request(path, options) {
     var tag = document.querySelector('meta[name="csrf-token"]');
 
-    return fetch(API_BASE + path, Object.assign({
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': tag ? tag.getAttribute('content') : ''
-      },
-      credentials: 'same-origin'
-    }, options || {})).then(function (res) {
+    options = Object.assign({}, options || {});
+
+    var headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': tag ? tag.getAttribute('content') : ''
+    };
+
+    /* IIS บนเซิร์ฟเวอร์ปลายทางดัก PUT / PATCH / DELETE ไว้ตั้งแต่ก่อนถึง PHP (WebDAVModule)
+       ส่งเป็น POST แล้วบอกเมธอดจริงผ่านหัวข้อนี้ Laravel อ่านให้เองตั้งแต่ชั้น Request
+
+       ใส่ _method ไว้ในตัว JSON ใช้ไม่ได้ — Laravel อ่าน _method จากฟอร์มหรือ query เท่านั้น
+       ไม่ได้อ่านจาก body ที่เป็น JSON */
+    var method = (options.method || 'GET').toUpperCase();
+    if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+      headers['X-HTTP-Method-Override'] = method;
+      options.method = 'POST';
+      if (!options.body) options.body = '{}';
+    }
+
+    options.headers = Object.assign(headers, options.headers || {});
+    options.credentials = options.credentials || 'same-origin';
+
+    return fetch(API_BASE + path, options).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (res.ok) return data;
 
@@ -236,8 +252,8 @@ window.TFC.followUpTemplateService = (function () {
     });
     if (API_BASE) {
       return request('', {
-        method: 'POST',
-        body: JSON.stringify({ _method: 'PUT', rows: payload })
+        method: 'PUT',
+        body: JSON.stringify({ rows: payload })
       }).then(function (data) {
         store = data.rows || [];
         if (data.usage) USAGE = data.usage;

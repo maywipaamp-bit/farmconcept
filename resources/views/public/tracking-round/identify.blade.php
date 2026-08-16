@@ -44,12 +44,8 @@
 
             <p class="tr-about-project">{{ $projectName }}</p>
 
-            <ul class="tr-trust-list">
-                @foreach($assurances as $line)
-                    <li><span class="tr-trust-check" aria-hidden="true"></span>{{ $line }}</li>
-                @endforeach
-            </ul>
-
+            {{-- รายการติ๊กถูกสามข้อถูกตัดออก — เนื้อความซ้ำกับคำชี้แจงด้านล่างอยู่แล้ว
+                 พูดเรื่องเดียวกันสองรอบทำให้คนอ่านข้ามทั้งสองอัน --}}
             <ol class="tr-disclosure-list">
                 @foreach($disclosures as $paragraph)
                     <li>{{ $paragraph }}</li>

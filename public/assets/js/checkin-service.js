@@ -194,14 +194,27 @@ window.TFC.checkinService = (function () {
   }
 
   function request(path, options) {
-    return fetch(API_BASE + path, Object.assign({
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrf()
-      },
-      credentials: 'same-origin'
-    }, options || {})).then(function (res) {
+    options = Object.assign({}, options || {});
+
+    var headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrf()
+    };
+
+    /* IIS บนเซิร์ฟเวอร์ปลายทางดัก PUT / PATCH / DELETE ไว้ตั้งแต่ก่อนถึง PHP (WebDAVModule)
+       ส่งเป็น POST แล้วบอกเมธอดจริงผ่านหัวข้อนี้ Laravel อ่านให้เองตั้งแต่ชั้น Request */
+    var method = (options.method || 'GET').toUpperCase();
+    if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+      headers['X-HTTP-Method-Override'] = method;
+      options.method = 'POST';
+      if (!options.body) options.body = '{}';
+    }
+
+    options.headers = Object.assign(headers, options.headers || {});
+    options.credentials = options.credentials || 'same-origin';
+
+    return fetch(API_BASE + path, options).then(function (res) {
       if (!res.ok) return fail(res, path);
       return res.json();
     });
