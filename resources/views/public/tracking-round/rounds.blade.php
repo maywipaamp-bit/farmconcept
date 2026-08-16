@@ -8,7 +8,7 @@
 
         <h1 class="tr-login-title">รอบแบบประเมิน</h1>
         <p class="tr-subheading">
-            ทำได้เฉพาะรอบที่ถึงกำหนด · {{ $rounds->whereNotNull('answered_at')->count() }}/{{ $rounds->count() }} รอบ
+            ทำได้ทีละรอบตามลำดับ · {{ $rounds->whereNotNull('answered_at')->count() }}/{{ $rounds->count() }} รอบ
         </p>
 
         {{-- ไทม์ไลน์แนวตั้ง — เห็นได้ทันทีว่าอยู่ตรงไหนของโครงการ เหลืออีกกี่รอบ
@@ -27,7 +27,7 @@
                             @if($answered)
                                 <span class="tr-tl-badge is-done">ทำแล้ว</span>
                             @elseif($open)
-                                <span class="tr-tl-badge is-open">ถึงกำหนด</span>
+                                <span class="tr-tl-badge is-open">ทำได้เลย</span>
                             @else
                                 <span class="tr-tl-badge">ยังไม่เปิด</span>
                             @endif
@@ -39,9 +39,10 @@
                             @if($answered)
                                 ตอบเมื่อ @thaidate($round->answered_at)
                             @elseif($open)
-                                ถึงกำหนด · ใช้เวลา 5 นาที
+                                ครบกำหนด @thaidate($round->due_date) · ใช้เวลา 5 นาที
                             @else
-                                เปิด @thaidate($round->windowStart())
+                                {{-- ล็อกเพราะลำดับ ไม่ใช่เพราะวันที่ — ต้องบอกเงื่อนไขที่ปลดล็อกได้จริง --}}
+                                ครบกำหนด @thaidate($round->due_date) · ทำรอบก่อนหน้าให้ครบก่อน
                             @endif
                         </p>
 

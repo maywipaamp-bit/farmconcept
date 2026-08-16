@@ -46,13 +46,13 @@ class TrackingRoundQrTest extends TestCase
     }
 
     /** คนที่ลงทะเบียนไว้แล้ว พร้อมใบติดตามหนึ่งใบที่ครบกำหนดวันนี้ */
-    private function member(string $code, string $phone, ?string $lineId = null, ?string $due = null): FollowUpRound
+    private function member(string $code, string $phone, ?string $lineId = null, ?string $due = null, ?string $name = null): FollowUpRound
     {
         $template = $this->template();
 
         $participant = Participant::create([
             'code' => $code, 'person_code' => $code,
-            'name' => 'ผู้ร่วม '.$code, 'phone' => $phone, 'line_user_id' => $lineId,
+            'name' => $name ?? 'ผู้ร่วม '.$code, 'phone' => $phone, 'line_user_id' => $lineId,
         ]);
 
         $profile = CohortProfile::create([
@@ -95,14 +95,11 @@ class TrackingRoundQrTest extends TestCase
      *
      * เบอร์อย่างเดียวเข้าไม่ได้แล้ว — ทุกเบอร์ที่เจอในฐานต้องผ่านหน้ายืนยันชื่อก่อนเสมอ
      */
-    private function confirmName(?int $participantId = null, ?string $prefix = null): TestResponse
+    private function confirmName(?string $prefix = null): TestResponse
     {
-        $ids = session('candidateIds', []);
-        $id = $participantId ?? ($ids[0] ?? 0);
-        $name = Participant::find($id)?->name ?? '';
+        $name = Participant::find(session('candidateIds', [])[0] ?? 0)?->name ?? '';
 
         return $this->post($this->url('/choose'), [
-            'participant_id' => $id,
             'name_prefix' => $prefix ?? mb_substr($name, 0, 5),
         ]);
     }
@@ -213,7 +210,7 @@ class TrackingRoundQrTest extends TestCase
             ->assertOk()
             ->assertSee('รอบแบบประเมิน')
             ->assertSee($round->name)
-            ->assertSee('ถึงกำหนด')
+            ->assertSee('ทำได้เลย')
             ->assertSee('เริ่มทำ');
     }
 
@@ -224,57 +221,71 @@ class TrackingRoundQrTest extends TestCase
         $this->get($this->url('/rounds'))->assertRedirect($this->url());
     }
 
-    public function test_a_phone_shared_by_two_people_asks_which_one_you_are(): void
+    public function test_the_identity_screen_never_shows_who_is_on_that_phone(): void
     {
-        $this->member('P0001', '081-234-5678');
-        $this->member('P0002', '0812345678');
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $this->member('P0002', '0812345678', null, null, 'มานี รักเรียน');
 
         $this->post($this->url('/verify'), ['phone' => '081-234-5678'])
             ->assertRedirect($this->url('/choose'));
 
+        /* ห้ามยื่นรายชื่อให้เลือก แม้แบบปิดบัง — แค่รู้เบอร์ของบ้านหนึ่ง
+           ไม่ควรอ่านได้ว่ามีใครอยู่ในโครงการบ้าง ผู้ตอบต้องพิมพ์ชื่อตัวเองจากความจำ */
         $this->followingRedirects()
             ->post($this->url('/verify'), ['phone' => '081-234-5678'])
             ->assertOk()
-            ->assertSee('เลือกชื่อของคุณ')
-            /* ต้องเห็นชื่อแบบปิดบังเท่านั้น — ชื่อเต็มห้ามหลุดออกมาก่อนยืนยันตัวตน
-               ไม่งั้นแค่รู้เบอร์ของบ้านหนึ่งก็อ่านได้ว่ามีใครอยู่ในโครงการบ้าง */
-            ->assertSee('ผู้••• P•••')
-            ->assertDontSee('ผู้ร่วม P0001')
-            ->assertDontSee('ผู้ร่วม P0002');
+            ->assertSee('ยืนยันตัวตน')
+            ->assertSee('ชื่อจริง 5 ตัวอักษรแรก')
+            ->assertDontSee('สมชาย')
+            ->assertDontSee('มานี')
+            ->assertDontSee('สมช')
+            ->assertDontSee('มาน');
     }
 
-    public function test_choosing_a_name_requires_the_first_three_letters_to_match(): void
+    public function test_the_typed_name_must_match_before_you_get_in(): void
     {
-        $this->member('P0001', '081-234-5678');
-        $this->member('P0002', '081-234-5678');
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $this->member('P0002', '081-234-5678', null, null, 'มานี รักเรียน');
 
         $this->post($this->url('/verify'), ['phone' => '081-234-5678']);
-
-        $target = Participant::where('person_code', 'P0001')->firstOrFail();
 
         /* กรอกผิด = ยังไม่ผ่าน และต้องยังไม่ถูกยืนยันตัวตน */
-        $this->post($this->url('/choose'), ['participant_id' => $target->id, 'name_prefix' => 'ผิด'])
+        $this->post($this->url('/choose'), ['name_prefix' => 'ผิดจัง'])
             ->assertSessionHasErrors('name_prefix');
 
-        /* ชื่อคือ "ผู้ร่วม P0001" — พิมพ์ตามที่เห็นหรือตามจำนวนคีย์ที่กด ต้องผ่านทั้งคู่ */
-        $this->post($this->url('/choose'), ['participant_id' => $target->id, 'name_prefix' => 'ผู้'])
+        /* ระบบเป็นฝ่ายจับคู่ว่าชื่อนี้คือใครในเบอร์นั้น ฟอร์มไม่ได้ส่ง id มาเลย */
+        $this->post($this->url('/choose'), ['name_prefix' => 'สมชา'])
             ->assertRedirect($this->url('/home'));
 
-        $this->get($this->url('/home'))->assertOk()->assertSee('ผู้ร่วม P0001');
+        $this->get($this->url('/home'))->assertOk()->assertSee('สมชาย ใจดี');
     }
 
-    public function test_choosing_someone_who_was_not_in_the_result_is_rejected(): void
+    public function test_a_name_from_a_different_phone_cannot_get_in(): void
     {
-        $this->member('P0001', '081-234-5678');
-        $this->member('P0002', '081-234-5678');
-        $outsider = $this->member('P0003', '089-999-9999');
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $this->member('P0002', '089-999-9999', null, null, 'อรทัย พากเพียร');
 
-        $this->post($this->url('/verify'), ['phone' => '081-234-5678']);
+        $this->post($this->url('/verify'), ['phone' => '0812345678']);
 
-        /* ยิง id ของคนที่ไม่ได้อยู่ในผลค้นหาของเบอร์นั้น = พยายามสวมสิทธิ์ */
-        $this->post($this->url('/choose'), [
-            'participant_id' => $outsider->cohortProfile->participant_id,
-        ])->assertForbidden();
+        /* ชื่อจริงของคนอื่นที่อยู่คนละเบอร์ ต้องเข้าไม่ได้ — สองชั้นต้องตรงกันทั้งคู่ */
+        $this->post($this->url('/choose'), ['name_prefix' => 'อรทัย'])
+            ->assertSessionHasErrors('name_prefix');
+
+        $this->get($this->url('/home'))->assertRedirect($this->url());
+    }
+
+    public function test_two_people_on_one_phone_with_the_same_opening_letters_are_not_guessed(): void
+    {
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $this->member('P0002', '081-234-5678', null, null, 'สมชาย ใจงาม');
+
+        $this->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        /* เดาให้ไม่ได้ เพราะเดาผิดแปลว่าคำตอบลงระเบียนผิดคนโดยไม่มีใครรู้ */
+        $this->post($this->url('/choose'), ['name_prefix' => 'สมชา'])
+            ->assertSessionHasErrors('name_prefix');
+
+        $this->get($this->url('/home'))->assertRedirect($this->url());
     }
 
     public function test_an_unknown_phone_is_taken_to_self_registration(): void
@@ -420,11 +431,14 @@ class TrackingRoundQrTest extends TestCase
             'answer_'.$text->id => 'กินผักมากขึ้น',
         ])->assertRedirect($this->url('/rounds/'.$round->id.'/done'));
 
-        /* หน้าสรุปต้องบอกว่าตอบไปกี่ข้อและครบไปกี่รอบแล้ว */
+        /* ใบยืนยันการส่ง — ต้องอ้างอิงได้ว่าตอบรอบไหน เมื่อไร */
         $this->get($this->url('/rounds/'.$round->id.'/done'))
             ->assertOk()
             ->assertSee('ส่งแบบประเมินแล้ว')
-            ->assertSee('ข้อที่ตอบ');
+            ->assertSee('ขอบคุณในการร่วมตอบแบบสอบถาม')
+            ->assertSee('วันที่ส่ง')
+            ->assertSee($round->name)
+            ->assertSee('กลับหน้าหลัก');
 
         $this->assertNotNull($round->fresh()->answered_at, 'ใบติดตามต้องถูกปิดว่าตอบแล้ว');
 
@@ -515,20 +529,62 @@ class TrackingRoundQrTest extends TestCase
         $this->assertNotNull($mine->fresh());
     }
 
-    public function test_a_round_that_is_not_open_yet_cannot_be_answered(): void
+    public function test_the_receipt_screen_is_not_reachable_before_answering(): void
+    {
+        $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678');
+
+        $this->signInWithPhone('0812345678');
+
+        /* พิมพ์ URL ตรง ๆ ต้องไม่ได้หน้า "ส่งแบบประเมินแล้ว" ทั้งที่ยังไม่ได้ส่งอะไร */
+        $this->get($this->url('/rounds/'.$round->id.'/done'))->assertNotFound();
+    }
+
+    public function test_a_round_due_far_ahead_can_still_be_answered_now(): void
     {
         $this->healthForm();
         $round = $this->member('P0001', '081-234-5678', null, now()->addYear()->toDateString());
 
         $this->signInWithPhone('0812345678');
 
-        /* รอบที่ยังไม่เปิดต้องเห็นได้ว่ามีอยู่ แต่กดทำไม่ได้ */
+        /* ไม่ต้องรอวันครบกำหนด คนที่พร้อมตอบก่อนไม่ควรถูกกันไว้เฉย ๆ */
         $this->get($this->url('/rounds'))
             ->assertOk()
-            ->assertSee('ยังไม่เปิด')
-            ->assertDontSee('เริ่มทำ');
+            ->assertSee('ทำได้เลย')
+            ->assertSee('เริ่มทำ');
 
-        $this->get($this->url('/rounds/'.$round->id.'/survey'))->assertNotFound();
+        $this->get($this->url('/rounds/'.$round->id.'/survey'))->assertOk();
+    }
+
+    public function test_a_later_round_stays_locked_until_the_earlier_one_is_answered(): void
+    {
+        $form = $this->healthForm();
+        $rating = $form->questions->firstWhere('question_type', 'rating');
+        $first = $this->member('P0001', '081-234-5678');
+
+        $template = $this->template('ติดตามครั้งที่สอง', 30);
+        $second = FollowUpRound::create([
+            'cohort_profile_id' => $first->cohort_profile_id,
+            'template_id' => $template->id,
+            'name' => $template->name,
+            'offset_days' => 30,
+            'due_date' => now()->addDays(30)->toDateString(),
+        ]);
+
+        $this->signInWithPhone('0812345678');
+
+        /* ข้ามลำดับไม่ได้ — คำตอบแต่ละรอบต้องเทียบก่อน–หลังกันได้ ข้ามรอบแล้วชุดข้อมูลใช้ไม่ได้ */
+        $this->get($this->url('/rounds/'.$second->id.'/survey'))->assertNotFound();
+
+        $this->get($this->url('/rounds'))
+            ->assertOk()
+            ->assertSee('ทำรอบก่อนหน้าให้ครบก่อน');
+
+        $this->post($this->url('/rounds/'.$first->id.'/survey'), ['answer_'.$rating->id => 4])
+            ->assertRedirect($this->url('/rounds/'.$first->id.'/done'));
+
+        /* ตอบใบแรกเสร็จ ใบถัดไปเปิดทันที ไม่ต้องรอวันครบกำหนดเช่นกัน */
+        $this->get($this->url('/rounds/'.$second->id.'/survey'))->assertOk();
     }
 
     public function test_signing_out_clears_the_verified_identity(): void
@@ -664,6 +720,12 @@ class TrackingRoundQrTest extends TestCase
 
         $this->post($this->url('/rounds/'.$theirs->id.'/survey'), ['answer_'.$rating->id => 3])
             ->assertRedirect($this->url('/rounds/'.$theirs->id.'/done'));
+
+        /* ใบยืนยันต้องบอกชัดว่าคำตอบลงในนามใคร ไม่งั้นเผลอคิดว่าตอบของตัวเอง */
+        $this->get($this->url('/rounds/'.$theirs->id.'/done'))
+            ->assertOk()
+            ->assertSee('ตอบในนามของ')
+            ->assertSee($subject->name);
 
         /* คำตอบลงระเบียนของผู้ถูกประเมิน และบันทึกว่าใครเป็นคนกรอก */
         $this->assertNotNull($theirs->fresh()->answered_at);

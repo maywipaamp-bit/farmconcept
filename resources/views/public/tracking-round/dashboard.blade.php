@@ -43,14 +43,12 @@
 
             @if($dueRound)
                 <p class="tr-due-name">รอบที่ {{ $dueOrder }} · {{ $dueRound->name }}</p>
-                <p class="tr-due-meta">ใช้เวลา 5 นาที · ถึง @thaidate($dueRound->due_date)</p>
+                <p class="tr-due-meta">ใช้เวลา 5 นาที · ถึง @thaidate($dueBefore)</p>
                 <a class="tr-primary-button"
                    href="{{ route('public.tracking-round-qr.survey', $dueRound->id) }}">ทำแบบประเมิน</a>
             @else
                 <p class="tr-due-name">ยังไม่มีรอบที่ต้องทำตอนนี้</p>
-                <p class="tr-due-meta">
-                    @if($nextOpen) รอบถัดไปเปิด @thaidate($nextOpen->windowStart()) @else คุณทำครบทุกรอบแล้ว ขอบคุณครับ @endif
-                </p>
+                <p class="tr-due-meta">คุณทำครบทุกรอบแล้ว ขอบคุณครับ</p>
             @endif
         </div>
 
@@ -60,10 +58,11 @@
                 <span class="tr-stat-label">รอบที่ทำแล้ว</span>
             </div>
             <div>
-                <span class="tr-stat-number">
-                    @if($nextOpen)@thaidate($nextOpen->windowStart(), false)@else—@endif
+                {{-- เต็มวัน–เดือน–ปี ไม่ตัดปีทิ้ง — รอบติดตามกินเวลาข้ามปี ปีจึงไม่ใช่ส่วนที่เดาเอาได้ --}}
+                <span class="tr-stat-number is-date">
+                    @if($nextRound)@thaidate($nextRound->due_date)@else—@endif
                 </span>
-                <span class="tr-stat-label">รอบถัดไปเปิด</span>
+                <span class="tr-stat-label">ครบกำหนดรอบถัดไป</span>
             </div>
         </div>
 

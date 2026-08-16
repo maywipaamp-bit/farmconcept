@@ -154,8 +154,9 @@
         count.textContent = (index + 1) + ' / ' + steps.length + ' ข้อ';
         fill.style.width = Math.round(((index + 1) / steps.length) * 100) + '%';
 
-        /* ข้อแรกไม่มีอะไรให้ย้อนกลับ ซ่อนไว้แต่กันที่ไว้ ปุ่มถัดไปจะได้ไม่กระโดดตำแหน่ง */
-        back.style.visibility = index === 0 ? 'hidden' : 'visible';
+        /* ข้อแรกไม่มีอะไรให้ย้อนกลับ เอาออกจากแถวไปเลย ปุ่มถัดไปจะได้เต็มความกว้าง
+           ไม่ใช่กันที่ว่างไว้ให้ปุ่มที่กดไม่ได้ */
+        back.hidden = index === 0;
         next.textContent = last ? 'ส่งแบบประเมิน' : 'ข้อถัดไป';
         next.type = last ? 'submit' : 'button';
         next.disabled = ! answered(steps[index]);

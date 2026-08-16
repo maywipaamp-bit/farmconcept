@@ -933,9 +933,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-done-receipt dt { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
 .tr-done-receipt dd { min-width: 0; margin: 0; color: var(--text-primary); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
 
-.tr-done-stats { display: flex; gap: 24px; padding: 13px 20px; border-radius: 12px; background: var(--surface-muted); }
-.tr-done-number { display: block; color: var(--dark-green); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tr-done-label { display: block; color: var(--text-secondary); font-size: 11.5px; }
 
 /* ==========================================================================
    หน้าจอฝั่งผู้เข้าร่วม — ยืนยันตัวตน / เลือกชื่อ / ลงทะเบียน / แดชบอร์ด / รอบ / กรอกแทน
@@ -1046,9 +1043,11 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-due-name { margin: 0; color: var(--dark-green); font-size: 16px; font-weight: 600; }
 .tr-due-meta { margin: 0 0 4px; color: var(--text-secondary); font-size: 12.5px; line-height: 1.5; }
 
-.tr-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.tr-stats { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 12px; }
 .tr-stats > div { padding: 14px 16px; border-radius: 14px; background: var(--surface-muted); }
 .tr-stat-number { display: block; color: var(--text-primary); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+/* วันที่เต็มยาวกว่าตัวเลขล้วนมาก ใช้ขนาดเดียวกันแล้วล้นกล่องครึ่งจอ */
+.tr-stat-number.is-date { font-size: 15px; letter-spacing: 0; }
 .tr-stat-label { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12.5px; }
 
 .tr-row-form { margin-bottom: 12px; }

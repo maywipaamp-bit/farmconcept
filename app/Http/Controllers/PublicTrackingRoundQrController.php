@@ -157,10 +157,10 @@ class PublicTrackingRoundQrController extends Controller
     }
 
     /**
-     * หน้าเลือกชื่อ เมื่อเบอร์เดียวมีหลายคน
+     * ยืนยันตัวตนชั้นที่สอง — พิมพ์ชื่อจริง 5 ตัวอักษรแรก
      *
-     * แสดงชื่อแบบปิดบังเท่านั้น (สมห••• ใ•••) แล้วให้พิมพ์ชื่อจริง 3 ตัวแรกยืนยัน
-     * ถ้าโชว์ชื่อเต็มตั้งแต่แรก แค่รู้เบอร์ของบ้านหนึ่งก็อ่านได้ว่ามีใครอยู่ในโครงการบ้าง
+     * หน้านี้ไม่แสดงรายชื่อในเบอร์นั้นเลย แม้แบบปิดบัง ผู้ตอบพิมพ์ชื่อตัวเองจากความจำ
+     * ถ้ายื่นรายชื่อให้เลือก แค่รู้เบอร์ของบ้านหนึ่งก็อ่านได้ว่ามีใครอยู่ในโครงการบ้าง
      */
     public function choose(Request $request): View|RedirectResponse
     {
@@ -175,8 +175,6 @@ class PublicTrackingRoundQrController extends Controller
 
         return view('public.tracking-round.choose', [
             'phone' => $request->session()->get('candidatePhone', ''),
-            'people' => Participant::with(['area', 'targetGroup'])->whereIn('id', $ids)->orderBy('name')->get(),
-            'selected' => (int) $request->session()->get('chooseSelected', 0),
         ]);
     }
 
@@ -184,33 +182,37 @@ class PublicTrackingRoundQrController extends Controller
     {
         $ids = array_map('intval', $request->session()->get('candidateIds', []));
 
-        /* ต้องเป็นคนที่อยู่ในผลค้นหาของเบอร์ที่เพิ่งยืนยันเท่านั้น
-           ไม่งั้นยิง id ของใครก็ได้เข้ามาแล้วสวมสิทธิ์ตอบแทนเขา
-
-           เช็คก่อนตรวจฟอร์ม — ถ้าไปเช็คทีหลัง คนที่ยิง id ของคนอื่นมาโดยไม่กรอกชื่อ
-           จะได้ข้อความ "กรุณากรอกชื่อจริง" แทน 403 ซึ่งเท่ากับบอกว่า id นั้นใช้ได้ */
-        $requested = (int) $request->input('participant_id');
-        abort_if($requested > 0 && ! in_array($requested, $ids, true), 403);
-
-        $data = $request->validate([
-            'participant_id' => ['required', 'integer'],
-            'name_prefix' => ['required', 'string', 'max:20'],
-        ], [
-            'participant_id.required' => 'กรุณาเลือกชื่อของคุณ',
-            'name_prefix.required' => 'กรุณากรอกชื่อจริง 5 ตัวอักษรแรก',
-        ]);
-
-        $participant = Participant::findOrFail($data['participant_id']);
-
-        if (! $participant->matchesNamePrefix($data['name_prefix'])) {
-            $request->session()->reflash();
-
-            return back()
-                ->with('chooseSelected', $participant->id)
-                ->withErrors(['name_prefix' => 'ชื่อจริงไม่ตรงกับรายชื่อที่เลือก']);
+        /* หมดอายุกลางทาง (กดค้างไว้นาน / เปิดจากแท็บเก่า) ต้องกลับไปกรอกเบอร์ใหม่
+           ไม่ใช่ให้ชื่ออย่างเดียวผ่านเข้ามาโดยไม่มีเบอร์คุมอยู่ */
+        if ($ids === []) {
+            return redirect()->route('public.tracking-round-qr');
         }
 
-        return $this->signIn($request, $participant);
+        $data = $request->validate(
+            ['name_prefix' => ['required', 'string', 'max:20']],
+            ['name_prefix.required' => 'กรุณากรอกชื่อจริง 5 ตัวอักษรแรก']
+        );
+
+        /* จับคู่เองจากชื่อที่พิมพ์ ไม่รับ id จากฟอร์ม — ฟอร์มไม่เคยรู้ว่ามีใครอยู่ในเบอร์นี้
+           จึงไม่มีทางยิง id ของคนอื่นเข้ามาสวมสิทธิ์ได้ตั้งแต่ต้น */
+        $matches = Participant::whereIn('id', $ids)->get()
+            ->filter(fn (Participant $p) => $p->matchesNamePrefix($data['name_prefix']))
+            ->values();
+
+        $request->session()->reflash();
+
+        if ($matches->isEmpty()) {
+            return back()->withErrors(['name_prefix' => 'ชื่อจริงไม่ตรงกับข้อมูลของเบอร์นี้ กรุณาตรวจสอบอีกครั้ง']);
+        }
+
+        /* เบอร์เดียวมีสองคนที่ชื่อขึ้นต้นเหมือนกัน — เดาให้ไม่ได้ เพราะเดาผิดคือคำตอบลงผิดคน */
+        if ($matches->count() > 1) {
+            return back()->withErrors([
+                'name_prefix' => 'เบอร์นี้มีมากกว่าหนึ่งชื่อที่ขึ้นต้นแบบนี้ กรุณาติดต่อเจ้าหน้าที่',
+            ]);
+        }
+
+        return $this->signIn($request, $matches->first());
     }
 
     /** หน้าลงทะเบียนกลุ่มตัวอย่างรายใหม่ — สำหรับผู้เข้าร่วมที่ทำเอง */
@@ -301,22 +303,31 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         $all = $this->allRoundsFor($participant);
-        $due = $this->rounds->dueRoundsFor($participant);
+        $due = $this->rounds->openRoundsFor($participant);
+        $dueRound = $due->first();
+
+        /* ใบถัดไปนับจากใบที่ทำได้ตอนนี้ — ใช้ทั้งบอกเส้นตายของรอบนี้และวันครบกำหนดของรอบหน้า */
+        $nextRound = $dueRound
+            ? $all->first(fn (FollowUpRound $r) => $r->due_date->gt($dueRound->due_date))
+            : $all->whereNull('answered_at')->first();
 
         return view('public.tracking-round.dashboard', [
-            
             'participant' => $participant,
-            'dueRound' => $due->first(),
+            'dueRound' => $dueRound,
             /* ลำดับของรอบในชุดทั้งหมดของคนนี้ — ผู้ตอบเข้าใจ "รอบที่ 2" ง่ายกว่าชื่อรอบลอย ๆ */
-            'dueOrder' => $due->first()
-                ? $all->pluck('id')->search($due->first()->id) + 1
+            'dueOrder' => $dueRound
+                ? $all->pluck('id')->search($dueRound->id) + 1
                 : null,
+            /* เส้นตายของรอบนี้คือหนึ่งวันก่อนรอบถัดไปครบกำหนด — สองรอบต้องไม่คาบเกี่ยวกัน
+               ถ้าเป็นใบสุดท้ายก็ใช้วันครบกำหนดของตัวเองตามเดิม */
+            'dueBefore' => $nextRound && $dueRound
+                ? $nextRound->due_date->copy()->subDay()
+                : $dueRound?->due_date,
             'answeredRounds' => $all->whereNotNull('answered_at')->count(),
             'totalRounds' => $all->count(),
-            /* รอบถัดไปที่ยังไม่เปิด — บอกวันที่เริ่มตอบได้ ไม่ใช่วันครบกำหนด
-               ผู้ตอบสนใจว่า "กลับมาได้เมื่อไหร่" ไม่ใช่ "ต้องเสร็จเมื่อไหร่" */
-            'nextOpen' => $all->whereNull('answered_at')
-                ->first(fn (FollowUpRound $r) => $r->state() === 'ยังไม่ถึงกำหนด'),
+            /* วันครบกำหนดของรอบถัดไป — ตอนนี้ตอบก่อนกำหนดได้แล้ว "วันที่เปิด" จึงไม่มีความหมาย
+               สิ่งที่ผู้ตอบต้องรู้คือรอบหน้าครบกำหนดวันไหน */
+            'nextRound' => $nextRound,
             /* ผู้ประสานงานของพื้นที่ก่อน ถ้าพื้นที่นั้นยังไม่ได้กรอกไว้ค่อยใช้เบอร์กลางของโครงการ
                ผู้เข้าร่วมต้องมีคนให้ติดต่อได้เสมอ ไม่ใช่หายไปเพราะข้อมูลพื้นที่ยังไม่ครบ */
             'coordinator' => filled($participant->area?->coordinator_phone)
@@ -347,7 +358,7 @@ class PublicTrackingRoundQrController extends Controller
             'participant' => $participant,
             /* ชื่อรอบมาจากใบติดตามของคนนั้นล้วน ๆ ไม่มี "3 เดือน / 6 เดือน" เขียนตายในเส้นทางนี้ */
             'rounds' => $this->allRoundsFor($participant),
-            'openIds' => $this->rounds->dueRoundsFor($participant)->pluck('id')->all(),
+            'openIds' => $this->rounds->openRoundsFor($participant)->pluck('id')->all(),
             'proxyFor' => $this->proxyFor($request),
         ]);
     }
@@ -527,6 +538,10 @@ class PublicTrackingRoundQrController extends Controller
 
         abort_if($profile === null || $round->cohort_profile_id !== $profile->id, 404);
 
+        /* หน้านี้คือใบยืนยันการส่ง ไม่ใช่หน้าทั่วไป — รอบที่ยังไม่ได้ตอบต้องเข้าไม่ได้
+           ไม่งั้นพิมพ์ URL ตรง ๆ ก็ได้หน้า "ส่งแบบประเมินแล้ว" ทั้งที่ยังไม่ได้ส่งอะไรเลย */
+        abort_if($round->answered_at === null, 404);
+
         $response = $round->surveyResponse;
 
         return view('public.tracking-round.done', [
@@ -534,12 +549,6 @@ class PublicTrackingRoundQrController extends Controller
             /* วันที่ส่งต้องมาจากใบตอบ ไม่ใช่ answered_at ของรอบ — ใบตอบคือหลักฐานที่ผู้ตอบอ้างอิงได้
                ถ้าใบยังไม่มีด้วยเหตุใดก็ตาม ให้ตกไปที่เวลาที่ปิดรอบ */
             'submittedAt' => $response?->submitted_at ?? $round->answered_at,
-            'answeredQuestions' => $response?->answers()->distinct('question_id')->count('question_id') ?? 0,
-            /* ตัวนับต้องอ้างถึงเจ้าของแบบประเมิน ไม่ใช่ผู้กรอก — การกรอกแทนไม่นับเป็นรอบของผู้กรอก */
-            'answeredRounds' => $profile->rounds()->whereNotNull('answered_at')->count(),
-            'totalRounds' => $profile->rounds()->count(),
-            'remaining' => $this->rounds->dueRoundsFor($participant)->count(),
-            'lineLinked' => filled($participant->line_user_id) && $participant->line_notify,
             'proxyFor' => $this->proxyFor($request),
         ]);
     }
@@ -624,11 +633,11 @@ class PublicTrackingRoundQrController extends Controller
      * รอบที่ "เปิดให้ตอบอยู่จริง" ของคนที่ยืนยันตัวตนแล้วเท่านั้น
      *
      * กันสองเรื่องพร้อมกัน: ยิงรหัสรอบของคนอื่นเข้ามาปิดรอบให้เขา
-     * และตอบรอบที่ยังไม่ถึงกำหนดข้ามลำดับไปก่อน
+     * และข้ามลำดับไปตอบรอบหลังก่อนที่จะตอบรอบก่อนหน้าให้ครบ
      */
     private function openRoundFor(Participant $participant, FollowUpRound $round): FollowUpRound
     {
-        $open = $this->rounds->dueRoundsFor($participant)->firstWhere('id', $round->id);
+        $open = $this->rounds->openRoundsFor($participant)->firstWhere('id', $round->id);
 
         abort_if($open === null, 404, 'รอบนี้ไม่ได้เปิดให้ตอบอยู่');
 

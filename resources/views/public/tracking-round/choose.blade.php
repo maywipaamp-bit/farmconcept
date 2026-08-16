@@ -1,53 +1,32 @@
 @extends('public.activities.layout')
 
-@section('title', 'เลือกชื่อของคุณ')
+@section('title', 'ยืนยันตัวตน')
 
 @section('content')
     <section class="detail-card tr-card">
-        {{-- เบอร์เดียวเจอคนเดียวก็ยังต้องยืนยันชื่อ แต่ไม่ต้องพูดว่า "เลือก" ในเมื่อไม่มีอะไรให้เลือก --}}
-        @if($people->count() > 1)
-            <h1 class="tr-heading">พบ {{ $people->count() }} รายชื่อในเบอร์นี้</h1>
-            <p class="tr-subheading">เบอร์ {{ $phone }} · เลือกชื่อของคุณ แล้วยืนยันด้วยชื่อจริง 5 ตัวอักษรแรก</p>
-        @else
-            <h1 class="tr-heading">ยืนยันตัวตน</h1>
-            <p class="tr-subheading">เบอร์ {{ $phone }} · กรอกชื่อจริง 5 ตัวอักษรแรกเพื่อเข้าใช้งาน</p>
-        @endif
+        <h1 class="tr-heading">ยืนยันตัวตน</h1>
+        {{-- ไม่แสดงรายชื่อในเบอร์นี้เลย แม้แบบปิดบัง — แค่รู้เบอร์ของบ้านหนึ่งไม่ควรอ่านได้ว่ามีใครอยู่ในโครงการ
+             ผู้ตอบพิมพ์ชื่อตัวเองจากความจำ ระบบเป็นฝ่ายจับคู่ให้ ไม่ใช่ยื่นตัวเลือกให้เดา --}}
+        <p class="tr-subheading">เบอร์ {{ $phone }} · กรอกชื่อจริง 5 ตัวอักษรแรกเพื่อเข้าใช้งาน</p>
 
         @error('name_prefix')<div class="tr-error" role="alert">{{ $message }}</div>@enderror
 
-        <form method="POST" action="{{ route('public.tracking-round-qr.choose.submit') }}">
+        <form method="POST" action="{{ route('public.tracking-round-qr.choose.submit') }}" novalidate>
             @csrf
 
-            <div class="tr-people">
-                @foreach($people as $person)
-                    {{-- ชื่อถูกปิดบังไว้ (สมห••• ใ•••) — ห้ามแสดงชื่อเต็มก่อนยืนยันตัวตน
-                         ไม่งั้นแค่รู้เบอร์ของบ้านหนึ่งก็อ่านได้ว่ามีใครอยู่ในโครงการบ้าง --}}
-                    <details class="tr-person" @if($selected === $person->id || ($loop->first && ! $selected)) open @endif>
-                        <summary>
-                            <span class="tr-person-avatar" aria-hidden="true">{{ mb_substr($person->name, 0, 1) }}</span>
-                            <span class="tr-person-text">
-                                <span class="tr-person-name">{{ $person->maskedName() }}</span>
-                                <span class="tr-person-meta">
-                                    {{ collect([$person->targetGroup?->name, $person->area?->name])->filter()->join(' · ') ?: 'กลุ่มตัวอย่าง' }}
-                                </span>
-                            </span>
-                            <span class="tr-person-chevron" aria-hidden="true"></span>
-                        </summary>
-
-                        <div class="tr-person-confirm">
-                            <label for="tr-prefix-{{ $person->id }}">ชื่อจริง 5 ตัวอักษรแรก</label>
-                            <input type="text" id="tr-prefix-{{ $person->id }}" name="name_prefix"
-                                   class="tr-prefix-input" maxlength="5" autocomplete="off" inputmode="text">
-                            <button type="submit" name="participant_id" value="{{ $person->id }}"
-                                    class="tr-primary-button">ยืนยันตัวตน</button>
-                        </div>
-                    </details>
-                @endforeach
+            <div class="registration-field">
+                <label for="tr-prefix">ชื่อจริง 5 ตัวอักษรแรก <span>*</span></label>
+                <input type="text" id="tr-prefix" name="name_prefix" class="tr-prefix-input"
+                       maxlength="5" autocomplete="off" inputmode="text" autofocus
+                       value="{{ old('name_prefix') }}" required>
+                <span class="tr-field-hint">เช่น ชื่อ “สมหญิง” ให้กรอก “สมหญิ”</span>
             </div>
+
+            <button type="submit" class="tr-primary-button tr-form-submit">เข้าใช้งาน</button>
         </form>
 
         <p class="tr-note">
-            ไม่มีชื่อของคุณ
+            ยังไม่เคยลงทะเบียน
             <a href="{{ route('public.tracking-round-qr.register') }}">ลงทะเบียนเพิ่ม</a>
         </p>
 

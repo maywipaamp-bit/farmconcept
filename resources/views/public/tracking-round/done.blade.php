@@ -21,43 +21,16 @@
                     <dt>วันที่ส่ง</dt>
                     <dd>@if($submittedAt)@thaidate($submittedAt) · {{ $submittedAt->format('H:i') }} น.@else—@endif</dd>
                 </div>
+                @if($proxyFor)
+                    {{-- กรอกแทนต้องเห็นชัดบนใบยืนยันว่าคำตอบลงในนามใคร ไม่งั้นเผลอคิดว่าตอบของตัวเอง --}}
+                    <div>
+                        <dt>ตอบในนามของ</dt>
+                        <dd>{{ $proxyFor->name }}</dd>
+                    </div>
+                @endif
             </dl>
 
-            {{-- ข้อความแปรตามบริบท: กรอกแทน / ยังมีรอบให้ทำต่อ / ทำครบแล้ว
-                 ผู้ตอบต้องรู้ว่าต้องทำอะไรต่อ ไม่ใช่แค่ "ขอบคุณ" แล้วจบ --}}
-            <p>
-                @if($proxyFor)
-                    บันทึกคำตอบ{{ $round->name }}ของ {{ $proxyFor->name }} แล้ว
-                    ระบบระบุว่าคุณเป็นผู้กรอกแทน
-                @else
-                    บันทึกคำตอบ{{ $round->name }}เรียบร้อยแล้ว
-                    @if($remaining > 0)
-                        · คุณยังมีอีก {{ $remaining }} รอบที่ถึงกำหนด
-                    @elseif($lineLinked)
-                        · รอบถัดไปจะแจ้งเตือนผ่าน LINE
-                    @else
-                        · เชื่อม LINE ไว้เพื่อรับแจ้งเตือนรอบถัดไปได้
-                    @endif
-                @endif
-            </p>
-
-            <div class="tr-done-stats">
-                <div>
-                    <span class="tr-done-number">{{ $answeredQuestions }}</span>
-                    <span class="tr-done-label">ข้อที่ตอบ</span>
-                </div>
-                <div>
-                    {{-- ตัวเลขเดียวไม่บอกว่าเหลืออีกเท่าไร ใช้รูปแบบเดียวกับแดชบอร์ดให้เทียบกันได้ --}}
-                    <span class="tr-done-number">{{ $answeredRounds }}/{{ $totalRounds }}</span>
-                    <span class="tr-done-label">รอบที่ทำแล้ว</span>
-                </div>
-            </div>
-
-            @if($remaining > 0)
-                <a class="tr-primary-button" href="{{ route('public.tracking-round-qr.rounds') }}">ทำรอบถัดไป</a>
-            @else
-                <a class="tr-primary-button" href="{{ route('public.tracking-round-qr.dashboard') }}">กลับหน้าหลัก</a>
-            @endif
+            <a class="tr-primary-button" href="{{ route('public.tracking-round-qr.dashboard') }}">กลับหน้าหลัก</a>
         </div>
     </section>
 @endsection
