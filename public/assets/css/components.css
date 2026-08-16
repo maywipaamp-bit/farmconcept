@@ -5671,19 +5671,19 @@ button.multiselect:focus-visible {
 }
 
 /* ความกว้างขั้นต่ำ = ผลรวมคอลัมน์ + gap + padding ซ้ายขวา
-   828 + (8 × 10) + 32 = 940 — พอดีพื้นที่คอนเทนต์จอโน้ตบุ๊ก (~947px) โดยไม่ต้องเลื่อนข้าง
+   หกคอลัมน์กว้างกว่าเดิมต่อช่อง แต่รวมแล้วแคบลง จึงพอดีจอโน้ตบุ๊กสบายกว่าชุดเก้าคอลัมน์เดิม
    จอแคบกว่านั้น .table-scroll ยังเลื่อนข้างให้เป็น fallback */
 .grid-head,
-.grid-row { min-width: 940px; }
+.grid-row { min-width: 860px; }
 
 .grid-head,
 .grid-row {
   display: grid;
-  /* # · ชื่อกิจกรรม · วันและเวลา · สถานที่ · ผู้ลงทะเบียน · เข้าร่วม/ประเมิน · สถานะ+หน้าเว็บ · ปรับปรุงล่าสุด · เมนู
-     คู่ที่เนื้อหาเป็นเรื่องเดียวกันรวมช่องกัน (สถานะกับหน้าเว็บ · เข้าร่วมกับประเมิน)
-     เพื่อให้ตารางพอดีจอ — คอลัมน์ที่ยืดได้มีสองอันคือชื่อกับสถานที่ */
-  grid-template-columns: 40px minmax(150px, 1.4fr) 110px minmax(84px, 1fr) 76px 100px 118px 110px 40px;
-  gap: 10px;
+  /* กิจกรรม · วันและเวลา · ลงทะเบียน/เช็คอิน/ประเมิน · สถานะ · หน้าเว็บ · เมนู
+     ช่องที่ยืดได้มีช่องเดียวคือชื่อกิจกรรม ที่เหลือกว้างคงที่ตามเนื้อหาที่ยาวที่สุดที่เป็นไปได้
+     (แถบความคืบหน้าต้องกว้างพอให้อ่านสัดส่วนออก จึงตรึงไว้ 210px ไม่ปล่อยให้หด) */
+  grid-template-columns: minmax(200px, 1fr) 118px 210px 116px 108px 40px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -5758,7 +5758,40 @@ button.multiselect:focus-visible {
 
 .grid-dash { color: var(--color-text-muted); }
 
-/* แถบความคืบหน้าของยอดลงทะเบียน — สีตามสถานะกิจกรรม */
+/* ---------- ป้ายประเภทหน้าชื่อกิจกรรม ----------
+   ไม่ใช้ .badge เพราะ .badge มีจุดนำหน้าเสมอ ซึ่งที่นี่ไม่ต้องการ
+   ป้ายนี้เป็นฉลากบอกชนิดของแถว ไม่ใช่สถานะที่ต้องสะดุดตา */
+.grid-name-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.grid-type {
+  flex: none;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.grid-type.is-activity { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.grid-type.is-event    { background: var(--color-info-soft);    color: var(--color-info-text); }
+.grid-type.is-news     { background: var(--color-warning-soft); color: var(--color-warning-text); }
+
+/* ---------- สามตัวเลขในช่องเดียว ----------
+   ยอดลงทะเบียนเป็นตัวหลัก เช็คอิน/ประเมินเป็นข้อมูลประกอบ จึงจางกว่าหนึ่งระดับ */
+.grid-metric-main { color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
+.grid-metric-sub  { color: var(--color-text-muted); }
+
+/* ---------- คอลัมน์หน้าเว็บ ---------- */
+.grid-web-on {
+  font-size: var(--font-size-small);
+  color: var(--color-success-text);
+}
+
 .grid-actions { display: flex; justify-content: flex-end; }
 
 /* ==========================================================================
@@ -11168,14 +11201,17 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 .co-table-scroll { overflow-x: auto; }
 .co-table { display: flex; flex-direction: column; }
 
+/* จำนวนคอลัมน์รอบไม่คงที่ — มาจากหน้าตั้งค่ารอบประเมิน หน้าจอจึงตั้ง --co-cols
+   กับ --co-min-width ที่ .co-table ให้ตอนเรนเดอร์ ค่าที่เขียนไว้ตรงนี้เป็นค่าสำรอง
+   ของชุดตั้งต้น 4 รอบ เผื่อกรณีที่ JS ยังไม่ทำงาน */
 .co-tr {
   display: grid;
-  grid-template-columns: minmax(170px, 1.6fr) 150px 118px 52px 52px 52px 52px 150px 118px 44px;
+  grid-template-columns: var(--co-cols, minmax(170px, 1.6fr) 128px 112px 52px 52px 52px 52px 164px 118px 44px);
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--color-background);
-  min-width: 1010px;
+  min-width: var(--co-min-width, 1054px);
   transition: background var(--transition-fast);
 }
 .co-tr:last-child { border-bottom: 0; }
@@ -11208,6 +11244,11 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+/* ช่วงวันที่ในแผงค้นหา — สองช่องเท่ากันเสมอ ไม่ให้ช่องหลังหดเมื่อแผงแคบ */
+.co-date-range { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.co-date-range .input { min-width: 0; }
+.co-date-range-sep { font-size: var(--font-size-caption); color: var(--color-text-secondary); white-space: nowrap; }
 
 .co-area-cell { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 

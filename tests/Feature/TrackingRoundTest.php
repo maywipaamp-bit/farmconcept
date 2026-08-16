@@ -334,14 +334,19 @@ class TrackingRoundTest extends TestCase
             'notify' => true,
         ]))->assertOk()->assertJsonPath('data.state', RoundBatch::STATE_RUNNING);
 
-        $token = $this->healthQr()->token;
+        /* ผู้ตอบเข้าทาง QR: ยืนยันด้วยเบอร์ แล้วส่งคำตอบของรอบนั้น
+           รายละเอียดของแต่ละหน้าจออยู่ใน TrackingRoundQrTest ที่นี่สนใจแค่ว่า sync ถึงรอบติดตามไหม */
+        $this->healthQr();
+        $base = '/health';
 
-        $this->postJson('/public/tracking-round-qr/submit', [
-            'token' => $token,
-            'phone' => $participant->phone,
-            'person_code' => $participant->person_code,
-            'round_id' => $round->id,
-        ])->assertOk();
+        /* เบอร์อย่างเดียวเข้าไม่ได้ ต้องยืนยันชื่อจริงอีกชั้น — รายละเอียดอยู่ใน TrackingRoundQrTest */
+        $this->post($base.'/verify', ['phone' => $participant->phone])->assertRedirect($base.'/choose');
+        $this->post($base.'/choose', [
+            'participant_id' => $participant->id,
+            'name_prefix' => mb_substr($participant->name, 0, 5),
+        ])->assertRedirect($base.'/home');
+        $this->post($base.'/rounds/'.$round->id.'/survey', [])
+            ->assertRedirect($base.'/rounds/'.$round->id.'/done');
 
         $this->assertNotNull($round->fresh()->answered_at, 'ใบติดตามรายคนต้องถูก stamp ว่าตอบแล้ว');
         $this->assertDatabaseHas('evl_survey_responses', ['cohort_round_id' => $round->id]);
@@ -371,26 +376,27 @@ class TrackingRoundTest extends TestCase
             'due_date' => now()->addYear()->toDateString(),
         ]);
 
-        $body = $this->getJson('/public/tracking-round-qr/verify?'.http_build_query([
-            'token' => $this->healthQr()->token,
-            'phone' => $participant->phone,
-            'person_code' => $participant->person_code,
-        ]))->assertOk()->json();
+        $this->healthQr();
+        $base = '/health';
 
-        $this->assertSame(['รอบที่เปิดอยู่'], array_column($body['rounds'], 'name'));
-        $this->assertSame($participant->name, $body['participant']['name']);
-    }
+        /* เบอร์อย่างเดียวเข้าไม่ได้ ต้องยืนยันชื่อจริงอีกชั้น — รายละเอียดอยู่ใน TrackingRoundQrTest */
+        $this->post($base.'/verify', ['phone' => $participant->phone])->assertRedirect($base.'/choose');
+        $this->post($base.'/choose', [
+            'participant_id' => $participant->id,
+            'name_prefix' => mb_substr($participant->name, 0, 5),
+        ])->assertRedirect($base.'/home');
 
-    public function test_qr_verification_rejects_a_wrong_phone_and_person_code_pair(): void
-    {
-        $group = $this->targetGroup('TG-1', 'ผู้สูงอายุ');
-        $round = $this->member('PID-0001', $group, now()->toDateString());
+        /* ทั้งสองรอบอยู่ในรายการ แต่กดทำได้เฉพาะรอบที่เปิดอยู่
+           รอบที่ยังไม่ถึงกำหนดต้องเห็นว่ามีอยู่ ไม่ใช่หายไปเฉย ๆ จนคิดว่าตกหล่น */
+        $this->get($base.'/home')->assertOk()->assertSee($participant->name);
 
-        $this->getJson('/public/tracking-round-qr/verify?'.http_build_query([
-            'token' => $this->healthQr()->token,
-            'phone' => '099-999-9999',
-            'person_code' => $round->cohortProfile->participant->person_code,
-        ]))->assertUnprocessable();
+        $this->get($base.'/rounds')
+            ->assertOk()
+            ->assertSee('รอบที่เปิดอยู่')
+            ->assertSee('รอบที่ยังไม่ถึงกำหนด')
+            ->assertSee('ยังไม่เปิด')
+            ->assertSee('ถึงกำหนด')
+            ->assertSee('เริ่มทำ');
     }
 
     public function test_only_health_follow_up_forms_can_be_used_for_a_round(): void

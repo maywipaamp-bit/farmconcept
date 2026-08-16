@@ -12,6 +12,7 @@ use App\Models\FollowUpRoundTemplate;
 use App\Models\Option;
 use App\Models\Participant;
 use App\Models\TargetGroup;
+use App\Services\PersonCodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,17 +26,13 @@ use Illuminate\Validation\ValidationException;
 
 class CohortController extends Controller
 {
-    /**
-     * เพศเก็บเป็น enum ในตาราง ไม่ได้แยกเป็นตาราง master
-     * เพราะเป็นชุดค่าที่ปิดตายตามมาตรฐานข้อมูล ไม่ใช่รายการที่แอดมินเพิ่มเองได้
-     * แผนที่นี้เป็นแหล่งเดียวของคำแปล — หน้าจอกับ payload ใช้ตัวเดียวกัน
-     */
-    private const GENDERS = [
-        'female' => 'หญิง',
-        'male' => 'ชาย',
-        'other' => 'อื่น ๆ',
-        'undisclosed' => 'ไม่ระบุ',
-    ];
+    public function __construct(private readonly PersonCodeGenerator $personCodes) {}
+
+    /** คำแปลของเพศอยู่ที่ config('farmconcept.genders') ที่เดียว — ใช้ร่วมกับหน้าที่ผู้เข้าร่วมกรอกเอง */
+    private function genders(): array
+    {
+        return config('farmconcept.genders');
+    }
 
     /** แหล่งที่มาของกลุ่มตัวอย่าง เก็บเป็น "รหัส" ลง ptp_cohort_profiles.source_type ไม่ใช่ id */
     private const SOURCE_GROUP = 'cohort_source';
@@ -151,13 +148,14 @@ class CohortController extends Controller
         $rounds = $request->selectedRounds($entryDate->toDateString());
 
         $payload = DB::transaction(function () use ($validated, $entryDate, $rounds) {
-            /* ตรวจซ้ำอีกครั้งใต้ transaction — ระหว่างที่แอดมินกรอกฟอร์มค้างไว้
-               อาจมีคนอื่นบันทึกรหัสเดียวกันไปแล้ว ปล่อยให้ unique index ระเบิดเป็น 500 ไม่ได้ */
-            $personCode = $this->reserveUnusedPersonCode($validated['person_code']);
+            /* ออกรหัสตอนบันทึก ไม่ใช่ตอนเปิดฟอร์ม — ระหว่างที่แอดมินกรอกฟอร์มค้างไว้
+               อาจมีคนอื่นบันทึกไปหลายคนแล้ว รหัสที่จองไว้ล่วงหน้าจึงชนกันได้เสมอ
+               ออกตรงนี้ใต้ transaction ที่ล็อกแถวไว้แล้ว จะไม่มีช่องให้ชนอีก */
+            $personCode = $this->personCodes->next(lock: true);
 
             $participant = Participant::create([
                 /* code กับ person_code ตั้งค่าเท่ากันสำหรับคนที่เพิ่มจากหน้านี้
-                   เพื่อให้รหัสที่แอดมินเห็นตอนกดรันเลข ตรงกับรหัสที่โผล่ในตารางเป๊ะ */
+                   เพื่อให้รหัสที่โผล่ในตารางกับรหัสบนใบยินยอมเป็นตัวเดียวกัน */
                 'code' => $personCode,
                 'person_code' => $personCode,
                 'name' => $validated['name'],
@@ -176,7 +174,7 @@ class CohortController extends Controller
 
             $cohortProfile = CohortProfile::create([
                 'participant_id' => $participant->id,
-                'cohort_code' => $this->nextCohortCode(),
+                'cohort_code' => $this->personCodes->nextCohortCode(lock: true),
                 'entry_date' => $entryDate,
                 'source_type' => $validated['source_code'],
                 /* สถานะอื่นทั้งหมด derive จากวันครบกำหนด มีแค่ "ยุติการติดตาม" ที่เป็นการตัดสินใจของคน
@@ -289,10 +287,10 @@ class CohortController extends Controller
 
         return [
             'today' => now()->toDateString(),
-            'nextPersonCode' => $this->nextPersonCode(),
-            /* ฟอร์มต่อรหัสบุคคลท้าย prefix นี้เอง จะได้ไม่ต้องประกอบ URL เองสองที่ */
-            'assessmentLinkBase' => self::assessmentLink(''),
-            'genders' => collect(self::GENDERS)->map(fn (string $label, string $value) => [
+            /* รหัสถัดไปที่ระบบจะออกให้ — ไว้ให้ดูเฉย ๆ ไม่ได้จองไว้
+               รหัสจริงออกตอนกดบันทึกเสมอ ดู CohortController::store() */
+            'nextPersonCode' => $this->personCodes->next(),
+            'genders' => collect($this->genders())->map(fn (string $label, string $value) => [
                 'value' => $value, 'label' => $label,
             ])->values(),
             'ageRanges' => $byGroup('age_range'),
@@ -323,58 +321,9 @@ class CohortController extends Controller
         return url('/evaluations/start?person='.$personCode);
     }
 
-    /** รหัสบุคคลถัดไปที่ยังไม่มีใครใช้ — รูปแบบ PID-0001 */
-    private function nextPersonCode(): string
-    {
-        return $this->personCodeFrom($this->highestPersonCodeNumber() + 1);
-    }
+    /* ตัวออกรหัสอยู่ที่ PersonCodeGenerator — ใช้ร่วมกับการลงทะเบียนตัวเองผ่าน QR
+       จะได้ไม่มีรหัสสองรูปแบบในระบบเดียวกัน */
 
-    private function personCodeFrom(int $running): string
-    {
-        return 'PID-'.str_pad((string) $running, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * เลขสูงสุดจาก "ตัวเลขท้ายรหัส" ไม่ใช่ max() ของข้อความ
-     * เหตุผลเดียวกับ MasterDataController::runningCode() — PID-9 กับ PID-0010 เทียบเป็นข้อความแล้วผิด
-     */
-    private function highestPersonCodeNumber(bool $lock = false): int
-    {
-        $query = Participant::withTrashed()->where('person_code', 'like', 'PID-%');
-
-        if ($lock) {
-            $query->lockForUpdate();
-        }
-
-        return (int) $query->pluck('person_code')
-            ->map(fn (string $code) => (int) Str::afterLast($code, '-'))
-            ->max();
-    }
-
-    /**
-     * รหัสที่ฟอร์มส่งมา ถ้ามีคนใช้ไปแล้วระหว่างที่กรอกฟอร์มค้างไว้ ให้ออกเลขถัดไปให้แทน
-     * ดีกว่าปฏิเสธทั้งฟอร์มแล้วให้กรอกใหม่ทั้งหมด เพราะรหัสไม่ใช่ค่าที่แอดมินตั้งใจพิมพ์เอง
-     */
-    private function reserveUnusedPersonCode(string $requested): string
-    {
-        $taken = Participant::withTrashed()
-            ->where(fn ($q) => $q->where('person_code', $requested)->orWhere('code', $requested))
-            ->lockForUpdate()
-            ->exists();
-
-        return $taken ? $this->personCodeFrom($this->highestPersonCodeNumber(lock: true) + 1) : $requested;
-    }
-
-    private function nextCohortCode(): string
-    {
-        $running = CohortProfile::where('cohort_code', 'like', 'CHT-%')
-            ->lockForUpdate()
-            ->pluck('cohort_code')
-            ->map(fn (string $code) => (int) Str::afterLast($code, '-'))
-            ->max() ?? 0;
-
-        return 'CHT-'.str_pad((string) ($running + 1), 4, '0', STR_PAD_LEFT);
-    }
 
     /** 0812345678 → 081-234-5678 เก็บรูปแบบเดียวกับข้อมูลเดิมทั้งฐาน */
     private function formatPhone(string $digits): string
@@ -397,7 +346,7 @@ class CohortController extends Controller
 
         $rounds = $cp->rounds->sortBy('offset_days')->values();
         $roundStates = [];
-        $nextRoundName = null;
+        $nextRound = null;
 
         foreach ($rounds as $r) {
             $state = $cp->isStopped() ? 'ยุติการติดตาม' : $r->state($today);
@@ -414,8 +363,11 @@ class CohortController extends Controller
                 'state' => $state,
             ];
 
-            if (! $nextRoundName && $state !== 'ตอบแล้ว' && ! $cp->isStopped()) {
-                $nextRoundName = $r->name;
+            /* รอบถัดไป = รอบแรกที่ยังไม่ตอบ เรียงตามจำนวนวัน
+               เก็บทั้งชื่อและวันครบกำหนด เพราะหน้ารายการต้องบอกว่า "ต้องตามภายในเมื่อไหร่"
+               ไม่ใช่แค่ชื่อรอบลอย ๆ ที่ยังต้องเปิดเข้าไปดูวันอีกที */
+            if ($nextRound === null && $state !== 'ตอบแล้ว' && ! $cp->isStopped()) {
+                $nextRound = end($roundStates);
             }
         }
 
@@ -432,11 +384,11 @@ class CohortController extends Controller
         return [
             'id' => (string) $cp->id,
             'db_id' => $cp->id,
-            'pid' => $p->code ?? $p->person_code ?? 'PID-'.$p->id,
+            'pid' => $p->code ?? $p->person_code ?? PersonCodeGenerator::PREFIX.$p->id,
             'cohortCode' => $cp->cohort_code,
             'name' => $p->name,
             'phone' => $p->phone ?? '',
-            'gender' => self::GENDERS[$p->gender] ?? 'ไม่ระบุ',
+            'gender' => $this->genders()[$p->gender] ?? 'ไม่ระบุ',
             'age' => $p->ageBand() ?? 'ไม่ระบุช่วงอายุ',
             'job' => $p->occupation?->label ?? $p->occupation_raw ?? 'ไม่ระบุอาชีพ',
             'source' => $sourceLabels[$cp->source_type] ?? $p->source ?? 'ไม่ระบุแหล่งที่มา',
@@ -449,7 +401,9 @@ class CohortController extends Controller
             'status' => $overallStatus,
             'stopped' => $cp->isStopped(),
             'stoppedReason' => $cp->stopped_reason,
-            'nextRound' => $nextRoundName ?? 'ครบกำหนดแล้ว',
+            'nextRound' => $nextRound['name'] ?? 'ครบกำหนดแล้ว',
+            'nextRoundDue' => $nextRound['dueDate'] ?? null,
+            'nextRoundState' => $nextRound['state'] ?? null,
             /* ลิงก์ผูกกับรหัสบุคคล ไม่ใช่รหัสกลุ่มตัวอย่าง เพราะฟอร์มต้องแสดงลิงก์นี้
                ให้คัดลอกได้ตั้งแต่ก่อนกดบันทึก ตอนนั้นยังไม่มี cohort_code */
             'assessmentLink' => self::assessmentLink($p->person_code),

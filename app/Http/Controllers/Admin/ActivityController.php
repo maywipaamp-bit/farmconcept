@@ -412,9 +412,11 @@ class ActivityController extends Controller
 
         $updated = $service->update($activity, $request->validated(), $request->user());
 
+        /* ไม่ redirect หลังบันทึก — ต่างจาก store() ที่ต้องย้ายจาก /create ไปหน้าแก้ไขของรหัสที่เพิ่งได้
+           ตรงนี้อยู่หน้าแก้ไขอยู่แล้ว การเด้งกลับไปหน้ารายการทุกครั้งที่กด "บันทึกร่าง" ทำให้แก้ไขต่อเนื่องไม่ได้
+           (เช่น เพิ่มรอบแล้วกดบันทึก จะถูกเด้งออกจากฟอร์มก่อนเพิ่มรอบถัดไป) */
         return response()->json([
             'message' => 'บันทึกกิจกรรม "'.$updated->name.'" แล้ว',
-            'redirect' => route('admin.activities.index'),
             'activity' => $this->toListRow($updated->load(['program', 'format', 'areas', 'instructors'])->loadCount('registrations')),
         ]);
     }

@@ -92,7 +92,7 @@ class CohortTest extends TestCase
         $entryDate = '2026-01-15';
 
         return array_merge([
-            'person_code' => 'PID-0001',
+            /* ไม่มี person_code ในฟอร์ม — เซิร์ฟเวอร์ออกให้เองตอนบันทึก */
             'name' => 'สมชาย ใจดี',
             'phone' => '081-234-5678',
             'gender' => 'male',
@@ -125,7 +125,7 @@ class CohortTest extends TestCase
         );
 
         $this->assertSame([0, 90, 180, 365], array_column($body['followUpRounds'], 'offsetDays'));
-        $this->assertSame('PID-0001', $body['nextPersonCode']);
+        $this->assertSame('P0001', $body['nextPersonCode']);
 
         /* ช่วงอายุ อาชีพ และแหล่งที่มา ต้องมาจาก master กลาง ไม่ใช่ค่าที่เขียนตายในหน้าจอ */
         $this->assertNotEmpty($body['ageRanges']);
@@ -149,7 +149,13 @@ class CohortTest extends TestCase
                ฟอร์มจึงใช้งานได้ทันทีโดยไม่ต้องรอ request รอบสอง */
             ->assertSee('nextPersonCode')
             ->assertSee('followUpRounds')
-            ->assertSee('targetGroups');
+            ->assertSee('targetGroups')
+            /* หัวตารางกับแถวถูกประกอบด้วย JS จากชุดรอบจริง จึงมีแต่ที่ยึดว่างไว้ให้ */
+            ->assertSee('id="co-head"', false)
+            ->assertSee('id="co-due-from"', false)
+            ->assertSee('id="co-due-to"', false)
+            /* การ์ดสรุปด้านบนถูกตัดออกแล้ว ตัวเลขย้ายไปอยู่ท้ายชื่อแท็บแทน */
+            ->assertDontSee('id="co-stats"', false);
     }
 
     public function test_store_creates_rounds_with_due_date_from_offset_days(): void
@@ -213,30 +219,45 @@ class CohortTest extends TestCase
         $this->assertSame(['ก่อนเข้าร่วม', '3 เดือน'], CohortProfile::firstOrFail()->rounds->pluck('name')->all());
     }
 
-    public function test_person_code_never_collides_with_an_existing_participant(): void
+    public function test_person_code_is_issued_by_the_server_in_running_order(): void
     {
         $this->seedRoundTemplates();
         $admin = $this->admin();
 
-        Participant::create([
-            'code' => 'PID-0001', 'person_code' => 'PID-0001',
-            'name' => 'คนที่มีอยู่แล้ว', 'phone' => '0800000000',
-        ]);
+        $first = $this->actingAs($admin)->postJson('/admin/cohort', $this->payload())
+            ->assertOk()->json('data.pid');
+        $second = $this->actingAs($admin)->postJson('/admin/cohort', $this->payload())
+            ->assertOk()->json('data.pid');
 
-        /* หน้าจอถือรหัสเก่าไว้ตั้งแต่ก่อนมีคนอื่นบันทึก — ต้องไม่ทับกันและต้องไม่ปฏิเสธทั้งฟอร์ม */
-        $this->actingAs($admin)
-            ->postJson('/admin/cohort', $this->payload(['person_code' => 'PID-0002']))
-            ->assertOk();
+        $this->assertSame(['P0001', 'P0002'], [$first, $second]);
+        $this->assertSame(['P0001', 'P0002'], Participant::orderBy('id')->pluck('person_code')->all());
+    }
 
-        $this->assertSame(
-            ['PID-0001', 'PID-0002'],
-            Participant::orderBy('id')->pluck('person_code')->all()
-        );
+    public function test_person_code_ignores_codes_of_other_shapes_already_in_the_database(): void
+    {
+        $this->seedRoundTemplates();
 
-        $this->actingAs($admin)
-            ->postJson('/admin/cohort', $this->payload(['person_code' => 'PID-0001']))
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('person_code');
+        /* ข้อมูลเดิมมีรหัสคนละแบบปนอยู่ ทั้งสองอันขึ้นต้นด้วย P เหมือนกัน
+           ถ้านับรวมเข้ามาจะได้เลขที่กระโดดหรือชนกับชุดใหม่ */
+        Participant::create(['code' => 'PID-0007', 'person_code' => 'PID-0007', 'name' => 'ของเดิม', 'phone' => '0800000000']);
+        Participant::create(['code' => 'DEMO-PSN-0009', 'person_code' => 'DEMO-PSN-0009', 'name' => 'ชุดตัวอย่าง', 'phone' => '0800000001']);
+
+        $this->actingAs($this->admin())->postJson('/admin/cohort', $this->payload())
+            ->assertOk()
+            ->assertJsonPath('data.pid', 'P0001');
+    }
+
+    public function test_person_code_sent_by_the_client_is_ignored(): void
+    {
+        $this->seedRoundTemplates();
+
+        /* รหัสมาจากเซิร์ฟเวอร์เท่านั้น ยิงค่าที่อยากได้เข้ามาต้องไม่มีผล */
+        $this->actingAs($this->admin())
+            ->postJson('/admin/cohort', $this->payload(['person_code' => 'P9999']))
+            ->assertOk()
+            ->assertJsonPath('data.pid', 'P0001');
+
+        $this->assertDatabaseMissing('ptp_participants', ['person_code' => 'P9999']);
     }
 
     public function test_required_fields_are_validated(): void
@@ -247,7 +268,7 @@ class CohortTest extends TestCase
             ->postJson('/admin/cohort', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'person_code', 'name', 'phone', 'gender',
+                'name', 'phone', 'gender',
                 'area_id', 'target_group_id', 'source_code', 'entry_date', 'rounds', 'consent',
             ]);
     }
@@ -355,10 +376,7 @@ class CohortTest extends TestCase
         $this->assertNull(CohortProfile::firstOrFail()->stopped_at);
 
         $this->actingAs($admin)
-            ->postJson('/admin/cohort', $this->payload([
-                'person_code' => 'PID-0002',
-                'status' => 'ยุติการติดตาม',
-            ]))
+            ->postJson('/admin/cohort', $this->payload(['status' => 'ยุติการติดตาม']))
             ->assertOk()
             ->assertJsonPath('data.stopped', true);
 
@@ -403,7 +421,7 @@ class CohortTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseHas('ptp_participants', [
-            'person_code' => 'PID-0001',
+            'person_code' => 'P0001',
             'age_range_id' => $ageRange->id,
             'occupation_id' => $occupation->id,
             'gender' => 'male',

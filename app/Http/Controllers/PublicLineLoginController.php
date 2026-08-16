@@ -59,6 +59,31 @@ class PublicLineLoginController extends Controller
     }
 
     /**
+     * เข้าด้วย LINE จากหน้า QR ติดตามสุขภาพ
+     *
+     * ใช้ callback เส้นเดิมร่วมกัน เพราะ LINE ให้ลงทะเบียน Callback URL ไว้ล่วงหน้าได้ชุดเดียว
+     * แยกปลายทางด้วย intent ที่ฝากไว้ใน session ตั้งแต่ตอนกดปุ่ม ไม่ใช่ทาง URL
+     */
+    public function redirectHealth(Request $request): RedirectResponse
+    {
+        $target = route('public.tracking-round-qr');
+
+        if (! $this->line->isConfigured()) {
+            return redirect()->away($target);
+        }
+
+        $authorize = $this->line->authorizeRequest($this->callbackUrl());
+
+        $request->session()->put('line_oauth', [
+            'state' => $authorize['state'],
+            'nonce' => $authorize['nonce'],
+            'intent' => 'health',
+        ]);
+
+        return redirect()->away($authorize['url']);
+    }
+
+    /**
      * ปลายทางที่ LINE ส่งกลับ — ต้องตรงกับ Callback URL ที่ตั้งไว้ใน LINE Developers Console
      *
      * เส้นทางนี้ไม่รับรหัสกิจกรรมทาง URL เพราะ LINE ให้ลงทะเบียน callback ไว้ล่วงหน้าเป็นค่าตายตัว
@@ -67,10 +92,14 @@ class PublicLineLoginController extends Controller
     public function callback(Request $request): RedirectResponse
     {
         $oauth = $request->session()->pull('line_oauth');
+        $isHealth = ($oauth['intent'] ?? null) === 'health';
         $activity = $oauth['activity'] ?? null;
-        $fallback = $activity
-            ? route('public.activities.register', $activity)
-            : route('public.activities');
+
+        $fallback = match (true) {
+            $isHealth => route('public.tracking-round-qr'),
+            (bool) $activity => route('public.activities.register', $activity),
+            default => route('public.activities'),
+        };
 
         /* ผู้ใช้กดยกเลิกที่หน้า LINE — กลับมาหน้าเดิมเงียบ ๆ ไม่ต้องขึ้น error ให้ตกใจ */
         if ($request->query('error')) {
@@ -80,12 +109,13 @@ class PublicLineLoginController extends Controller
         $code = (string) $request->query('code');
         $state = (string) $request->query('state');
 
-        if (! $activity || ! $code || ! $state || ! hash_equals((string) ($oauth['state'] ?? ''), $state)) {
+        if ((! $activity && ! $isHealth) || ! $code || ! $state
+            || ! hash_equals((string) ($oauth['state'] ?? ''), $state)) {
             return redirect()->away($fallback)->with('lineError', 'การเชื่อมต่อ LINE หมดอายุ กรุณาลองใหม่อีกครั้ง');
         }
 
         /* กิจกรรมต้องยังเปิดอยู่จริง ไม่งั้นพากลับไปหน้าที่ redirect ต่อเองอยู่แล้ว */
-        if (! Activity::forPublicListing()->where('code', $activity)->exists()) {
+        if (! $isHealth && ! Activity::forPublicListing()->where('code', $activity)->exists()) {
             return redirect()->away(route('public.activities'));
         }
 
@@ -97,6 +127,12 @@ class PublicLineLoginController extends Controller
         }
 
         $request->session()->put(self::SESSION_KEY, $profile);
+
+        /* ฝั่งติดตามสุขภาพ: บัญชี LINE ที่เคยผูกไว้แล้วคือการยืนยันตัวตนในตัว
+           เข้าได้เลยโดยไม่ต้องกรอกเบอร์ ส่วนคนที่ยังไม่เคยผูกจะถูกพาไปกรอกเบอร์หรือลงทะเบียนต่อ */
+        if ($isHealth) {
+            return redirect()->away(route('public.tracking-round-qr.line-return'));
+        }
 
         return redirect()->away($fallback);
     }

@@ -17,6 +17,12 @@
     --text-muted: #8A9683;
     --shadow: 0 10px 24px rgba(40, 70, 36, .08);
     --radius-pill: 999px;
+
+    /* เพิ่มตอนทำหน้าแบบประเมินติดตามสุขภาพ — ค่าที่เดิมกระจายเป็น hex ซ้ำหลายจุดในไฟล์นี้ */
+    --surface-muted: #F7FAF7;
+    --danger-text: #B91C1C;
+    --danger-bg: #FFF5F5;
+    --disabled-bg: #C7D0C7;
 }
 
 * { box-sizing: border-box; }
@@ -735,3 +741,704 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
     .category-icon { width: 42px; height: 42px; }
     .category-icon svg { width: 18px; height: 18px; }
 }
+
+/* ==========================================================================
+   QR ทำแบบประเมินติดตามสุขภาพ — แยกเป็นหน้าจอละขั้นตอน
+   ใช้คลาสร่วมกับหน้าลงทะเบียนกิจกรรม (registration-* · checkin-* · survey-*)
+   ที่นี่มีเฉพาะส่วนที่หน้าอื่นไม่มี
+   ========================================================================== */
+.tr-card { padding: 20px 16px; }
+
+/* ปุ่ม LINE ใช้สีแบรนด์ของ LINE ไม่ใช่สีเขียวของโครงการ ผู้ใช้จำปุ่มนี้จากสีเป็นหลัก */
+.tr-line-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    background: #06C755;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+.tr-line-button:hover { background: #05b34c; }
+
+.tr-or { position: relative; margin: 0 0 14px; text-align: center; }
+.tr-or::before { position: absolute; top: 50%; right: 0; left: 0; height: 1px; background: var(--border); content: ''; }
+.tr-or span { position: relative; padding: 0 10px; background: var(--surface); color: var(--text-secondary); font-size: 12px; }
+
+.tr-note { margin: 12px 0 0; color: var(--text-secondary); font-size: 12px; text-align: center; }
+.tr-note a { color: var(--dark-green); }
+
+.tr-banner { margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; }
+.tr-banner.is-success { border: 1px solid var(--primary); background: var(--primary-soft); color: var(--dark-green); }
+
+/* แถวรอบ: เลขลำดับ / ชื่อรอบ + วันครบกำหนด / ปุ่มทำแบบประเมิน */
+.tr-round-due { color: var(--text-secondary); font-size: 11.5px; font-weight: 400; }
+.tr-round-due.is-over { color: #B91C1C; }
+
+.tr-round-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 7px 12px;
+    border: 1px solid var(--primary);
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.tr-round-action:hover { border-color: var(--primary-hover); background: var(--primary-hover); }
+
+/* แถวเลือกชื่อ — ทั้งแถวกดได้ ไม่ใช่ต้องจิ้มวงกลมเล็ก ๆ */
+.tr-choice { grid-template-columns: 18px minmax(0, 1fr); cursor: pointer; }
+.tr-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); }
+.tr-choice-code { color: var(--text-secondary); font-size: 11.5px; font-weight: 400; }
+
+.tr-signout { margin-top: 16px; text-align: center; }
+.tr-link-button {
+    padding: 6px 4px;
+    border: 0;
+    background: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.tr-link-button:hover { color: var(--dark-green); }
+
+/* ==========================================================================
+   หน้าทำแบบประเมิน — ทีละข้อ
+   โครงและลำดับสายตาตาม design handoff (ออกแบบหน้าจอประเมินอาหารและสุขภาวะ)
+   แต่ map ค่าสีเข้ากับตัวแปรของโปรเจกต์ ไม่ได้ hardcode ชุดสีของ handoff
+   ตามที่ handoff เองระบุไว้ว่าถ้าปลายทางมี design system อยู่แล้วให้ map เข้าหาของเดิม
+   ========================================================================== */
+.tr-progress { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.tr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.tr-progress-round { min-width: 0; color: var(--text-primary); font-weight: 600; }
+.tr-progress-count { flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.tr-progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: var(--border); }
+.tr-progress-fill { display: block; height: 100%; border-radius: 99px; background: var(--primary); transition: width .3s ease; }
+
+/* กล่องคำถาม — พื้นอ่อนแยกคำถามออกจากตัวเลือกอย่างชัดเจน */
+.tr-step { min-width: 0; margin: 0; padding: 0; border: 0; }
+.tr-step[hidden] { display: none; }
+
+.tr-question { margin-bottom: 14px; padding: 16px; border-radius: 14px; background: var(--surface-muted); }
+.tr-question-section { display: block; margin-bottom: 7px; color: var(--dark-green); font-size: 11.5px; font-weight: 600; letter-spacing: .5px; }
+.tr-question-text { display: block; width: 100%; padding: 0; color: var(--text-primary); font-size: 15.5px; font-weight: 600; line-height: 1.5; text-wrap: pretty; }
+.tr-question-hint { display: block; margin-top: 6px; color: var(--text-secondary); font-size: 11.5px; }
+.tr-required { color: #DC2626; }
+
+/* ตัวเลือกเต็มความกว้าง กดได้ทั้งแถว — เป้าหมายการกดใหญ่พอสำหรับผู้สูงอายุ */
+.tr-options { display: flex; flex-direction: column; gap: 9px; }
+
+.tr-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 12px 15px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.45;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+.tr-option:hover { border-color: var(--primary); }
+.tr-option input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.tr-option-dot { position: relative; width: 19px; height: 19px; flex: 0 0 19px; border: 2px solid var(--border); border-radius: 50%; background: #fff; transition: border-color .15s ease, background .15s ease; }
+.tr-option-dot.is-square { border-radius: 6px; }
+
+.tr-option-label { min-width: 0; }
+
+.tr-option:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+.tr-option:has(input:checked) .tr-option-dot { border-color: var(--primary); background: var(--primary); }
+.tr-option:has(input:checked) .tr-option-dot::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    content: '';
+}
+.tr-option:has(input:checked) .tr-option-dot.is-square::after { top: 2px; left: 4.5px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; border-radius: 0; background: none; transform: rotate(45deg); }
+
+/* โฟกัสด้วยคีย์บอร์ดต้องเห็นได้ เพราะ input ตัวจริงถูกซ่อนไว้ */
+.tr-option:has(input:focus-visible) { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+.tr-textarea,
+.tr-select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 12px; outline: none; background: #fff; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; }
+.tr-textarea:focus,
+.tr-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+/* ปุ่มหลักต้องกว้างกว่าปุ่มย้อนกลับชัดเจน — ทางเดินหลักคือเดินหน้า */
+.tr-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+.tr-ghost-button { flex: 1; min-height: 46px; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; background: #fff; color: var(--text-secondary); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.tr-ghost-button:hover { border-color: var(--primary); color: var(--dark-green); }
+
+.tr-next { flex: 2; }
+
+.tr-primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.tr-primary-button:hover { background: var(--primary-hover); }
+.tr-primary-button:disabled { background: var(--disabled-bg); cursor: default; }
+
+.tr-error { margin-bottom: 14px; padding: 10px 13px; border-radius: 10px; background: var(--danger-bg); color: var(--danger-text); font-size: 12.5px; line-height: 1.5; }
+
+/* หน้าสรุปหลังส่ง */
+.tr-done { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 26px 4px 6px; text-align: center; }
+.tr-done h2 { margin: 0; font-size: 18px; }
+.tr-done p { margin: 0; max-width: 290px; color: var(--text-secondary); font-size: 13px; line-height: 1.6; text-wrap: pretty; }
+
+.tr-done-mark { display: inline-flex; width: 64px; height: 64px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); }
+.tr-done-mark i { width: 24px; height: 13px; margin-top: -6px; border-bottom: 4px solid var(--primary); border-left: 4px solid var(--primary); transform: rotate(-45deg); }
+
+/* คำขอบคุณอยู่ติดหัวข้อ เป็นประโยคเดียวกัน ไม่ใช่ย่อหน้าใหม่ */
+.tr-done-thanks { margin-top: -6px !important; color: var(--text-primary) !important; font-size: 14px !important; font-weight: 500; }
+
+/* ใบยืนยันการส่ง — ป้ายกำกับซ้าย ค่าขวา อ่านเป็นคู่ได้ในบรรทัดเดียว */
+.tr-done-receipt { width: 100%; max-width: 290px; margin: 0; padding: 11px 14px; border: 1px solid var(--border); border-radius: 12px; text-align: left; }
+.tr-done-receipt > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tr-done-receipt > div + div { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--border); }
+.tr-done-receipt dt { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+.tr-done-receipt dd { min-width: 0; margin: 0; color: var(--text-primary); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+
+.tr-done-stats { display: flex; gap: 24px; padding: 13px 20px; border-radius: 12px; background: var(--surface-muted); }
+.tr-done-number { display: block; color: var(--dark-green); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tr-done-label { display: block; color: var(--text-secondary); font-size: 11.5px; }
+
+/* ==========================================================================
+   หน้าจอฝั่งผู้เข้าร่วม — ยืนยันตัวตน / เลือกชื่อ / ลงทะเบียน / แดชบอร์ด / รอบ / กรอกแทน
+   โครงและลำดับสายตาตาม design handoff · สีทั้งหมด map เข้าตัวแปรของโปรเจกต์
+   ========================================================================== */
+.tr-eyebrow { display: block; margin-bottom: 6px; color: var(--dark-green); font-size: 11px; font-weight: 600; letter-spacing: .6px; }
+.tr-project-title { margin: 0 0 14px; color: var(--text-primary); font-size: 15.5px; font-weight: 700; line-height: 1.5; text-wrap: pretty; }
+.tr-project-line { margin: 0 0 14px; color: var(--text-secondary); font-size: 14px; line-height: 1.5; text-wrap: pretty; }
+
+.tr-heading { margin: 0 0 4px; color: var(--text-primary); font-size: 17px; font-weight: 700; line-height: 1.5; }
+.tr-subheading { margin: 0 0 14px; color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; text-wrap: pretty; }
+
+/* ---------- กล่องความเชื่อมั่น ---------- */
+.tr-trust { margin-bottom: 16px; padding: 15px 17px; border-radius: 14px; background: var(--surface-muted); }
+.tr-trust-list { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.tr-trust-list li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; text-wrap: pretty; }
+
+.tr-trust-check { position: relative; width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; border-radius: 50%; background: var(--primary-soft); }
+.tr-trust-check::after { position: absolute; top: 4px; left: 6px; width: 4px; height: 8px; border: solid var(--dark-green); border-width: 0 2px 2px 0; transform: rotate(45deg); content: ""; }
+
+.tr-trust-more { margin-top: 12px; }
+.tr-trust-more summary { color: var(--dark-green); font-size: 12.5px; cursor: pointer; list-style: none; }
+.tr-trust-more summary::-webkit-details-marker { display: none; }
+.tr-trust-more[open] summary { margin-bottom: 10px; }
+.tr-trust-more p { margin: 0 0 8px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; line-height: 1.65; text-wrap: pretty; }
+
+/* ---------- ปุ่ม LINE / ปุ่มรอง ---------- */
+.tr-line-mark { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50% 50% 50% 4px; background: #fff; }
+
+.tr-secondary-button {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 4px;
+    padding: 12px;
+    border: 1.5px solid var(--primary-soft);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--dark-green);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.tr-secondary-button:hover { border-color: var(--primary); background: var(--primary-soft); }
+
+.tr-field-hint { display: block; margin-top: 5px; color: var(--text-muted); font-size: 11px; line-height: 1.5; }
+.tr-form-submit { margin-top: 16px; }
+
+/* ---------- เลือกชื่อในเบอร์เดียวกัน ---------- */
+.tr-people { display: flex; flex-direction: column; gap: 10px; }
+
+.tr-person { border: 1.5px solid var(--border); border-radius: 14px; background: #fff; }
+.tr-person[open] { border-color: var(--primary); background: var(--surface-muted); }
+.tr-person summary { display: flex; align-items: center; gap: 11px; padding: 12px 14px; cursor: pointer; list-style: none; }
+.tr-person summary::-webkit-details-marker { display: none; }
+
+.tr-person-avatar { display: inline-flex; width: 36px; height: 36px; flex: 0 0 36px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); color: var(--dark-green); font-weight: 600; }
+.tr-person-text { display: flex; min-width: 0; flex-direction: column; gap: 2px; flex: 1; }
+.tr-person-name { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+.tr-person-meta { color: var(--text-muted); font-size: 11.5px; }
+
+.tr-person-chevron { width: 7px; height: 7px; flex: none; border-right: 1.5px solid var(--border); border-bottom: 1.5px solid var(--border); transform: rotate(45deg); transition: transform .2s ease; }
+.tr-person[open] .tr-person-chevron { transform: rotate(225deg); }
+
+.tr-person-confirm { display: flex; flex-direction: column; gap: 9px; padding: 0 14px 14px; }
+.tr-person-confirm label { color: var(--text-primary); font-size: 12px; font-weight: 500; }
+
+.tr-prefix-input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; outline: none; background: #fff; color: var(--text-primary); font-family: inherit; font-size: 16px; letter-spacing: 2px; }
+.tr-prefix-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+/* ---------- chip เลือกช่วงอายุ ---------- */
+.tr-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tr-chip { position: relative; }
+.tr-chip input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.tr-chip span { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 16px; border: 1.5px solid var(--border); border-radius: 99px; background: #fff; color: var(--text-secondary); font-size: 13.5px; cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease; }
+.tr-chip:has(input:checked) span { border-color: var(--primary); background: var(--primary-soft); color: var(--dark-green); font-weight: 600; }
+.tr-chip:has(input:focus-visible) span { box-shadow: 0 0 0 3px var(--primary-soft); }
+
+/* ---------- แดชบอร์ด ---------- */
+.tr-user-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+
+.tr-user-menu { position: relative; min-width: 0; }
+.tr-user-menu summary { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; cursor: pointer; list-style: none; }
+.tr-user-menu summary::-webkit-details-marker { display: none; }
+.tr-user-menu summary:hover { background: var(--surface-muted); }
+
+.tr-user-avatar { display: inline-flex; width: 40px; height: 40px; flex: 0 0 40px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-soft); color: var(--dark-green); font-weight: 600; }
+.tr-user-text { display: flex; min-width: 0; flex-direction: column; }
+.tr-user-hello { color: var(--text-muted); font-size: 11.5px; }
+.tr-user-name { overflow: hidden; color: var(--text-primary); font-size: 14.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.tr-user-chevron { width: 7px; height: 7px; flex: none; border-right: 1.5px solid var(--border); border-bottom: 1.5px solid var(--border); transform: rotate(45deg); transition: transform .2s ease; }
+.tr-user-menu[open] .tr-user-chevron { transform: rotate(225deg); }
+
+.tr-user-dropdown { position: absolute; z-index: 20; top: 52px; left: 0; min-width: 220px; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: #fff; box-shadow: 0 10px 28px rgba(30, 60, 30, .14); }
+.tr-user-item { display: block; width: 100%; padding: 11px 14px; border: 0; background: none; color: var(--text-primary); font-family: inherit; font-size: 13.5px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; }
+.tr-user-item small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 11.5px; font-weight: 400; }
+.tr-user-item:hover { background: var(--surface-muted); }
+.tr-user-item.is-danger { border-top: 1px solid var(--border); color: var(--danger-text); }
+.tr-user-item.is-danger:hover { background: var(--danger-bg); }
+
+.tr-user-chip { flex: none; padding: 6px 12px; border-radius: 99px; background: var(--surface-muted); color: var(--text-secondary); font-size: 11.5px; white-space: nowrap; }
+
+/* การ์ดเดียวในหน้าที่ใช้สีเขียว — สิ่งที่ต้องทำตอนนี้ */
+.tr-due-card { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding: 18px 20px; border-radius: 16px; background: var(--primary-soft); }
+.tr-due-card.is-empty { background: var(--surface-muted); }
+.tr-due-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; color: var(--text-secondary); font-size: 11.5px; }
+.tr-due-head a { color: var(--dark-green); font-size: 12px; }
+.tr-due-name { margin: 0; color: var(--dark-green); font-size: 16px; font-weight: 600; }
+.tr-due-meta { margin: 0 0 4px; color: var(--text-secondary); font-size: 12.5px; line-height: 1.5; }
+
+.tr-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.tr-stats > div { padding: 14px 16px; border-radius: 14px; background: var(--surface-muted); }
+.tr-stat-number { display: block; color: var(--text-primary); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+.tr-stat-label { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12.5px; }
+
+.tr-row-form { margin-bottom: 12px; }
+.tr-toggle-row { display: flex; width: 100%; align-items: center; gap: 12px; padding: 13px 16px; border: 0; border-radius: 14px; background: var(--surface-muted); color: var(--text-secondary); font-family: inherit; font-size: 12.5px; line-height: 1.5; text-align: left; cursor: pointer; }
+.tr-toggle-row > span:first-child { flex: 1; }
+
+.tr-toggle { display: flex; width: 46px; height: 27px; flex: none; align-items: center; padding: 3px; border-radius: 99px; background: var(--border); transition: background .2s ease; }
+.tr-toggle i { width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); transition: transform .2s ease; }
+.tr-toggle.is-on { background: var(--primary); }
+.tr-toggle.is-on i { transform: translateX(19px); }
+
+.tr-info-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 13px 16px; border-radius: 14px; background: var(--surface-muted); color: var(--text-secondary); font-size: 12.5px; line-height: 1.5; }
+.tr-info-text { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.tr-info-label { color: var(--text-muted); font-size: 12.5px; }
+.tr-info-value { color: var(--text-primary); font-size: 15px; font-weight: 600; }
+
+.tr-outline-button { flex: none; padding: 8px 16px; border: 1.5px solid var(--primary-soft); border-radius: 10px; color: var(--dark-green); font-size: 13px; font-weight: 600; text-decoration: none; }
+.tr-outline-button:hover { border-color: var(--primary); background: var(--primary-soft); }
+
+/* ---------- รายการรอบ ---------- */
+.tr-rounds { display: flex; flex-direction: column; gap: 10px; }
+
+.tr-round { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 14px; background: #fff; }
+.tr-round.is-open { border-color: var(--primary); background: var(--surface-muted); }
+.tr-round.is-locked .tr-round-name { color: var(--text-muted); }
+
+.tr-round-icon { display: inline-flex; width: 40px; height: 40px; flex: 0 0 40px; align-items: center; justify-content: center; border-radius: 12px; background: var(--surface-muted); color: var(--text-muted); font-weight: 600; }
+.tr-round.is-open .tr-round-icon { background: var(--primary-soft); color: var(--dark-green); }
+.tr-round.is-done .tr-round-icon { background: var(--primary); color: #fff; }
+
+.tr-round-text { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.tr-round-name { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+.tr-round-date { color: var(--text-muted); font-size: 12px; }
+
+.tr-round-badge { flex: none; padding: 6px 12px; border-radius: 99px; background: var(--surface-muted); color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.tr-round-badge.is-done { background: var(--primary-soft); color: var(--dark-green); }
+
+/* ---------- ป้ายกรอกแทน ---------- */
+.tr-proxy-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding: 9px 13px; border-radius: 10px; background: #FFFBEB; color: #8A6D1F; font-size: 12px; line-height: 1.5; }
+.tr-proxy-banner .tr-link-button { color: #8A6D1F; }
+
+/* --------------------------------------------------------------------------
+   ปรับให้กระชับขึ้น — บรรทัดชิดขึ้น ฟอนต์เล็กลง
+   เขียนทับค่าด้านบนโดยตั้งใจ ไม่ไปแก้ของเดิมทีละจุด จะได้เห็นชัดว่าอะไรถูกบีบบ้าง
+   ระวัง: ห้ามต่ำกว่า 12px กับข้อความที่ต้องอ่านจริง เพราะกลุ่มตัวอย่างมีผู้สูงอายุ
+   -------------------------------------------------------------------------- */
+.tr-card { padding: 16px 14px 18px; }
+
+.tr-eyebrow { margin-bottom: 4px; font-size: 11px; }
+
+.tr-project-title { margin: 0 0 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; }
+.tr-project-line { margin: 0 0 10px; font-size: 13px; line-height: 1.45; }
+
+.tr-heading { font-size: 16px; }
+.tr-subheading { margin: 0 0 12px; font-size: 12px; line-height: 1.45; }
+
+/* กล่องความเชื่อมั่น — พื้นเขียวอ่อนตามภาพ ไม่ใช่เทา */
+.tr-trust { margin-bottom: 12px; padding: 12px 13px; border-radius: 12px; background: var(--primary-soft); }
+.tr-trust-list { gap: 7px; }
+.tr-trust-list li { gap: 8px; font-size: 12px; line-height: 1.45; }
+.tr-trust-check { width: 15px; height: 15px; flex: 0 0 15px; margin-top: 1px; background: #fff; }
+.tr-trust-check::after { top: 3px; left: 5px; width: 3.5px; height: 7px; }
+
+.tr-trust-more { margin-top: 9px; }
+.tr-trust-more summary { font-size: 12px; text-decoration: underline; }
+.tr-trust-more[open] summary { margin-bottom: 8px; }
+.tr-trust-more p { margin: 0 0 6px; padding-top: 8px; font-size: 11.5px; line-height: 1.55; }
+
+/* ปุ่ม LINE — สูงพอกดง่ายแต่ไม่เทอะทะ */
+.tr-line-button { min-height: 48px; margin-bottom: 10px; border-radius: 12px; font-size: 15.5px; }
+.tr-line-mark { width: 19px; height: 19px; flex: 0 0 19px; }
+
+.tr-or { margin: 0 0 10px; }
+.tr-or span { font-size: 12px; }
+
+.tr-secondary-button { min-height: 44px; margin-top: 2px; font-size: 14.5px; }
+
+/* ระยะระหว่างช่องกรอกกับคำอธิบายใต้ช่อง */
+.tr-card .registration-field { margin-bottom: 10px; }
+.tr-card .registration-field label { margin-bottom: 5px; font-size: 12.5px; }
+.tr-card .registration-field input,
+.tr-card .registration-field select { min-height: 44px; }
+
+.tr-field-hint { margin-top: 4px; font-size: 11px; line-height: 1.4; }
+
+.tr-note { margin: 10px 0 0; font-size: 12.5px; }
+.tr-footnote { margin: 14px 0 0; color: var(--text-muted); font-size: 11.5px; text-align: center; }
+.tr-footnote a { color: var(--text-secondary); }
+
+.tr-form-submit { margin-top: 12px; }
+
+/* ---------- หน้าอื่นกระชับตามกัน ---------- */
+.tr-question { margin-bottom: 12px; padding: 13px 14px; border-radius: 12px; }
+.tr-question-text { font-size: 14.5px; }
+.tr-option { min-height: 44px; padding: 11px 13px; font-size: 13.5px; }
+.tr-actions { margin-top: 14px; }
+
+.tr-people { gap: 8px; }
+.tr-person summary { padding: 10px 12px; }
+.tr-person-confirm { padding: 0 12px 12px; }
+
+.tr-user-row { margin-bottom: 10px; }
+.tr-due-card { margin-bottom: 10px; padding: 14px 16px; }
+.tr-due-name { font-size: 15px; }
+.tr-due-meta { font-size: 12px; }
+.tr-stats { gap: 8px; margin-bottom: 10px; }
+.tr-stats > div { padding: 12px 14px; }
+.tr-stat-number { font-size: 20px; }
+.tr-stat-label { font-size: 12px; }
+.tr-info-row,
+.tr-toggle-row { padding: 11px 14px; font-size: 12px; }
+.tr-row-form { margin-bottom: 10px; }
+
+.tr-rounds { gap: 8px; }
+.tr-round { padding: 12px 14px; }
+.tr-round-icon { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px; }
+
+/* --------------------------------------------------------------------------
+   หน้าเข้าสู่ระบบ — เหลือเฉพาะสิ่งที่ต้องกด รายละเอียดโครงการซ่อนไว้ให้กดอ่านเอง
+   -------------------------------------------------------------------------- */
+.tr-login-title { margin: 2px 0 12px; color: var(--text-primary); font-size: 17px; font-weight: 600; line-height: 1.4; }
+
+.tr-about { margin-bottom: 14px; }
+.tr-about summary { display: inline-flex; align-items: center; gap: 6px; color: var(--dark-green); font-size: 12.5px; cursor: pointer; list-style: none; }
+.tr-about summary::-webkit-details-marker { display: none; }
+.tr-about summary::after { width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform .2s ease; content: ''; }
+.tr-about[open] summary::after { transform: rotate(225deg) translate(-1px, -1px); }
+
+.tr-about[open] summary { margin-bottom: 10px; }
+.tr-about > *:not(summary) { padding: 0 2px; }
+
+.tr-about-project { margin: 0 0 10px; color: var(--text-primary); font-size: 13.5px; font-weight: 600; line-height: 1.45; text-wrap: pretty; }
+.tr-about-note { margin: 8px 0 0; color: var(--text-secondary); font-size: 11.5px; line-height: 1.55; text-wrap: pretty; }
+
+/* รายการความเชื่อมั่นย้ายเข้ามาอยู่ในกล่องที่กดเปิด จึงไม่ต้องมีพื้นสีของตัวเองแล้ว */
+.tr-about .tr-trust-list { gap: 6px; }
+.tr-about .tr-trust-check { background: var(--primary-soft); }
+
+/* ไอคอน LINE จริง ไม่ใช่รูปทรงที่วาดด้วย CSS */
+.tr-line-icon { width: 21px; height: 21px; flex: 0 0 21px; }
+
+/* ปุ่มเข้าสู่ระบบด้วยเบอร์ — ขอบเขียว พื้นขาว */
+.tr-secondary-button { border-color: var(--primary); color: var(--dark-green); }
+
+/* --------------------------------------------------------------------------
+   บังคับซ่อนเนื้อหาใน <details> ที่ยังไม่เปิด
+
+   เบราว์เซอร์ซ่อนให้เองด้วยกฎ details:not([open]) > *:not(summary) { display:none }
+   ที่มาจาก user-agent stylesheet — แต่กฎของเรา (.tr-trust-list / .tr-person-confirm)
+   ที่ตั้ง display: flex เป็น author style ซึ่งชนะ user-agent เสมอ เนื้อหาเลยโผล่ตลอดเวลา
+   ต้องเขียนทับกลับเองด้วยกฎที่เจาะจงกว่า
+   -------------------------------------------------------------------------- */
+.tr-about:not([open]) > *:not(summary),
+.tr-person:not([open]) > *:not(summary),
+.tr-user-menu:not([open]) > *:not(summary) { display: none; }
+
+/* ==========================================================================
+   รอบที่สาม — คำชี้แจงบนแดชบอร์ด · ไทม์ไลน์รอบ · ปุ่มขนาดเดียวกันทั้งระบบ
+   ========================================================================== */
+
+/* ---------- คำชี้แจงการใช้ข้อมูล (ใช้ทั้งหน้าเข้าสู่ระบบและแดชบอร์ด) ---------- */
+.tr-assurance { margin-bottom: 12px; padding: 12px 13px; border-radius: 12px; background: var(--primary-soft); }
+.tr-assurance .tr-trust-list { gap: 7px; }
+
+.tr-disclosure { margin-top: 9px; }
+.tr-disclosure summary { color: var(--dark-green); font-size: 12px; text-decoration: underline; cursor: pointer; list-style: none; }
+.tr-disclosure summary::-webkit-details-marker { display: none; }
+.tr-disclosure .tr-disclosure-hide,
+.tr-disclosure[open] .tr-disclosure-show { display: none; }
+.tr-disclosure[open] .tr-disclosure-hide { display: inline; }
+.tr-disclosure:not([open]) > *:not(summary) { display: none; }
+
+.tr-disclosure-list { margin: 9px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.tr-disclosure-list li { color: var(--text-secondary); font-size: 11.5px; line-height: 1.55; text-wrap: pretty; }
+
+/* กล่องในหน้าเข้าสู่ระบบซ้อนอยู่ใน details อีกชั้น ไม่ต้องมีพื้นสีของตัวเองอีก */
+.tr-about .tr-assurance { margin-bottom: 0; padding: 0; background: none; }
+
+.tr-toggle-note { display: block; margin-top: 2px; color: var(--text-muted); font-size: 11px; line-height: 1.4; }
+
+/* ---------- ไทม์ไลน์รอบแบบประเมิน ---------- */
+.tr-timeline { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+
+.tr-tl { position: relative; display: flex; gap: 12px; padding: 0 0 18px 0; }
+.tr-tl:last-child { padding-bottom: 0; }
+
+/* เส้นเชื่อมระหว่างรอบ — วาดจากจุดวงกลมลงไปหารอบถัดไป */
+.tr-tl::before { position: absolute; top: 28px; bottom: 0; left: 13px; width: 2px; background: var(--border); content: ''; }
+.tr-tl:last-child::before { display: none; }
+.tr-tl.is-done::before { background: var(--primary); }
+
+.tr-tl-dot {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.tr-tl.is-open .tr-tl-dot { border-color: var(--primary); color: var(--dark-green); }
+.tr-tl.is-done .tr-tl-dot { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+.tr-tl-body { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; padding-top: 3px; }
+
+.tr-tl-head { display: flex; align-items: center; gap: 8px; margin: 0; flex-wrap: wrap; }
+.tr-tl-order { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+.tr-tl.is-locked .tr-tl-order { color: var(--text-muted); }
+
+.tr-tl-badge { padding: 2px 9px; border-radius: 99px; background: var(--surface-muted); color: var(--text-muted); font-size: 11.5px; white-space: nowrap; }
+.tr-tl-badge.is-open { background: transparent; color: var(--primary); font-weight: 600; }
+.tr-tl-badge.is-done { background: var(--primary-soft); color: var(--dark-green); }
+
+.tr-tl-name { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.4; }
+.tr-tl.is-locked .tr-tl-name { color: var(--text-muted); }
+.tr-tl-date { margin: 0; color: var(--text-muted); font-size: 11.5px; line-height: 1.4; }
+
+.tr-tl-action { align-self: flex-start; margin-top: 7px; }
+
+/* ==========================================================================
+   ปุ่มทั้งระบบใช้ขนาดเดียวกัน — สูงเท่ากัน ฟอนต์เท่ากัน มุมเท่ากัน
+   ปุ่มเต็มความกว้างสำหรับการกระทำหลัก · ปุ่มสั้นสำหรับการกระทำในแถว
+   ========================================================================== */
+.tr-primary-button,
+.tr-secondary-button,
+.tr-line-button,
+.tr-ghost-button {
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.tr-line-button { margin-bottom: 10px; box-shadow: none; }
+
+.tr-tl-action,
+.tr-round-action,
+.tr-outline-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.tr-tl-action,
+.tr-round-action { border: 1px solid var(--primary); background: var(--primary); color: #fff; }
+.tr-tl-action:hover,
+.tr-round-action:hover { border-color: var(--primary-hover); background: var(--primary-hover); }
+
+.tr-outline-button { border: 1px solid var(--primary); background: #fff; color: var(--dark-green); }
+
+/* --------------------------------------------------------------------------
+   ลิงก์และตัวกดเปิดคำชี้แจง — ให้ดูเป็นตัวควบคุมที่ตั้งใจออกแบบ ไม่ใช่คำที่ขีดเส้นใต้ลอย ๆ
+   ขีดเส้นใต้ทำให้ดูเหมือนลิงก์ในเอกสารเก่า ๆ ใช้น้ำหนักตัวอักษรกับลูกศรบอกแทน
+   -------------------------------------------------------------------------- */
+.tr-disclosure { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(53, 82, 44, .12); }
+
+.tr-disclosure summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 2px 0;
+    color: var(--dark-green);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.tr-disclosure summary::after {
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform .2s ease;
+    content: '';
+}
+.tr-disclosure[open] summary::after { transform: rotate(225deg) translate(-1px, -1px); }
+.tr-disclosure summary:hover { color: var(--primary-hover); }
+
+/* ลิงก์ท้ายฟอร์ม — เน้นด้วยน้ำหนักและสี ไม่ใช่เส้นใต้ */
+.tr-note { color: var(--text-secondary); }
+.tr-note a { color: var(--dark-green); font-weight: 600; text-decoration: none; }
+.tr-note a:hover { color: var(--primary-hover); text-decoration: underline; }
+
+.tr-due-head a { font-weight: 600; text-decoration: none; }
+.tr-due-head a:hover { text-decoration: underline; }
+
+.tr-link-button { text-decoration: none; font-weight: 600; }
+.tr-link-button:hover { text-decoration: underline; }
+
+/* แถบบอกสถานะระหว่างทาง — ใช้ตอนพากลับมายืนยันเบอร์เพื่อเชื่อม LINE และตอนเชื่อมสำเร็จ */
+.tr-notice { margin-bottom: 12px; padding: 10px 13px; border-radius: 10px; background: var(--surface-muted); color: var(--text-secondary); font-size: 12px; line-height: 1.55; text-wrap: pretty; }
+.tr-notice.is-success { border: 1px solid var(--primary); background: var(--primary-soft); color: var(--dark-green); }
+
+/* --------------------------------------------------------------------------
+   รอบสี่ — ตัวกดเปิดรายละเอียดโครงการเป็นสีเทา · ลิงก์ใต้ฟอร์มกลับไปแบบเดิม
+   -------------------------------------------------------------------------- */
+
+/* ตัวกดสีเทา ไม่แย่งความสนใจจากปุ่มเข้าสู่ระบบซึ่งเป็นสิ่งที่ต้องทำจริง */
+.tr-about { margin-bottom: 14px; }
+.tr-about summary { color: var(--text-secondary); font-size: 12.5px; font-weight: 400; }
+.tr-about summary:hover { color: var(--text-primary); }
+.tr-about[open] summary { margin-bottom: 10px; }
+
+.tr-about .tr-trust-list { gap: 7px; margin-top: 10px; }
+.tr-about .tr-disclosure-list { margin-top: 10px; }
+
+/* ลิงก์ใต้ฟอร์มกลับไปใช้รูปแบบเดิม — ขีดเส้นใต้ตลอด */
+.tr-note a { font-weight: 400; text-decoration: underline; }
+.tr-note a:hover { text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   Popup กรอกเบอร์เพื่อเชื่อม LINE — เปิดอัตโนมัติเมื่อกลับมาจาก LINE
+   ใช้ <dialog> ของเบราว์เซอร์ ไม่ต้องมีไลบรารีและปิดด้วย Esc ได้เอง
+   -------------------------------------------------------------------------- */
+.tr-dialog { width: min(360px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 16px; background: var(--surface); box-shadow: 0 12px 40px rgba(30, 60, 30, .22); }
+.tr-dialog::backdrop { background: rgba(17, 24, 39, .45); }
+
+.tr-dialog-body { padding: 20px 18px 18px; }
+.tr-dialog-title { margin: 0 0 6px; color: var(--text-primary); font-size: 16px; font-weight: 600; }
+.tr-dialog-text { margin: 0 0 14px; color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; text-wrap: pretty; }
+.tr-dialog-actions { display: flex; gap: 8px; margin-top: 12px; }
+.tr-dialog-actions .tr-primary-button { flex: 2; }
+.tr-dialog-actions .tr-ghost-button { flex: 1; }
+
+/* --------------------------------------------------------------------------
+   รอบห้า — ปุ่ม LINE เป็นทางเลือกรอง · ฟอนต์ของ select ให้ตรงกับทั้งระบบ
+   -------------------------------------------------------------------------- */
+
+/* ปุ่ม LINE แบบขอบ — ใช้เมื่อ LINE เป็นทางเลือกรอง (หน้าเข้าสู่ระบบ) หรือเป็นการชวนเชื่อม (แดชบอร์ด)
+   คงสีแบรนด์ LINE ไว้ที่ไอคอนกับขอบ ผู้ใช้จำปุ่มนี้จากสีเป็นหลัก */
+.tr-line-outline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1.5px solid #06C755;
+    border-radius: 10px;
+    background: #fff;
+    color: #06A548;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+}
+.tr-line-outline:hover { background: #F2FBF5; }
+.tr-line-outline .tr-line-icon { color: #06C755; }
+
+.tr-hint-center { margin: 7px 0 0; color: var(--text-muted); font-size: 11.5px; line-height: 1.45; text-align: center; text-wrap: pretty; }
+
+/* select ของเบราว์เซอร์ใช้ฟอนต์ระบบปฏิบัติการ ไม่ใช่ฟอนต์ของหน้า
+   ต้องบังคับ inherit ไม่งั้นช่องเพศกับพื้นที่จะเป็นคนละฟอนต์กับช่องอื่นทั้งหน้า */
+.tr-card select,
+.tr-card input,
+.tr-card textarea,
+.registration-field select,
+.registration-field input { font-family: inherit; }
+
+.tr-card select,
+.registration-field select {
+    font-size: 14px;
+    color: var(--text-primary);
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+                      linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 34px;
+}
+
+/* ตัวเลือก placeholder ต้องดูจางกว่าค่าจริง จะได้รู้ว่ายังไม่ได้เลือก */
+.tr-card select:has(option[value=""]:checked),
+.registration-field select:has(option[value=""]:checked) { color: var(--text-muted); }

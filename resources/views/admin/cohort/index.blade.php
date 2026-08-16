@@ -22,8 +22,6 @@
     </div>
   </div>
 
-  <div class="co-stats" id="co-stats"></div>
-
   <div class="co-filter-bar">
     <div class="co-tabs" id="co-tabs" role="tablist"></div>
     <div class="co-search" id="co-search">
@@ -44,6 +42,16 @@
           <span class="co-field-label">พื้นที่</span>
           <select class="select" id="co-area"></select>
         </label>
+        {{-- กรองจากวันครบกำหนดของ "รอบถัดไป" — ตัวเดียวกับที่แสดงในคอลัมน์รอบถัดไป
+             จะได้ตรงกับสิ่งที่เห็นบนจอ ไม่ใช่ไปจับรอบที่ตอบไปแล้วด้วย --}}
+        <div class="co-field">
+          <span class="co-field-label">ครบกำหนดรอบถัดไป</span>
+          <div class="co-date-range">
+            <input type="date" class="input" id="co-due-from" lang="th-TH" aria-label="ครบกำหนดตั้งแต่วันที่">
+            <span class="co-date-range-sep">ถึง</span>
+            <input type="date" class="input" id="co-due-to" lang="th-TH" aria-label="ครบกำหนดถึงวันที่">
+          </div>
+        </div>
         <div class="co-search-foot">
           <button type="button" class="co-link" id="co-clear">ล้างค่า</button>
           <button type="button" class="btn btn-primary btn-sm" id="co-apply">ดูผลลัพธ์</button>
@@ -56,18 +64,7 @@
     <div class="co-legend" id="co-legend"></div>
     <div class="co-table-scroll">
       <div class="co-table">
-        <div class="co-tr co-th">
-          <div>ชื่อ / รหัส</div>
-          <div>พื้นที่</div>
-          <div>กลุ่มเป้าหมาย</div>
-          <div class="text-center">ก่อน</div>
-          <div class="text-center">3 เดือน</div>
-          <div class="text-center">6 เดือน</div>
-          <div class="text-center">12 เดือน</div>
-          <div>รอบถัดไป</div>
-          <div>สถานะ</div>
-          <div></div>
-        </div>
+        <div class="co-tr co-th" id="co-head"></div>
         <div id="co-rows"></div>
       </div>
     </div>
@@ -165,36 +162,43 @@
 
   var TABS = ['ทั้งหมด', 'ต้องติดตามรอบนี้', 'เกินกำหนด', 'ติดตามครบ', 'หลุดการติดตาม'];
   var PAGE_SIZES = [10, 20, 50];
-  var state = { tab: 'ทั้งหมด', q: '', round: 'ทุกรอบ', area: 'ทุกพื้นที่', searchOpen: false, page: 1, pageSize: PAGE_SIZES[0] };
+  var state = {
+    tab: 'ทั้งหมด', q: '', round: 'ทุกรอบ', area: 'ทุกพื้นที่',
+    dueFrom: '', dueTo: '', searchOpen: false, page: 1, pageSize: PAGE_SIZES[0]
+  };
   var esc = window.TFC.escapeHtml;
   var $ = function (id) { return document.getElementById(id); };
 
-  function renderStats() {
-    var dueNow = membersList.filter(function (m) { return (m.rounds || []).some(function (r) { return r.state === 'รอติดตาม'; }); }).length;
-    var overdue = membersList.filter(function (m) { return (m.rounds || []).some(function (r) { return r.state === 'เกินกำหนด'; }); }).length;
-    var running = membersList.filter(function (m) { return m.status === 'กำลังติดตาม'; }).length;
-
-    var cards = [
-      { label: 'กลุ่มตัวอย่างทั้งหมด', value: membersList.length, hint: 'เป้าหมาย 120 คน', warn: false },
-      { label: 'กำลังติดตาม', value: running, hint: Math.round((running / (membersList.length || 1)) * 100) + '% ของกลุ่ม', warn: false },
-      { label: 'ต้องติดตามช่วงนี้', value: dueNow, hint: dueNow > 0 ? 'อยู่ในช่วงติดตาม' : 'ไม่มีรายการ', warn: dueNow > 0 },
-      { label: 'เกินกำหนด', value: overdue, hint: overdue > 0 ? 'พ้นช่วงติดตามแล้ว' : 'ไม่มีรายการ', warn: overdue > 0 }
-    ];
-
-    $('co-stats').innerHTML = cards.map(function (c) {
-      return '<div class="card co-stat">' +
-        '<span class="co-stat-label">' + esc(c.label) + '</span>' +
-        '<span class="co-stat-value' + (c.warn ? ' is-warn' : '') + '">' + c.value + ' <span class="co-stat-unit">คน</span></span>' +
-        '<span class="co-stat-hint">' + esc(c.hint) + '</span>' +
-        '</div>';
-    }).join('');
+  /* TFC.formatThaiDate ไม่ได้กันค่าว่าง — new Date(null) คืนวันที่ 1 ม.ค. 2513 ออกมาเฉย ๆ
+     ห่อไว้ชั้นหนึ่งเพื่อให้ช่องที่ไม่มีวันที่ขึ้นขีดกลาง ไม่ใช่วันที่ปลอม */
+  function fmt(iso) {
+    return iso ? window.TFC.formatThaiDate(iso) : '—';
   }
 
+  /* ชุดคอลัมน์รอบมาจากหน้าตั้งค่ารอบประเมิน ไม่ได้เขียน 3/6/12 ตายไว้
+     เพิ่มหรือลบรอบที่หน้านั้นแล้วตารางนี้ตามทันที รวมถึงความกว้างของกริดด้วย */
+  var ROUND_COLUMNS = templatesList;
+
+  function tabCount(tab) {
+    return membersList.filter(function (m) { return matchesTab(m, tab); }).length;
+  }
+
+  function matchesTab(m, tab) {
+    var rounds = m.rounds || [];
+    if (tab === 'ต้องติดตามรอบนี้') return rounds.some(function (r) { return r.state === 'รอติดตาม'; });
+    if (tab === 'เกินกำหนด') return rounds.some(function (r) { return r.state === 'เกินกำหนด'; });
+    if (tab === 'ติดตามครบ') return m.status === 'ติดตามครบ';
+    if (tab === 'หลุดการติดตาม') return m.status === 'หลุดการติดตาม';
+    return true;
+  }
+
+  /* จำนวนต่อท้ายชื่อแท็บ นับจากข้อมูลทั้งหมดเสมอ ไม่ใช่จากผลที่กรองอยู่
+     ไม่งั้นเลขจะเปลี่ยนตามตัวเองแล้วอ่านไม่ได้ว่าแท็บอื่นมีกี่คน */
   function renderTabs() {
     $('co-tabs').innerHTML = TABS.map(function (t) {
       var on = state.tab === t;
       return '<button type="button" class="co-tab' + (on ? ' is-on' : '') + '" role="tab" aria-selected="' + on +
-        '" data-tab="' + esc(t) + '">' + esc(t) + '</button>';
+        '" data-tab="' + esc(t) + '">' + esc(t) + ' · ' + tabCount(t) + '</button>';
     }).join('');
   }
 
@@ -208,13 +212,12 @@
   function filteredList() {
     var q = state.q.trim().toLowerCase();
     return membersList.filter(function (m) {
-      var rounds = m.rounds || [];
-      if (state.tab === 'ต้องติดตามรอบนี้' && !rounds.some(function (r) { return r.state === 'รอติดตาม'; })) return false;
-      if (state.tab === 'เกินกำหนด' && !rounds.some(function (r) { return r.state === 'เกินกำหนด'; })) return false;
-      if (state.tab === 'ติดตามครบ' && m.status !== 'ติดตามครบ') return false;
-      if (state.tab === 'หลุดการติดตาม' && m.status !== 'หลุดการติดตาม') return false;
+      if (!matchesTab(m, state.tab)) return false;
       if (state.round !== 'ทุกรอบ' && m.nextRound !== state.round) return false;
       if (state.area !== 'ทุกพื้นที่' && m.area !== state.area) return false;
+      /* เทียบเป็นข้อความ ISO ได้ตรง ๆ เพราะ YYYY-MM-DD เรียงตามตัวอักษรเท่ากับเรียงตามวัน */
+      if (state.dueFrom && (!m.nextRoundDue || m.nextRoundDue < state.dueFrom)) return false;
+      if (state.dueTo && (!m.nextRoundDue || m.nextRoundDue > state.dueTo)) return false;
       if (q && (m.name + ' ' + m.pid + ' ' + m.phone).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
@@ -228,13 +231,56 @@
     'ยุติการติดตาม': { cls: 'is-idle', path: '<path d="M6 12h12"/>', w: 1.8 }
   };
 
+  /* คำอธิบายตอนเอาเมาส์ชี้ — บอกทั้งวันครบกำหนดและวันที่ตอบเสมอ
+     รอบที่ยังไม่ตอบก็ต้องเห็นว่า "ยังไม่ได้ตอบ" ไม่ใช่ซ่อนบรรทัดนั้นไปเฉย ๆ */
+  function roundTitle(r) {
+    return [
+      r.name + ' · ' + r.state,
+      'ครบกำหนด ' + fmt(r.dueDate),
+      r.at ? 'ตอบเมื่อ ' + fmt(r.at) : 'ยังไม่ได้ตอบ'
+    ].join('\n');
+  }
+
   function roundIcon(r) {
     var ic = ROUND_ICONS[r.state] || ROUND_ICONS['ยังไม่ถึงกำหนด'];
-    var title = r.name + ' · ' + r.state + (r.at ? ' · ตอบเมื่อ ' + r.at : ' · ครบกำหนด ' + r.dueDate);
-    return '<span class="co-round-icon ' + ic.cls + '" title="' + esc(title) + '">' +
+    return '<span class="co-round-icon ' + ic.cls + '" title="' + esc(roundTitle(r)) + '" tabindex="0">' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + ic.w + '" stroke-linecap="round" stroke-linejoin="round">' + ic.path + '</svg>' +
       '</span>';
   }
+
+  /* ความกว้างกริดผูกกับจำนวนรอบจริง ตั้งเป็นตัวแปร CSS ที่ .co-table ครั้งเดียว
+     ไม่ต้องใส่ inline style ซ้ำทุกแถว และเพิ่มรอบใหม่แล้วหัวกับเนื้อไม่เลื่อนหลุดกัน */
+  function applyGridWidth() {
+    var roundCols = ROUND_COLUMNS.map(function () { return '52px'; }).join(' ');
+    var table = document.querySelector('.co-table');
+
+    table.style.setProperty('--co-cols',
+      'minmax(170px, 1.6fr) 122px 108px 106px ' + roundCols + ' 158px 116px 44px');
+    table.style.setProperty('--co-min-width',
+      (170 + 122 + 108 + 106 + ROUND_COLUMNS.length * 52 + 158 + 116 + 44 + 120) + 'px');
+  }
+
+  function renderHead() {
+    $('co-head').innerHTML =
+      '<div>ชื่อ / รหัส</div>' +
+      '<div>กลุ่มเป้าหมาย</div>' +
+      '<div>วันที่เข้ากลุ่ม</div>' +
+      '<div>LINE</div>' +
+      ROUND_COLUMNS.map(function (name) {
+        return '<div class="text-center">' + esc(name) + '</div>';
+      }).join('') +
+      '<div>รอบถัดไป</div>' +
+      '<div>สถานะ</div>' +
+      '<div></div>';
+  }
+
+  var STATUS_CLASS = {
+    'ติดตามครบ': 'is-done',
+    'เกินกำหนด': 'is-lost',
+    'หลุดการติดตาม': 'is-stopped'
+  };
+
+  var NEXT_DUE_TONE = { 'รอติดตาม': ' is-due', 'เกินกำหนด': ' is-over' };
 
   function renderTable() {
     var list = filteredList();
@@ -247,23 +293,34 @@
       var rMap = {};
       (m.rounds || []).forEach(function (r) { rMap[r.name] = r; });
 
-      var badgeCls = m.status === 'ติดตามครบ' ? 'is-done' : (m.status === 'เกินกำหนด' ? 'is-over' : (m.status === 'หลุดการติดตาม' ? 'is-idle' : 'is-due'));
+      var href = '{{ url('/admin/cohort') }}/' + m.id;
 
       return '<div class="co-tr">' +
-        '<div><a href="{{ url('/admin/cohort') }}/' + m.id + '" class="co-name">' + esc(m.name) + '</a><span class="co-sub">' + esc(m.pid) + '</span></div>' +
-        '<div>' + esc(m.area) + '</div>' +
-        '<div>' + esc(m.target) + '</div>' +
-        '<div class="text-center">' + (rMap['ก่อนเข้าร่วม'] ? roundIcon(rMap['ก่อนเข้าร่วม']) : '—') + '</div>' +
-        '<div class="text-center">' + (rMap['3 เดือน'] ? roundIcon(rMap['3 เดือน']) : '—') + '</div>' +
-        '<div class="text-center">' + (rMap['6 เดือน'] ? roundIcon(rMap['6 เดือน']) : '—') + '</div>' +
-        '<div class="text-center">' + (rMap['12 เดือน'] ? roundIcon(rMap['12 เดือน']) : '—') + '</div>' +
-        '<div><span class="co-next">' + esc(m.nextRound || '—') + '</span></div>' +
-        '<div><span class="co-badge ' + badgeCls + '">' + esc(m.status) + '</span></div>' +
-        '<div><a href="{{ url('/admin/cohort') }}/' + m.id + '" class="btn btn-outline btn-sm">ดูข้อมูล</a></div>' +
+        '<div class="co-name-cell">' +
+          '<a href="' + href + '" class="co-name">' + esc(m.name) + '</a>' +
+          '<span class="co-pid">' + esc(m.pid) + '</span>' +
+        '</div>' +
+        '<div class="co-cell">' + esc(m.target) + '</div>' +
+        '<div class="co-cell">' + esc(fmt(m.entryDate)) + '</div>' +
+        /* คนที่ยังไม่เชื่อม LINE คือคนที่ระบบส่งแจ้งเตือนให้ไม่ได้ ต้องเห็นตั้งแต่หน้ารายการ
+           ไม่ใช่ไปรู้ตอนเปิดรอบติดตามแล้วพบว่าส่งไม่ออก */
+        '<div class="co-line ' + (m.line ? 'is-linked' : 'is-unlinked') + '">' +
+          (m.line ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม') + '</div>' +
+        ROUND_COLUMNS.map(function (name) {
+          return '<div class="co-round-cell">' + (rMap[name] ? roundIcon(rMap[name]) : '—') + '</div>';
+        }).join('') +
+        '<div class="co-next">' +
+          '<span class="co-next-name">' + esc(m.nextRound || '—') + '</span>' +
+          (m.nextRoundDue
+            ? '<span class="co-next-due' + (NEXT_DUE_TONE[m.nextRoundState] || '') + '">ครบกำหนด ' + esc(fmt(m.nextRoundDue)) + '</span>'
+            : '') +
+        '</div>' +
+        '<div><span class="co-status ' + (STATUS_CLASS[m.status] || '') + '">' + esc(m.status) + '</span></div>' +
+        '<div><a href="' + href + '" class="btn btn-outline btn-sm">ดูข้อมูล</a></div>' +
         '</div>';
     }).join('');
 
-    $('co-rows').innerHTML = html || '<div class="co-empty">ไม่พบข้อมูลกลุ่มตัวอย่างตามเงื่อนไขที่เลือก</div>';
+    $('co-rows').innerHTML = html || '<div class="co-empty"><span class="co-empty-title">ไม่พบข้อมูลกลุ่มตัวอย่างตามเงื่อนไขที่เลือก</span></div>';
 
     window.TFC.renderPagination('co-foot', {
       page: state.page,
@@ -274,8 +331,17 @@
       onChange: function (p) { state.page = p; renderTable(); },
       onPageSizeChange: function (sz) { state.pageSize = sz; state.page = 1; renderTable(); }
     });
+  }
 
-    renderStats();
+  /* คำอธิบายสีไอคอนรายรอบ — ไม่งั้นต้องเอาเมาส์ชี้ทีละอันถึงจะรู้ว่าสีไหนแปลว่าอะไร */
+  function renderLegend() {
+    $('co-legend').innerHTML = ['ตอบแล้ว', 'รอติดตาม', 'เกินกำหนด', 'ยังไม่ถึงกำหนด'].map(function (s) {
+      var ic = ROUND_ICONS[s];
+      return '<span class="co-legend-item">' +
+        '<span class="co-round-icon ' + ic.cls + '">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + ic.w + '" stroke-linecap="round" stroke-linejoin="round">' + ic.path + '</svg>' +
+        '</span>' + esc(s) + '</span>';
+    }).join('');
   }
 
   /* --- Event Listeners --- */
@@ -298,27 +364,82 @@
     state.q = $('co-q').value;
     state.round = $('co-round').value;
     state.area = $('co-area').value;
+    state.dueFrom = $('co-due-from').value;
+    state.dueTo = $('co-due-to').value;
+
+    /* กรอกช่วงกลับด้านมาให้สลับให้เอง ดีกว่าคืนผลลัพธ์ว่างแล้วให้ผู้ใช้เดาเองว่าผิดตรงไหน */
+    if (state.dueFrom && state.dueTo && state.dueFrom > state.dueTo) {
+      var swap = state.dueFrom;
+      state.dueFrom = state.dueTo;
+      state.dueTo = swap;
+      $('co-due-from').value = state.dueFrom;
+      $('co-due-to').value = state.dueTo;
+    }
+
     state.page = 1;
     state.searchOpen = false;
+    $('co-search-btn').classList.toggle('is-on', hasFilter());
     $('co-search-panel').hidden = true;
     renderTable();
   });
+
+  function hasFilter() {
+    return !!(state.q.trim() || state.dueFrom || state.dueTo ||
+      state.round !== 'ทุกรอบ' || state.area !== 'ทุกพื้นที่');
+  }
 
   $('co-clear').addEventListener('click', function () {
     $('co-q').value = '';
     $('co-round').value = 'ทุกรอบ';
     $('co-area').value = 'ทุกพื้นที่';
+    $('co-due-from').value = '';
+    $('co-due-to').value = '';
     state.q = ''; state.round = 'ทุกรอบ'; state.area = 'ทุกพื้นที่';
+    state.dueFrom = ''; state.dueTo = '';
     state.page = 1;
+    $('co-search-btn').classList.remove('is-on');
     renderTable();
   });
 
-  var exportBtn = $('co-export');
-  if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      window.TFC.exportTableCsv('#co-rows', 'รายการกลุ่มตัวอย่าง.csv');
+  /* ส่งออกทุกแถวที่ตรงเงื่อนไขที่กรองอยู่ ไม่ใช่แค่หน้าที่เปิดค้างอยู่
+     และประกอบจากข้อมูลจริง ไม่ใช่ขูดจาก DOM — คอลัมน์ไอคอนรายรอบขูดออกมาแล้วได้ช่องว่าง */
+  $('co-export').addEventListener('click', function () {
+    var list = filteredList();
+
+    if (!list.length) {
+      return toast('ไม่มีข้อมูลให้ส่งออกตามเงื่อนไขที่เลือก', 'warning');
+    }
+
+    var headers = ['รหัสบุคคล', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'เพศ', 'ช่วงอายุ', 'อาชีพ',
+      'พื้นที่', 'กลุ่มเป้าหมาย', 'แหล่งที่มา', 'วันที่เข้ากลุ่ม'];
+
+    /* รอบละสามคอลัมน์ — สถานะ / ครบกำหนด / ตอบเมื่อ ชื่อคอลัมน์มาจากรอบจริงในระบบ */
+    ROUND_COLUMNS.forEach(function (name) {
+      headers.push(name + ' - สถานะ', name + ' - ครบกำหนด', name + ' - ตอบเมื่อ');
     });
-  }
+
+    headers.push('รอบถัดไป', 'ครบกำหนดรอบถัดไป', 'สถานะ', 'LINE', 'ความยินยอม');
+
+    var rows = list.map(function (m) {
+      var rMap = {};
+      (m.rounds || []).forEach(function (r) { rMap[r.name] = r; });
+
+      var row = [m.pid, m.name, m.phone, m.gender, m.age, m.job,
+        m.area, m.target, m.source, fmt(m.entryDate)];
+
+      ROUND_COLUMNS.forEach(function (name) {
+        var r = rMap[name];
+        row.push(r ? r.state : '—', r ? fmt(r.dueDate) : '—', r && r.at ? fmt(r.at) : '—');
+      });
+
+      row.push(m.nextRound, m.nextRoundDue ? fmt(m.nextRoundDue) : '—', m.status,
+        m.line ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม', m.consent ? 'ยินยอมแล้ว' : 'รอยืนยัน');
+
+      return row;
+    });
+
+    window.TFC.exportCsv('รายการกลุ่มตัวอย่าง.csv', headers, rows);
+  });
 
   /* ================= ฟอร์มเพิ่มกลุ่มตัวอย่าง ================= */
   function toast(msg, tone) {
@@ -334,9 +455,6 @@
   }
 
   var form = {
-    /* ว่างไว้จนกว่าจะกดรันเลข — เลขต้องมาจากเซิร์ฟเวอร์เท่านั้น
-       นับต่อจากรายการบนหน้าจอไม่ได้ เพราะหน้าจอไม่เห็นคนที่คนอื่นเพิ่มระหว่างนี้ */
-    personCode: '',
     name: '', phone: '',
     gender: '', ageRangeId: '', occupationId: '',
     areaId: '', targetGroupId: '', sourceCode: '',
@@ -346,7 +464,7 @@
     rounds: lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; }),
     dueEdit: {}, editing: null,
     consent: false, consentFile: null, uploading: false,
-    linkCopied: false, saving: false
+    saving: false
   };
 
   function optionsHtml(list, value, placeholder) {
@@ -375,12 +493,12 @@
 
   function renderForm() {
     $('co-form-grid').innerHTML =
+      /* รหัสบุคคลไม่มีให้กรอกและไม่มีปุ่มรันเลข — เซิร์ฟเวอร์ออกให้ตอนกดบันทึก
+         รหัสที่จองไว้ตั้งแต่เปิดฟอร์มชนกันได้เสมอถ้ามีคนอื่นบันทึกแทรกระหว่างนั้น */
       '<label class="co-field">' +
-        '<span class="co-field-label">รหัสบุคคล<span class="form-required">*</span></span>' +
-        '<span class="co-pid-input">' +
-          '<input type="text" class="input" id="co-f-pid" value="' + esc(form.personCode) + '" placeholder="กดปุ่มเพื่อรันเลข" disabled>' +
-          '<button type="button" class="co-pid-btn" id="co-gen-pid">รันเลข</button>' +
-        '</span></label>' +
+        '<span class="co-field-label">รหัสบุคคล</span>' +
+        '<input type="text" class="input" value="" placeholder="ระบบออกรหัสให้อัตโนมัติหลังบันทึก" disabled>' +
+      '</label>' +
       fieldHtml('ชื่อ–นามสกุล', true, '<input type="text" class="input" id="co-f-name" value="' + esc(form.name) + '" placeholder="ชื่อ นามสกุล">') +
       fieldHtml('เบอร์โทร', true, '<input type="tel" class="input" id="co-f-phone" value="' + esc(form.phone) + '" placeholder="08x-xxx-xxxx" inputmode="tel">') +
 
@@ -394,11 +512,11 @@
 
       fieldHtml('วันที่เข้ากลุ่มตัวอย่าง', true, '<input type="date" class="input" id="co-f-base" value="' + esc(form.entryDate) + '" lang="th-TH">') +
       fieldHtml('สถานะ', false, selectHtml('co-f-status', plainList(lookups.statuses), form.status)) +
+      /* คนที่เพิ่งเพิ่มยังไม่มีทางผูก LINE ได้ — ช่องนี้บอกสถานะจริงไว้ให้ตรงกับหน้ารายการ
+         แล้วส่งลิงก์ผูกให้ในหน้าต่างยืนยันหลังบันทึก */
       '<label class="co-field">' +
-        '<span class="co-field-label">ลิงก์แบบประเมิน</span>' +
-        '<button type="button" class="co-copy-btn' + (form.linkCopied ? ' is-done' : '') + '" id="co-copy-link"' +
-          (form.personCode ? '' : ' disabled') + '>' +
-          (form.linkCopied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์แบบประเมิน') + '</button>' +
+        '<span class="co-field-label">การเชื่อม LINE</span>' +
+        '<input type="text" class="input" value="ยังไม่เชื่อม — ส่งลิงก์ผูกให้หลังบันทึก" disabled>' +
       '</label>';
   }
 
@@ -454,7 +572,7 @@
   }
 
   function formValid() {
-    return !!(form.personCode && form.name.trim() && form.phone.trim() && form.gender &&
+    return !!(form.name.trim() && form.phone.trim() && form.gender &&
       form.areaId && form.targetGroupId && form.sourceCode && form.entryDate &&
       form.rounds.length && form.consent && !form.uploading && !form.saving);
   }
@@ -475,34 +593,6 @@
 
   /* --- เหตุการณ์ในฟอร์ม --- */
   document.addEventListener('click', function (e) {
-    var genBtn = e.target.closest('#co-gen-pid');
-    if (genBtn) {
-      genBtn.disabled = true;
-      fetch('{{ route('admin.cohort.lookups') }}', { headers: { 'Accept': 'application/json' } })
-        .then(function (res) { return res.json(); })
-        .then(function (res) {
-          form.personCode = res.nextPersonCode;
-          form.linkCopied = false;
-          renderAddModal();
-        })
-        .catch(function () {
-          genBtn.disabled = false;
-          toast('รันเลขรหัสบุคคลไม่สำเร็จ กรุณาลองใหม่', 'danger');
-        });
-      return;
-    }
-
-    if (e.target.closest('#co-copy-link')) {
-      if (!form.personCode || !navigator.clipboard) return;
-      navigator.clipboard.writeText(lookups.assessmentLinkBase + form.personCode).then(function () {
-        form.linkCopied = true;
-        renderAddModal();
-      }, function () {
-        toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + lookups.assessmentLinkBase + form.personCode, 'warning');
-      });
-      return;
-    }
-
     var chip = e.target.closest('[data-round-chip]');
     if (chip) {
       var rid = Number(chip.getAttribute('data-round-chip'));
@@ -604,14 +694,14 @@
   }
 
   function resetForm() {
-    form.personCode = ''; form.name = ''; form.phone = '';
+    form.name = ''; form.phone = '';
     form.gender = ''; form.ageRangeId = ''; form.occupationId = '';
     form.areaId = ''; form.targetGroupId = ''; form.sourceCode = '';
     form.entryDate = lookups.today;
     form.status = lookups.statuses[0] || '';
     form.rounds = lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; });
     form.dueEdit = {}; form.editing = null;
-    form.consent = false; form.consentFile = null; form.linkCopied = false;
+    form.consent = false; form.consentFile = null;
     $('co-consent').checked = false;
     $('co-file').value = '';
     renderAddModal();
@@ -628,7 +718,6 @@
        เซิร์ฟเวอร์จะคำนวณ offset ของ "คนนี้" ย้อนกลับจากวันที่บนหน้าจอ
        วันที่ที่แอดมินแก้ทับจึงไม่หายไประหว่างทาง */
     var payload = {
-      person_code: form.personCode,
       name: form.name.trim(),
       phone: form.phone.trim(),
       gender: form.gender,
@@ -665,6 +754,8 @@
 
         membersList.unshift(res.body.data);
         state.page = 1;
+        /* จำนวนบนแท็บนับจากรายการทั้งหมด เพิ่มคนใหม่แล้วต้องอัปเดตด้วย ไม่ใช่แค่ตาราง */
+        renderTabs();
         renderTable();
 
         if (window.TFC.closeModal) window.TFC.closeModal('co-add-modal');
@@ -700,6 +791,9 @@
   bindCopy('co-saved-copy', 'co-saved-link', 'คัดลอกลิงก์เรียบร้อย');
   bindCopy('co-bind-copy', 'co-bind-link', 'คัดลอกลิงก์ผูก LINE เรียบร้อย');
 
+  applyGridWidth();
+  renderHead();
+  renderLegend();
   renderTabs();
   fillFilters();
   renderTable();

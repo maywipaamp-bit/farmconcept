@@ -20,7 +20,44 @@ class Participant extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = ['has_caregiver' => 'bool'];
+    protected $casts = ['has_caregiver' => 'bool', 'line_notify' => 'bool'];
+
+    /** ชื่อที่ปิดบังไว้สำหรับหน้าเลือกคนในเบอร์เดียวกัน — สมหญิง ใจดี → สมห••• ใ•••
+     *
+     * ห้ามส่งชื่อเต็มออกไปก่อนยืนยันตัวตน ไม่งั้นแค่รู้เบอร์ก็อ่านได้ว่าบ้านนั้นมีใครบ้าง
+     * เปิดพอให้เจ้าตัวจำชื่อตัวเองได้ แต่ไม่พอให้คนนอกเอาไปใช้ต่อ
+     */
+    public function maskedName(): string
+    {
+        return collect(preg_split('/\s+/', trim($this->name), -1, PREG_SPLIT_NO_EMPTY) ?: [])
+            ->map(function (string $part, int $index) {
+                $keep = $index === 0 ? 3 : 1;
+
+                return mb_strlen($part) <= $keep
+                    ? $part
+                    : mb_substr($part, 0, $keep).str_repeat('•', min(3, mb_strlen($part) - $keep));
+            })
+            ->join(' ');
+    }
+
+    /**
+     * ชื่อจริงตัวแรก ๆ ใช้ยืนยันว่าเป็นเจ้าของชื่อจริง
+     *
+     * เทียบแบบ "ขึ้นต้นด้วย" ไม่ใช่ตัดสามตัวมาเทียบตรง ๆ เพราะภาษาไทยนับตัวอักษรไม่ตรงกับที่ตาเห็น
+     * เช่น "ผู้ร่วม" สามตัวอักษรแรกตามรหัสคือ "ผู้" ซึ่งดูเหมือนตัวเดียว ผู้ใช้ที่พิมพ์ตามที่เห็น
+     * กับที่พิมพ์ตามจำนวนคีย์ที่กด จะได้คนละค่ากัน — รับได้ทั้งสองแบบดีกว่าปฏิเสธคนที่จำชื่อตัวเองได้
+     */
+    public function matchesNamePrefix(string $prefix): bool
+    {
+        $first = preg_split('/\s+/', trim($this->name), -1, PREG_SPLIT_NO_EMPTY)[0] ?? '';
+        $typed = mb_strtolower(trim($prefix));
+
+        if ($typed === '' || $first === '') {
+            return false;
+        }
+
+        return mb_strtolower(mb_substr($first, 0, mb_strlen($typed))) === $typed;
+    }
 
     public function area(): BelongsTo
     {

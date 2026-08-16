@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -65,6 +66,16 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo \App\Providers\AppServiceProvider::versionedAsset({$expression}); ?>";
         });
 
+        /*
+         * @thaidate($date) — 2026-09-30 → 30 ก.ย. 2569
+         *
+         * format() ของ PHP ให้ชื่อเดือนภาษาอังกฤษเสมอ และปีเป็น ค.ศ.
+         * หน้าจอฝั่งผู้เข้าร่วมเป็นภาษาไทยล้วน จะเขียนตารางเดือนซ้ำในทุก view ไม่ได้
+         */
+        Blade::directive('thaidate', function (string $expression): string {
+            return "<?php echo \App\Providers\AppServiceProvider::thaiDate({$expression}); ?>";
+        });
+
         /* บริบทฝั่งหน้าจอประกอบที่เดียว ใช้ร่วมกันทั้งหน้า Blade และหน้า static เดิม
            eager load ไว้ครบ ไม่งั้นการวนเช็คสิทธิ์ทีละเมนูจะยิง query ต่อเมนู */
         View::composer('partials.client-context', function (ViewContract $view): void {
@@ -85,5 +96,19 @@ class AppServiceProvider extends ServiceProvider
         $file = public_path($path);
 
         return is_file($file) ? asset($path) . '?v=' . filemtime($file) : asset($path);
+    }
+
+    /** วันที่แบบไทยย่อ — 30 ก.ย. 2569 · คืนขีดกลางเมื่อไม่มีวันที่ ไม่ใช่วันที่ปลอม */
+    public static function thaiDate(mixed $date, bool $withYear = true): string
+    {
+        if (blank($date)) {
+            return '—';
+        }
+
+        $date = $date instanceof \DateTimeInterface ? Carbon::instance($date) : Carbon::parse($date);
+
+        $months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        return $date->day.' '.$months[$date->month - 1].($withYear ? ' '.($date->year + 543) : '');
     }
 }

@@ -1118,7 +1118,14 @@
     if (manual && window.TFC.showToast) window.TFC.showToast('บันทึกฉบับร่างเรียบร้อย', 'success');
   }
 
-  setInterval(function () { if (state.dirty) saveDraft(false); }, AUTOSAVE_MS);
+  /* หน้าที่ต่อฐานข้อมูลจริง (มี api.onSubmit) ต้องบันทึกร่างขึ้นเซิร์ฟเวอร์จริง ไม่ใช่แค่เคลียร์ state.dirty
+     เฉย ๆ ในเครื่อง — ของเดิมทำแบบนั้น ทำให้ปิดแท็บ/รีเฟรชแล้วข้อมูลที่เพิ่งแก้ (เช่น รอบที่เพิ่งเพิ่ม) หายเงียบ ๆ
+     เพราะสัญญาณเตือน beforeunload ถูกปิดไปแล้วทั้งที่ไม่ได้บันทึกจริง */
+  setInterval(function () {
+    if (!state.dirty) return;
+    if (api.onSubmit) { api.onSubmit(state, { publish: false }); return; }
+    saveDraft(false);
+  }, AUTOSAVE_MS);
 
   /* ออกจากหน้าโดยยังไม่บันทึก ต้องถามยืนยันก่อน */
   window.addEventListener('beforeunload', function (e) {

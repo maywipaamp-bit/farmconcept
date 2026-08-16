@@ -49,7 +49,6 @@
     const tabBank = document.getElementById('reg-tab-bank');
     const qrPanel = document.getElementById('reg-qr-panel');
     const bankPanel = document.getElementById('reg-bank-panel');
-    const qrExpire = document.getElementById('reg-qr-expire');
     const qrSave = document.getElementById('reg-qr-save');
     const copyBtn = document.getElementById('reg-copy-account');
     const copyIcon = document.getElementById('reg-copy-icon');
@@ -93,7 +92,6 @@
     const COPY_PATH = 'M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3M5 8h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2';
     const CHECK_PATH = 'M4 12.5 9 17.5 20 6.5';
 
-    let countdownTimer = null;
     let copiedTimer = null;
 
     function csrfToken() {
@@ -184,8 +182,6 @@
         footerError.textContent = '';
         renderFooter();
         pane.scrollTop = 0;
-        if (screen === 'pay') startCountdown();
-        else stopCountdown();
     }
 
     function renderFooter() {
@@ -326,6 +322,47 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && dupModal && !dupModal.hidden) closeDupModal();
+    });
+
+    /* ---------- popup อ่านเอกสารความยินยอม (เงื่อนไขการเข้าร่วม · นโยบายความเป็นส่วนตัว) ---------- */
+
+    const consentDocModal = document.getElementById('reg-consent-modal');
+    const consentDocTitle = document.getElementById('reg-consent-modal-title');
+    const consentDocVersion = document.getElementById('reg-consent-modal-version');
+    const consentDocContent = document.getElementById('reg-consent-modal-content');
+
+    function openConsentDoc(kind) {
+        const doc = config.consentDocs && config.consentDocs[kind];
+        if (!doc || !consentDocModal) return;
+        consentDocTitle.textContent = doc.title;
+        consentDocVersion.textContent = doc.version ? 'เวอร์ชัน ' + doc.version : '';
+        consentDocContent.textContent = doc.content;
+        consentDocContent.scrollTop = 0;
+        consentDocModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeConsentDoc() {
+        if (!consentDocModal) return;
+        consentDocModal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', function (event) {
+        const link = event.target.closest('[data-consent-doc]');
+        if (link) {
+            /* กันไม่ให้ label ของ checkbox สลับติ๊กตอนกดลิงก์อ่านเอกสาร */
+            event.preventDefault();
+            openConsentDoc(link.dataset.consentDoc);
+            return;
+        }
+        if (event.target.closest('#reg-consent-modal-close')) closeConsentDoc();
+        /* คลิกฉากหลังนอกการ์ดเพื่อปิด */
+        if (consentDocModal && !consentDocModal.hidden && event.target === consentDocModal) closeConsentDoc();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && consentDocModal && !consentDocModal.hidden) closeConsentDoc();
     });
 
     function bindDuplicateCheck(input, label, toContact) {
@@ -623,25 +660,6 @@
         if (bankAmount) bankAmount.textContent = fmtBaht(totalAmount());
     }
 
-    function startCountdown() {
-        if (!qrExpire || countdownTimer) return;
-        let remaining = 30 * 60;
-        countdownTimer = window.setInterval(function () {
-            remaining = Math.max(0, remaining - 1);
-            const minutes = Math.floor(remaining / 60);
-            const seconds = String(remaining % 60).padStart(2, '0');
-            qrExpire.textContent = 'คิวอาร์หมดอายุใน ' + minutes + ':' + seconds + ' นาที';
-            if (remaining === 0) window.clearInterval(countdownTimer);
-        }, 1000);
-    }
-
-    function stopCountdown() {
-        if (countdownTimer) {
-            window.clearInterval(countdownTimer);
-            countdownTimer = null;
-        }
-    }
-
     if (tabQr && tabBank) {
         tabQr.addEventListener('click', function () {
             tabQr.classList.add('is-active');
@@ -774,25 +792,73 @@
         }).join('');
     }
 
-    /* วาดรายละเอียดการจองเป็นภาพให้เก็บไว้แสดงหน้างาน */
+    /* อ่านค่าตัวแปรสีจาก CSS ของหน้า — ภาพที่วาดจะได้สีชุดเดียวกับหน้าเว็บเสมอ
+       แม้ต่อไปโทนสีเปลี่ยน ก็ไม่ต้องมาไล่แก้ค่าที่ hardcode ไว้ในนี้อีก */
+    function cssVar(name, fallback) {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return value || fallback;
+    }
+
+    /* วาดไอคอนเส้นชุดเดียวกับบนหน้า (path 24×24) ลง canvas ที่ตำแหน่ง/ขนาดที่ต้องการ */
+    function drawIcon(ctx, path, x, y, size, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 24, size / 24);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke(new Path2D(path));
+        ctx.restore();
+    }
+
+    /* วาดรายละเอียดการจองเป็นภาพให้เก็บไว้แสดงหน้างาน
+       เลย์เอาต์/สี/ฟอนต์จำลองหน้าจอ "ลงทะเบียนสำเร็จ" ของเว็บแบบหนึ่งต่อหนึ่ง */
     function downloadBookingImage() {
         const booking = state.booking;
-        const scale = 2;
-        const width = 640;
-        const pad = 44;
         const rows = doneRowsData();
+        const scale = 2;
+        const width = 520;
+        const pad = 24;
+        const contentWidth = width - pad * 2;
+        const thai = '"Noto Sans Thai", sans-serif';
+
+        const colors = {
+            title: cssVar('--reg-title', '#123c1c'),
+            text: cssVar('--reg-text', '#14421f'),
+            faint: cssVar('--reg-text-faint', '#9aa89c'),
+            footer: cssVar('--reg-footer-text', '#9AA694'),
+            icon: cssVar('--reg-text-icon', '#2c7a44'),
+            accent: cssVar('--reg-accent', '#1b7a3d'),
+            primary: cssVar('--reg-primary', '#34c759'),
+            border: cssVar('--reg-border', '#e4eee6'),
+            borderSoft: cssVar('--reg-border-soft', '#eef4ef'),
+            pillBg: cssVar('--reg-tint-strong', '#f2f8f3'),
+            pillBorder: cssVar('--reg-tint-line', '#dcebe0')
+        };
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const thai = '"IBM Plex Sans Thai", sans-serif';
 
-        /* คำนวณความสูงจากจำนวนบรรทัดของค่าแต่ละแถวก่อนวาดจริง */
-        ctx.font = '500 15px ' + thai;
+        /* การ์ดสรุป: icon 17 + gap 12 → ข้อความกว้าง content - padding การ์ด 20×2 - 29 */
+        const cardTextWidth = contentWidth - 40 - 29;
+        ctx.font = '500 13.5px ' + thai;
         const lines = rows.map(function (row) {
-            return wrapText(ctx, row[1], width - pad * 2 - 46);
+            return wrapText(ctx, row[1], cardTextWidth);
         });
-        const rowsHeight = lines.reduce(function (sum, list) { return sum + 26 + list.length * 22 + 16; }, 0);
-        const height = 235 + rowsHeight + pad;
+        /* แถวการ์ด: padding 12 + label 18 + gap 2 + ค่า 20/บรรทัด + padding 12 */
+        const rowHeights = lines.map(function (list) { return 12 + 18 + 2 + list.length * 20 + 12; });
+        const cardHeight = 8 + rowHeights.reduce(function (sum, h) { return sum + h; }, 0);
+
+        const heroTop = 36;
+        const circleSize = 72;
+        const titleY = heroTop + circleSize + 14 + 18;
+        const pillTop = titleY + 12;
+        const pillHeight = 33;
+        const dividerY = pillTop + pillHeight + 16;
+        const cardTop = dividerY + 20;
+        const footerY = cardTop + cardHeight + 26;
+        const height = footerY + 24;
 
         canvas.width = width * scale;
         canvas.height = height * scale;
@@ -801,47 +867,97 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.fillStyle = '#5ba554';
+        /* วงกลมเครื่องหมายถูก + เงาเขียวจางแบบเดียวกับ .reg-check-circle */
+        const cx = width / 2;
+        const cy = heroTop + circleSize / 2;
+        ctx.save();
+        ctx.shadowColor = 'rgba(52, 199, 89, .28)';
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = colors.primary;
         ctx.beginPath();
-        ctx.arc(width / 2, pad + 30, 30, 0, Math.PI * 2);
+        ctx.arc(cx, cy, circleSize / 2, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.moveTo(width / 2 - 12, pad + 31);
-        ctx.lineTo(width / 2 - 3, pad + 40);
-        ctx.lineTo(width / 2 + 13, pad + 21);
+        ctx.moveTo(cx - 13, cy + 1);
+        ctx.lineTo(cx - 4, cy + 10);
+        ctx.lineTo(cx + 14, cy - 9);
         ctx.stroke();
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#1f2c20';
-        ctx.font = '600 22px ' + thai;
-        ctx.fillText('ลงทะเบียนสำเร็จแล้ว!', width / 2, pad + 95);
-        ctx.fillStyle = '#5ba554';
-        ctx.font = '600 16px "IBM Plex Sans", sans-serif';
-        ctx.fillText(booking.code, width / 2, pad + 125);
+        ctx.fillStyle = colors.title;
+        ctx.font = '600 18px ' + thai;
+        ctx.fillText('ลงทะเบียนสำเร็จแล้ว!', cx, titleY);
+
+        /* ป้ายรหัสจอง — ทรง/สีเดียวกับ .reg-code-pill บนหน้า */
+        ctx.font = '600 14px ' + thai;
+        const codeWidth = ctx.measureText(booking.code).width;
+        const pillWidth = codeWidth + 32;
+        ctx.fillStyle = colors.pillBg;
+        ctx.strokeStyle = colors.pillBorder;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cx - pillWidth / 2, pillTop, pillWidth, pillHeight, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = colors.accent;
+        ctx.fillText(booking.code, cx, pillTop + 22);
+
+        /* เส้นคั่นใต้ hero แบบเดียวกับหน้า */
+        ctx.strokeStyle = colors.border;
+        ctx.beginPath();
+        ctx.moveTo(pad, dividerY + .5);
+        ctx.lineTo(width - pad, dividerY + .5);
+        ctx.stroke();
+
+        /* การ์ดสรุป — กรอบมน 16 + เงาอ่อน ตาม .reg-done-box */
+        ctx.save();
+        ctx.shadowColor = 'rgba(20, 66, 31, .05)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 2;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(pad, cardTop, contentWidth, cardHeight, 16);
+        ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = colors.border;
+        ctx.beginPath();
+        ctx.roundRect(pad + .5, cardTop + .5, contentWidth - 1, cardHeight - 1, 16);
+        ctx.stroke();
 
         ctx.textAlign = 'left';
-        let y = pad + 165;
+        let y = cardTop + 4;
+        const cardX = pad + 20;
         rows.forEach(function (row, index) {
-            ctx.fillStyle = '#5c6b58';
-            ctx.font = '400 12.5px ' + thai;
-            ctx.fillText(row[0], pad, y);
-            y += 22;
-            ctx.fillStyle = '#1f2c20';
-            ctx.font = '500 15px ' + thai;
-            lines[index].forEach(function (line) {
-                ctx.fillText(line, pad, y);
-                y += 22;
+            const rowTop = y;
+            drawIcon(ctx, row[2], cardX, rowTop + 14, 17, colors.icon);
+            ctx.fillStyle = colors.faint;
+            ctx.font = '400 12px ' + thai;
+            ctx.fillText(row[0], cardX + 29, rowTop + 24);
+            ctx.fillStyle = colors.text;
+            ctx.font = '500 13.5px ' + thai;
+            lines[index].forEach(function (line, lineIndex) {
+                ctx.fillText(line, cardX + 29, rowTop + 44 + lineIndex * 20);
             });
-            y += 16;
+            y += rowHeights[index];
+            if (index < rows.length - 1) {
+                ctx.strokeStyle = colors.borderSoft;
+                ctx.beginPath();
+                ctx.moveTo(cardX, y + .5);
+                ctx.lineTo(pad + contentWidth - 20, y + .5);
+                ctx.stroke();
+            }
         });
 
-        ctx.strokeStyle = '#eef1eb';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(.5, .5, width - 1, height - 1);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = colors.footer;
+        ctx.font = '400 12px ' + thai;
+        ctx.fillText('TheFarmConcept © 2026', cx, footerY);
 
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
@@ -849,24 +965,51 @@
         link.click();
     }
 
+    /* ตัดบรรทัด — แยกด้วยช่องว่างก่อน ถ้าท่อนเดียวยังยาวเกิน (ข้อความไทยไม่มีช่องว่าง)
+       ค่อยตัดทีละตัวอักษร ไม่ให้ข้อความทะลุขอบการ์ด */
     function wrapText(ctx, text, maxWidth) {
-        const words = String(text).split(' ');
         const lines = [];
         let current = '';
-        words.forEach(function (word) {
+
+        function pushWord(word) {
             const candidate = current === '' ? word : current + ' ' + word;
-            if (ctx.measureText(candidate).width > maxWidth && current !== '') {
-                lines.push(current);
-                current = word;
-            } else {
+            if (ctx.measureText(candidate).width <= maxWidth) {
                 current = candidate;
+                return;
             }
-        });
+            if (current !== '') {
+                lines.push(current);
+                current = '';
+            }
+            if (ctx.measureText(word).width <= maxWidth) {
+                current = word;
+                return;
+            }
+            let chunk = '';
+            for (const ch of word) {
+                if (ctx.measureText(chunk + ch).width > maxWidth && chunk !== '') {
+                    lines.push(chunk);
+                    chunk = '';
+                }
+                chunk += ch;
+            }
+            current = chunk;
+        }
+
+        String(text).split(' ').forEach(pushWord);
         if (current !== '') lines.push(current);
         return lines;
     }
 
-    downloadBtn.addEventListener('click', downloadBookingImage);
+    /* ให้ฟอนต์ไทยโหลดเสร็จก่อนวาด — วาดตอนฟอนต์ยังไม่มา ภาพจะออกเป็นฟอนต์ระบบไม่ตรงหน้าเว็บ */
+    downloadBtn.addEventListener('click', function () {
+        const draw = function () { downloadBookingImage(); };
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(draw);
+        } else {
+            draw();
+        }
+    });
 
     /* ---------- ปุ่มหลักของ footer ---------- */
 

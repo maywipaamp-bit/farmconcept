@@ -684,10 +684,15 @@
         form.markSaved();
         Object.assign(current, body);
 
+        /* โหมดแก้ไขไม่ redirect (ดู ActivityController::update) จึงต้องขึ้น toast เองตรงนี้
+           ไม่งั้นกดบันทึกแล้วดูเหมือนไม่มีอะไรเกิดขึ้น ทั้งที่บันทึกสำเร็จแล้ว */
+        if (!data.redirect) {
+          window.TFC.showToast(data.message || 'บันทึกสำเร็จ', 'success');
+          return;
+        }
+
         /* สร้างเสร็จแล้วต้องย้ายไปหน้าแก้ไขของรหัสที่เพิ่งได้ ไม่งั้นกดบันทึกซ้ำ
            จะสร้างกิจกรรมใหม่อีกใบ — ส่งรูปที่พักไว้ตามไปก่อนแล้วค่อยย้ายหน้า */
-        if (!data.redirect) return;
-
         return uploadPendingCover(data.code).then(function () {
           try {
             sessionStorage.setItem('tfc-activity-success', 'บันทึกสำเร็จ');

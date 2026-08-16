@@ -9,8 +9,11 @@
     <meta name="theme-color" content="#81C060">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/public-activities.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- ต้องเป็น @assetv ไม่ใช่ asset() — ไฟล์นี้ไม่ได้ผ่าน Vite จึงถูกเสิร์ฟด้วยชื่อคงที่
+         เบราว์เซอร์เก็บของเก่าไว้ แก้ CSS แล้วหน้าจอไม่เปลี่ยนจนกว่าจะ hard refresh
+         (เหตุผลเต็มอยู่ที่ AppServiceProvider ตรงที่ประกาศ directive นี้) --}}
+    <link rel="stylesheet" href="@assetv('assets/css/public-activities.css')">
     {{-- หน้าที่ต้องการ CSS หรือ meta เพิ่มเติมต่อท้ายตรงนี้ — ต้องมาหลัง public-activities.css เสมอ --}}
     @stack('head')
 </head>
@@ -48,8 +51,15 @@
                     <span class="public-menu-text">หน้าหลัก</span>
                 </a>
                 <a class="public-menu-link" href="{{ route('public.about') }}">
-                    <span class="public-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7M12 14c-4 0-7-2.5-7-6.5C5 4 8 3 12 3s7 1 7 4.5c0 4-3 6.5-7 6.5Z"/></svg></span>
+                    {{-- ไอคอนต้นกล้า — ตัวเดียวกับหมวด WORKSHOP ในแถบหมวดหมู่ (sprout ใน public-activities.js) --}}
+                    <span class="public-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M12 20V9"/><path d="M12 9C12 6 9.5 3.5 5 3.5c0 4.5 2.5 7 7 7z"/><path d="M12 12c0-2.5 2-5 6-5 0 3.5-2.5 5.5-6 5.5z"/></svg></span>
                     <span class="public-menu-text">เกี่ยวกับเรา</span>
+                </a>
+                {{-- ทางเข้าระบบประเมินสุขภาวะของกลุ่มตัวอย่าง — เดิมเข้าได้ทางเดียวคือสแกน QR
+                     คนที่ทำค้างไว้หรือทำ QR หายต้องกลับเข้ามาได้เองโดยไม่ต้องตามหากระดาษ --}}
+                <a class="public-menu-link" href="{{ route('public.tracking-round-qr') }}">
+                    <span class="public-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6v3H9z"/><path d="M15 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 12.5l2 2 4-4"/></svg></span>
+                    <span class="public-menu-text">แบบประเมินสุขภาวะ</span>
                 </a>
                 <a class="public-menu-link" href="{{ route('public.contact') }}">
                     <span class="public-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.36 1.78.7 2.61a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.47-1.27a2 2 0 0 1 2.11-.45c.83.34 1.71.58 2.61.7A2 2 0 0 1 22 16.92z"/></svg></span>
@@ -67,7 +77,7 @@
 </div>
 
 @stack('page-data')
-<script src="{{ asset('assets/js/public-activities.js') }}" defer></script>
+<script src="@assetv('assets/js/public-activities.js')" defer></script>
 @stack('page-script')
 </body>
 </html>

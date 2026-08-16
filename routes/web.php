@@ -122,14 +122,43 @@ Route::get('/s/{token}', [PublicQrController::class, 'postSurvey'])
     ->name('public.qr.post-survey');
 
 /* QR ติดตามสุขภาพ — อันเดียวทั้งโครงการ ไม่ผูกกิจกรรม และไม่มีรหัสคนอยู่ใน URL
-   ต้องยืนยันตัวตนก่อนเสมอ ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของคนนั้น */
-Route::get('/h/{token}', [PublicTrackingRoundQrController::class, 'landing'])
-    ->where('token', '[a-z0-9]{24}')
-    ->name('public.tracking-round-qr');
-Route::get('/public/tracking-round-qr/verify', [PublicTrackingRoundQrController::class, 'verify'])
-    ->name('public.tracking-round-qr.verify');
-Route::post('/public/tracking-round-qr/submit', [PublicTrackingRoundQrController::class, 'submit'])
-    ->name('public.tracking-round-qr.submit');
+   ต้องยืนยันตัวตนก่อนเสมอ ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของคนนั้น
+   แยกเป็นหน้าจอละขั้นตอน แต่ละขั้นมี URL ของตัวเอง กดย้อนกลับแล้วไม่หลุดไปเริ่มใหม่ */
+/* พาธอ่านออกและพูดต่อทางโทรศัพท์ได้ — QR ติดตามสุขภาพมีอันเดียวทั้งโครงการ
+   จึงไม่ต้องมี token ใน URL ตัว token เดิมเป็นแค่รหัสของแถวใน act_qr_codes ไม่ใช่ความลับ
+   (ตัวกันคนอื่นเข้าถึงข้อมูลคือการยืนยันตัวตน ไม่ใช่การเดา URL ไม่ถูก) */
+Route::prefix('health')->group(function () {
+    Route::get('/', [PublicTrackingRoundQrController::class, 'landing'])->name('public.tracking-round-qr');
+    Route::post('/verify', [PublicTrackingRoundQrController::class, 'verify'])->name('public.tracking-round-qr.verify');
+
+    Route::get('/choose', [PublicTrackingRoundQrController::class, 'choose'])->name('public.tracking-round-qr.choose');
+    Route::post('/choose', [PublicTrackingRoundQrController::class, 'chooseSubmit'])->name('public.tracking-round-qr.choose.submit');
+
+    Route::get('/register', [PublicTrackingRoundQrController::class, 'register'])->name('public.tracking-round-qr.register');
+    Route::post('/register', [PublicTrackingRoundQrController::class, 'registerSubmit'])->name('public.tracking-round-qr.register.submit');
+
+    Route::get('/home', [PublicTrackingRoundQrController::class, 'dashboard'])->name('public.tracking-round-qr.dashboard');
+    Route::post('/notify', [PublicTrackingRoundQrController::class, 'toggleNotify'])->name('public.tracking-round-qr.notify');
+
+    Route::get('/proxy', [PublicTrackingRoundQrController::class, 'proxy'])->name('public.tracking-round-qr.proxy');
+    Route::post('/proxy', [PublicTrackingRoundQrController::class, 'proxySubmit'])->name('public.tracking-round-qr.proxy.submit');
+    Route::post('/proxy/stop', [PublicTrackingRoundQrController::class, 'proxyStop'])->name('public.tracking-round-qr.proxy.stop');
+
+    Route::get('/rounds', [PublicTrackingRoundQrController::class, 'roundList'])->name('public.tracking-round-qr.rounds');
+    Route::get('/rounds/{round}/survey', [PublicTrackingRoundQrController::class, 'survey'])->name('public.tracking-round-qr.survey');
+    Route::post('/rounds/{round}/survey', [PublicTrackingRoundQrController::class, 'surveySubmit'])->name('public.tracking-round-qr.survey.submit');
+    Route::get('/rounds/{round}/done', [PublicTrackingRoundQrController::class, 'done'])->name('public.tracking-round-qr.done');
+
+    Route::post('/sign-out', [PublicTrackingRoundQrController::class, 'signOut'])->name('public.tracking-round-qr.sign-out');
+
+    Route::get('/line', [PublicLineLoginController::class, 'redirectHealth'])->name('public.tracking-round-qr.line');
+    Route::get('/line/return', [PublicTrackingRoundQrController::class, 'lineReturn'])->name('public.tracking-round-qr.line-return');
+})->where('round', '[0-9]+');
+
+/* QR ที่พิมพ์แจกไปแล้วชี้มาที่ /h/<token> — ส่งต่อไปพาธใหม่ ห้ามให้เจอ 404
+   กระดาษที่แจกไปแล้วเรียกคืนไม่ได้ */
+Route::get('/h/{token}', fn () => redirect()->route('public.tracking-round-qr'))
+    ->where('token', '[a-z0-9]{24}');
 
 /* ข้อมูลกิจกรรมสาธารณะ — คืนเฉพาะรายการที่เผยแพร่ */
 Route::get('/api/public/activities', [PublicActivityController::class, 'index'])

@@ -35,12 +35,11 @@ class CohortRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /* หน้าจอรันเลขให้ก่อนแล้ว แต่ยังต้องกันซ้ำที่นี่ด้วย เพราะสองคนอาจกดรันเลขพร้อมกัน
-               ชั้นสุดท้ายที่กันจริงคือ unique index ของตาราง — ดู CohortController::store() */
-            'person_code' => ['required', 'string', 'max:30', 'unique:ptp_participants,person_code'],
+            /* ไม่มี person_code ที่นี่โดยตั้งใจ — เซิร์ฟเวอร์ออกรหัสให้เองตอนบันทึก
+               ถ้ารับค่าจากฟอร์ม ใครก็ยิงรหัสที่ต้องการเข้ามาทับลำดับของระบบได้ */
             'name' => ['required', 'string', 'max:160'],
             'phone' => ['required', 'regex:/^0[689]\d{8}$/'],
-            'gender' => ['required', Rule::in(['male', 'female', 'other', 'undisclosed'])],
+            'gender' => ['required', Rule::in(array_keys(config('farmconcept.genders')))],
             'age_range_id' => [
                 'nullable', 'integer',
                 Rule::exists('mst_options', 'id')->where('option_group', 'age_range')->where('is_active', true),
@@ -153,7 +152,6 @@ class CohortRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'person_code' => 'รหัสบุคคล',
             'name' => 'ชื่อ-นามสกุล',
             'phone' => 'เบอร์โทรศัพท์',
             'gender' => 'เพศ',
@@ -173,8 +171,6 @@ class CohortRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'person_code.required' => 'กรุณากดรันเลขรหัสบุคคล',
-            'person_code.unique' => 'รหัสบุคคลนี้ถูกใช้ไปแล้ว กรุณากดรันเลขใหม่',
             'name.required' => 'กรุณากรอกชื่อ-นามสกุล',
             'phone.required' => 'กรุณากรอกเบอร์โทรศัพท์',
             'phone.regex' => 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก',

@@ -80,8 +80,9 @@
 
   var activities = mock.activities;
   var PAGE_SIZES = [10, 20, 50];
-  /* sort ว่าง = เรียงตามที่เซิร์ฟเวอร์ส่งมา ซึ่งคือใหม่สุดอยู่บนและไม่ขยับเมื่อแก้ข้อมูล */
-  var state = { status: '', search: '', type: '', instructor: '', area: '', sort: '', page: 1, pageSize: PAGE_SIZES[0] };
+  /* ค่าเริ่มต้น: กรองเฉพาะกิจกรรมที่ "เปิดรับสมัคร" และเรียงตามลำดับที่แสดงบนหน้าเว็บ (น้อยไปมาก)
+     เพราะนี่คือมุมมองที่แอดมินต้องใช้บ่อยที่สุด — ดูว่ากิจกรรมที่กำลังเปิดรับอยู่เรียงลำดับถูกไหม */
+  var state = { status: 'เปิดรับสมัคร', search: '', type: '', instructor: '', area: '', sort: 'publicRank', page: 1, pageSize: PAGE_SIZES[0] };
   var deleteTargetId = null;
 
   window.TFC.renderPageHeader('activity-page-header', {
@@ -166,6 +167,8 @@
     return rows.sort(function (a, b) {
       if (state.sort === 'registered') return b.registered - a.registered;
       if (state.sort === 'startDate') return String(a.startDate).localeCompare(String(b.startDate));
+      /* ลำดับที่แสดงบนหน้าเว็บ น้อยไปมาก — กิจกรรมที่ไม่ได้เผยแพร่ (ไม่มีลำดับ) ให้ไปอยู่ท้ายสุด */
+      if (state.sort === 'publicRank') return (a.publicRank || Infinity) - (b.publicRank || Infinity);
       return String(a.name).localeCompare(String(b.name), 'th');
     });
   }
@@ -183,6 +186,7 @@
         label: 'เรียงลำดับ',
         placeholder: 'เพิ่มล่าสุด',
         options: [
+          { value: 'publicRank', label: 'ลำดับที่แสดงบนเว็บ' },
           { value: 'startDate', label: 'วันที่จัดกิจกรรม' },
           { value: 'name', label: 'ชื่อกิจกรรม' },
           { value: 'registered', label: 'จำนวนผู้ลงทะเบียน' }
@@ -193,7 +197,8 @@
       state.type = values.filters.type || '';
       state.instructor = values.filters.instructor || '';
       state.area = values.filters.area || '';
-      state.sort = values.filters.sort || '';
+      /* ไม่เลือกอะไรในแผงตัวกรอง = กลับไปที่ค่าเริ่มต้นของหน้านี้ (เรียงตามลำดับที่แสดงบนเว็บ) ไม่ใช่เลิกเรียงไปเลย */
+      state.sort = values.filters.sort || 'publicRank';
       state.page = 1;
       render();
       done();
@@ -202,7 +207,7 @@
       state.type = '';
       state.instructor = '';
       state.area = '';
-      state.sort = '';
+      state.sort = 'publicRank';
       state.page = 1;
       render();
     }
@@ -224,40 +229,59 @@
   });
 
   /* ---------- มุมมองตาราง ---------- */
-  /* center: true = หัวคอลัมน์กับเนื้อจัดกลางเหมือนกัน (คอลัมน์ตัวเลขและสถานะตามมาตรฐาน)
-     คู่ที่เป็นเรื่องเดียวกันรวมช่องเดียว (เข้าร่วม·ประเมิน / สถานะ·หน้าเว็บ)
-     เพื่อให้ตารางพอดีความกว้างจอ ไม่ต้องเลื่อนแนวนอน — ต้องตรงกับ grid-template ใน components.css */
+  /* หกคอลัมน์ อ่านซ้ายไปขวาเป็นลำดับคำถาม: กิจกรรมอะไร · เมื่อไหร่ · คนมาแค่ไหน · สถานะ · ขึ้นเว็บหรือยัง
+     สามตัวเลขของกิจกรรมเดียวกัน (ลงทะเบียน/เช็คอิน/ประเมิน) อยู่ช่องเดียว เพราะต้องอ่านเทียบกัน
+     ไม่ใช่แยกช่องแล้วให้สายตาวิ่งข้ามคอลัมน์
+     ตัดคอลัมน์ #, สถานที่ และปรับปรุงล่าสุดออก — ไม่ใช่สิ่งที่ต้องเห็นทุกแถว หาได้จากหน้ารายละเอียด
+     จำนวนช่องต้องตรงกับ grid-template ใน components.css เสมอ */
   var TABLE_COLS = [
-    { label: '#', center: true },
-    { label: 'ชื่อกิจกรรม' },
+    { label: 'กิจกรรม' },
     { label: 'วันและเวลา' },
-    { label: 'สถานที่' },
-    { label: 'ผู้ลงทะเบียน', center: true },
-    { label: 'เข้าร่วม · ประเมิน', center: true },
-    { label: 'สถานะ · หน้าเว็บ', center: true },
-    { label: 'ปรับปรุงล่าสุด', center: true },
+    { label: 'ลงทะเบียน · เช็คอิน · ประเมิน' },
+    { label: 'สถานะ' },
+    { label: 'หน้าเว็บ' },
     { label: '' }
   ];
 
-  /* "12 ส.ค. 69 | 08.30" — ย่อ พ.ศ. เหลือ 2 หลักกันบรรทัดตกในคอลัมน์แคบ */
-  function updatedStamp(activity) {
-    if (!activity.updatedDate) return '-';
+  /* ป้ายประเภทหน้าชื่อ — รายการนี้ปนทั้งกิจกรรม อีเวนท์ และข่าวสาร
+     ซึ่งมีคอลัมน์ที่ใช้ได้ไม่เท่ากัน (ข่าวสารไม่มีคนลงทะเบียน) ต้องแยกออกจากกันตั้งแต่แรกเห็น */
+  var TYPE_TONE = { 'ข่าวสาร': 'is-news', 'อีเว้นท์': 'is-event' };
 
-    var date = window.TFC.formatThaiDate(activity.updatedDate).replace(/\d{2}(\d{2})$/, '$1');
-    return window.TFC.escapeHtml(activity.updatedTime ? date + ' | ' + activity.updatedTime : date);
+  function typeChip(activity) {
+    if (!activity.type) return '';
+    return '<span class="grid-type ' + (TYPE_TONE[activity.type] || 'is-activity') + '">' +
+      window.TFC.escapeHtml(activity.type) + '</span>';
   }
 
-  /* คอลัมน์ "หน้าเว็บ" — ตอบสองคำถามในช่องเดียว: กิจกรรมนี้โผล่บนหน้าเว็บสาธารณะไหม
+  /* สามตัวเลขในช่องเดียว — ตัวแรกเน้น เพราะเป็นตัวที่บอกว่ากิจกรรมนี้ไปรอดหรือไม่ อีกสองตัวเป็นข้อมูลประกอบ
+     กิจกรรมที่ไม่เปิดรับลงทะเบียน (ข่าวสาร/อีเวนท์บางรายการ) ไม่มีตัวหาร จึงขึ้น — แทน 0/0
+     ตัดแถบกราฟความคืบหน้าออกแล้ว — ตัวเลขสามตัวพอสื่อความหมายอยู่แล้ว ไม่ต้องมีกราฟแนวนอนกินที่เพิ่ม */
+  function metricsCell(activity) {
+    var cap = activity.capacity || 0;
+    var reg = activity.registered || 0;
+    var regText = cap > 0 ? (reg + '/' + cap) : (reg ? String(reg) : '—');
+
+    return '<div class="fb-progress-cell">' +
+      '<span class="fb-progress-text">' +
+        '<span class="grid-metric-main">' + window.TFC.escapeHtml(regText) + '</span>' +
+        '<span class="grid-metric-sub"> · เช็คอิน ' + (activity.checkedIn || 0) +
+        ' · ประเมิน ' + (activity.responses || 0) + '</span>' +
+      '</span>' +
+      '</div>';
+  }
+
+  /* คอลัมน์ "หน้าเว็บ" — ตอบสองคำถาม: กิจกรรมนี้โผล่บนหน้าเว็บสาธารณะไหม
      และถ้าโผล่ อยู่ลำดับที่เท่าไหร่ (เลขเดียวกับที่ผู้เข้าชมเห็นจริง ไม่ใช่ค่าดิบในฐาน)
      ไม่โผล่ก็บอกเหตุผลเลย แอดมินจะได้รู้ว่าต้องแก้อะไร ไม่ต้องไล่เดาเอง */
   function publicCell(activity) {
     if (activity.publicRank) {
-      return '<div class="grid-sub">' +
-        '<span class="badge badge-success" title="กำลังแสดงบนหน้าเว็บสาธารณะ เป็นลำดับที่ ' + activity.publicRank + '">เว็บ · ลำดับที่ ' + activity.publicRank + '</span>' +
+      return '<div title="กำลังแสดงบนหน้าเว็บสาธารณะ เป็นลำดับที่ ' + activity.publicRank + '">' +
+        '<div class="grid-web-on">เผยแพร่</div>' +
+        '<div class="grid-sub">ลำดับที่ ' + activity.publicRank + '</div>' +
         '</div>';
     }
     var reason = activity.publicHiddenReason || 'ไม่แสดงบนเว็บ';
-    return '<div class="grid-sub" title="' + window.TFC.escapeHtml(reason) + '">ไม่แสดงบนเว็บ</div>';
+    return '<div class="grid-soft" title="' + window.TFC.escapeHtml(reason) + '">ไม่แสดงบนเว็บ</div>';
   }
 
   function truncate(str, maxLen) {
@@ -266,44 +290,31 @@
     return str.length > maxLen ? str.slice(0, maxLen) + '...' : str;
   }
 
-  /* order = ลำดับที่ในหน้าปัจจุบัน นับต่อจากแถวแรกของหน้า ไม่ใช่นับใหม่ทุกหน้า */
-  function rowHtml(activity, order) {
+  function rowHtml(activity) {
     var schedules = window.TFC.activity.schedules(activity);
     var timeText = schedules.length && schedules[0].timeStart
       ? schedules[0].timeStart + '–' + schedules[0].timeEnd + ' น.'
       : '';
-    var cap = activity.capacity || 0;
-    var reg = activity.registered || 0;
-    var checkedIn = activity.checkedIn || 0;
-    var responses = activity.responses || 0;
     var respText = responsible(activity).join(' · ');
 
     return '<div class="grid-row" data-id="' + activity.id + '">' +
-      '<div class="grid-code grid-center">' + order + '</div>' +
 
       /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
       '<div>' +
       (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
-      '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 25)) + '</a>' +
-      (respText ? '<div class="grid-sub" title="' + window.TFC.escapeHtml(respText) + '">' + window.TFC.escapeHtml(truncate(respText, 25)) + '</div>' : '') + '</div>' +
+      '<div class="grid-name-line">' + typeChip(activity) +
+        '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 30)) + '</a>' +
+      '</div>' +
+      '<div class="grid-sub" title="' + window.TFC.escapeHtml(respText) + '">' + (respText ? window.TFC.escapeHtml(truncate(respText, 30)) : '—') + '</div></div>' +
 
       '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
       (timeText ? '<div class="grid-sub">' + window.TFC.escapeHtml(timeText) + '</div>' : '') + '</div>' +
 
-      '<div class="grid-soft">' + window.TFC.escapeHtml(areasOf(activity).join(' · ') || '-') + '</div>' +
+      '<div>' + metricsCell(activity) + '</div>' +
 
-      '<div class="grid-center grid-strong">' + (cap > 0 ? (reg + '/' + cap) : (reg ? reg : '—')) + '</div>' +
+      '<div>' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
 
-      /* เข้าร่วมกับแบบประเมิน */
-      '<div class="grid-num grid-center">เช็คอิน ' + checkedIn + ' · ประเมิน ' + responses + '</div>' +
-
-      /* สถานะบรรทัดบน การแสดงบนหน้าเว็บบรรทัดล่าง — เรื่องเดียวกันอ่านคู่กัน */
-      '<div class="grid-center">' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) +
-      publicCell(activity) + '</div>' +
-
-      /* คนแก้บรรทัดบน วันเวลาบรรทัดล่าง — โครงเดียวกับหน้าอื่นในระบบ */
-      '<div class="grid-center"><div>' + window.TFC.escapeHtml(activity.updatedBy || '-') + '</div>' +
-      '<div class="grid-sub nowrap">' + updatedStamp(activity) + '</div></div>' +
+      '<div>' + publicCell(activity) + '</div>' +
 
       '<div class="grid-actions">' + window.TFC.actionMenuTrigger(menuItems(activity)) + '</div>' +
       '</div>';
@@ -329,12 +340,12 @@
     return items;
   }
 
-  function tableHtml(rows, start) {
+  function tableHtml(rows) {
     return '<div class="grid-table">' +
       '<div class="grid-head">' + TABLE_COLS.map(function (c) {
         return '<div' + (c.center ? ' class="grid-center"' : '') + '>' + window.TFC.escapeHtml(c.label) + '</div>';
       }).join('') + '</div>' +
-      rows.map(function (row, i) { return rowHtml(row, start + i + 1); }).join('') +
+      rows.map(rowHtml).join('') +
       '</div>';
   }
 
@@ -352,7 +363,7 @@
     var start = (state.page - 1) * state.pageSize;
 
     var pageRows = rows.slice(start, start + state.pageSize);
-    listEl.innerHTML = rows.length ? tableHtml(pageRows, start) : EMPTY_HTML;
+    listEl.innerHTML = rows.length ? tableHtml(pageRows) : EMPTY_HTML;
 
     window.TFC.renderPagination('activity-pagination', {
       page: state.page,

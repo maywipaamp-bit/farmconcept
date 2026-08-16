@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\CohortProfile;
+use App\Models\Consent;
 use App\Models\FollowUpNote;
 use App\Models\FollowUpRound;
+use App\Models\FollowUpRoundTemplate;
 use App\Models\Form;
 use App\Models\Participant;
 use App\Models\RoundBatch;
@@ -14,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * รอบติดตาม — ตรรกะที่หน้ารายการ · หน้าสร้าง · QR สาธารณะ ใช้ร่วมกัน
@@ -27,7 +31,133 @@ use Illuminate\Support\Str;
  */
 class TrackingRoundService
 {
-    public function __construct(private readonly LinePushService $push) {}
+    public function __construct(
+        private readonly LinePushService $push,
+        private readonly PersonCodeGenerator $personCodes,
+        private readonly SurveyAnswerBuilder $answerBuilder,
+    ) {}
+
+    /**
+     * ผู้เข้าร่วมลงทะเบียนเป็นกลุ่มตัวอย่างเอง ผ่าน QR
+     *
+     * ถามเท่าที่คนคนหนึ่งตอบแทนตัวเองได้จริง — ชื่อ เบอร์ เพศ พื้นที่ และความยินยอม
+     * กลุ่มเป้าหมายเว้นไว้ให้เจ้าหน้าที่มาจัดทีหลัง เพราะเป็นการจัดกลุ่มเชิงบริหารที่เจ้าตัวไม่รู้
+     *
+     * รอบติดตามถูกสร้างให้ครบทุกรอบที่เปิดใช้งาน นับจากวันที่ลงทะเบียนเป็นวันฐาน
+     */
+    public function selfRegister(
+        string $name,
+        string $phone,
+        ?string $lineUserId = null,
+        ?string $gender = null,
+        ?int $areaId = null,
+    ): CohortProfile {
+        return DB::transaction(function () use ($name, $phone, $lineUserId, $gender, $areaId): CohortProfile {
+            $personCode = $this->personCodes->next(lock: true);
+
+            $participant = Participant::create([
+                'code' => $personCode,
+                'person_code' => $personCode,
+                'name' => $name,
+                'phone' => $phone,
+                'gender' => $gender,
+                'area_id' => $areaId,
+                'consent_status' => 'ยินยอม',
+                'line_user_id' => $lineUserId,
+            ]);
+
+            Consent::create([
+                'participant_id' => $participant->id,
+                'status' => 'ยินยอม',
+                'consent_version' => config('farmconcept.consent_version'),
+                'consented_at' => now(),
+                /* บอกให้รู้ว่าความยินยอมนี้เจ้าตัวกดเอง ไม่ได้มีเจ้าหน้าที่เป็นพยาน
+                   ต่างจากใบยินยอมกระดาษที่แอดมินแนบให้ตอนเพิ่มจากหลังบ้าน */
+                'recorded_via' => 'self_qr',
+            ]);
+
+            $entryDate = Carbon::today();
+
+            $profile = CohortProfile::create([
+                'participant_id' => $participant->id,
+                'cohort_code' => $this->personCodes->nextCohortCode(lock: true),
+                'entry_date' => $entryDate,
+                'source_type' => 'walk_in',
+            ]);
+
+            foreach (FollowUpRoundTemplate::active()->get() as $template) {
+                FollowUpRound::create([
+                    'cohort_profile_id' => $profile->id,
+                    'template_id' => $template->id,
+                    'name' => $template->name,
+                    'offset_days' => $template->offset_days,
+                    'due_date' => $entryDate->copy()->addDays($template->offset_days),
+                ]);
+            }
+
+            return $profile->load('participant');
+        });
+    }
+
+    /**
+     * แบบประเมินที่ใช้กับรอบนี้
+     *
+     * รอบที่ถูกดึงเข้ารอบติดตามแล้ว ใช้แบบประเมินที่แอดมินล็อกไว้กับรอบนั้น
+     * ที่เหลือใช้แบบติดตามสุขภาพที่เปิดใช้งานอยู่ — คนที่สแกน QR เองโดยยังไม่มีใครเปิดรอบให้
+     * ก็ต้องตอบได้ ไม่ใช่เจอหน้าว่าง
+     */
+    public function formForRound(FollowUpRound $round): ?Form
+    {
+        $batchForm = RoundBatchMember::where('follow_up_round_id', $round->id)
+            ->whereHas('batch', fn ($q) => $q->where('state', '!=', RoundBatch::STATE_CANCELLED))
+            ->with('batch.form')
+            ->latest('id')
+            ->first()?->batch?->form;
+
+        /* ต้องเป็นแบบติดตามสุขภาพที่เปิดใช้งานอยู่เท่านั้น
+           แบบที่ถูกปิดไปแล้วหรือเป็นชนิดอื่น (ลงทะเบียน / ความพึงพอใจ) ห้ามโผล่มาให้ตอบ
+           ถึงจะเคยผูกไว้กับรอบตอนที่ยังเปิดอยู่ก็ตาม — ไม่งั้นเก็บข้อมูลด้วยแบบที่เลิกใช้แล้ว */
+        $usable = fn (?Form $form) => $form
+            && $form->type === Form::TYPE_HEALTH_FOLLOW_UP
+            && $form->status === Form::STATUS_ACTIVE;
+
+        $form = $usable($batchForm) ? $batchForm : $this->defaultForm();
+
+        return $form?->loadMissing(['questions.options']);
+    }
+
+    /**
+     * บันทึกคำตอบของรอบหนึ่ง แล้วปิดรอบนั้นให้เป็น "ตอบแล้ว"
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    public function submitSurvey(FollowUpRound $round, array $answers, ?Participant $submittedBy = null): SurveyResponse
+    {
+        return DB::transaction(function () use ($round, $answers, $submittedBy): SurveyResponse {
+            $form = $this->formForRound($round);
+
+            if ($form === null) {
+                throw ValidationException::withMessages([
+                    'answers' => 'ยังไม่มีแบบติดตามสุขภาพที่เปิดใช้งาน กรุณาติดต่อเจ้าหน้าที่',
+                ]);
+            }
+
+            /* ตรวจคำตอบให้ครบก่อนสร้างระเบียน ถ้าตกข้อบังคับกลางทางจะได้ไม่มีคำตอบครึ่ง ๆ ค้างไว้ */
+            $rows = $this->answerBuilder->rowsFor($form, $answers);
+
+            $response = $this->recordResponse($round, $form);
+
+            if ($submittedBy !== null) {
+                $response->update(['submitted_by_participant_id' => $submittedBy->id]);
+            }
+
+            foreach ($rows as $row) {
+                $response->answers()->create($row);
+            }
+
+            return $response;
+        });
+    }
 
     /**
      * คนที่ "ถึงกำหนดติดตาม" ในช่วงที่ระบุ
@@ -240,6 +370,10 @@ class TrackingRoundService
         return DB::transaction(function () use ($round, $form, $submittedAt): SurveyResponse {
             $submittedAt ??= now();
 
+            /* เผื่อผู้เรียกส่งใบที่ยังไม่ได้โหลดโปรไฟล์มา — เมธอดนี้ถูกเรียกจากหลายทาง
+               จะไปพึ่งให้ทุกทางโหลดมาให้ครบไม่ได้ */
+            $round->loadMissing('cohortProfile');
+
             $response = SurveyResponse::firstOrCreate(
                 ['cohort_round_id' => $round->id],
                 [
@@ -287,7 +421,10 @@ class TrackingRoundService
             return collect();
         }
 
+        /* โหลด cohortProfile มาด้วย — ปลายทางของรอบพวกนี้คือการบันทึกคำตอบ ซึ่งต้องใช้ participant_id
+           ถ้าไม่โหลดมา พอมีรอบที่ถึงกำหนดมากกว่าหนึ่ง ตัวกัน lazy loading จะทำงานแล้วส่งคำตอบไม่ได้เลย */
         return $profile->rounds()
+            ->with('cohortProfile')
             ->whereNull('answered_at')
             ->orderBy('due_date')
             ->get()
@@ -347,11 +484,19 @@ class TrackingRoundService
         ];
     }
 
+    /**
+     * แบบติดตามสุขภาพที่ใช้อยู่จริง
+     *
+     * ถ้ามีเปิดใช้งานอยู่หลายชุด (เช่นทำสำเนาไว้แก้) ให้ใช้ "ชุดที่เผยแพร่ล่าสุด"
+     * ไม่ใช่ id ต่ำสุด — คนที่ทำสำเนาใหม่แล้วปิดของเก่า ย่อมตั้งใจให้ใช้ชุดใหม่
+     * เรียงด้วย id ต่ำสุดจะได้ชุดเก่าค้างอยู่โดยไม่มีอะไรเตือน
+     */
     private function defaultForm(): ?Form
     {
         return Form::where('type', Form::TYPE_HEALTH_FOLLOW_UP)
             ->where('status', Form::STATUS_ACTIVE)
-            ->orderBy('id')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
             ->first();
     }
 

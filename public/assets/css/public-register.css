@@ -59,7 +59,9 @@
     --reg-line: #06c755;
 
     --reg-font: "Noto Sans Thai", sans-serif;
-    --reg-font-numeric: "IBM Plex Sans", sans-serif;
+    /* handoff ใช้ Noto Sans Thai ทั้งหน้า รวมตัวเลข — IBM Plex ไม่ได้ถูกโหลดในหน้านี้อยู่แล้ว
+       ถ้าปล่อยไว้ตัวเลขจะ fallback เป็นฟอนต์ระบบ หน้าตาไม่ตรงกับส่วนอื่น */
+    --reg-font-numeric: "Noto Sans Thai", sans-serif;
 
     --reg-r-card: 26px;
     --reg-r-modal: 20px;
@@ -401,19 +403,22 @@ body[data-screen="check"] .reg-hero-desc[data-for="check"] { display: block; }
     transition: border-color var(--reg-transition), box-shadow var(--reg-transition), background var(--reg-transition);
 }
 
+/* ใช้ background-color ไม่ใช่ background shorthand — shorthand จะล้าง background-image
+   ที่เป็นรูป chevron ของ .reg-select ทิ้ง ไอคอนลูกศรจะหายไปตอนกดเปิด dropdown */
 .reg-input:focus, .reg-select:focus, .reg-textarea:focus {
     border-color: var(--reg-focus-border);
-    background: var(--reg-card-bg);
+    background-color: var(--reg-card-bg);
     box-shadow: 0 0 0 3px var(--reg-focus-ring);
 }
 
 /* หน้าจอตรวจสอบสิทธิ์และ popup ใช้พื้นอีกเฉด ตาม hifi */
+/* background-color เท่านั้น — เหตุผลเดียวกับกฎ :focus ด้านบน (กัน chevron ของ select หาย) */
 .reg-input.is-bright, .reg-select.is-bright {
-    background: var(--reg-surface-input);
+    background-color: var(--reg-surface-input);
     border-color: var(--reg-border-input);
 }
 
-.reg-input.is-bright:focus, .reg-select.is-bright:focus { background: var(--reg-card-bg); }
+.reg-input.is-bright:focus, .reg-select.is-bright:focus { background-color: var(--reg-card-bg); }
 
 .reg-input.is-error { border-color: var(--reg-error-border); }
 
@@ -1008,7 +1013,6 @@ body[data-screen="check"] .reg-hero-desc[data-for="check"] { display: block; }
 
 .reg-qr-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-.reg-qr-expire { font-size: 12px; color: var(--reg-text-faint); }
 
 .reg-qr-save { height: 38px; padding: 0 16px; }
 
@@ -1298,6 +1302,18 @@ body[data-screen="check"] .reg-hero-desc[data-for="check"] { display: block; }
     display: flex;
     flex-direction: column;
     gap: 18px;
+}
+
+/* popup อ่านเอกสารความยินยอม — เนื้อหายาว จำกัดความสูงให้เลื่อนในตัว popup
+   pre-line เคารพการขึ้นบรรทัดที่แอดมินพิมพ์ไว้ในเอกสาร */
+.reg-consent-doc-card { max-height: min(78vh, 640px); }
+
+.reg-consent-doc-body {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--reg-text-secondary);
+    white-space: pre-line;
+    text-wrap: pretty;
 }
 
 /* แถบ progress ของป๊อปอัปผู้ร่วมเพิ่มถูกถอดออก — ตำแหน่งบอกในบรรทัดใต้หัวข้อแทน */

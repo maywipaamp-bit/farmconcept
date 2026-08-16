@@ -15,8 +15,8 @@
 
 @push('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    {{-- หน้านี้ใช้ Prompt ตามสเปกของหน้าลงทะเบียน ต่างจากหน้ากิจกรรมที่ใช้ Noto Sans Thai --}}
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- ใช้ Noto Sans Thai ตัวเดียวกับ layout (โหลดไว้แล้ว) — ไม่โหลดฟอนต์ที่สองซ้อน
+         ไม่งั้นตอน reload จะเห็นฟอนต์เก่ากระพริบสลับก่อนฟอนต์จริงจะติด --}}
     <link rel="stylesheet" href="@assetv('assets/css/public-register.css')">
 @endpush
 
@@ -167,12 +167,31 @@
                 <div class="reg-activity-summary">
                     <div class="reg-activity-summary-text">
                         <span class="reg-activity-name">{{ $config['activity']['title'] }}</span>
-                        <span class="reg-activity-meta">{{ collect([$config['activity']['scheduleLabel'] ?: null, $config['activity']['location'] ?: null])->filter()->join(' · ') ?: '-' }}</span>
+                        {{-- เฉพาะวันเวลา ไม่แสดงสถานที่ — ดูได้จากหน้ารายละเอียดกิจกรรมอยู่แล้ว
+                             กิจกรรมหลายรอบไม่แสดงวันเวลาตรงนี้เลย — วันเวลาของแต่ละรอบอยู่ใน dropdown เลือกรอบแล้ว --}}
+                        @if(count($config['rounds']) <= 1)
+                            <span class="reg-activity-meta">{{ $config['activity']['scheduleLabel'] ?: '-' }}</span>
+                        @endif
                     </div>
                     <span class="reg-activity-fee">{{ $config['activity']['isFree'] ? 'ฟรี' : number_format($config['activity']['fee']).' ฿/ท่าน' }}</span>
                 </div>
 
                 <div class="reg-form-fields">
+                    {{-- เลือกรอบอยู่บนสุด ใต้ข้อมูลกิจกรรม — ต้องรู้ก่อนว่าสมัครรอบไหน ค่อยกรอกข้อมูลตัวเอง --}}
+                    @if(count($config['rounds']) > 0)
+                        <p class="reg-fieldset-title">รอบที่ต้องการสมัคร</p>
+                        <div class="reg-field">
+                            <label for="reg-round"><span>รอบที่ต้องการสมัคร</span><span class="reg-star">*</span></label>
+                            <select id="reg-round" class="reg-select">
+                                <option value="">เลือกรอบ *</option>
+                                {{-- ไม่โชว์จำนวนที่นั่งเหลือ — รอบที่เต็มถูก disable ให้เลือกไม่ได้อยู่แล้ว --}}
+                                @foreach($config['rounds'] as $round)
+                                    <option value="{{ $round['id'] }}" @disabled($round['seatsLeft'] === 0)>{{ $round['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <p class="reg-fieldset-title">ข้อมูลผู้ลงทะเบียน</p>
                     <div class="reg-field">
                         {{-- label ยังอยู่ใน DOM เพื่อ screen reader แต่ซ่อนไว้ทางสายตา — ใช้ placeholder
@@ -232,20 +251,6 @@
                         </div>
                     @endif
 
-                    @if(count($config['rounds']) > 0)
-                        <div class="reg-field">
-                            <label for="reg-round"><span>รอบที่ต้องการสมัคร</span><span class="reg-star">*</span></label>
-                            <select id="reg-round" class="reg-select">
-                                <option value="">รอบที่ต้องการสมัคร *</option>
-                                @foreach($config['rounds'] as $round)
-                                    <option value="{{ $round['id'] }}" @disabled($round['seatsLeft'] === 0)>
-                                        {{ $round['label'] }}{{ $round['seatsLeft'] !== null ? ' · เหลือ '.$round['seatsLeft'].' ที่นั่ง' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
                     {{-- มาหลายคน — เลือกจาก dropdown แทนปุ่ม +/− เดิม ให้เข้าชุดกับฟิลด์เลือกค่าอื่น ๆ ในหน้านี้
                          ตัวเลือกสุดท้ายเป็น "ขึ้นไป" เพราะเกินจำนวนนี้ต้องติดต่อผู้จัดเป็นกรณีไป --}}
                     @if($config['maxSeats'] > 1)
@@ -266,9 +271,11 @@
                         <textarea id="reg-note" class="reg-textarea" maxlength="255" rows="2" placeholder="เช่น มีผู้ติดตาม 2 คน / คาดหวังอะไรในกิจกรรมนี้"></textarea>
                     </div>
 
+                    {{-- ลิงก์เงื่อนไข/นโยบาย: มีเอกสาร active ในระบบ (master/consent-documents) → เปิดอ่านเป็น popup
+                         ไม่มีเอกสารแต่ตั้ง URL ไว้ → เปิดลิงก์ภายนอกแบบเดิม · ไม่มีทั้งคู่ → ตัวหนาเฉย ๆ --}}
                     <label class="reg-consent">
                         <input type="checkbox" id="reg-consent">
-                        <span>ข้าพเจ้ายอมรับ@if($config['links']['terms'])<a href="{{ $config['links']['terms'] }}" target="_blank" rel="noopener">เงื่อนไขการเข้าร่วม</a>@else<b style="font-weight:500">เงื่อนไขการเข้าร่วม</b>@endif และ@if($config['links']['privacy'])<a href="{{ $config['links']['privacy'] }}" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a>@else<b style="font-weight:500">นโยบายความเป็นส่วนตัว</b>@endif</span>
+                        <span>ยอมรับ@if($config['consentDocs']['terms'])<a href="#" data-consent-doc="terms">เงื่อนไขการเข้าร่วม</a>@elseif($config['links']['terms'])<a href="{{ $config['links']['terms'] }}" target="_blank" rel="noopener">เงื่อนไขการเข้าร่วม</a>@else<b style="font-weight:500">เงื่อนไขการเข้าร่วม</b>@endif และ@if($config['consentDocs']['privacy'])<a href="#" data-consent-doc="privacy">นโยบายความเป็นส่วนตัว</a>@elseif($config['links']['privacy'])<a href="{{ $config['links']['privacy'] }}" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a>@else<b style="font-weight:500">นโยบายความเป็นส่วนตัว</b>@endif</span>
                     </label>
                 </div>
             </section>
@@ -304,7 +311,6 @@
                         <div class="reg-qr-image">
                             <img src="{{ $config['payment']['qrUrl'] }}" alt="QR Code สำหรับชำระเงิน">
                         </div>
-                        <span class="reg-qr-expire" id="reg-qr-expire">คิวอาร์หมดอายุใน 30:00 นาที</span>
                         <button type="button" class="reg-btn-outline reg-qr-save" id="reg-qr-save">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
                             <span>บันทึกคิวอาร์</span>
@@ -408,6 +414,22 @@
                 <button type="button" class="reg-btn-secondary" id="reg-dup-edit">แก้ไขข้อมูล</button>
                 <button type="button" class="reg-btn-primary" id="reg-dup-view">ดูประวัติการลงทะเบียน</button>
             </div>
+        </div>
+    </div>
+
+    {{-- popup อ่านเอกสารความยินยอม — ใช้ใบเดียวทั้งเงื่อนไขและนโยบาย JS เปลี่ยนหัว/เนื้อหาตามลิงก์ที่กด --}}
+    <div class="reg-modal" id="reg-consent-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reg-consent-modal-title">
+        <div class="reg-modal-card reg-consent-doc-card">
+            <div class="reg-modal-head">
+                <div class="reg-modal-titles">
+                    <h2 id="reg-consent-modal-title"></h2>
+                    <p id="reg-consent-modal-version"></p>
+                </div>
+                <button type="button" class="reg-modal-close" id="reg-consent-modal-close" aria-label="ปิด">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="reg-modal-body reg-consent-doc-body" id="reg-consent-modal-content"></div>
         </div>
     </div>
 

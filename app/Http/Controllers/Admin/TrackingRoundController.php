@@ -270,7 +270,10 @@ class TrackingRoundController extends Controller
     private function healthQrPayload(): array
     {
         $qr = QrCode::where('purpose', 'health')->whereNull('activity_id')->first();
-        $url = $qr ? url('/h/'.$qr->token) : null;
+
+        /* พาธอ่านออกและบอกต่อทางโทรศัพท์ได้ — ไม่มี token ใน URL แล้ว
+           QR ติดตามสุขภาพมีอันเดียวทั้งโครงการ ปลายทางจึงตายตัว */
+        $url = $qr ? route('public.tracking-round-qr') : null;
 
         return [
             'exists' => $qr !== null,

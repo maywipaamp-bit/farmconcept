@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PublicRegistrationRequest;
 use App\Models\Activity;
+use App\Models\ConsentDocument;
 use App\Models\Form;
 use App\Models\Option;
 use App\Models\PaymentAccount;
@@ -163,6 +164,12 @@ class PublicRegistrationController extends Controller
                     'privacy' => $settings->get('privacy_policy_url') ?: null,
                     'terms' => $settings->get('terms_url') ?: null,
                 ],
+                /* เอกสารความยินยอมฉบับที่เปิดใช้งาน (จากหน้าแอดมิน master/consent-documents)
+                   กดลิงก์ในบรรทัดยอมรับแล้วเปิดอ่านเป็น popup — terms = เงื่อนไขการเข้าร่วม, pdpa = นโยบายความเป็นส่วนตัว */
+                'consentDocs' => [
+                    'terms' => $this->consentDoc('terms'),
+                    'privacy' => $this->consentDoc('pdpa'),
+                ],
                 /* เข้าสู่ระบบด้วย LINE — enabled=false เมื่อยังไม่ได้ตั้ง channel ในเซิร์ฟเวอร์
                    หน้าจอจะซ่อนปุ่มไปเลย ไม่ใช่ให้กดแล้วเจอหน้า error */
                 'line' => [
@@ -300,6 +307,21 @@ class PublicRegistrationController extends Controller
             'seatsLabel' => $registrations->count().' ที่นั่ง ('.$registrations->pluck('name')->join(', ').')',
             'paymentLabel' => $this->paymentLabel($activity, $registrations),
         ];
+    }
+
+    /** เอกสารความยินยอมฉบับที่เปิดใช้ของประเภทนั้น — null เมื่อยังไม่มีฉบับ active */
+    private function consentDoc(string $type): ?array
+    {
+        $document = ConsentDocument::query()
+            ->where('consent_type', $type)
+            ->where('is_active', true)
+            ->first();
+
+        return $document ? [
+            'title' => $document->title,
+            'version' => $document->version,
+            'content' => $document->content,
+        ] : null;
     }
 
     /** @param  Collection<int, Registration>  $registrations */

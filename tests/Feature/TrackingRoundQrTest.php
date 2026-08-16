@@ -1,0 +1,706 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Http\Controllers\PublicTrackingRoundQrController;
+use App\Models\Area;
+use App\Models\CohortProfile;
+use App\Models\District;
+use App\Models\FollowUpRound;
+use App\Models\FollowUpRoundTemplate;
+use App\Models\Form;
+use App\Models\Option;
+use App\Models\Participant;
+use App\Models\QrCode;
+use App\Models\Question;
+use App\Models\SurveyResponse;
+use App\Models\TargetGroup;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
+
+/**
+ * QR ทำแบบประเมินติดตามสุขภาพ — เส้นทางของผู้ตอบตั้งแต่สแกนจนส่งคำตอบ
+ *
+ * ยืนยันตัวตนสองชั้น เบอร์โทร + ชื่อจริง 5 ตัวอักษรแรก
+ * ตัวตนอยู่ใน session ไม่ใช่ใน URL — ลิงก์ที่แชร์ต่อจึงไม่พาสิทธิ์ของคนอื่นไปด้วย
+ */
+class TrackingRoundQrTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function qr(): QrCode
+    {
+        return QrCode::firstOrCreate(
+            ['purpose' => 'health', 'activity_id' => null],
+            ['token' => 'abcdefghijklmnopqrstuvwx', 'target_url' => '/h/abcdefghijklmnopqrstuvwx', 'is_active' => true]
+        );
+    }
+
+    private function template(string $name = 'ติดตามครั้งที่หนึ่ง', int $offset = 0): FollowUpRoundTemplate
+    {
+        return FollowUpRoundTemplate::firstOrCreate(
+            ['code' => 'FRT-'.$offset],
+            ['name' => $name, 'offset_days' => $offset, 'is_active' => true, 'sort_order' => $offset + 1]
+        );
+    }
+
+    /** คนที่ลงทะเบียนไว้แล้ว พร้อมใบติดตามหนึ่งใบที่ครบกำหนดวันนี้ */
+    private function member(string $code, string $phone, ?string $lineId = null, ?string $due = null): FollowUpRound
+    {
+        $template = $this->template();
+
+        $participant = Participant::create([
+            'code' => $code, 'person_code' => $code,
+            'name' => 'ผู้ร่วม '.$code, 'phone' => $phone, 'line_user_id' => $lineId,
+        ]);
+
+        $profile = CohortProfile::create([
+            'participant_id' => $participant->id,
+            'cohort_code' => 'CHT-'.$code,
+            'entry_date' => now()->toDateString(),
+        ]);
+
+        return FollowUpRound::create([
+            'cohort_profile_id' => $profile->id,
+            'template_id' => $template->id,
+            'name' => $template->name,
+            'offset_days' => 0,
+            'due_date' => $due ?? now()->toDateString(),
+        ]);
+    }
+
+    private function healthForm(): Form
+    {
+        $form = Form::firstOrCreate(
+            ['code' => 'FRM-HEALTH'],
+            ['name' => 'แบบติดตามสุขภาพ', 'type' => Form::TYPE_HEALTH_FOLLOW_UP, 'status' => Form::STATUS_ACTIVE]
+        );
+
+        Question::firstOrCreate(
+            ['form_id' => $form->id, 'sort_order' => 1],
+            ['question_type' => 'rating', 'text' => 'สุขภาพโดยรวมของคุณตอนนี้', 'is_required' => true]
+        );
+
+        Question::firstOrCreate(
+            ['form_id' => $form->id, 'sort_order' => 2],
+            ['question_type' => 'text', 'text' => 'สิ่งที่เปลี่ยนไป', 'is_required' => false]
+        );
+
+        return $form->fresh('questions');
+    }
+
+    /**
+     * ยืนยันชื่อจริงต่อจากการกรอกเบอร์
+     *
+     * เบอร์อย่างเดียวเข้าไม่ได้แล้ว — ทุกเบอร์ที่เจอในฐานต้องผ่านหน้ายืนยันชื่อก่อนเสมอ
+     */
+    private function confirmName(?int $participantId = null, ?string $prefix = null): TestResponse
+    {
+        $ids = session('candidateIds', []);
+        $id = $participantId ?? ($ids[0] ?? 0);
+        $name = Participant::find($id)?->name ?? '';
+
+        return $this->post($this->url('/choose'), [
+            'participant_id' => $id,
+            'name_prefix' => $prefix ?? mb_substr($name, 0, 5),
+        ]);
+    }
+
+    /** ยืนยันตัวตนครบสองชั้นในบรรทัดเดียว — ใช้ในเทสต์ที่แค่ต้องการสถานะ "เข้าระบบแล้ว" */
+    private function signInWithPhone(string $phone): TestResponse
+    {
+        $this->post($this->url('/verify'), ['phone' => $phone]);
+
+        return $this->confirmName();
+    }
+
+    /** พาธสาธารณะไม่มี token แล้ว — QR ติดตามสุขภาพมีอันเดียวทั้งโครงการ */
+    private function url(string $suffix = ''): string
+    {
+        $this->qr();
+
+        return '/health'.$suffix;
+    }
+
+    private function area(): Area
+    {
+        return Area::firstOrCreate(['code' => 'AREA-1'], [
+            'name' => 'ชุมชนสวนหลวง',
+            'area_type_id' => $this->option('area_type', 'AT-1', 'ชุมชนเมือง')->id,
+            'area_group_id' => $this->option('area_group', 'AG-1', 'กลุ่มกรุงเทพ')->id,
+            'district_id' => District::firstOrCreate(['province' => 'กรุงเทพมหานคร', 'name' => 'เขตสวนหลวง'])->id,
+            'coordinator_name' => 'ลดา',
+            'coordinator_phone' => '065-256-4455',
+        ]);
+    }
+
+    private function option(string $group, string $code, string $label): Option
+    {
+        return Option::firstOrCreate(
+            ['option_group' => $group, 'code' => $code],
+            ['label' => $label, 'sort_order' => 1, 'is_active' => true]
+        );
+    }
+
+    private function group(): TargetGroup
+    {
+        return TargetGroup::firstOrCreate(
+            ['code' => 'TG-1'],
+            ['name' => 'วัยทำงาน', 'is_active' => true, 'sort_order' => 1]
+        );
+    }
+
+    /** ฟอร์มลงทะเบียนบังคับ ช่วงอายุ และพื้นที่ ด้วย — ทั้งคู่มาจาก master data */
+    private function registerPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'สมชาย ใจดี',
+            'phone' => '0899999999',
+            'gender' => 'female',
+            'area_id' => $this->area()->id,
+            'consent' => 1,
+        ], $overrides);
+    }
+
+    public function test_identify_screen_asks_for_the_phone_only(): void
+    {
+        $this->get($this->url())
+            ->assertOk()
+            ->assertSee('เบอร์โทรศัพท์')
+            ->assertSee('เข้าสู่ระบบประเมินสุขภาวะ')
+            ->assertSee('เข้าสู่ระบบด้วย LINE')
+            /* รายละเอียดโครงการซ่อนหลังตัวกด แต่ต้องอยู่ในหน้านี้เสมอ
+               เพราะเป็นข้อมูลที่ต้องบอกก่อนขอข้อมูลส่วนบุคคล */
+            ->assertSee('เกี่ยวกับโครงการและการใช้ข้อมูล')
+            ->assertSee('ข้อมูลของคุณเป็นความลับ เสนอผลเป็นภาพรวมเท่านั้น')
+            ->assertSee('แบบประเมินชุดนี้ใช้เพื่อรวบรวมข้อมูล')
+            /* หน้านี้เหลือเฉพาะสิ่งที่ต้องกด — ตัวช่วยเหลือย้ายไปหน้าแดชบอร์ด */
+            ->assertDontSee('ผู้ประสานงานโครงการ')
+            ->assertDontSee('เบอร์เดียวใช้ได้หลายคนในครัวเรือน')
+            /* รหัสบุคคลบนใบยินยอมถูกตัดออกจากขั้นยืนยันแล้ว */
+            ->assertDontSee('รหัสบุคคลบนใบยินยอม');
+    }
+
+    public function test_verifying_a_known_phone_asks_for_the_name_before_letting_you_in(): void
+    {
+        $round = $this->member('P0001', '081-234-5678');
+
+        /* เจอเบอร์แล้วยังเข้าไม่ได้ทันที — เบอร์เป็นสิ่งที่คนอื่นรู้ได้ ต้องยืนยันชื่อจริงอีกชั้น */
+        $this->post($this->url('/verify'), ['phone' => '0812345678'])
+            ->assertRedirect($this->url('/choose'));
+
+        /* กรอกเบอร์อย่างเดียวยังเข้าแดชบอร์ดไม่ได้ */
+        $this->get($this->url('/home'))->assertRedirect($this->url());
+
+        $this->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        $this->get($this->url('/choose'))
+            ->assertOk()
+            ->assertSee('ยืนยันตัวตน')
+            ->assertSee('ชื่อจริง 5 ตัวอักษรแรก');
+
+        $this->confirmName()->assertRedirect($this->url('/home'));
+
+        /* หน้าแรกหลังยืนยันคือแดชบอร์ด — เห็นรอบที่ถึงกำหนดกับปุ่มทำได้ทันที */
+        $this->get($this->url('/home'))
+            ->assertOk()
+            ->assertSee('รอบที่ถึงกำหนด')
+            ->assertSee($round->name)
+            ->assertSee('ทำแบบประเมิน');
+
+        $this->get($this->url('/rounds'))
+            ->assertOk()
+            ->assertSee('รอบแบบประเมิน')
+            ->assertSee($round->name)
+            ->assertSee('ถึงกำหนด')
+            ->assertSee('เริ่มทำ');
+    }
+
+    public function test_rounds_screen_cannot_be_opened_without_verifying_first(): void
+    {
+        $this->member('P0001', '081-234-5678');
+
+        $this->get($this->url('/rounds'))->assertRedirect($this->url());
+    }
+
+    public function test_a_phone_shared_by_two_people_asks_which_one_you_are(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->member('P0002', '0812345678');
+
+        $this->post($this->url('/verify'), ['phone' => '081-234-5678'])
+            ->assertRedirect($this->url('/choose'));
+
+        $this->followingRedirects()
+            ->post($this->url('/verify'), ['phone' => '081-234-5678'])
+            ->assertOk()
+            ->assertSee('เลือกชื่อของคุณ')
+            /* ต้องเห็นชื่อแบบปิดบังเท่านั้น — ชื่อเต็มห้ามหลุดออกมาก่อนยืนยันตัวตน
+               ไม่งั้นแค่รู้เบอร์ของบ้านหนึ่งก็อ่านได้ว่ามีใครอยู่ในโครงการบ้าง */
+            ->assertSee('ผู้••• P•••')
+            ->assertDontSee('ผู้ร่วม P0001')
+            ->assertDontSee('ผู้ร่วม P0002');
+    }
+
+    public function test_choosing_a_name_requires_the_first_three_letters_to_match(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->member('P0002', '081-234-5678');
+
+        $this->post($this->url('/verify'), ['phone' => '081-234-5678']);
+
+        $target = Participant::where('person_code', 'P0001')->firstOrFail();
+
+        /* กรอกผิด = ยังไม่ผ่าน และต้องยังไม่ถูกยืนยันตัวตน */
+        $this->post($this->url('/choose'), ['participant_id' => $target->id, 'name_prefix' => 'ผิด'])
+            ->assertSessionHasErrors('name_prefix');
+
+        /* ชื่อคือ "ผู้ร่วม P0001" — พิมพ์ตามที่เห็นหรือตามจำนวนคีย์ที่กด ต้องผ่านทั้งคู่ */
+        $this->post($this->url('/choose'), ['participant_id' => $target->id, 'name_prefix' => 'ผู้'])
+            ->assertRedirect($this->url('/home'));
+
+        $this->get($this->url('/home'))->assertOk()->assertSee('ผู้ร่วม P0001');
+    }
+
+    public function test_choosing_someone_who_was_not_in_the_result_is_rejected(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->member('P0002', '081-234-5678');
+        $outsider = $this->member('P0003', '089-999-9999');
+
+        $this->post($this->url('/verify'), ['phone' => '081-234-5678']);
+
+        /* ยิง id ของคนที่ไม่ได้อยู่ในผลค้นหาของเบอร์นั้น = พยายามสวมสิทธิ์ */
+        $this->post($this->url('/choose'), [
+            'participant_id' => $outsider->cohortProfile->participant_id,
+        ])->assertForbidden();
+    }
+
+    public function test_an_unknown_phone_is_taken_to_self_registration(): void
+    {
+        $this->template();
+
+        $this->post($this->url('/verify'), ['phone' => '0899999999'])
+            ->assertRedirect($this->url('/register'));
+
+        $this->followingRedirects()
+            ->post($this->url('/verify'), ['phone' => '0899999999'])
+            ->assertOk()
+            ->assertSee('ลงทะเบียนกลุ่มตัวอย่าง')
+            /* เติมเบอร์ที่เพิ่งกรอกให้ ไม่ต้องพิมพ์ซ้ำ */
+            ->assertSee('0899999999');
+    }
+
+    public function test_self_registration_creates_a_cohort_member_with_rounds_and_consent(): void
+    {
+        $this->template('ก่อนเข้าร่วม', 0);
+        $this->template('3 เดือน', 90);
+
+        $this->post($this->url('/register'), $this->registerPayload())
+            ->assertRedirect($this->url('/home'));
+
+        $participant = Participant::firstOrFail();
+
+        /* รหัสรูปแบบเดียวกับที่แอดมินเพิ่มจากหลังบ้าน — ตัวออกรหัสตัวเดียวกัน */
+        $this->assertSame('P0001', $participant->person_code);
+        $this->assertSame('089-999-9999', $participant->phone);
+
+        /* เพศกับพื้นที่ถูกบันทึกจริง ไม่ได้ปล่อยว่างให้เจ้าหน้าที่มาตามเก็บทีหลัง */
+        $this->assertSame('female', $participant->gender);
+        $this->assertSame($this->area()->id, $participant->area_id);
+
+        $this->assertSame(
+            ['ก่อนเข้าร่วม', '3 เดือน'],
+            $participant->cohortProfile->rounds->sortBy('offset_days')->pluck('name')->all()
+        );
+
+        $this->assertDatabaseHas('ptp_consents', [
+            'participant_id' => $participant->id,
+            'status' => 'ยินยอม',
+            'recorded_via' => 'self_qr',
+        ]);
+
+        $this->followingRedirects()->get($this->url('/home'))
+            ->assertOk()
+            ->assertSee('สมชาย ใจดี')
+            ->assertSee('ชุมชนสวนหลวง');
+    }
+
+    public function test_dashboard_shows_the_due_round_progress_and_coordinator(): void
+    {
+        $this->template('ก่อนเข้าร่วม', 0);
+        $this->post($this->url('/register'), $this->registerPayload());
+
+        $this->get($this->url('/home'))
+            ->assertOk()
+            ->assertSee('รอบที่ถึงกำหนด')
+            ->assertSee('รอบที่ 1 · ก่อนเข้าร่วม')
+            ->assertSee('ทำแบบประเมิน')
+            ->assertSee('0/1')
+            ->assertSee('รอบที่ทำแล้ว')
+            ->assertSee('แจ้งเตือนรอบถัดไปผ่าน LINE')
+            ->assertSee('ทำแทนคนอื่น')
+            /* คำชี้แจงการใช้ข้อมูลอยู่ที่หน้าเข้าสู่ระบบเท่านั้น หน้าหลักเหลือเฉพาะสิ่งที่ต้องทำ */
+            ->assertDontSee('ข้อมูลของคุณเป็นความลับ')
+            ->assertDontSee('อ่านคำชี้แจง')
+            /* ชื่อโครงการไม่ต้องแสดงในหน้านี้ — อ่านได้จากหน้าเข้าสู่ระบบ */
+            ->assertDontSee('โครงการพัฒนาพื้นที่ต้นแบบ');
+    }
+
+    /** ปุ่มชวนเชื่อม LINE เป็นของคนที่ยังไม่เชื่อมเท่านั้น — คนที่เชื่อมแล้วเห็นแล้วสับสน */
+    public function test_the_link_line_button_is_only_for_people_who_have_not_linked_yet(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->signInWithPhone('0812345678');
+
+        $this->get($this->url('/home'))->assertOk()->assertSee('เชื่อมต่อ LINE');
+
+        $this->post($this->url('/sign-out'));
+
+        $this->member('P0002', '081-234-5679', 'U-line-2');
+        $this->signInWithPhone('0812345679');
+
+        $this->get($this->url('/home'))->assertOk()->assertDontSee('เชื่อมต่อ LINE');
+    }
+
+    public function test_notification_switch_belongs_to_the_person_and_can_be_turned_off(): void
+    {
+        $round = $this->member('P0001', '081-234-5678', 'U-line-1');
+        $participant = $round->cohortProfile->participant;
+
+        $this->signInWithPhone('0812345678');
+
+        $this->assertTrue($participant->fresh()->line_notify, 'ค่าเริ่มต้นต้องเปิด');
+
+        $this->post($this->url('/notify'));
+        $this->assertFalse($participant->fresh()->line_notify);
+
+        $this->post($this->url('/notify'));
+        $this->assertTrue($participant->fresh()->line_notify);
+    }
+
+    public function test_self_registration_requires_name_phone_and_consent(): void
+    {
+        $this->template();
+
+        $this->post($this->url('/register'), [])
+            ->assertSessionHasErrors(['name', 'phone', 'gender', 'area_id', 'consent']);
+
+        $this->assertSame(0, Participant::count());
+    }
+
+    public function test_self_registration_refuses_a_phone_that_already_exists(): void
+    {
+        $this->member('P0001', '081-234-5678');
+
+        $this->post($this->url('/register'), $this->registerPayload(['name' => 'คนใหม่', 'phone' => '0812345678']))
+            ->assertRedirect($this->url())
+            ->assertSessionHasErrors('phone');
+
+        $this->assertSame(1, Participant::count());
+    }
+
+    public function test_answering_the_survey_records_the_answers_and_closes_the_round(): void
+    {
+        $form = $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678');
+        $rating = $form->questions->firstWhere('question_type', 'rating');
+        $text = $form->questions->firstWhere('question_type', 'text');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->get($this->url('/rounds/'.$round->id.'/survey'))
+            ->assertOk()
+            ->assertSee($round->name)
+            ->assertSee('สุขภาพโดยรวมของคุณตอนนี้');
+
+        $this->post($this->url('/rounds/'.$round->id.'/survey'), [
+            'answer_'.$rating->id => 4,
+            'answer_'.$text->id => 'กินผักมากขึ้น',
+        ])->assertRedirect($this->url('/rounds/'.$round->id.'/done'));
+
+        /* หน้าสรุปต้องบอกว่าตอบไปกี่ข้อและครบไปกี่รอบแล้ว */
+        $this->get($this->url('/rounds/'.$round->id.'/done'))
+            ->assertOk()
+            ->assertSee('ส่งแบบประเมินแล้ว')
+            ->assertSee('ข้อที่ตอบ');
+
+        $this->assertNotNull($round->fresh()->answered_at, 'ใบติดตามต้องถูกปิดว่าตอบแล้ว');
+
+        $response = SurveyResponse::where('cohort_round_id', $round->id)->firstOrFail();
+        $this->assertSame($form->id, $response->form_id);
+
+        $this->assertDatabaseHas('evl_answers', [
+            'response_type' => 'survey', 'response_id' => $response->id,
+            'question_id' => $rating->id, 'score' => 4,
+        ]);
+        $this->assertDatabaseHas('evl_answers', [
+            'response_type' => 'survey', 'response_id' => $response->id,
+            'question_id' => $text->id, 'text_value' => 'กินผักมากขึ้น',
+        ]);
+    }
+
+    /**
+     * เคสจริงที่พัง — คนที่มีรอบค้างมากกว่าหนึ่งใบส่งแบบประเมินไม่ได้เลย
+     *
+     * ตัวกัน lazy loading จะติดอาวุธก็ต่อเมื่อ hydrate ได้โมเดลมากกว่าหนึ่งตัว
+     * เทสต์เดิมมีใบเดียวจึงผ่านตลอดทั้งที่ของจริงพัง — เทสต์นี้ต้องมีสองใบเสมอ
+     */
+    public function test_someone_with_more_than_one_due_round_can_still_submit(): void
+    {
+        $form = $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678');
+        $rating = $form->questions->firstWhere('question_type', 'rating');
+
+        /* ใบที่สองของคนเดียวกัน ครบกำหนดเหมือนกัน — offset ต้องต่างกันเพราะติด unique */
+        $second = $this->template('ติดตามครั้งที่สอง', 30);
+        FollowUpRound::create([
+            'cohort_profile_id' => $round->cohort_profile_id,
+            'template_id' => $second->id,
+            'name' => $second->name,
+            'offset_days' => 30,
+            'due_date' => now()->toDateString(),
+        ]);
+
+        $this->signInWithPhone('0812345678');
+
+        $this->post($this->url('/rounds/'.$round->id.'/survey'), ['answer_'.$rating->id => 3])
+            ->assertRedirect($this->url('/rounds/'.$round->id.'/done'));
+
+        $this->assertNotNull($round->fresh()->answered_at);
+    }
+
+    public function test_a_required_question_left_blank_is_rejected(): void
+    {
+        $form = $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->post($this->url('/rounds/'.$round->id.'/survey'), [
+            'answer_'.$form->questions->firstWhere('question_type', 'text')->id => 'ตอบแต่ข้อไม่บังคับ',
+        ])->assertSessionHasErrors();
+
+        $this->assertNull($round->fresh()->answered_at);
+        $this->assertSame(0, SurveyResponse::count());
+    }
+
+    public function test_a_round_that_is_already_answered_disappears_and_cannot_be_answered_again(): void
+    {
+        $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678');
+
+        $this->signInWithPhone('0812345678');
+        $round->update(['answered_at' => now()]);
+
+        /* รอบที่ตอบแล้วยังอยู่ในไทม์ไลน์ แต่เปลี่ยนเป็นป้าย "ทำแล้ว" กดทำซ้ำไม่ได้ */
+        $this->get($this->url('/rounds'))
+            ->assertOk()
+            ->assertSee('ทำแล้ว')
+            ->assertDontSee('เริ่มทำ');
+
+        $this->get($this->url('/rounds/'.$round->id.'/survey'))->assertNotFound();
+    }
+
+    public function test_a_round_belonging_to_someone_else_cannot_be_answered(): void
+    {
+        $this->healthForm();
+        $mine = $this->member('P0001', '081-234-5678');
+        $theirs = $this->member('P0002', '089-999-9999');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->get($this->url('/rounds/'.$theirs->id.'/survey'))->assertNotFound();
+        $this->assertNotNull($mine->fresh());
+    }
+
+    public function test_a_round_that_is_not_open_yet_cannot_be_answered(): void
+    {
+        $this->healthForm();
+        $round = $this->member('P0001', '081-234-5678', null, now()->addYear()->toDateString());
+
+        $this->signInWithPhone('0812345678');
+
+        /* รอบที่ยังไม่เปิดต้องเห็นได้ว่ามีอยู่ แต่กดทำไม่ได้ */
+        $this->get($this->url('/rounds'))
+            ->assertOk()
+            ->assertSee('ยังไม่เปิด')
+            ->assertDontSee('เริ่มทำ');
+
+        $this->get($this->url('/rounds/'.$round->id.'/survey'))->assertNotFound();
+    }
+
+    public function test_signing_out_clears_the_verified_identity(): void
+    {
+        $this->member('P0001', '081-234-5678');
+
+        $this->signInWithPhone('0812345678');
+        $this->post($this->url('/sign-out'))->assertRedirect($this->url());
+
+        $this->get($this->url('/rounds'))->assertRedirect($this->url());
+    }
+
+    public function test_scanning_again_after_verifying_skips_straight_to_the_rounds(): void
+    {
+        $this->member('P0001', '081-234-5678');
+
+        $this->signInWithPhone('0812345678');
+
+        /* เคยยืนยันแล้วในเครื่องนี้ ไม่ต้องกรอกเบอร์ซ้ำทุกครั้งที่สแกน */
+        $this->get($this->url())->assertRedirect($this->url('/home'));
+    }
+
+    public function test_a_line_account_already_linked_signs_in_without_typing_a_phone(): void
+    {
+        $round = $this->member('P0001', '081-234-5678', 'U-line-1');
+
+        $this->withSession(['line_profile' => ['userId' => 'U-line-1', 'name' => 'สมชาย']])
+            ->get($this->url('/line/return'))
+            ->assertRedirect($this->url('/home'));
+
+        $this->withSession([
+            'line_profile' => ['userId' => 'U-line-1', 'name' => 'สมชาย'],
+            PublicTrackingRoundQrController::SESSION_KEY => ['id' => $round->cohortProfile->participant_id],
+        ])->get($this->url('/rounds'))->assertOk()->assertSee($round->name);
+    }
+
+    public function test_a_line_account_not_linked_yet_is_asked_to_confirm_the_phone_first(): void
+    {
+        $this->template();
+
+        /* พาไปยืนยันเบอร์ ไม่ใช่ผลักไปลงทะเบียนใหม่ — คนที่เคยลงทะเบียนด้วยเบอร์ไว้แล้ว
+           จะกรอกเบอร์เดิมแล้วโดนปฏิเสธวนอยู่อย่างนั้น ผูก LINE ไม่ได้เลย */
+        $this->withSession(['line_profile' => ['userId' => 'U-new', 'name' => 'คนใหม่']])
+            ->get($this->url('/line/return'))
+            ->assertRedirect($this->url());
+
+        $this->withSession(['line_profile' => ['userId' => 'U-new', 'name' => 'คนใหม่']])
+            ->followingRedirects()
+            ->get($this->url('/line/return'))
+            ->assertOk()
+            ->assertSee('เชื่อม LINE กับบัญชีของคุณ');
+    }
+
+    public function test_an_existing_phone_gets_its_line_linked_after_confirming_the_phone(): void
+    {
+        $round = $this->member('P0001', '081-234-5678');
+        $participant = $round->cohortProfile->participant;
+
+        $this->assertNull($participant->line_user_id);
+
+        /* เข้าด้วย LINE → ยังไม่มีใครผูก → ยืนยันเบอร์ → ระบบผูกให้เอง */
+        $this->withSession(['line_profile' => ['userId' => 'U-new', 'name' => 'สมชาย']])
+            ->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        $this->confirmName()->assertRedirect($this->url('/home'));
+
+        $this->assertSame('U-new', $participant->fresh()->line_user_id);
+    }
+
+    public function test_linking_never_takes_over_a_line_account_that_belongs_to_someone_else(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $other = $this->member('P0002', '089-999-9999', 'U-taken');
+
+        /* บัญชี LINE นี้เป็นของคนอื่นอยู่แล้ว — ห้ามย้ายมาผูกกับคนที่เพิ่งยืนยันเบอร์
+           ไม่งั้นใครที่รู้เบอร์ของคนอื่นก็ดึงปลายทางแจ้งเตือนมาเข้าตัวเองได้ */
+        $this->withSession(['line_profile' => ['userId' => 'U-taken', 'name' => 'ใครก็ไม่รู้']])
+            ->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        $this->confirmName()->assertRedirect($this->url('/home'));
+
+        $this->assertNull(Participant::where('person_code', 'P0001')->firstOrFail()->line_user_id);
+        $this->assertSame('U-taken', $other->cohortProfile->participant->fresh()->line_user_id);
+    }
+
+    public function test_linking_never_replaces_a_line_account_the_person_already_has(): void
+    {
+        $round = $this->member('P0001', '081-234-5678', 'U-original');
+
+        /* เจ้าตัวผูกไว้แล้วด้วยบัญชีหนึ่ง มีคนเข้าด้วยอีกบัญชีแล้วยืนยันเบอร์เดียวกัน
+           ต้องไม่เปลี่ยนปลายทางแจ้งเตือนให้เงียบ ๆ — เรื่องนี้ต้องให้เจ้าหน้าที่ตรวจ */
+        $this->withSession(['line_profile' => ['userId' => 'U-second', 'name' => 'อีกเครื่อง']])
+            ->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        $this->confirmName()->assertRedirect($this->url('/home'));
+
+        $this->assertSame('U-original', $round->cohortProfile->participant->fresh()->line_user_id);
+    }
+
+    public function test_registering_while_signed_in_with_line_links_the_account(): void
+    {
+        $this->template();
+
+        $this->withSession(['line_profile' => ['userId' => 'U-new', 'name' => 'คนใหม่']])
+            ->post($this->url('/register'), $this->registerPayload(['name' => 'คนใหม่']))
+            ->assertRedirect($this->url('/home'));
+
+        $this->assertSame('U-new', Participant::firstOrFail()->line_user_id);
+    }
+
+    public function test_filling_in_for_someone_else_records_the_answers_under_their_name(): void
+    {
+        $form = $this->healthForm();
+        $rating = $form->questions->firstWhere('question_type', 'rating');
+        $mine = $this->member('P0001', '081-234-5678');
+        $theirs = $this->member('P0002', '089-999-9999');
+
+        $actor = $mine->cohortProfile->participant;
+        $subject = $theirs->cohortProfile->participant;
+
+        $this->signInWithPhone('0812345678');
+
+        /* ต้องยืนยันสองชั้น เบอร์ + ชื่อจริง 3 ตัวแรก ไม่งั้นกรอกลงระเบียนผิดคน */
+        $this->post($this->url('/proxy'), ['phone' => '0899999999', 'name_prefix' => 'ผิด'])
+            ->assertSessionHasErrors('phone');
+
+        $this->post($this->url('/proxy'), ['phone' => '0899999999', 'name_prefix' => 'ผู้ร่'])
+            ->assertRedirect($this->url('/rounds'));
+
+        /* ป้ายกรอกแทนต้องค้างอยู่ทุกหน้า ไม่งั้นเผลอคิดว่าตอบของตัวเอง */
+        $this->get($this->url('/rounds'))->assertOk()->assertSee('กำลังกรอกแทน '.$subject->name);
+        $this->get($this->url('/rounds/'.$theirs->id.'/survey'))->assertOk()->assertSee('กำลังกรอกแทน');
+
+        $this->post($this->url('/rounds/'.$theirs->id.'/survey'), ['answer_'.$rating->id => 3])
+            ->assertRedirect($this->url('/rounds/'.$theirs->id.'/done'));
+
+        /* คำตอบลงระเบียนของผู้ถูกประเมิน และบันทึกว่าใครเป็นคนกรอก */
+        $this->assertNotNull($theirs->fresh()->answered_at);
+        $this->assertDatabaseHas('evl_survey_responses', [
+            'cohort_round_id' => $theirs->id,
+            'participant_id' => $subject->id,
+            'submitted_by_participant_id' => $actor->id,
+        ]);
+
+        /* รอบของผู้กรอกต้องไม่ถูกนับเพิ่ม */
+        $this->assertNull($mine->fresh()->answered_at);
+    }
+
+    public function test_stopping_proxy_returns_to_your_own_dashboard(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->member('P0002', '089-999-9999');
+
+        $this->signInWithPhone('0812345678');
+        $this->post($this->url('/proxy'), ['phone' => '0899999999', 'name_prefix' => 'ผู้ร่']);
+
+        $this->post($this->url('/proxy/stop'))->assertRedirect($this->url('/home'));
+
+        $this->get($this->url('/home'))->assertOk()->assertSee('ผู้ร่วม P0001');
+    }
+
+    public function test_proxy_requires_being_signed_in_first(): void
+    {
+        $this->member('P0002', '089-999-9999');
+
+        $this->get($this->url('/proxy'))->assertRedirect($this->url());
+    }
+
+    public function test_an_inactive_qr_is_refused(): void
+    {
+        $this->qr()->update(['is_active' => false]);
+
+        $this->get($this->url())->assertStatus(410);
+    }
+}
