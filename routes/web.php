@@ -34,7 +34,8 @@ use Illuminate\Support\Facades\Route;
 | ซึ่งถูกย้ายออกจาก public/ มาเสิร์ฟผ่าน LegacyPageController เพื่อให้ผ่านการตรวจสิทธิ์ก่อนเสมอ
 */
 
-Route::redirect('/', '/home.html');
+Route::get('/', [PublicActivityController::class, 'page']);
+Route::redirect('/home.html', '/');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
