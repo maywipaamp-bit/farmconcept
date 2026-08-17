@@ -72,16 +72,22 @@ class PublicActivityController extends Controller
                 ->with(['questions.options']),
         ]);
 
-        /* แบบประเมินย้ายไปหน้าของตัวเองแล้ว — ลิงก์เดิม ?action=post-survey ต้องยังใช้ได้
-           (QR ที่พิมพ์แจกไปแล้วชี้มาที่นี่ผ่าน /s/{token} เรียกคืนไม่ได้) */
-        if ($request->query('action') === 'post-survey') {
-            return redirect()->route('public.activities.survey', $activity->code);
+        /* Check-in และแบบประเมินย้ายไปหน้าของตัวเองแล้ว — ลิงก์เดิมต้องยังใช้ได้
+           (QR ที่พิมพ์แจกไปแล้วชี้มาที่นี่ผ่าน /c/{token} และ /s/{token} เรียกคืนไม่ได้) */
+        $moved = [
+            'checkin' => 'public.activities.checkin',
+            'post-survey' => 'public.activities.survey',
+        ];
+
+        $target = $moved[$request->query('action')] ?? null;
+
+        if ($target) {
+            return redirect()->route($target, $activity->code);
         }
 
         $registrationForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'registration'
             && $form->type === Form::TYPE_REGISTRATION);
         $canRegister = $activity->acceptsRegistration() && $registrationForm !== null;
-        $checkinRequested = $request->query('action') === 'checkin';
 
         return view('public.activities.show', [
             'activity' => $this->present($activity),
@@ -89,12 +95,6 @@ class PublicActivityController extends Controller
                 'enabled' => $canRegister,
                 'closed' => $canRegister ? null : $this->registrationClosedReason($activity, $registrationForm),
                 'registerUrl' => route('public.activities.register', $activity->code),
-            ],
-            'checkin' => [
-                'requested' => $checkinRequested,
-                'enabled' => $checkinRequested && $activity->acceptsCheckin(),
-                'lookupUrl' => route('public.activities.checkin.lookup', $activity->code),
-                'storeUrl' => route('public.activities.checkin.store', $activity->code),
             ],
         ]);
     }

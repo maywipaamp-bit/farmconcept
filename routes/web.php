@@ -83,6 +83,12 @@ Route::post('/activities/{activity}/registration', [PublicRegistrationController
     ->middleware('throttle:10,1')
     ->name('public.activities.registration.store');
 
+/* หน้า Check-in — แยกจากหน้ารายละเอียด มีหัวกิจกรรมของตัวเอง เหมือนหน้าแบบประเมิน
+   URI เดียวกับ endpoint บันทึกด้านล่างได้ เพราะคนละ verb (GET เปิดหน้า · POST บันทึก) */
+Route::get('/activities/{activity}/checkin', [PublicCheckinController::class, 'page'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->name('public.activities.checkin');
+
 Route::post('/activities/{activity}/checkin/lookup', [PublicCheckinController::class, 'lookup'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->middleware('throttle:30,1')

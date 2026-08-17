@@ -366,7 +366,7 @@ class ActivityController extends Controller
            ไม่มี QR ก็ยังมีลิงก์หน้า Check-in สาธารณะตรง ๆ ให้เปิดได้ */
         $checkinQr = collect($this->qrPayload($activity))->firstWhere('purpose', 'checkin');
         $checkinUrl = $checkinQr['url'] ?? ($activity->requires_checkin
-            ? route('public.activities.show', ['activity' => $activity->code, 'action' => 'checkin'])
+            ? route('public.activities.checkin', $activity->code)
             : null);
 
         return view('admin.activities.checkins', [

@@ -46,9 +46,14 @@ class PublicQrController extends Controller
             ]);
         }
 
-        /* QR แบบประเมินพาไปหน้าแบบประเมินของตัวเอง — แยกจากหน้ารายละเอียดกิจกรรม */
-        if ($action === 'post-survey') {
-            return redirect()->route('public.activities.survey', [
+        /* QR Check-in และ QR แบบประเมินพาไปหน้าของตัวเอง — แยกจากหน้ารายละเอียดกิจกรรม */
+        $ownPage = [
+            'checkin' => 'public.activities.checkin',
+            'post-survey' => 'public.activities.survey',
+        ];
+
+        if (isset($ownPage[$action])) {
+            return redirect()->route($ownPage[$action], [
                 'activity' => $qr->activity->code,
                 'qr' => $qr->token,
             ]);

@@ -59,53 +59,16 @@
                 </div>
             @endif
 
-            @if(!$checkin['requested'] && $registration['enabled'])
+            @if($registration['enabled'])
                 <a class="registration-cta" href="{{ $registration['registerUrl'] }}">ลงทะเบียนเข้าร่วม</a>
             @endif
         </div>
     </article>
 
-    {{-- แบบประเมินหลังกิจกรรมย้ายไปหน้าของตัวเองแล้ว (public.activities.survey)
-         ลิงก์เดิม ?action=post-survey ถูก redirect จากคอนโทรลเลอร์ --}}
-    @if($checkin['requested'] && $checkin['enabled'])
-        <section class="registration-card checkin-card" id="checkin-form">
-            <div class="registration-heading">
-                <span class="registration-step">1</span>
-                <div>
-                    <h2>ยืนยันเบอร์โทรศัพท์เพื่อ Check-in</h2>
-                    <p>ใช้เบอร์เดียวกับที่ลงทะเบียน แล้วเลือกรายชื่อผู้เข้าร่วม</p>
-                </div>
-            </div>
-
-            <form id="public-checkin-form" novalidate>
-                @csrf
-                <div class="registration-field">
-                    <label for="checkin-phone">เบอร์โทรศัพท์ <span>*</span></label>
-                    <div class="registration-phone-row">
-                        <input id="checkin-phone" name="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="08X-XXX-XXXX" required>
-                        <button type="button" id="checkin-lookup">ค้นหารายชื่อ</button>
-                    </div>
-                    <p class="registration-message" id="checkin-message" aria-live="polite"></p>
-                </div>
-
-                <div class="checkin-results" id="checkin-results" hidden>
-                    <div class="registration-heading is-sub">
-                        <span class="registration-step">2</span>
-                        <div>
-                            <h2>เลือกรายชื่อเพื่อ Check-in</h2>
-                            <p>กรณีจองหลายที่นั่ง ระบบจะแสดงรายชื่อทั้งหมดของเบอร์นี้</p>
-                        </div>
-                    </div>
-                    <div class="checkin-name-list" id="checkin-name-list"></div>
-                </div>
-            </form>
-        </section>
-    @elseif($checkin['requested'])
-        <section class="registration-card is-closed">
-            <h2>ยังไม่เปิด Check-in</h2>
-            <p>กิจกรรมนี้ยังไม่อยู่ในช่วง Check-in หรือสิ้นสุดช่วง Check-in แล้ว</p>
-        </section>
-    @elseif(!$registration['enabled'] && $activity['requiresRegistration'])
+    {{-- Check-in และแบบประเมินหลังกิจกรรมย้ายไปหน้าของตัวเองแล้ว
+         (public.activities.checkin · public.activities.survey)
+         ลิงก์เดิม ?action=checkin และ ?action=post-survey ถูก redirect จากคอนโทรลเลอร์ --}}
+    @if(!$registration['enabled'] && $activity['requiresRegistration'])
         {{-- บอกสาเหตุจริงว่าปิดเพราะอะไร ไม่ใช่ข้อความรวมทุกกรณีเหมือนเดิม --}}
         <section class="registration-card is-closed">
             <h2>{{ $registration['closed']['title'] }}</h2>
@@ -148,10 +111,4 @@
             });
         })();
     </script>
-    @if($checkin['requested'] && $checkin['enabled'])
-        <script>
-            window.TFC_PUBLIC_CHECKIN = @json($checkin);
-        </script>
-        <script src="@assetv('assets/js/public-checkin.js')" defer></script>
-    @endif
 @endpush

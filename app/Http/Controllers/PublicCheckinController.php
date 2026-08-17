@@ -7,9 +7,28 @@ use App\Http\Requests\PublicCheckinRequest;
 use App\Models\Activity;
 use App\Services\PublicCheckinService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 
 class PublicCheckinController extends Controller
 {
+    /**
+     * หน้า Check-in — หน้าของตัวเอง ไม่ปนกับหน้ารายละเอียดกิจกรรม
+     * โครงเดียวกับหน้าแบบประเมิน (PublicPostSurveyController::page)
+     */
+    public function page(string $activity): View
+    {
+        $activity = Activity::forPublicListing()
+            ->where('code', $activity)
+            ->firstOrFail();
+
+        return view('public.activities.checkin', [
+            'activity' => $activity,
+            'enabled' => $activity->acceptsCheckin(),
+            'lookupUrl' => route('public.activities.checkin.lookup', $activity->code),
+            'storeUrl' => route('public.activities.checkin.store', $activity->code),
+        ]);
+    }
+
     public function lookup(
         PublicCheckinLookupRequest $request,
         Activity $activity,
