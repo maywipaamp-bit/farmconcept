@@ -139,7 +139,7 @@
 
   var form = {
     name: '', formId: FORMS.length ? FORMS[0].value : '',
-    from: TODAY, to: TODAY, targets: [], msg: DEFAULT_MSG
+    from: TODAY, to: TODAY, answerDue: '', targets: [], msg: DEFAULT_MSG
   };
 
   var search = {
@@ -171,7 +171,12 @@
           (String(f.value) === String(form.formId) ? ' selected' : '') + '>' + esc(f.label) + '</option>';
       }).join('') + '</select>') +
       field('ครบกำหนดตั้งแต่', true, '<input type="date" class="input" id="rc-from" value="' + esc(form.from) + '" lang="th-TH">') +
-      field('ถึงวันที่', true, '<input type="date" class="input" id="rc-to" value="' + esc(form.to) + '" lang="th-TH">');
+      field('ถึงวันที่', true, '<input type="date" class="input" id="rc-to" value="' + esc(form.to) + '" lang="th-TH">') +
+      /* เส้นตายการตอบของทั้งรอบ — คนละอย่างกับสองช่องบน ซึ่งเป็นช่วงที่ใช้กรองว่าใครเข้ารอบนี้
+         เว้นว่างได้ ระบบจะใช้วันครบกำหนดของใบรายคนแทน */
+      field('วันสุดท้ายที่ตอบได้', false,
+        '<input type="date" class="input" id="rc-answer-due" value="' + esc(form.answerDue) + '" lang="th-TH" min="' + esc(form.to) + '">' +
+        '<span class="co-field-hint">เว้นว่างได้ — ไม่กำหนดจะใช้วันครบกำหนดของแต่ละคน</span>');
   }
 
   function renderTargets() {
@@ -334,7 +339,11 @@
 
   /* ---------- ข้อความแจ้งเตือน ---------- */
   function sampleMember() {
-    return search.rows[0] || { name: 'สมชาย ใจดี', round: 'ติดตาม 3 เดือน', due: TODAY };
+    var p = search.rows[0] || { name: 'สมชาย ใจดี', round: 'ติดตาม 3 เดือน', due: TODAY };
+
+    /* วันสุดท้ายที่ตอบได้ของรอบมาก่อนวันครบกำหนดของใบรายคน — กติกาเดียวกับ RoundBatch::answerDueFor()
+       แก้ฝั่งใดฝั่งหนึ่งแล้วพรีวิวจะไม่ตรงกับข้อความที่ส่งจริง */
+    return { name: p.name, round: p.round, due: form.answerDue || p.due };
   }
 
   /* แทนค่าชุดเดียวกับฝั่งเซิร์ฟเวอร์ (TrackingRoundService::fillTemplate)
@@ -410,6 +419,8 @@
         form_id: form.formId,
         due_from: form.from,
         due_to: form.to,
+        /* ส่ง null เมื่อไม่ได้กำหนด — ส่งสตริงว่างไป validation จะตีเป็นค่าที่กรอกผิดรูปแบบ */
+        answer_due_date: form.answerDue || null,
         target_group_ids: form.targets,
         follow_up_round_ids: pickedIds(),
         notification_template: form.msg,
@@ -515,7 +526,8 @@
     var id = e.target.id;
     if (id === 'rc-name') { form.name = e.target.value; return renderBottom(); }
     if (id === 'rc-from') { form.from = e.target.value; return; }
-    if (id === 'rc-to') { form.to = e.target.value; return; }
+    if (id === 'rc-to') { form.to = e.target.value; $('rc-answer-due').min = form.to; return; }
+    if (id === 'rc-answer-due') { form.answerDue = e.target.value; renderMsg(); return; }
     if (id === 'rc-msg') { form.msg = e.target.value; renderMsg(); }
   });
 

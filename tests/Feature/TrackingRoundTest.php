@@ -509,4 +509,56 @@ class TrackingRoundTest extends TestCase
             ['token' => 'abcdefghijklmnopqrstuvwx', 'target_url' => '/h/abcdefghijklmnopqrstuvwx', 'is_active' => true]
         );
     }
+
+    /**
+     * วันสุดท้ายที่ตอบได้ของรอบต้องไปแทนที่วันครบกำหนดของใบรายคนในข้อความแจ้งเตือน
+     *
+     * สองค่านี้ต่างกันจริง — due_from/due_to คือช่วงที่ใช้กรองว่าใครเข้ารอบนี้
+     * ส่วน answer_due_date คือเส้นตายที่ผู้ตอบต้องตอบภายใน
+     */
+    public function test_วันสุดท้ายที่ตอบได้ของรอบมาก่อนวันครบกำหนดรายคน(): void
+    {
+        Http::fake(['api.line.me/*' => Http::response([], 200)]);
+        config(['services.line.messaging_token' => 'test-token']);
+
+        $admin = $this->admin();
+        $this->form();
+        $group = $this->targetGroup('TG-1', 'ผู้สูงอายุ');
+        $round = $this->member('PID-0001', $group, '2026-08-10', 'U-line-1');
+
+        $this->actingAs($admin)->postJson('/admin/tracking-rounds', $this->payload([
+            'follow_up_round_ids' => [$round->id],
+            'answer_due_date' => '2026-09-30',
+            'notify' => true,
+        ]))->assertOk();
+
+        $batch = RoundBatch::firstOrFail();
+        $this->assertSame('2026-09-30', $batch->answer_due_date->toDateString());
+
+        /* ข้อความที่ส่งจริงต้องมีวันของรอบ ไม่ใช่วันครบกำหนดของใบ (10 ส.ค.) */
+        Http::assertSent(function ($request) {
+            return str_contains(json_encode($request->data(), JSON_UNESCAPED_UNICODE), '30 ก.ย. 2569');
+        });
+    }
+
+    public function test_วันสุดท้ายที่ตอบได้ต้องไม่อยู่ก่อนวันครบกำหนดสุดท้ายของรอบ(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/admin/tracking-rounds', $this->payload(['answer_due_date' => '2026-08-01']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('answer_due_date');
+    }
+
+    /** ไม่กำหนดก็ต้องทำงานเหมือนเดิม — รอบเก่าทั้งหมดไม่มีค่านี้ */
+    public function test_ไม่กำหนดวันสุดท้ายที่ตอบได้แล้วใช้วันครบกำหนดรายคนตามเดิม(): void
+    {
+        $this->form();
+        $round = $this->member('PID-0001', $this->targetGroup('TG-1', 'ผู้สูงอายุ'), '2026-08-10');
+
+        $this->actingAs($this->admin())
+            ->postJson('/admin/tracking-rounds', $this->payload(['follow_up_round_ids' => [$round->id]]))
+            ->assertOk();
+
+        $this->assertNull(RoundBatch::firstOrFail()->answer_due_date);
+    }
 }

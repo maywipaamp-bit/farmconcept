@@ -68,7 +68,8 @@
                             </div>
                         </dl>
                     </div>
-                    <a class="registration-cta" href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรม</a>
+                    {{-- เช็กอินเสร็จแล้วไม่มีอะไรให้ทำต่อในหน้ากิจกรรม พากลับหน้าหลักของเว็บเลย --}}
+                    <a class="registration-cta" href="{{ route('public.activities') }}">กลับไปหน้าหลัก</a>
                 </div>
             </form>
         </section>

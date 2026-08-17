@@ -64,6 +64,7 @@
           '<div class="cd-meta">' +
             '<span>ครบกำหนด ' + esc(fmt(batch.from)) + ' – ' + esc(fmt(batch.to)) + '</span>' +
             '<span>' + esc(batch.form) + '</span>' +
+            (batch.answerDue ? '<span>ตอบได้ถึง ' + esc(fmt(batch.answerDue)) + '</span>' : '') +
             '<span>ตอบแล้ว ' + batch.answered + '/' + batch.total + ' คน</span>' +
           '</div>' +
         '</div>' +

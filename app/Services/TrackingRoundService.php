@@ -263,6 +263,8 @@ class TrackingRoundService
                 'name' => $data['name'],
                 'due_from' => $data['due_from'],
                 'due_to' => $data['due_to'],
+                /* ไม่กำหนดก็ปล่อยว่าง — การ์ดแจ้งเตือนจะไปใช้วันครบกำหนดของใบรายคนแทน */
+                'answer_due_date' => $data['answer_due_date'] ?? null,
                 'form_id' => $data['form_id'],
                 'notification_template' => $data['notification_template'] ?: $this->defaultTemplate(),
                 'state' => $notify ? RoundBatch::STATE_RUNNING : RoundBatch::STATE_DRAFT,
@@ -325,14 +327,14 @@ class TrackingRoundService
             return 'noChannel';
         }
 
-        $message = $this->fillTemplate($batch->notification_template, $participant, $member->followUpRound);
-        /* ส่งเป็นการ์ดมีปุ่มกดเสมอ — รอบกับวันครบกำหนดขึ้นบนการ์ดเป็นโครงสร้างอยู่แล้ว
+        $message = $this->fillTemplate($batch->notification_template, $participant, $member->followUpRound, $batch);
+        /* ส่งเป็นการ์ดมีปุ่มกดเสมอ — รอบกับวันสุดท้ายที่ตอบได้ขึ้นบนการ์ดเป็นโครงสร้างอยู่แล้ว
            แอดมินจึงไม่ต้องพะวงว่าลืมใส่ตัวแปรในข้อความ */
         $ok = $this->push->pushSurveyInvite(
             $lineUserId,
             $message,
             $member->followUpRound->name,
-            $this->thaiDate($member->followUpRound->due_date),
+            $this->thaiDate($batch->answerDueFor($member->followUpRound)),
             $this->healthUrl(),
         );
 
@@ -416,13 +418,15 @@ class TrackingRoundService
     }
 
     /** แทนค่าตัวแปรในข้อความ — ชุดตัวแปรอยู่ที่ config('farmconcept.tracking_round.placeholders') */
-    public function fillTemplate(?string $template, Participant $participant, FollowUpRound $round): string
+    public function fillTemplate(?string $template, Participant $participant, FollowUpRound $round, ?RoundBatch $batch = null): string
     {
         return strtr($template ?: $this->defaultTemplate(), [
             '{ชื่อ}' => $participant->name,
             /* ชื่อรอบมาจากใบของคนนั้น ซึ่ง snapshot มาจากหน้าตั้งค่ารอบประเมิน — ไม่ได้เขียนตายไว้ */
             '{รอบ}' => $round->name,
-            '{วันครบกำหนด}' => $this->thaiDate($round->due_date),
+            /* เส้นตายของรอบมาก่อนวันครบกำหนดของใบรายคน ถ้าแอดมินกำหนดไว้
+               รอบเก่าที่ไม่ได้กำหนดยังได้วันเดิมเหมือนก่อนมีคอลัมน์นี้ */
+            '{วันครบกำหนด}' => $this->thaiDate($batch?->answerDueFor($round) ?? $round->due_date),
             '{ลิงก์}' => $this->healthUrl(),
         ]);
     }

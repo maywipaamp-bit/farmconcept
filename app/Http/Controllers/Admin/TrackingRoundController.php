@@ -274,6 +274,8 @@ class TrackingRoundController extends Controller
             'name' => $batch->name,
             'from' => $batch->due_from?->toDateString(),
             'to' => $batch->due_to?->toDateString(),
+            /* เส้นตายการตอบของทั้งรอบ — ว่างได้ แปลว่าใช้วันครบกำหนดของใบรายคน */
+            'answerDue' => $batch->answer_due_date?->toDateString(),
             'form' => $batch->form?->name ?? 'ยังไม่ระบุแบบประเมิน',
             'formId' => $batch->form_id,
             'state' => $batch->displayState(),

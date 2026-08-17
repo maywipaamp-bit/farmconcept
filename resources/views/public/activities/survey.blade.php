@@ -128,7 +128,8 @@
                 <div class="tr-done" id="post-survey-success" hidden role="status">
                     <h2>ส่งแบบประเมินแล้ว</h2>
                     <p>ขอบคุณสำหรับความคิดเห็นของคุณ</p>
-                    <a class="tr-primary-button" href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรม</a>
+                    {{-- ตอบเสร็จแล้วไม่มีอะไรให้ทำต่อในหน้ากิจกรรม พากลับหน้าหลักของเว็บเลย --}}
+                    <a class="tr-primary-button" href="{{ route('public.activities') }}">กลับไปหน้าหลัก</a>
                 </div>
             </form>
         </section>

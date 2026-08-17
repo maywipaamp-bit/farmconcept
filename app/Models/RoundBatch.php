@@ -32,7 +32,18 @@ class RoundBatch extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = ['due_from' => 'date', 'due_to' => 'date'];
+    protected $casts = ['due_from' => 'date', 'due_to' => 'date', 'answer_due_date' => 'date'];
+
+    /**
+     * เส้นตายที่ผู้ตอบต้องตอบภายใน — ของรอบนี้ก่อน ถ้าไม่ได้กำหนดค่อยใช้วันครบกำหนดของใบรายคน
+     *
+     * แยกจาก due_from/due_to ซึ่งเป็นช่วงที่ใช้กรองว่าใครเข้ารอบนี้ ไม่ใช่เส้นตาย
+     * รอบเก่าที่สร้างก่อนมีคอลัมน์นี้จึงยังทำงานเหมือนเดิมโดยไม่ต้องไล่แก้ข้อมูลย้อนหลัง
+     */
+    public function answerDueFor(?FollowUpRound $round): ?\Illuminate\Support\Carbon
+    {
+        return $this->answer_due_date ?? $round?->due_date;
+    }
 
     /** URL อ้างรหัสรอบ ไม่ใช่ id — ลิงก์ที่ส่งต่อกันจึงอ่านออกและไม่เปิดเผยจำนวนรอบทั้งระบบ */
     public function getRouteKeyName(): string

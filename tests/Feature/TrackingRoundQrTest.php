@@ -554,7 +554,8 @@ class TrackingRoundQrTest extends TestCase
             ->assertSee('ขอบคุณในการร่วมตอบแบบสอบถาม')
             ->assertSee('วันที่ส่ง')
             ->assertSee($round->name)
-            ->assertSee('กลับหน้าหลัก');
+            /* ปุ่มท้ายใบยืนยันพากลับหน้าหลักของเว็บ ไม่ใช่แดชบอร์ดของระบบติดตาม */
+            ->assertSee('กลับไปหน้าหลัก');
 
         $this->assertNotNull($round->fresh()->answered_at, 'ใบติดตามต้องถูกปิดว่าตอบแล้ว');
 

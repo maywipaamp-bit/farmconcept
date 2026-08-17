@@ -34,6 +34,9 @@ class TrackingRoundRequest extends FormRequest
             ],
             'due_from' => ['required', 'date'],
             'due_to' => ['required', 'date', 'after_or_equal:due_from'],
+            /* เส้นตายการตอบ — ไม่บังคับ ไม่กำหนดก็ใช้วันครบกำหนดของใบรายคนตามเดิม
+               ต้องไม่อยู่ก่อนวันครบกำหนดสุดท้ายของรอบ ไม่งั้นจะมีคนหมดเวลาตั้งแต่ยังไม่ถึงคิวตัวเอง */
+            'answer_due_date' => ['nullable', 'date', 'after_or_equal:due_to'],
             'target_group_ids' => ['array'],
             'target_group_ids.*' => ['integer', 'exists:mst_target_groups,id'],
 
@@ -56,6 +59,7 @@ class TrackingRoundRequest extends FormRequest
             'form_id' => 'แบบประเมินที่ใช้',
             'due_from' => 'ครบกำหนดตั้งแต่',
             'due_to' => 'ถึงวันที่',
+            'answer_due_date' => 'วันสุดท้ายที่ตอบได้',
             'follow_up_round_ids' => 'รายชื่อผู้ติดตาม',
             'notification_template' => 'ข้อความแจ้งเตือน',
         ];
@@ -72,6 +76,7 @@ class TrackingRoundRequest extends FormRequest
             'form_id.exists' => 'ใช้ได้เฉพาะแบบติดตามสุขภาพที่เปิดใช้งานอยู่',
             'due_from.required' => 'กรุณาระบุวันครบกำหนดเริ่มต้น',
             'due_to.after_or_equal' => 'วันสิ้นสุดต้องไม่อยู่ก่อนวันเริ่มต้น',
+            'answer_due_date.after_or_equal' => 'วันสุดท้ายที่ตอบได้ต้องไม่อยู่ก่อนวันครบกำหนดสุดท้ายของรอบ',
             'follow_up_round_ids.required' => 'กรุณาเลือกรายชื่อผู้ติดตามอย่างน้อยหนึ่งคน',
             'follow_up_round_ids.min' => 'กรุณาเลือกรายชื่อผู้ติดตามอย่างน้อยหนึ่งคน',
         ];
