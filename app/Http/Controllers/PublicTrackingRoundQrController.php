@@ -60,6 +60,10 @@ class PublicTrackingRoundQrController extends Controller
         /* เคยยืนยันตัวตนไว้แล้วในเครื่องนี้ (หรือเพิ่งกลับมาจาก LINE) ก็ข้ามไปหน้ารอบเลย
            ไม่ต้องให้กรอกเบอร์ซ้ำทุกครั้งที่สแกน */
         if ($this->verifiedParticipant($request) !== null) {
+            /* ข้อความผลการเชื่อม LINE ถูก flash มาจาก callback แล้วเด้งต่ออีกหนึ่งจังหวะมาที่นี่
+               ไม่ reflash ไว้ ข้อความจะหมดอายุก่อนถึงแดชบอร์ด ผู้ใช้เลยไม่เห็นเหตุผลอะไรเลย */
+            $request->session()->reflash();
+
             return redirect()->route('public.tracking-round-qr.dashboard');
         }
 

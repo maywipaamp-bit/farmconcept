@@ -955,6 +955,38 @@ body[data-screen="check"] .reg-hero-desc[data-for="check"] { display: block; }
 
 /* ---------- แถบสรุปยอดชำระ ---------- */
 
+/* แถบแจ้งว่ากลับมาแนบสลิปต่อได้ — ใช้โทนยืนยัน ไม่ใช่โทนเตือน เพราะเป็นข่าวดี
+   (ที่นั่งยังอยู่) ไม่ใช่ข้อผิดพลาดที่ต้องแก้ */
+.reg-resume-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-bottom: 14px;
+    padding: 11px 13px;
+    border-radius: 11px;
+    background: var(--reg-primary-soft, #EDF5EA);
+    color: var(--reg-title);
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+
+.reg-resume-note svg { flex: none; margin-top: 1px; color: var(--reg-primary, #6BCB4D); }
+
+.reg-resume-reset {
+    display: inline;
+    margin-left: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--reg-text-label);
+    font-family: inherit;
+    font-size: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.reg-resume-reset:hover { color: var(--reg-title); }
+
 .reg-pay-summary-bar {
     display: flex;
     align-items: center;

@@ -41,6 +41,12 @@
             </div>
         @endif
 
+        {{-- เชื่อม LINE ไม่สำเร็จแล้วถูกพากลับมาที่แดชบอร์ด (คนที่ยืนยันตัวตนไว้แล้ว)
+             ต้องบอกเหตุผลเหมือนกัน ไม่งั้นสวิตช์แจ้งเตือนก็ยังปิดอยู่โดยไม่รู้ว่าทำไม --}}
+        @if(session('lineError'))
+            <div class="tr-notice" role="alert">{{ session('lineError') }}</div>
+        @endif
+
         @if(session('lineLinked'))
             <div class="tr-notice is-success" role="status">เชื่อม LINE เรียบร้อยแล้ว · จะได้รับแจ้งเตือนรอบถัดไปทาง LINE</div>
         @endif

@@ -8,6 +8,13 @@
 
         {{-- กลับมาจาก LINE แต่ยังไม่มีใครผูกบัญชีนี้ — เด้ง popup ให้กรอกเบอร์ทันที
              การผูก LINE คือการให้สิทธิ์เข้าถึงข้อมูลสุขภาพของคนนั้นตลอดไป จะข้ามขั้นยืนยันไม่ได้ --}}
+        {{-- เชื่อม LINE ไม่สำเร็จแล้วถูกพากลับมาหน้านี้ ต้องบอกเหตุผล
+             ไม่งั้นผู้ใช้เห็นแค่หน้าเดิมกลับมาเฉย ๆ แล้วสรุปว่า "กดปุ่มแล้วไม่มีอะไรเกิดขึ้น"
+             รายละเอียดเชิงเทคนิคอยู่ใน storage/logs (LineLoginService เขียน Log::warning ไว้ทุกขั้น) --}}
+        @if(session('lineError'))
+            <div class="tr-error" role="alert">{{ session('lineError') }}</div>
+        @endif
+
         @if(session('linkLine'))
             <dialog class="tr-dialog" id="tr-link-dialog">
                 <form method="POST" action="{{ route('public.tracking-round-qr.verify') }}" class="tr-dialog-body">

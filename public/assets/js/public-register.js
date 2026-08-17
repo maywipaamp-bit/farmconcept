@@ -55,6 +55,7 @@
     const copiedPill = document.getElementById('reg-copied-pill');
     const bankAmount = document.getElementById('reg-bank-amount');
     const resumeNote = document.getElementById('reg-resume-note');
+    const resumeReset = document.getElementById('reg-resume-reset');
     const payFeeLabel = document.getElementById('reg-pay-fee-label');
     const payTotal = document.getElementById('reg-pay-total');
     const slipInput = document.getElementById('reg-slip-input');
@@ -734,6 +735,15 @@
         if (resumeNote) resumeNote.hidden = false;
 
         return true;
+    }
+
+    if (resumeReset) {
+        /* ล้างของค้างแล้วเริ่มใหม่ — โหลดหน้าใหม่แทนการสลับหน้าจอเอง
+           เพราะ state ถูกตั้งเป็น "ลงทะเบียนแล้ว" ไว้ตอนรับช่วงต่อ การล้างทีละตัวเสี่ยงหลงเหลือ */
+        resumeReset.addEventListener('click', function () {
+            clearPending();
+            window.location.reload();
+        });
     }
 
     /* ---------- หน้าจอ 5: ชำระเงิน ---------- */
