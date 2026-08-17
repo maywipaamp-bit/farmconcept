@@ -161,6 +161,37 @@ class TrackingRoundController extends Controller
     }
 
     /**
+     * ส่งแจ้งเตือนให้คนเดียวในรอบนี้
+     *
+     * ส่งซ้ำได้แม้เคยส่งสำเร็จแล้ว ต่างจากการส่งทั้งรอบที่ข้ามคนที่ส่งไปแล้ว
+     * เพราะแอดมินกดปุ่มนี้ทีละคนโดยเห็นสถานะของคนนั้นอยู่ตรงหน้า จึงตั้งใจส่งซ้ำจริง
+     */
+    public function sendNotifyMember(RoundBatch $trackingRound, RoundBatchMember $member): JsonResponse
+    {
+        if ($trackingRound->state === RoundBatch::STATE_CANCELLED) {
+            return response()->json(['message' => 'รอบนี้ถูกยกเลิกแล้ว ส่งแจ้งเตือนไม่ได้'], 422);
+        }
+
+        /* กันยิงรหัสสมาชิกของรอบอื่นเข้ามา — สองค่านี้มาจาก URL ทั้งคู่ */
+        abort_if($member->batch_id !== $trackingRound->id, 404);
+
+        $outcome = $this->rounds->notifyMember($trackingRound, $member);
+
+        $trackingRound->load(['form', 'members.cohortProfile.participant', 'members.followUpRound']);
+
+        return response()->json([
+            'success' => $outcome === 'sent',
+            'message' => match ($outcome) {
+                'sent' => 'ส่งแจ้งเตือนเรียบร้อย',
+                'noChannel' => 'คนนี้ยังไม่ผูก LINE จึงส่งแจ้งเตือนไม่ได้',
+                default => 'ส่งแจ้งเตือนไม่สำเร็จ กรุณาลองใหม่',
+            },
+            'outcome' => $outcome,
+            'data' => $this->toBatchPayload($trackingRound),
+        ]);
+    }
+
+    /**
      * บันทึกผลติดตามนอกระบบของคนที่แจ้งเตือนไม่ได้
      *
      * เขียนลง evl_round_batch_members (offline_*) และเปิดบันทึกในประวัติของคนนั้นด้วย

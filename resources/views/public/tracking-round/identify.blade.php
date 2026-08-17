@@ -60,12 +60,25 @@
         <form method="POST" action="{{ route('public.tracking-round-qr.verify') }}" novalidate>
             @csrf
 
+            {{-- ช่องเดียวรับได้ทั้งเบอร์และอีเมล — อีเมลเป็นทางเลือกสำหรับคนที่ไม่สะดวกใช้เบอร์
+                 ห้ามใส่ inputmode="numeric" / maxlength="10" / pattern ตัวเลขล้วนกลับมา
+                 สามอย่างนั้นบล็อกการพิมพ์อีเมลตั้งแต่แป้นพิมพ์ ทำให้ทางเลือกนี้ใช้ไม่ได้จริง --}}
             <div class="registration-field">
-                <label for="tr-phone">เบอร์โทรศัพท์ <span>*</span></label>
-                <input type="tel" id="tr-phone" name="phone" inputmode="numeric" autocomplete="tel"
-                       placeholder="08x-xxx-xxxx" value="{{ old('phone') }}"
-                       maxlength="10" pattern="[0-9]{10}" required>
+                <label for="tr-phone">เบอร์โทรศัพท์หรืออีเมล <span>*</span></label>
+                <input type="text" id="tr-phone" name="phone" inputmode="email" autocomplete="username"
+                       placeholder="08x-xxx-xxxx หรือ name@email.com" value="{{ old('phone') }}"
+                       maxlength="160" required>
                 @error('phone')<span class="registration-message is-error">{{ $message }}</span>@enderror
+            </div>
+
+            {{-- รหัสบุคคลอยู่หน้าเดียวกับเบอร์ ไม่ต้องกดผ่านสองจอ
+                 เบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ รหัสจึงเป็นตัวชี้ว่ากำลังตอบในนามใคร
+                 เว้นว่างได้ ระบบจะพาไปถามที่หน้าถัดไปแทน สำหรับคนที่จำรหัสไม่ได้ตอนนั้น --}}
+            <div class="registration-field">
+                <label for="tr-person-code">รหัสบุคคล <span>*</span></label>
+                <input type="text" id="tr-person-code" name="person_code" autocomplete="off"
+                       placeholder="เช่น P0001" value="{{ old('person_code') }}" maxlength="6">
+                @error('person_code')<span class="registration-message is-error">{{ $message }}</span>@enderror
             </div>
 
             <button type="submit" class="tr-primary-button">เข้าสู่ระบบ</button>

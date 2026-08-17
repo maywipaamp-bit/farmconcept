@@ -44,6 +44,9 @@ class CohortController extends Controller
             'participant.targetGroup',
             'participant.occupation',
             'participant.ageRange',
+            /* ใบยินยอมบอกว่าระเบียนนี้มาทางไหน (ทำเอง / เจ้าหน้าที่คีย์) — โหลดมาด้วย
+               ไม่งั้นทุกแถวยิง query แยกใบละครั้ง และตัวกัน lazy loading จะฟ้องทันที */
+            'participant.consents',
             'rounds',
         ])
         ->orderByDesc('entry_date')
@@ -221,6 +224,135 @@ class CohortController extends Controller
         ]);
     }
 
+    /**
+     * แก้ไขกลุ่มตัวอย่างที่มีอยู่แล้ว
+     *
+     * รหัสบุคคลกับรหัสกลุ่มตัวอย่างแก้ไม่ได้ — สองค่านี้ถูกพิมพ์ลงใบยินยอมและใช้เข้าระบบไปแล้ว
+     * เปลี่ยนเมื่อไรคนที่ถือกระดาษอยู่ก็เข้าไม่ได้ทันที
+     *
+     * ใบติดตามที่ตอบไปแล้วห้ามแตะ ทั้งวันครบกำหนดและการถอดรอบออก — คำตอบผูกกับใบนั้น
+     * แก้วันที่ย้อนหลังเท่ากับเปลี่ยนความหมายของข้อมูลที่เก็บมาแล้ว
+     */
+    public function update(CohortRequest $request, CohortProfile $cohortProfile): JsonResponse
+    {
+        $validated = $request->validated();
+        $entryDate = Carbon::parse($validated['entry_date'])->startOfDay();
+        $rounds = $request->selectedRounds($entryDate->toDateString());
+
+        $payload = DB::transaction(function () use ($validated, $entryDate, $rounds, $cohortProfile) {
+            $participant = $cohortProfile->participant;
+
+            $participant->update([
+                'name' => $validated['name'],
+                'phone' => $this->formatPhone($validated['phone']),
+                'gender' => $validated['gender'],
+                'age_range_id' => $validated['age_range_id'] ?? null,
+                'occupation_id' => $validated['occupation_id'] ?? null,
+                'area_id' => $validated['area_id'],
+                'target_group_id' => $validated['target_group_id'],
+                'updated_by' => auth()->id(),
+            ]);
+
+            $stopped = ($validated['status'] ?? null) === 'ยุติการติดตาม';
+
+            $cohortProfile->update([
+                'entry_date' => $entryDate,
+                'source_type' => $validated['source_code'],
+                /* เคยยุติแล้วกลับมาติดตามต่อได้ ล้างเหตุผลเดิมทิ้งไปพร้อมกัน
+                   ไม่งั้นเหลือเหตุผลค้างอยู่กับคนที่กลับมาติดตามแล้ว อ่านแล้วเข้าใจผิด */
+                'stopped_at' => $stopped ? ($cohortProfile->stopped_at ?? now()) : null,
+                'stopped_reason' => $stopped ? ($cohortProfile->stopped_reason ?? 'ตั้งค่าตอนแก้ไขกลุ่มตัวอย่าง') : null,
+                'stopped_by' => $stopped ? ($cohortProfile->stopped_by ?? auth()->id()) : null,
+            ]);
+
+            $this->syncRounds($cohortProfile, $rounds);
+
+            $cohortProfile->load([
+                'participant.area', 'participant.targetGroup', 'participant.occupation',
+                'participant.ageRange', 'participant.consents', 'rounds',
+            ]);
+
+            return $this->toMemberPayload($cohortProfile, $this->sourceLabels());
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'แก้ไขกลุ่มตัวอย่างเรียบร้อย',
+            'data' => $payload,
+        ]);
+    }
+
+    /**
+     * ปรับชุดใบติดตามให้ตรงกับที่แอดมินเลือก โดยไม่แตะใบที่ตอบไปแล้ว
+     *
+     * @param  array<int, array{template_id: int, name: string, offset_days: int, due_date: string}>  $rounds
+     */
+    private function syncRounds(CohortProfile $cohortProfile, array $rounds): void
+    {
+        $existing = $cohortProfile->rounds()->get()->keyBy('template_id');
+        $keep = [];
+
+        foreach ($rounds as $round) {
+            $current = $existing->get($round['template_id']);
+            $keep[] = $round['template_id'];
+
+            /* ใบที่ตอบไปแล้วปล่อยไว้เหมือนเดิมทุกอย่าง ไม่ใช่แค่ไม่ลบ */
+            if ($current?->answered_at !== null) {
+                continue;
+            }
+
+            $attributes = [
+                'name' => $round['name'],
+                'offset_days' => $round['offset_days'],
+                'due_date' => $round['due_date'],
+            ];
+
+            $current
+                ? $current->update($attributes)
+                : FollowUpRound::create($attributes + [
+                    'cohort_profile_id' => $cohortProfile->id,
+                    'template_id' => $round['template_id'],
+                ]);
+        }
+
+        $cohortProfile->rounds()
+            ->whereNotIn('template_id', $keep)
+            ->whereNull('answered_at')
+            ->delete();
+    }
+
+    /**
+     * ลบกลุ่มตัวอย่าง — ใช้กับระเบียนที่คีย์ผิดเท่านั้น
+     *
+     * มีคำตอบแล้วลบไม่ได้ ต้องใช้ "ยุติการติดตาม" แทน — คำตอบที่เก็บมาเป็นข้อมูลวิจัย
+     * ลบเจ้าของคำตอบทิ้งแล้วชุดข้อมูลที่เหลือจะอ้างถึงคนที่ไม่มีอยู่
+     */
+    public function destroy(CohortProfile $cohortProfile): JsonResponse
+    {
+        $answered = $cohortProfile->rounds()->whereNotNull('answered_at')->count();
+
+        if ($answered > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ลบไม่ได้ — มีคำตอบแบบประเมินแล้ว '.$answered.' รอบ กรุณาใช้ "ยุติการติดตาม" แทน',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($cohortProfile) {
+            $cohortProfile->rounds()->delete();
+            $cohortProfile->delete();
+
+            /* ผู้เข้าร่วมถูก soft delete ไว้ ไม่ล้างทิ้งจริง — รหัสบุคคลกับเบอร์มี unique index
+               ถ้าลบออกจริงแล้วมีคนใช้รหัสเดิมซ้ำ ประวัติเก่าจะย้ายไปติดคนใหม่โดยไม่มีใครรู้ */
+            $cohortProfile->participant?->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ลบกลุ่มตัวอย่างเรียบร้อย',
+        ]);
+    }
+
     public function show(CohortProfile $cohortProfile): View|JsonResponse
     {
         $cohortProfile->load([
@@ -233,6 +365,7 @@ class CohortController extends Controller
                แต่ยังไม่ระเบิดเพราะไม่มีใครมีบันทึกติดตามเลย ตอนนี้รอบติดตามเขียนบันทึกให้แล้ว
                หน้านี้จึงจะ 500 ทันทีที่เปิดดูคนที่เคยถูกตามไป */
             'participant.notes.createdBy',
+            'participant.consents',
             'rounds.surveyResponse',
         ]);
 
@@ -248,7 +381,102 @@ class CohortController extends Controller
         return view('admin.cohort.detail', [
             'member' => $payload,
             'cohortProfile' => $cohortProfile,
+            'tabs' => $this->detailTabs($cohortProfile),
         ]);
+    }
+
+    /**
+     * ข้อมูลของแท็บใต้หน้ารายละเอียด — ประวัติกิจกรรม · แบบประเมิน · การซื้อสินค้า · การติดตาม
+     *
+     * ทุกแท็บอ่านจากตารางที่มีอยู่แล้ว ไม่มีการเก็บสำเนาไว้ที่โปรไฟล์
+     * สถานะจึงตรงกับต้นทางเสมอ ไม่ต้องมีงาน sync ที่พังเงียบ ๆ ได้
+     *
+     * @return array<string, mixed>
+     */
+    private function detailTabs(CohortProfile $cohortProfile): array
+    {
+        $participant = $cohortProfile->participant;
+
+        $registrations = $participant->registrations()
+            ->with(['activity.program', 'activity.course'])
+            /* กิจกรรมที่ถูกลบไปแล้วไม่ต้องโชว์เป็นแถวว่าง */
+            ->whereHas('activity')
+            ->orderBy('registered_at')
+            ->get();
+
+        $purchases = $participant->purchases()
+            ->with(['items', 'channel', 'createdBy:id,name'])
+            ->orderBy('order_date')
+            ->get();
+
+        $rounds = $cohortProfile->rounds->sortBy('offset_days')->values();
+        $answered = $rounds->whereNotNull('answered_at')->count();
+
+        return [
+            /* ข้อมูลทั่วไปเรียงเป็นคู่ "ป้าย : ค่า" ตามลำดับที่เจ้าหน้าที่อ่านจริง
+               ประกอบใน controller ไม่ใช่ใน view เพราะบางค่าต้องรวมจากหลายที่ (ความยินยอม, ตอบครบ) */
+            'info' => [
+                ['รหัสบุคคล', $participant->person_code ?: '—'],
+                ['ชื่อ–นามสกุล', $participant->name],
+                ['เบอร์โทร', $participant->phone ?: '—'],
+                ['เพศ', $this->genders()[$participant->gender] ?? 'ไม่ระบุ'],
+                ['ช่วงอายุ', $participant->ageBand() ?? 'ไม่ระบุ'],
+                ['อาชีพ', $participant->occupation?->label ?? $participant->occupation_raw ?? 'ไม่ระบุ'],
+                ['พื้นที่', $participant->area?->name ?? 'ไม่ระบุ'],
+                ['กลุ่มเป้าหมาย', $participant->targetGroup?->name ?? 'ไม่ระบุ'],
+                ['แหล่งที่มา', $this->sourceLabels()[$cohortProfile->source_type] ?? 'ไม่ระบุ'],
+                ['วันที่เข้ากลุ่มตัวอย่าง', $cohortProfile->entry_date?->toDateString()],
+                ['ความยินยอม', $this->consentLabel($participant)],
+                ['LINE', filled($participant->line_user_id) ? 'ผูกแล้ว' : 'ยังไม่ผูก'],
+                ['ตอบครบ', $answered.' จาก '.$rounds->count().' รอบ'],
+            ],
+
+            'entryDate' => $cohortProfile->entry_date?->toDateString(),
+
+            /* ช่วงติดตามคำนวณจากใบของคนนั้น ไม่ใช่ค่ากลางของระบบ — วันครบกำหนดของแต่ละคนต่างกัน
+               เจ้าหน้าที่ต้องรู้ว่า "ตอบได้ตั้งแต่วันไหนถึงวันไหน" ไม่ใช่แค่วันครบกำหนดลอย ๆ */
+            'timeline' => $rounds->map(fn (FollowUpRound $r) => [
+                'name' => $r->name,
+                'state' => $cohortProfile->isStopped() ? 'ยุติการติดตาม' : $r->state(),
+                'due' => $r->due_date?->toDateString(),
+                'from' => $r->windowStart()->toDateString(),
+                'to' => $r->windowEnd()->toDateString(),
+                /* รอบแรก (offset 0) ทำในวันที่เข้ากลุ่มเลย ไม่มีช่วงให้รอ จึงไม่ต้องบอกช่วง */
+                'hasWindow' => $r->offset_days !== 0,
+                'answeredAt' => $r->answered_at?->toDateString(),
+            ])->values(),
+
+            'activities' => $registrations->map(fn ($r) => [
+                'date' => $r->activity->start_date,
+                'name' => $r->activity->name,
+                'program' => collect([$r->activity->program?->name, $r->activity->course?->name])
+                    ->filter()->join(' · ') ?: '—',
+                'venue' => $r->activity->organizer ?: '—',
+                /* เช็คอินแล้วคือ "เข้าร่วม" จริง ไม่ใช่แค่ลงชื่อไว้ — สองอย่างนี้ต่างกันในรายงาน */
+                'status' => $r->checked_in_at ? 'เข้าร่วม' : ($r->payment_status ?: 'ลงทะเบียนแล้ว'),
+                'joined' => $r->checked_in_at !== null,
+            ])->values(),
+
+            'purchases' => $purchases->map(fn ($p) => [
+                'date' => $p->order_date,
+                'items' => $p->items->map(fn ($i) => trim($i->product_name.' '.$i->quantity))->join(' · ') ?: '—',
+                'store' => $p->store_name ?: '—',
+                'channel' => $p->channel?->label ?? '—',
+                'status' => $p->status ?: '—',
+                'paid' => $p->status === 'ชำระแล้ว',
+                'amount' => (float) $p->amount,
+                'by' => $p->createdBy?->name ?? 'ระบบ',
+            ])->values(),
+            'purchaseTotal' => (float) $purchases->sum('amount'),
+
+            'notes' => $participant->notes->sortBy('noted_at')->map(fn ($n) => [
+                'at' => $n->noted_at,
+                'source' => $n->source,
+                'kind' => $n->kind,
+                'body' => $n->body,
+                'by' => $n->createdBy?->name ?? 'ระบบอัตโนมัติ',
+            ])->values(),
+        ];
     }
 
     public function stopFollowUp(Request $request, CohortProfile $cohortProfile): JsonResponse
@@ -339,6 +567,41 @@ class CohortController extends Controller
         return Option::group(self::SOURCE_GROUP)->pluck('label', 'code');
     }
 
+    /**
+     * ระเบียนนี้ใครเป็นคนสร้าง — ผู้เข้าร่วมทำเอง หรือเจ้าหน้าที่คีย์ให้
+     *
+     * ใบยินยอมบอกได้ตรงที่สุดเพราะบันทึกไว้ตอนสร้างว่ามาทางไหน (recorded_via)
+     * ไม่มีใบยินยอมค่อยดูว่ามีเจ้าหน้าที่เป็นผู้สร้างไหม — ทำเองผ่าน QR ไม่มีใครล็อกอินอยู่
+     * ไม่มีสัญญาณทั้งคู่ (ข้อมูลเก่าที่นำเข้ามา) ให้ตอบว่าไม่ระบุ ดีกว่าเดาแล้วรายงานผิด
+     */
+    /** ความยินยอม — บอกด้วยว่ามีไฟล์ใบยินยอมแนบไว้ไหม เพราะเป็นหลักฐานที่ต้องหาให้เจอตอนตรวจ */
+    private function consentLabel(Participant $p): string
+    {
+        if ($p->consent_status !== 'ยินยอม') {
+            return $p->consent_status ?: 'ยังไม่ยืนยัน';
+        }
+
+        $consent = $p->relationLoaded('consents')
+            ? $p->consents->sortByDesc('id')->first()
+            : $p->consents()->latest('id')->first();
+
+        return filled($consent?->file_path) ? 'ได้รับแล้ว · มีเอกสารแนบ' : 'ได้รับแล้ว';
+    }
+
+    private function createdViaLabel(Participant $p): string
+    {
+        $via = $p->relationLoaded('consents')
+            ? $p->consents->sortByDesc('id')->first()?->recorded_via
+            : $p->consents()->latest('id')->value('recorded_via');
+
+        return match ($via) {
+            'self_qr' => 'ลงทะเบียนเอง',
+            'registration' => 'ลงทะเบียนกิจกรรม',
+            'admin_cohort' => 'แอดมินสร้าง',
+            default => $p->created_by ? 'แอดมินสร้าง' : 'ไม่ระบุ',
+        };
+    }
+
     private function toMemberPayload(CohortProfile $cp, Collection $sourceLabels): array
     {
         $p = $cp->participant;
@@ -395,6 +658,8 @@ class CohortController extends Controller
             'area' => $p->area?->name ?? 'ไม่ระบุพื้นที่',
             'target' => $p->targetGroup?->name ?? 'ไม่ระบุกลุ่ม',
             'line' => ! empty($p->line_user_id),
+            'email' => $p->email ?: '',
+            'createdVia' => $this->createdViaLabel($p),
             'consent' => $p->consent_status === 'ยินยอม',
             'base' => $cp->entry_date?->toDateString(),
             'entryDate' => $cp->entry_date?->toDateString(),
@@ -408,6 +673,26 @@ class CohortController extends Controller
                ให้คัดลอกได้ตั้งแต่ก่อนกดบันทึก ตอนนั้นยังไม่มี cohort_code */
             'assessmentLink' => self::assessmentLink($p->person_code),
             'rounds' => $roundStates,
+            /* ค่าดิบสำหรับเติมฟอร์มแก้ไข — ช่องอื่นในนี้เป็นข้อความสำหรับแสดงผลแล้ว
+               (เพศเป็น "ชาย" ไม่ใช่ "male") เอากลับเข้า <select> ไม่ได้ */
+            'edit' => [
+                'name' => $p->name,
+                'phone' => preg_replace('/\D+/', '', (string) $p->phone),
+                'gender' => $p->gender,
+                'ageRangeId' => $p->age_range_id,
+                'occupationId' => $p->occupation_id,
+                'areaId' => $p->area_id,
+                'targetGroupId' => $p->target_group_id,
+                'sourceCode' => $cp->source_type,
+                'entryDate' => $cp->entry_date?->toDateString(),
+                'status' => $cp->isStopped() ? 'ยุติการติดตาม' : 'กำลังติดตาม',
+                /* ใบที่ตอบแล้วต้องล็อกไม่ให้ถอดออกหรือแก้วันครบกำหนด — คำตอบผูกกับใบนั้น */
+                'rounds' => $rounds->map(fn (FollowUpRound $r) => [
+                    'templateId' => $r->template_id,
+                    'dueDate' => $r->due_date?->toDateString(),
+                    'answered' => $r->answered_at !== null,
+                ])->values(),
+            ],
         ];
     }
 }

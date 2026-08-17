@@ -46,6 +46,14 @@ class PublicQrController extends Controller
             ]);
         }
 
+        /* QR แบบประเมินพาไปหน้าแบบประเมินของตัวเอง — แยกจากหน้ารายละเอียดกิจกรรม */
+        if ($action === 'post-survey') {
+            return redirect()->route('public.activities.survey', [
+                'activity' => $qr->activity->code,
+                'qr' => $qr->token,
+            ]);
+        }
+
         return redirect()->route('public.activities.show', [
             'activity' => $qr->activity->code,
             'action' => $action,

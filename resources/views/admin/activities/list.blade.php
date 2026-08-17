@@ -11,13 +11,23 @@
   </nav>
   <div class="page-header" id="activity-page-header"></div>
 
-  {{-- โครงมาตรฐานของหน้ารายการ: pill สถานะซ้าย · ช่องค้นหา + ปุ่มตัวกรองขวา --}}
+  {{-- โครงมาตรฐานของหน้ารายการ: pill สถานะซ้าย · ช่องค้นหา + เลือกคอลัมน์ + ปุ่มตัวกรองขวา --}}
   <div class="list-filter-bar">
     <div class="status-pills" id="activity-status-pills"></div>
     <div class="list-filter-tools">
       {{-- ค้นหาพิมพ์แล้วกรองเลย ไม่ต้องกดปุ่ม จึงไม่มีปุ่มค้นหาข้างช่อง --}}
       <input type="search" class="input list-search-input" id="activity-search"
              placeholder="ค้นหากิจกรรม ผู้รับผิดชอบ สถานที่" aria-label="ค้นหากิจกรรม">
+      {{-- เลือกคอลัมน์ที่จะแสดง — จำค่าไว้ใน localStorage แบบเดียวกับตารางในหน้ารายละเอียด --}}
+      <div class="aov-pt-picker">
+        <button type="button" class="btn btn-outline" id="activity-cols-btn" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9.5 4v16M15.5 4v16"/></svg>
+          คอลัมน์
+        </button>
+        <div class="aov-pt-picker-panel" id="activity-cols-panel" hidden>
+          <div class="aov-pt-picker-title">เลือกคอลัมน์ที่แสดง</div>
+        </div>
+      </div>
       <div id="activity-search-popover"></div>
     </div>
   </div>
@@ -96,10 +106,13 @@
     ]
   });
 
-  /* ---------- ชิปกรองตามสถานะ พร้อมจำนวน ---------- */
+  /* ---------- ชิปกรองตามสถานะ พร้อมจำนวน ----------
+     แสดงเฉพาะสถานะที่มีกิจกรรมใช้อยู่จริง บวกกับสถานะที่กำลังกรองอยู่
+     (ถ้าไม่บวกไว้ พอเปลี่ยนสถานะแถวสุดท้ายออกจากกลุ่มที่กรองอยู่ ชิปจะหายไปทั้งที่ยังกรองด้วยค่านั้น) */
   function statusesInUse() {
     return (mock.activityStatuses || []).filter(function (item) {
-      return activities.some(function (a) { return a.status === item.value; });
+      return item.value === state.status
+        || activities.some(function (a) { return a.status === item.value; });
     });
   }
 
@@ -234,14 +247,40 @@
      ไม่ใช่แยกช่องแล้วให้สายตาวิ่งข้ามคอลัมน์
      ตัดคอลัมน์ #, สถานที่ และปรับปรุงล่าสุดออก — ไม่ใช่สิ่งที่ต้องเห็นทุกแถว หาได้จากหน้ารายละเอียด
      จำนวนช่องต้องตรงกับ grid-template ใน components.css เสมอ */
+  /* คอลัมน์ทั้งหมดที่เลือกแสดงได้ — defaultHidden = ปิดไว้ก่อนจนกว่าผู้ใช้จะติ๊กเปิดเอง
+     (ข้อมูลที่ไม่ต้องดูทุกวัน แต่บางครั้งต้องใช้ เช่นตอนตรวจทานหรือทำรายงาน) */
   var TABLE_COLS = [
-    { label: 'กิจกรรม' },
-    { label: 'วันและเวลา' },
-    { label: 'ลงทะเบียน · เช็คอิน · ประเมิน' },
-    { label: 'สถานะ' },
-    { label: 'หน้าเว็บ' },
-    { label: '' }
+    { key: 'name', label: 'กิจกรรม', fixed: true },
+    { key: 'code', label: 'รหัสกิจกรรม', defaultHidden: true },
+    { key: 'type', label: 'ประเภท', defaultHidden: true },
+    { key: 'date', label: 'วันและเวลา' },
+    { key: 'metrics', label: 'ลงทะเบียน · เช็คอิน · ประเมิน', defaultHidden: true },
+    { key: 'instructor', label: 'วิทยากร', defaultHidden: true },
+    { key: 'area', label: 'สถานที่จัด' },
+    { key: 'program', label: 'โปรแกรม', defaultHidden: true },
+    { key: 'format', label: 'รูปแบบ', defaultHidden: true },
+    { key: 'fee', label: 'ค่าเข้าร่วม' },
+    { key: 'status', label: 'สถานะ' },
+    { key: 'web', label: 'หน้าเว็บ' },
+    { key: 'updated', label: 'ปรับปรุงล่าสุด', defaultHidden: true },
+    { key: 'actions', label: '', fixed: true }
   ];
+
+  /* คอลัมน์ที่ผู้ใช้ซ่อนไว้ — เก็บเป็นรายการ key เปิดหน้าใหม่แล้วค่าคงเดิม
+     ต้องอ่านก่อน render ครั้งแรก ไม่งั้นตารางจะกระพริบจากเต็มเป็นซ่อน
+     ยังไม่เคยตั้งค่า = ใช้ชุดเริ่มต้นจาก defaultHidden */
+  var COLS_KEY = 'tfc-activity-list-cols';
+  var hiddenCols = TABLE_COLS.filter(function (c) { return c.defaultHidden; }).map(function (c) { return c.key; });
+  try {
+    var savedCols = localStorage.getItem(COLS_KEY);
+    if (savedCols) hiddenCols = JSON.parse(savedCols);
+  } catch (e) {}
+
+  function visibleCols() {
+    return TABLE_COLS.filter(function (col) {
+      return col.fixed || hiddenCols.indexOf(col.key) === -1;
+    });
+  }
 
   /* ป้ายประเภทหน้าชื่อ — รายการนี้ปนทั้งกิจกรรม อีเวนท์ และข่าวสาร
      ซึ่งมีคอลัมน์ที่ใช้ได้ไม่เท่ากัน (ข่าวสารไม่มีคนลงทะเบียน) ต้องแยกออกจากกันตั้งแต่แรกเห็น */
@@ -290,33 +329,71 @@
     return str.length > maxLen ? str.slice(0, maxLen) + '...' : str;
   }
 
-  function rowHtml(activity) {
-    var schedules = window.TFC.activity.schedules(activity);
-    var timeText = schedules.length && schedules[0].timeStart
-      ? schedules[0].timeStart + '–' + schedules[0].timeEnd + ' น.'
-      : '';
-    var respText = responsible(activity).join(' · ');
-
-    return '<div class="grid-row" data-id="' + activity.id + '">' +
-
+  /* HTML ของแต่ละช่องในแถว แยกตาม key ของคอลัมน์ — ใช้คู่กับ visibleCols()
+     ให้ลำดับและจำนวนช่องตรงกับหัวตารางเสมอ ไม่ว่าผู้ใช้ซ่อนคอลัมน์ไหนไว้ */
+  function cellHtml(key, activity) {
+    /* ช่องกิจกรรมเหลือชื่อกับป้ายประเภทเท่านั้น — วิทยากรแยกเป็นคอลัมน์ของตัวเองแล้ว
+       (เปิดได้จากปุ่ม "คอลัมน์") จึงไม่ต้องซ้ำเป็นบรรทัดรองใต้ชื่ออีก */
+    if (key === 'name') {
       /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
-      '<div>' +
-      (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
-      '<div class="grid-name-line">' + typeChip(activity) +
-        '<a class="grid-name" href="/admin/activities/' + activity.id + '/edit" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 30)) + '</a>' +
-      '</div>' +
-      '<div class="grid-sub" title="' + window.TFC.escapeHtml(respText) + '">' + (respText ? window.TFC.escapeHtml(truncate(respText, 30)) : '—') + '</div></div>' +
+      return '<div>' +
+        (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
+        '<div class="grid-name-line">' + typeChip(activity) +
+          '<a class="grid-name" href="/admin/activities/' + activity.id + '" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 34)) + '</a>' +
+        '</div></div>';
+    }
 
-      '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
-      (timeText ? '<div class="grid-sub">' + window.TFC.escapeHtml(timeText) + '</div>' : '') + '</div>' +
+    if (key === 'date') {
+      var schedules = window.TFC.activity.schedules(activity);
+      var timeText = schedules.length && schedules[0].timeStart
+        ? schedules[0].timeStart + '–' + schedules[0].timeEnd + ' น.'
+        : '';
+      return '<div><div class="grid-strong">' + window.TFC.escapeHtml(window.TFC.activity.dateLabel(activity)) + '</div>' +
+        (timeText ? '<div class="grid-sub">' + window.TFC.escapeHtml(timeText) + '</div>' : '') + '</div>';
+    }
 
-      '<div>' + metricsCell(activity) + '</div>' +
+    if (key === 'metrics') return '<div>' + metricsCell(activity) + '</div>';
 
-      '<div>' + window.TFC.statusTextHTML({ options: mock.activityStatuses, value: activity.status }) + '</div>' +
+    /* ช่องข้อความธรรมดา — ยาวเกินช่องให้ตัดด้วย … และเก็บข้อความเต็มไว้ใน title */
+    if (key === 'code') return '<div class="grid-code">' + window.TFC.escapeHtml(activity.id) + '</div>';
+    if (key === 'type') return '<div>' + typeChip(activity) + '</div>';
 
-      '<div>' + publicCell(activity) + '</div>' +
+    if (key === 'instructor' || key === 'area' || key === 'program' || key === 'format') {
+      var text = key === 'instructor' ? responsible(activity).join(' · ')
+        : key === 'area' ? areasOf(activity).join(' · ')
+        : key === 'program' ? (activity.program || '')
+        : (activity.format || '');
+      return '<div class="grid-sub grid-ellipsis" title="' + window.TFC.escapeHtml(text) + '">' +
+        (text ? window.TFC.escapeHtml(text) : '—') + '</div>';
+    }
 
-      '<div class="grid-actions">' + window.TFC.actionMenuTrigger(menuItems(activity)) + '</div>' +
+    if (key === 'fee') {
+      return '<div class="grid-sub">' + window.TFC.escapeHtml(window.TFC.activity.feeLabel(activity)) + '</div>';
+    }
+
+    if (key === 'updated') {
+      if (!activity.updatedDate) return '<div class="grid-soft">—</div>';
+      return '<div><div class="grid-sub">' + window.TFC.escapeHtml(activity.updatedBy || '—') + '</div>' +
+        '<div class="grid-soft">' + window.TFC.escapeHtml(activity.updatedDate + ' · ' + (activity.updatedTime || '')) + '</div></div>';
+    }
+
+    /* สถานะเปลี่ยนได้จากตารางเลย — บันทึกจริงผ่าน endpoint ใน data-status-url */
+    if (key === 'status') {
+      return '<div>' + window.TFC.activity.statusSelectHTML('activity', activity.status, {
+        rowId: activity.id,
+        url: '/admin/activities/' + encodeURIComponent(activity.id) + '/status',
+        ariaLabel: 'เปลี่ยนสถานะของ ' + activity.name
+      }) + '</div>';
+    }
+
+    if (key === 'web') return '<div>' + publicCell(activity) + '</div>';
+
+    return '<div class="grid-actions">' + window.TFC.actionMenuTrigger(menuItems(activity)) + '</div>';
+  }
+
+  function rowHtml(activity) {
+    return '<div class="grid-row" data-id="' + activity.id + '">' +
+      visibleCols().map(function (col) { return cellHtml(col.key, activity); }).join('') +
       '</div>';
   }
 
@@ -325,13 +402,17 @@
     return activity.status === 'ฉบับร่าง';
   }
 
+  /* เมนู ⋮ ของแถว — สามรายการล่างพาไป "แท็บ" ในหน้ารายละเอียดของกิจกรรมนั้น
+     ไม่ใช่หน้ารวมแบบเดิมที่ต้องเลือกกิจกรรมซ้ำอีกรอบด้วย ?id= */
   function menuItems(activity) {
+    var base = '/admin/activities/' + activity.id;
     var items = [
-      { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: '/admin/activities/' + activity.id + '/edit' },
-      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: '/admin/activities/' + activity.id + '/edit', perm: 'activities' },
-      { key: 'act-registrants-' + activity.id, label: 'ผู้ลงทะเบียน', icon: 'users', href: '/admin/activities/registrants?id=' + activity.id },
-      { key: 'act-checkin-' + activity.id, label: 'Check-in', icon: 'checkin', href: '/admin/activities/checkin?id=' + activity.id },
-      { key: 'act-eval-' + activity.id, label: 'ประเมินกิจกรรม', icon: 'star', href: '/admin/activities/responses?id=' + activity.id }
+      { key: 'act-view-' + activity.id, label: 'ดูรายละเอียด', icon: 'view', href: base },
+      { key: 'act-edit-' + activity.id, label: 'แก้ไข', icon: 'edit', href: base + '/edit', perm: 'activities' },
+      { key: 'act-registrants-' + activity.id, label: 'ลงทะเบียน', icon: 'users', href: base + '/participants' },
+      { key: 'act-checkin-' + activity.id, label: 'Check-in', icon: 'checkin', href: base + '/checkins' },
+      { key: 'act-eval-' + activity.id, label: 'แบบประเมิน', icon: 'evaluation', href: base + '/evaluations' },
+      { key: 'act-report-' + activity.id, label: 'รายงาน', icon: 'report', href: base + '/reports' }
     ];
     if (canDelete(activity)) {
       items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',
@@ -340,9 +421,42 @@
     return items;
   }
 
+  /* จำนวนช่องต้องตรงกับ grid-template ของตาราง — คอลัมน์ที่ซ่อนถูกตัดออกทั้งหัวและแถว
+     จึงตั้ง grid-template-columns เองตามชุดที่แสดงจริง แทนการพึ่งค่าคงที่ใน components.css */
+  /* ความกว้างเป็น px คงที่ทุกคอลัมน์ยกเว้นชื่อกิจกรรมที่ยืดกินที่ว่างที่เหลือ
+     ห้ามใช้ minmax(0, Npx) กับคอลัมน์ที่เลือกเปิดเพิ่ม — พอเปิดหลายคอลัมน์จนพื้นที่ไม่พอ
+     track แบบนั้นจะยุบลงไปเหลือไม่กี่ px แทนที่จะดันให้ตารางเลื่อนแนวนอน */
+  var COL_WIDTHS = {
+    name: 'minmax(200px, 1fr)',
+    code: '118px',
+    type: '84px',
+    date: '118px',
+    metrics: '210px',
+    instructor: '150px',
+    area: '150px',
+    program: '140px',
+    format: '120px',
+    fee: '104px',
+    status: '150px',
+    web: '108px',
+    updated: '128px',
+    actions: '40px'
+  };
+
   function tableHtml(rows) {
-    return '<div class="grid-table">' +
-      '<div class="grid-head">' + TABLE_COLS.map(function (c) {
+    var cols = visibleCols();
+    var template = cols.map(function (c) { return COL_WIDTHS[c.key] || '120px'; }).join(' ');
+
+    /* ตารางต้องกว้างอย่างน้อยเท่าผลรวมของคอลัมน์ + ช่องไฟ ไม่งั้นคอลัมน์จะถูกบีบ
+       เกินพื้นที่เมื่อไหร่ .table-scroll จะเลื่อนแนวนอนให้เอง */
+    var minWidth = cols.reduce(function (sum, c) {
+      /* 'minmax(200px, 1fr)' -> 200 · '150px' -> 150 (ตัวเลขแรกคือความกว้างต่ำสุดเสมอ) */
+      var width = String(COL_WIDTHS[c.key] || '120px').replace(/^minmax\(/, '');
+      return sum + (parseInt(width, 10) || 120) + 12;
+    }, 40);
+
+    return '<div class="grid-table" style="--grid-cols: ' + template + '; --grid-min-width: ' + minWidth + 'px">' +
+      '<div class="grid-head">' + cols.map(function (c) {
         return '<div' + (c.center ? ' class="grid-center"' : '') + '>' + window.TFC.escapeHtml(c.label) + '</div>';
       }).join('') + '</div>' +
       rows.map(rowHtml).join('') +
@@ -375,6 +489,63 @@
       onPageSizeChange: function (size) { state.pageSize = size; state.page = 1; render(); }
     });
   }
+
+  /* ---------- แผงเลือกคอลัมน์ ---------- */
+  (function () {
+    var panel = document.getElementById('activity-cols-panel');
+    var button = document.getElementById('activity-cols-btn');
+
+    panel.insertAdjacentHTML('beforeend', TABLE_COLS
+      .filter(function (col) { return col.label; })
+      .map(function (col) {
+        return '<label class="aov-pt-picker-item' + (col.fixed ? ' is-fixed' : '') + '">' +
+          '<input type="checkbox" value="' + col.key + '"' +
+          (hiddenCols.indexOf(col.key) === -1 ? ' checked' : '') +
+          (col.fixed ? ' disabled' : '') + '>' +
+          '<span>' + window.TFC.escapeHtml(col.label) + '</span></label>';
+      }).join(''));
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = panel.hidden;
+      panel.hidden = !open;
+      button.setAttribute('aria-expanded', String(open));
+    });
+
+    panel.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    document.addEventListener('click', function () {
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { panel.hidden = true; button.setAttribute('aria-expanded', 'false'); }
+    });
+
+    panel.addEventListener('change', function (e) {
+      var box = e.target;
+      if (box.type !== 'checkbox' || box.disabled) return;
+      if (box.checked) {
+        hiddenCols = hiddenCols.filter(function (k) { return k !== box.value; });
+      } else if (hiddenCols.indexOf(box.value) === -1) {
+        hiddenCols.push(box.value);
+      }
+      try { localStorage.setItem(COLS_KEY, JSON.stringify(hiddenCols)); } catch (e2) {}
+      render();
+    });
+  })();
+
+  /* สถานะถูกบันทึกที่เซิร์ฟเวอร์แล้ว — ซิงก์ข้อมูลในหน่วยความจำให้ตัวกรอง/ตัวนับตรงกับที่เห็น
+     ไม่ render() ใหม่ทันที เพราะแถวที่เพิ่งเปลี่ยนอาจหลุดจากตัวกรองที่เปิดอยู่จนหายไปต่อหน้า
+     ปล่อยให้ผู้ใช้เห็นผลก่อน แล้วรายการจะจัดใหม่เมื่อกดกรอง/เปลี่ยนหน้าครั้งถัดไป */
+  document.getElementById('activity-list').addEventListener('status-select:saved', function (e) {
+    var row = e.target.closest('[data-id]');
+    if (!row) return;
+    var activity = activities.find(function (a) { return a.id === row.getAttribute('data-id'); });
+    if (activity) activity.status = e.detail.value;
+    renderPills();
+  });
 
   /* ---------- ลบกิจกรรม ---------- 
      เปิดกล่องยืนยันจากเมนู ⋮ แล้วเตรียมข้อความตามสถานะของแถวนั้น

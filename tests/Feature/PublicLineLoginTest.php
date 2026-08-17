@@ -402,6 +402,36 @@ class PublicLineLoginTest extends TestCase
             ->assertSee(route('public.line.logout', $activity->code));
     }
 
+    /**
+     * กลุ่มตัวอย่างที่ลงทะเบียนเองผ่าน QR ไม่ได้ให้ชื่อจริงไว้ ระบบใช้รหัสบุคคลเป็นชื่อในระบบแทน
+     * เอามาเติมช่อง "ชื่อ - นามสกุล" ไม่ได้ ผู้ใช้จะเห็น "P0005" แล้วส่งไปทั้งอย่างนั้น
+     */
+    public function test_ชื่อที่เป็นรหัสบุคคลต้องไม่ถูกเติมลงช่องชื่อ(): void
+    {
+        $activity = $this->activity();
+        $profile = $this->lineProfile();
+
+        Participant::create([
+            'code' => 'P0005',
+            'person_code' => 'P0005',
+            'name' => 'P0005',
+            'phone' => '0925399788',
+            'line_user_id' => $profile['userId'],
+        ]);
+
+        $prefill = app(\App\Services\PublicRegistrationService::class)
+            ->lastContactForLineUser($profile['userId']);
+
+        $this->assertNull($prefill['name'], 'รหัสบุคคลต้องไม่ถูกส่งมาเป็นชื่อ');
+        $this->assertSame('0925399788', $prefill['phone'], 'เบอร์ยังต้องเติมให้ตามเดิม');
+
+        /* หน้าจอจะตกไปใช้ชื่อที่แสดงบน LINE แทน ซึ่งเป็นชื่อคนจริง ไม่ใช่รหัสของระบบ */
+        $this->withSession([PublicLineLoginController::SESSION_KEY => $profile])
+            ->get('/activities/'.$activity->code.'/register')
+            ->assertOk()
+            ->assertDontSee('"name":"P0005"', false);
+    }
+
     public function test_ออกจากบัญชี_line_แล้วโปรไฟล์ถูกล้างจาก_session(): void
     {
         $activity = $this->activity();

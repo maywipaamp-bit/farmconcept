@@ -158,7 +158,9 @@ window.TFC = window.TFC || {};
       return Number(activity.fee).toLocaleString('th-TH') + ' บาท';
     },
 
-    /* Dropdown สถานะแบบมีสี (inline edit) — ใช้ทั้งตาราง Index และตารางผู้ลงทะเบียน */
+    /* Dropdown สถานะแบบมีสี (inline edit) — ใช้ทั้งตาราง Index และตารางผู้ลงทะเบียน
+       opts.url ถ้าใส่มา = endpoint ที่จะ PATCH ค่าใหม่ไปบันทึกจริงตอนเปลี่ยน (ดู listener ท้ายไฟล์)
+       ไม่ใส่ = แสดงผลอย่างเดียว ไม่บันทึกอะไร (พฤติกรรมเดิม) */
     statusSelectHTML: function (kind, value, opts) {
       opts = opts || {};
       var options = listOf(kind).map(function (item) {
@@ -169,7 +171,9 @@ window.TFC = window.TFC || {};
 
       return '<select class="select status-select ' + toneOf(kind, value) + '"' +
         ' data-status-select="' + kind + '"' +
+        ' data-status-current="' + window.TFC.escapeHtml(value || '') + '"' +
         (opts.rowId ? ' data-row-id="' + window.TFC.escapeHtml(opts.rowId) + '"' : '') +
+        (opts.url ? ' data-status-url="' + window.TFC.escapeHtml(opts.url) + '"' : '') +
         ' aria-label="' + window.TFC.escapeHtml(opts.ariaLabel || 'เปลี่ยนสถานะ') + '">' +
         options + '</select>';
     }
@@ -204,20 +208,66 @@ window.TFC = window.TFC || {};
     return '<span class="status-text ' + tone + '">' + window.TFC.escapeHtml(opts.value || '-') + '</span>';
   };
 
-  /* เปลี่ยนสีตามค่าที่เลือกทันที + แจ้ง toast (mock: ยังไม่บันทึกลงฐานข้อมูลจริง) */
+  /* เปลี่ยนสีตามค่าที่เลือกทันที — ถ้ามี data-status-url ให้ PATCH ไปบันทึกจริงด้วย
+     ไม่ใช้ optimistic ล้วน ๆ เพราะเซิร์ฟเวอร์ตรวจสิทธิ์/เงื่อนไขซ้ำได้ (เช่นแก้กิจกรรมที่ยกเลิกแล้วไม่ได้)
+     พลาดแล้วต้องดีดกลับค่าเดิม ไม่ปล่อยให้ตัวเลือกค้างเป็นค่าที่ไม่ได้บันทึกจริง */
   document.addEventListener('change', function (e) {
     var select = e.target.closest('[data-status-select]');
     if (!select) return;
 
-    var toneAttr = select.getAttribute('data-status-tones');
-    var tone;
-    if (toneAttr) {
-      try { tone = JSON.parse(toneAttr)[select.value]; } catch (err) { tone = null; }
-    } else {
-      tone = toneOf(select.getAttribute('data-status-select'), select.value);
+    function applyTone(value) {
+      var toneAttr = select.getAttribute('data-status-tones');
+      var tone;
+      if (toneAttr) {
+        try { tone = JSON.parse(toneAttr)[value]; } catch (err) { tone = null; }
+      } else {
+        tone = toneOf(select.getAttribute('data-status-select'), value);
+      }
+      select.className = 'select status-select ' + (tone || 'is-neutral');
     }
 
-    select.className = 'select status-select ' + (tone || 'is-neutral');
-    if (window.TFC.showToast) window.TFC.showToast('เปลี่ยนสถานะเป็น "' + select.value + '" แล้ว', 'success');
+    var url = select.getAttribute('data-status-url');
+    var newValue = select.value;
+
+    if (!url) {
+      applyTone(newValue);
+      if (window.TFC.showToast) window.TFC.showToast('เปลี่ยนสถานะเป็น "' + newValue + '" แล้ว', 'success');
+      return;
+    }
+
+    var previousValue = select.getAttribute('data-status-current') || newValue;
+    applyTone(newValue);
+    select.disabled = true;
+
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : '',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': 'PATCH'
+      },
+      body: JSON.stringify({ status: newValue })
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (!res.ok) throw new Error(body.message || 'เปลี่ยนสถานะไม่สำเร็จ กรุณาลองใหม่');
+          return body;
+        });
+      })
+      .then(function (body) {
+        select.setAttribute('data-status-current', newValue);
+        if (window.TFC.showToast) window.TFC.showToast(body.message || 'เปลี่ยนสถานะแล้ว', 'success');
+        /* แจ้งหน้าที่เรียกใช้ dropdown นี้ให้ซิงก์ข้อมูลของตัวเอง (เช่น ตัวกรอง/ตัวนับในหน้ารายการ)
+           ไม่ผูก logic เฉพาะหน้าไว้ในไฟล์กลางนี้ — ปล่อยให้แต่ละหน้าฟังอีเวนต์แล้วจัดการเอง */
+        select.dispatchEvent(new CustomEvent('status-select:saved', { bubbles: true, detail: { value: newValue } }));
+      })
+      .catch(function (err) {
+        select.value = previousValue;
+        applyTone(previousValue);
+        if (window.TFC.showToast) window.TFC.showToast(err.message, 'danger');
+      })
+      .finally(function () { select.disabled = false; });
   });
 })();

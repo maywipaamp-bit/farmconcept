@@ -59,85 +59,15 @@
                 </div>
             @endif
 
-            @if(!$checkin['requested'] && !$postSurvey['requested'] && $registration['enabled'])
+            @if(!$checkin['requested'] && $registration['enabled'])
                 <a class="registration-cta" href="{{ $registration['registerUrl'] }}">ลงทะเบียนเข้าร่วม</a>
             @endif
         </div>
     </article>
 
-    @if($postSurvey['requested'] && $postSurvey['enabled'])
-        <section class="registration-card survey-card" id="post-survey-form">
-            <div class="registration-heading">
-                <span class="registration-step">✓</span>
-                <div>
-                    <h2>{{ $postSurvey['form']->name }}</h2>
-                    <p>{{ $postSurvey['form']->description ?: 'ความคิดเห็นของคุณจะช่วยให้เราพัฒนากิจกรรมครั้งต่อไป' }}</p>
-                </div>
-            </div>
-
-            <form id="public-post-survey-form" novalidate>
-                @csrf
-                @foreach($postSurvey['form']->questions as $question)
-                    @if($question->question_type === 'section')
-                        <h3 class="survey-section-title">{{ $question->text }}</h3>
-                    @else
-                        <fieldset class="survey-question" data-question-id="{{ $question->id }}" data-question-type="{{ $question->question_type }}">
-                            <legend>{{ $question->text }} @if($question->is_required)<span>*</span>@endif</legend>
-
-                            @if($question->question_type === 'rating')
-                                <div class="survey-rating">
-                                    @foreach([1 => 'น้อยที่สุด', 2 => 'น้อย', 3 => 'ปานกลาง', 4 => 'มาก', 5 => 'มากที่สุด'] as $score => $label)
-                                        <label>
-                                            <input type="radio" name="answer_{{ $question->id }}" value="{{ $score }}" @required($question->is_required)>
-                                            <span>{{ $score }}</span>
-                                            <small>{{ $label }}</small>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @elseif($question->question_type === 'text')
-                                <textarea name="answer_{{ $question->id }}" rows="4" maxlength="5000" placeholder="พิมพ์คำตอบ…" @required($question->is_required)></textarea>
-                            @elseif($question->question_type === 'dropdown')
-                                <select name="answer_{{ $question->id }}" @required($question->is_required)>
-                                    <option value="">เลือกคำตอบ</option>
-                                    @foreach($question->options as $option)
-                                        <option value="{{ $option->id }}">{{ $option->label }}</option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <div class="survey-options{{ $question->question_type === 'chips' ? ' is-chips' : '' }}">
-                                    @foreach($question->options as $option)
-                                        <label>
-                                            <input
-                                                type="{{ in_array($question->question_type, ['multi', 'chips'], true) ? 'checkbox' : 'radio' }}"
-                                                name="answer_{{ $question->id }}{{ in_array($question->question_type, ['multi', 'chips'], true) ? '[]' : '' }}"
-                                                value="{{ $option->id }}"
-                                                @required($question->is_required && !in_array($question->question_type, ['multi', 'chips'], true))
-                                            >
-                                            <span>{{ $option->label }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </fieldset>
-                    @endif
-                @endforeach
-
-                <p class="registration-message" id="post-survey-message" aria-live="polite"></p>
-                <button type="submit" class="registration-submit" id="post-survey-submit">ส่งแบบประเมิน</button>
-
-                <div class="registration-success" id="post-survey-success" hidden role="status">
-                    <span class="registration-success-icon">✓</span>
-                    <h2>ส่งแบบประเมินแล้ว</h2>
-                    <p>ขอบคุณสำหรับความคิดเห็นของคุณ</p>
-                </div>
-            </form>
-        </section>
-    @elseif($postSurvey['requested'])
-        <section class="registration-card is-closed">
-            <h2>ยังไม่เปิดแบบประเมิน</h2>
-            <p>กิจกรรมนี้ยังไม่อยู่ในช่วงรับคำตอบ หรือแบบประเมินปิดรับคำตอบแล้ว</p>
-        </section>
-    @elseif($checkin['requested'] && $checkin['enabled'])
+    {{-- แบบประเมินหลังกิจกรรมย้ายไปหน้าของตัวเองแล้ว (public.activities.survey)
+         ลิงก์เดิม ?action=post-survey ถูก redirect จากคอนโทรลเลอร์ --}}
+    @if($checkin['requested'] && $checkin['enabled'])
         <section class="registration-card checkin-card" id="checkin-form">
             <div class="registration-heading">
                 <span class="registration-step">1</span>
@@ -218,14 +148,7 @@
             });
         })();
     </script>
-    @if($postSurvey['requested'] && $postSurvey['enabled'])
-        <script>
-            window.TFC_PUBLIC_POST_SURVEY = @json([
-                'storeUrl' => $postSurvey['storeUrl'],
-            ]);
-        </script>
-        <script src="@assetv('assets/js/public-post-survey.js')" defer></script>
-    @elseif($checkin['requested'] && $checkin['enabled'])
+    @if($checkin['requested'] && $checkin['enabled'])
         <script>
             window.TFC_PUBLIC_CHECKIN = @json($checkin);
         </script>

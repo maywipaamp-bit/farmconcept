@@ -199,8 +199,9 @@
       { label: 'รูปภาพปก', ok: state.cover },
       { label: 'สถานที่จัด', ok: state.place !== PLACE_EMPTY },
       { label: 'วันและเวลาอย่างน้อย 1 รอบ', ok: !!(first.date && first.start) },
-      { label: 'กลุ่มเป้าหมาย', ok: state.targets.length > 0 },
-      { label: 'วิทยากร', ok: state.hosts.length > 0 }
+      { label: 'กลุ่มเป้าหมาย', ok: state.targets.length > 0 }
+      /* วิทยากรกับรูปแบบไม่อยู่ในเช็กลิสต์แล้ว — ไม่บังคับกรอกทั้งฝั่งหน้าจอและ ActivityRequest
+         กิจกรรมบางประเภท (ข่าวสาร งานอีเวนท์) ไม่มีวิทยากรตั้งแต่แรก */
     ];
 
     if (needsReg()) list.push({ label: 'เลือกแบบลงทะเบียน', ok: !!state.formReg });

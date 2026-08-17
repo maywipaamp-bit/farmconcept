@@ -10,35 +10,19 @@
 
   <div class="fb-header">
     <h1 class="fb-title">รอบติดตาม</h1>
-    <a class="btn btn-primary" href="{{ route('admin.tracking-rounds.create') }}">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-      สร้างรอบติดตาม
-    </a>
+    <div class="flex gap-2">
+      {{-- QR เป็นปุ่มไม่ใช่การ์ดเต็มความกว้าง — QR ตัวเดียวใช้ตลอดโครงการ ไม่เคยเปลี่ยน
+           เปิดดูตอนจะพิมพ์หรือส่งต่อเท่านั้น กินพื้นที่หัวหน้าถาวรไม่คุ้ม --}}
+      <button type="button" class="btn btn-outline" id="fb-qr-open" @disabled(! $qr['exists'])>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
+        QR ทำแบบประเมิน
+      </button>
+      <a class="btn btn-primary" href="{{ route('admin.tracking-rounds.create') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        สร้างรอบติดตาม
+      </a>
+    </div>
   </div>
-
-  {{-- QR ถาวรของระบบติดตามสุขภาพ — สร้างครั้งเดียว ใช้ตลอดโครงการ
-       URL ไม่มีรหัสคน รหัสรอบ หรือรหัสแบบประเมินอยู่ข้างใน จึงไม่ต้องพิมพ์ใหม่เมื่อเพิ่มรอบหรือเพิ่มคน
-       แบบประเมินที่ผู้ตอบได้เห็น มาจากรอบของเขา ไม่ได้มาจาก QR --}}
-  <section class="card fb-qr-card" aria-labelledby="fb-qr-title">
-    <div class="fb-qr" id="fb-qr" aria-hidden="true">{!! $qr['svg'] !!}</div>
-
-    <div class="fb-qr-text">
-      <h2 class="fb-qr-title" id="fb-qr-title">QR ทำแบบประเมินติดตามสุขภาพ</h2>
-      <p class="fb-qr-desc">ใช้อันเดียวตลอดโครงการ เพิ่มรอบหรือเพิ่มคนไม่ต้องสร้างใหม่ — ผู้ตอบสแกนแล้วยืนยันตัวตนก่อน ระบบจึงแสดงเฉพาะรอบที่ถึงกำหนดของเขา</p>
-      <div class="copy-link fb-qr-link">
-        <code class="copy-link-url" id="fb-qr-url">{{ $qr['url'] ?? 'ยังไม่ได้สร้าง QR ติดตามสุขภาพ' }}</code>
-        <button type="button" class="copy-link-btn" id="fb-qr-copy" @disabled(! $qr['exists'])>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
-          <span id="fb-qr-copy-text">คัดลอกลิงก์</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="fb-qr-actions">
-      <button type="button" class="btn btn-outline btn-sm" id="fb-qr-open">ขยาย</button>
-      <button type="button" class="btn btn-outline btn-sm" id="fb-qr-download">ดาวน์โหลด</button>
-    </div>
-  </section>
 
   <div class="fb-filter-bar">
     <div class="fb-tabs" id="fb-tabs" role="tablist"></div>
@@ -74,7 +58,6 @@
           <div>#</div>
           <div>ชื่อรอบติดตาม</div>
           <div>ช่วงวันครบกำหนด</div>
-          <div>แบบประเมิน</div>
           <div class="text-center">จำนวนติดตาม</div>
           <div>ตอบแล้ว</div>
           <div class="text-center">แจ้งเตือนได้</div>
@@ -108,7 +91,13 @@
       </div>
     </div>
     <div class="modal-footer">
+      {{-- คัดลอกลิงก์กับดาวน์โหลดย้ายมาอยู่ใน popup พร้อมกับ QR — เดิมอยู่บนการ์ดหัวหน้าที่ถูกตัดออก
+           ทั้งสามอย่างเป็นงานเดียวกันคือเอา QR ไปใช้ต่อ อยู่ที่เดียวกันหาง่ายกว่า --}}
       <button type="button" class="btn btn-outline" data-close-modal>ปิด</button>
+      <button type="button" class="btn btn-outline" id="fb-qr-copy">
+        <span id="fb-qr-copy-text">คัดลอกลิงก์</span>
+      </button>
+      <button type="button" class="btn btn-outline" id="fb-qr-download">ดาวน์โหลด</button>
       <button type="button" class="btn btn-outline" id="fb-qr-print">พิมพ์</button>
     </div>
   </div>
@@ -174,18 +163,15 @@
 
   function rowHtml(b, index) {
     var open = state.menu === b.id;
-    var pct = b.total ? Math.round((b.answered / b.total) * 100) : 0;
 
     return '<div class="fb-tr is-clickable" data-open="' + esc(b.id) + '">' +
       '<div class="fb-cell fb-nums fb-no">' + index + '</div>' +
       '<div class="fb-name-cell"><span class="fb-name">' + esc(b.name) + '</span></div>' +
       '<div class="fb-cell fb-nums">' + esc(fmt(b.from)) + ' – ' + esc(fmt(b.to)) + '</div>' +
-      '<div class="fb-cell">' + esc(b.form) + '</div>' +
       '<div class="fb-cell fb-nums text-center">' + b.total + '</div>' +
-      '<div class="fb-progress-cell">' +
-        '<span class="fb-progress-text">' + b.answered + '/' + b.total + '</span>' +
-        '<div class="fb-progress"><span style="width: ' + pct + '%"></span></div>' +
-      '</div>' +
+      /* ตัวเลข "ตอบแล้ว/ทั้งหมด" อ่านได้ตรงกว่าแท่งกราฟ — แท่งบอกสัดส่วนคร่าว ๆ ที่ตัวเลขบอกอยู่แล้ว
+         และกินความกว้างจนคอลัมน์อื่นถูกบีบ */
+      '<div class="fb-cell fb-nums">' + b.answered + '/' + b.total + '</div>' +
       '<div class="fb-cell fb-nums text-center">' + b.notifiable + '</div>' +
       /* คนที่แจ้งเตือนไม่ได้ต้องเด่นพอให้แอดมินเห็นว่ามีงานต้องตามเอง */
       '<div class="fb-cell fb-nums text-center' + (b.unreachable > 0 ? ' is-warn' : '') + '">' + b.unreachable + '</div>' +
@@ -196,10 +182,10 @@
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>' +
         '</button>' +
         (open
+          /* ส่งแจ้งเตือนอีกครั้งถูกตัดออกจากเมนูนี้ — การส่งซ้ำทั้งรอบยิงถึงคนที่ตอบไปแล้วด้วย
+             ตอนนี้ส่งเป็นรายคนได้จากหน้ารายละเอียด ซึ่งเห็นว่าใครยังไม่ตอบก่อนกดส่ง */
           ? '<div class="fb-menu" role="menu">' +
               '<a class="fb-menu-item" role="menuitem" href="' + esc(b.url) + '">ดูรายละเอียด</a>' +
-              '<button type="button" class="fb-menu-item" role="menuitem" data-notify="' + esc(b.id) + '"' +
-                (b.cancelled || b.total === 0 ? ' disabled' : '') + '>ส่งแจ้งเตือนอีกครั้ง</button>' +
               '<button type="button" class="fb-menu-item is-danger" role="menuitem" data-cancel="' + esc(b.id) + '"' +
                 (b.cancelled ? ' disabled' : '') + '>ยกเลิกรอบติดตาม</button>' +
             '</div>'
@@ -288,23 +274,6 @@
       return render();
     }
 
-    var notify = t.closest('[data-notify]');
-    if (notify) {
-      e.stopPropagation();
-      if (notify.disabled) return;
-      var nid = notify.getAttribute('data-notify');
-      notify.disabled = true;
-      notify.textContent = 'กำลังส่ง…';
-      post('{{ url('admin/tracking-rounds') }}/' + encodeURIComponent(nid) + '/send-notify').then(function (res) {
-        state.menu = null;
-        if (!res.ok) return render(), window.TFC.showToast(res.body.message || 'ส่งแจ้งเตือนไม่สำเร็จ', 'danger');
-        replaceBatch(res.body.data);
-        render();
-        window.TFC.showToast(res.body.message, res.body.notify.sent > 0 ? 'success' : 'warning');
-      });
-      return;
-    }
-
     var cancel = t.closest('[data-cancel]');
     if (cancel) {
       e.stopPropagation();
@@ -367,7 +336,8 @@
     $('fb-qr-open').addEventListener('click', function () { window.TFC.openModal('fb-qr-modal'); });
 
     $('fb-qr-download').addEventListener('click', function () {
-      var el = $('fb-qr').querySelector('svg');
+      /* อ่านจากตัวใน popup — ตัวเล็กบนหัวหน้าถูกตัดออกไปแล้ว */
+      var el = $('fb-qr-large').querySelector('svg');
       if (!el) return;
       var blob = new Blob([el.outerHTML], { type: 'image/svg+xml' });
       var url = URL.createObjectURL(blob);

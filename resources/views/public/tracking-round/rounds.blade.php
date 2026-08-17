@@ -11,52 +11,7 @@
             ทำได้ทีละรอบตามลำดับ · {{ $rounds->whereNotNull('answered_at')->count() }}/{{ $rounds->count() }} รอบ
         </p>
 
-        {{-- ไทม์ไลน์แนวตั้ง — เห็นได้ทันทีว่าอยู่ตรงไหนของโครงการ เหลืออีกกี่รอบ
-             รอบที่ยังไม่เปิดต้องเห็นว่ามีอยู่ ไม่ใช่ซ่อนจนคิดว่าตกหล่น --}}
-        <ol class="tr-timeline">
-            @foreach($rounds as $round)
-                @php($answered = $round->answered_at !== null)
-                @php($open = in_array($round->id, $openIds, true))
-
-                <li class="tr-tl {{ $answered ? 'is-done' : ($open ? 'is-open' : 'is-locked') }}">
-                    <span class="tr-tl-dot" aria-hidden="true">{{ $answered ? '✓' : $loop->iteration }}</span>
-
-                    <div class="tr-tl-body">
-                        <p class="tr-tl-head">
-                            <span class="tr-tl-order">รอบที่ {{ $loop->iteration }}</span>
-                            @if($answered)
-                                <span class="tr-tl-badge is-done">ทำแล้ว</span>
-                            @elseif($open)
-                                <span class="tr-tl-badge is-open">ทำได้เลย</span>
-                            @else
-                                <span class="tr-tl-badge">ยังไม่เปิด</span>
-                            @endif
-                        </p>
-
-                        <p class="tr-tl-name">{{ $round->name }}</p>
-
-                        <p class="tr-tl-date">
-                            @if($answered)
-                                ตอบเมื่อ @thaidate($round->answered_at)
-                            @elseif($open)
-                                ครบกำหนด @thaidate($round->due_date) · ใช้เวลา 5 นาที
-                            @else
-                                ครบกำหนด @thaidate($round->due_date)
-                            @endif
-                        </p>
-
-                        @if($open)
-                            <a class="tr-tl-action"
-                               href="{{ route('public.tracking-round-qr.survey', $round->id) }}">เริ่มทำ</a>
-                        @endif
-                    </div>
-                </li>
-            @endforeach
-        </ol>
-
-        @if($rounds->isEmpty())
-            <p class="tr-subheading">ยังไม่มีรอบติดตามสำหรับคุณ</p>
-        @endif
+        @include('public.tracking-round.partials.timeline')
 
         <p class="tr-note">
             <a href="{{ route('public.tracking-round-qr.dashboard') }}">กลับหน้าหลัก</a>

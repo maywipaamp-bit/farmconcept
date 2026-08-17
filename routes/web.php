@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Admin\ActivityCheckinController;
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\ActivityPeopleController;
 use App\Http\Controllers\Admin\ActivityQrController;
 use App\Http\Controllers\Admin\ActivityResponseController;
 use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
+use App\Http\Controllers\Admin\EvaluationResponseController;
 use App\Http\Controllers\Admin\MasterData;
 use App\Http\Controllers\Admin\RegistrantController;
 use App\Http\Controllers\Admin\RoleController;
@@ -90,6 +92,11 @@ Route::post('/activities/{activity}/checkin', [PublicCheckinController::class, '
     ->where('activity', '[A-Za-z0-9-]+')
     ->middleware('throttle:15,1')
     ->name('public.activities.checkin.store');
+
+/* หน้าแบบประเมินหลังกิจกรรม — แยกจากหน้ารายละเอียด มีหัวเว็บเหมือนแบบประเมินติดตาม */
+Route::get('/activities/{activity}/survey', [PublicPostSurveyController::class, 'page'])
+    ->where('activity', '[A-Za-z0-9-]+')
+    ->name('public.activities.survey');
 
 Route::post('/activities/{activity}/post-survey', [PublicPostSurveyController::class, 'store'])
     ->where('activity', '[A-Za-z0-9-]+')
@@ -206,6 +213,21 @@ Route::middleware('auth')->group(function () {
             ->middleware('menu:dashboard')
             ->name('dashboard.fragment');
 
+        /*
+         | รายงาน — หน้าที่มองข้อมูลข้ามกิจกรรม ไม่ผูกกับกิจกรรมใดกิจกรรมหนึ่ง
+         | แยก prefix ออกจาก activities เพราะไม่ใช่การจัดการกิจกรรมรายตัว
+         | และจะมีรายงานตัวอื่นมาอยู่ในหมวดนี้ต่อไป
+         */
+        Route::prefix('reports')->name('reports.')->group(function () {
+            /* รายชื่อผู้เข้าร่วมทั้งหมด — รวมทุกกิจกรรมเป็นรายคน (ยึดเบอร์โทร/อีเมล) */
+            Route::get('/people', [ActivityPeopleController::class, 'index'])
+                ->middleware('menu:reports-people')
+                ->name('people');
+        });
+
+        /* พาธเดิมตอนหน้านี้ยังอยู่ใต้หมวดกิจกรรม — ส่งต่อไปที่ใหม่แทนที่จะ 404 */
+        Route::redirect('/activities/people', '/admin/reports/people');
+
         Route::prefix('activities')->name('activities.')->group(function () {
             /*
              | ต้องเป็น /list ไม่ใช่ / เพราะ URL /admin/activities ถูกใช้เป็น prefix
@@ -229,8 +251,10 @@ Route::middleware('auth')->group(function () {
                 ->name('checkin');
 
             /* ชุด endpoint JSON ของหน้าเช็คอิน — รูป URL ต้องตรงกับ assets/js/checkin-service.js
-               ที่ตั้ง checkinApiBase = '/admin' ไว้ (ดู checkin.blade.php) */
-            Route::middleware('menu:activities-checkin')->name('checkin.')->group(function () {
+               ที่ตั้ง checkinApiBase = '/admin' ไว้ (ดู checkin.blade.php)
+               รับสองสิทธิ์ เพราะแท็บ Check-in ในหน้ารายละเอียดกิจกรรมก็เรียกชุดนี้เหมือนกัน
+               คนที่จัดการกิจกรรมได้จึงเช็คอินแทนจากแท็บนั้นได้โดยไม่ต้องเปิดสิทธิ์เมนู Check-in เพิ่ม */
+            Route::middleware('menu:activities-checkin|activities-list')->name('checkin.')->group(function () {
                 Route::get('/{activity}/checkin', [ActivityCheckinController::class, 'snapshot'])->name('snapshot');
                 Route::post('/{activity}/checkin', [ActivityCheckinController::class, 'store'])->name('store');
                 Route::get('/{activity}/checkin/audit', [ActivityCheckinController::class, 'audit'])->name('audit');
@@ -248,8 +272,10 @@ Route::middleware('auth')->group(function () {
                ผูก {registration} ด้วย code ไม่ใช่ id ตัวเลข URL จึงไม่บอกลำดับข้อมูลในฐาน */
             Route::redirect('/registrants.html', '/admin/activities/registrants');
 
+            /* รับสองสิทธิ์ด้วยเหตุผลเดียวกับชุด checkin — แท็บลงทะเบียนในหน้ารายละเอียดกิจกรรม
+               เรียก endpoint ยืนยันการชำระเงินและเปิดดูสลิปจากชุดนี้ */
             Route::prefix('registrants')->name('registrants.')
-                ->middleware('menu:activities-registrants')->group(function () {
+                ->middleware('menu:activities-registrants|activities-list')->group(function () {
                     Route::get('/', [RegistrantController::class, 'index'])->name('index');
                     Route::patch('/{registration:code}/payment', [RegistrantController::class, 'updatePayment'])->name('payment');
                     Route::post('/{registration:code}/checkin', [RegistrantController::class, 'checkin'])->name('checkin');
@@ -271,6 +297,33 @@ Route::middleware('auth')->group(function () {
 
             /* {activity} ผูกกับคอลัมน์ code ผ่าน Activity::getRouteKeyName()
                ต้องมาหลัง /list และ /create ไม่งั้นสองคำนี้จะถูกตีความเป็นรหัสกิจกรรม */
+
+            /* หน้าภาพรวมกิจกรรม — ปลายทางของ "ดูรายละเอียด" ในหน้ารายการ */
+            Route::get('/{activity}', [ActivityController::class, 'show'])
+                ->middleware('menu:activities-list')
+                ->name('show');
+
+            /* แท็บผู้เข้าร่วมของหน้ารายละเอียด — ตารางรายชื่อพร้อมฟิลด์ตามแบบลงทะเบียน */
+            Route::get('/{activity}/participants', [ActivityController::class, 'participants'])
+                ->middleware('menu:activities-list')
+                ->name('participants');
+
+            /* แท็บ Check-in ของหน้ารายละเอียด — ตารางอ่านอย่างเดียว
+               ใช้ /checkins (มี s) เพราะ /{activity}/checkin เป็น endpoint JSON ของหน้าเช็คอินหน้างาน */
+            Route::get('/{activity}/checkins', [ActivityController::class, 'checkins'])
+                ->middleware('menu:activities-list')
+                ->name('checkins');
+
+            /* แท็บแบบประเมินของหน้ารายละเอียด — คำตอบนิรนามพร้อมคะแนนรายข้อ */
+            Route::get('/{activity}/evaluations', [ActivityController::class, 'evaluations'])
+                ->middleware('menu:activities-list')
+                ->name('evaluations');
+
+            /* แท็บรายงานภาพรวมของหน้ารายละเอียด — กราฟสรุปจากข้อมูลชุดเดียวกับแท็บอื่น */
+            Route::get('/{activity}/reports', [ActivityController::class, 'reports'])
+                ->middleware('menu:activities-list')
+                ->name('reports');
+
             Route::get('/{activity}/edit', [ActivityController::class, 'edit'])
                 ->middleware('menu:activities-list')
                 ->name('edit');
@@ -297,6 +350,12 @@ Route::middleware('auth')->group(function () {
             Route::put('/{activity}', [ActivityController::class, 'update'])
                 ->middleware('menu:activities-list')
                 ->name('update');
+
+            /* เปลี่ยนสถานะอย่างเดียวจากหน้ารายการ — endpoint เบา ไม่ผ่าน ActivityRequest
+               เพราะฟอร์มเต็มบังคับกรอกฟิลด์อื่นครบด้วย ซึ่งไม่จำเป็นสำหรับแค่เปลี่ยนสถานะ */
+            Route::patch('/{activity}/status', [ActivityController::class, 'updateStatus'])
+                ->middleware('menu:activities-list')
+                ->name('status');
 
             Route::delete('/{activity}', [ActivityController::class, 'destroy'])
                 ->middleware('menu:activities-list')
@@ -407,6 +466,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/upload-consent', [CohortController::class, 'uploadConsent'])->name('upload-consent');
 
             Route::get('/{cohortProfile}', [CohortController::class, 'show'])->name('show');
+            Route::put('/{cohortProfile}', [CohortController::class, 'update'])->name('update');
+            Route::delete('/{cohortProfile}', [CohortController::class, 'destroy'])->name('destroy');
             Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
         });
 
@@ -428,6 +489,8 @@ Route::middleware('auth')->group(function () {
                 ->where('trackingRound', '[A-Za-z0-9-]+')->name('send-notify');
             Route::patch('/{trackingRound}/cancel', [TrackingRoundController::class, 'cancel'])
                 ->where('trackingRound', '[A-Za-z0-9-]+')->name('cancel');
+            Route::post('/{trackingRound}/members/{member}/notify', [TrackingRoundController::class, 'sendNotifyMember'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.notify');
             Route::post('/{trackingRound}/members/{member}/offline-log', [TrackingRoundController::class, 'offlineLog'])
                 ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.offline-log');
         });
@@ -439,6 +502,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/evaluations/create.html', [EvaluationController::class, 'legacyCreateRedirect'])
             ->middleware('menu:evaluations')
             ->name('evaluations.legacy-create');
+
+        /* ต้องอยู่ก่อนกลุ่ม evaluations ด้านล่าง ไม่งั้น "responses" จะถูกอ่านเป็นรหัสแบบประเมิน
+           และใช้สิทธิ์เมนูคนละตัวกัน (ตอบแบบประเมิน ≠ จัดการแบบประเมิน) */
+        Route::redirect('/evaluations/responses.html', '/admin/evaluations/responses');
+
+        Route::prefix('evaluations/responses')->name('evaluations.responses.')
+            ->middleware('menu:evaluations-responses')->group(function () {
+                Route::get('/', [EvaluationResponseController::class, 'index'])->name('index');
+                Route::get('/{id}', [EvaluationResponseController::class, 'show'])
+                    ->where('id', '[0-9]+')->name('show');
+            });
 
         Route::prefix('evaluations')->name('evaluations.')->middleware('menu:evaluations')->group(function () {
             Route::get('/', [EvaluationController::class, 'index'])->name('index');

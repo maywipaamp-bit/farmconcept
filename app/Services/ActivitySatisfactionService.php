@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Activity;
 use App\Models\Form;
 use App\Models\Question;
+use App\Models\QuestionOption;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -112,6 +113,141 @@ class ActivitySatisfactionService
             })->values()->all(),
             'topics' => $this->topics($activity),
         ];
+    }
+
+    /**
+     * รายละเอียดคำตอบแยกตามคำถาม สไตล์เดียวกับสรุปผลของ Google Forms —
+     * คำถามให้คะแนน = แท่งกระจาย 1–5 · ตัวเลือกเดี่ยว/ดรอปดาวน์ = โดนัท ·
+     * ตัวเลือกหลายข้อ = แท่งนับความถี่ (ร้อยละของผู้ตอบข้อนั้น) ·
+     * คำถามปลายเปิด = นับจำนวนคนตอบเท่านั้น ดูคำตอบจริงได้ที่แท็บแบบประเมิน
+     *
+     * อ่านจากคำถามของฟอร์มโดยตรง (ไม่ใช่จากคำตอบเหมือน topics()) ข้อที่ยังไม่มีคนตอบ
+     * จึงยังโผล่ในรายการเป็น "ยังไม่มีคำตอบ" — ตรงกับที่ Google Forms ทำ
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function questionBreakdown(Activity $activity): array
+    {
+        $form = $activity->forms()
+            ->wherePivot('slot', 'post_survey')
+            ->where('type', Form::TYPE_POST_ACTIVITY)
+            ->with([
+                'questions' => fn ($q) => $q->where('question_type', '!=', 'section')->orderBy('sort_order'),
+                'questions.options',
+            ])
+            ->first();
+
+        if (! $form || $form->questions->isEmpty()) {
+            return [];
+        }
+
+        $answers = DB::table('evl_answers')
+            ->where('response_type', self::ANSWER_TYPE)
+            ->whereIn('question_id', $form->questions->pluck('id'))
+            ->whereIn('response_id', DB::table('evl_satisfaction_responses')->where('activity_id', $activity->id)->select('id'))
+            ->get(['question_id', 'option_id', 'score', 'text_value', 'response_id']);
+
+        $byQuestion = $answers->groupBy('question_id');
+
+        return $form->questions->map(fn (Question $question) => match ($question->question_type) {
+            'rating' => $this->ratingBreakdown($question, $byQuestion->get($question->id, collect())),
+            'single', 'dropdown' => $this->choiceBreakdown($question, $byQuestion->get($question->id, collect()), false),
+            'multi', 'chips' => $this->choiceBreakdown($question, $byQuestion->get($question->id, collect()), true),
+            default => [
+                'id' => $question->id,
+                'label' => $question->text,
+                'type' => 'text',
+                'answered' => $byQuestion->get($question->id, collect())->pluck('response_id')->unique()->count(),
+            ],
+        })->values()->all();
+    }
+
+    /** แท่งกระจายคะแนน 1–5 ของคำถามเดียว (ต่างจาก distribution() ใน summary() ที่เป็นค่าเฉลี่ยรวมทั้งชุดคำตอบ) */
+    private function ratingBreakdown(Question $question, Collection $rows): array
+    {
+        $max = (int) config('farmconcept.assessment_score_max');
+        $counts = $rows->countBy(fn (object $row) => (int) $row->score);
+        $total = $rows->count();
+
+        $bars = collect(range($max, 1))->map(fn (int $score) => [
+            'label' => (string) $score,
+            'count' => $counts->get($score, 0),
+            'pct' => $total > 0 ? (int) round($counts->get($score, 0) / $total * 100) : 0,
+            'tone' => $score >= 4 ? 'good' : ($score === 3 ? 'mid' : 'low'),
+        ])->values()->all();
+
+        return [
+            'id' => $question->id,
+            'label' => $question->text,
+            'type' => 'rating',
+            'answered' => $total,
+            'average' => $total > 0 ? round($rows->avg(fn (object $r) => (float) $r->score), 1) : null,
+            'bars' => $bars,
+        ];
+    }
+
+    /**
+     * ตัวเลือกเดี่ยว/ดรอปดาวน์ → โดนัท (สัดส่วนของตัวเลือกทั้งหมด)
+     * ตัวเลือกหลายข้อ → แท่งนับความถี่ (ร้อยละของ "คนที่ตอบข้อนี้" ไม่ใช่ร้อยละของตัวเลือกทั้งหมด
+     * เพราะหนึ่งคนเลือกได้หลายข้อ ผลรวมร้อยละจึงเกิน 100 ได้ตามธรรมชาติของคำถามชนิดนี้)
+     */
+    private function choiceBreakdown(Question $question, Collection $rows, bool $multi): array
+    {
+        $counts = $rows->countBy('option_id');
+        $respondents = $rows->pluck('response_id')->unique()->count();
+        $options = $question->options->sortByDesc(fn (QuestionOption $o) => $counts->get($o->id, 0))->values();
+
+        $base = ['id' => $question->id, 'label' => $question->text, 'answered' => $respondents];
+
+        if ($multi) {
+            return $base + [
+                'type' => 'multi',
+                'bars' => $options->map(fn (QuestionOption $o) => [
+                    'label' => $o->label,
+                    'count' => $counts->get($o->id, 0),
+                    'pct' => $respondents > 0 ? (int) round($counts->get($o->id, 0) / $respondents * 100) : 0,
+                ])->values()->all(),
+            ];
+        }
+
+        $items = $options->map(fn (QuestionOption $o) => ['label' => $o->label, 'count' => $counts->get($o->id, 0)])->all();
+
+        return $base + [
+            'type' => 'single',
+            'donut' => ['total' => $counts->sum(), 'segments' => $this->rankedDonutSegments($items)],
+        ];
+    }
+
+    /**
+     * แปลงจำนวนเป็นค่า stroke-dasharray/offset ของวงโดนัท — เรขาคณิตเดียวกับแดชบอร์ดภาพรวม
+     * (r=76 · เว้นช่อง 3 หน่วยระหว่างชิ้น) วนสีตามอันดับ (rank 0–4) แทนสีตามความหมายสถานะ
+     * เพราะตัวเลือกของคำถามไม่มีความหมายตายตัวแบบ ชำระแล้ว/รอตรวจสอบ/ยังไม่ชำระ
+     *
+     * @param  array<int, array{label: string, count: int}>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function rankedDonutSegments(array $items): array
+    {
+        $total = array_sum(array_column($items, 'count'));
+        $circumference = 2 * M_PI * 76;
+        $offset = 0.0;
+
+        return collect($items)->values()->map(function (array $item, int $index) use ($total, $circumference, &$offset) {
+            $length = $total > 0 ? ($item['count'] / $total) * $circumference : 0;
+
+            $segment = [
+                'label' => $item['label'],
+                'count' => $item['count'],
+                'rank' => $index % 5,
+                'pct' => $total > 0 ? (int) round($item['count'] / $total * 100) : 0,
+                'dash' => round(max($length - 3, 0), 2).' '.round($circumference - max($length - 3, 0), 2),
+                'offset' => round(-$offset, 2),
+            ];
+
+            $offset += $length;
+
+            return $segment;
+        })->all();
     }
 
     /**
@@ -356,8 +492,14 @@ class ActivitySatisfactionService
             })->values()->all();
     }
 
-    /** @return array{label: string, tone: string} */
-    private function grade(float $average): array
+    /**
+     * แปลคะแนนเฉลี่ยเป็นคำที่เข้าใจง่าย — ใช้ร่วมกันทุกจุดที่ต้องแสดงระดับความพึงพอใจ
+     * (การ์ดสรุปในแท็บรายงาน และคอลัมน์เฉลี่ยในตารางแท็บแบบประเมิน) เกณฑ์เดียวกันเป๊ะ
+     * ไม่งั้นคำตอบเดียวกันจะได้คำอธิบายไม่ตรงกันระหว่างสองหน้าจอ
+     *
+     * @return array{label: string, tone: string}
+     */
+    public function grade(float $average): array
     {
         foreach (self::GRADES as [$min, $label, $tone]) {
             if ($average >= $min) {

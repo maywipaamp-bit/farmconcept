@@ -15,7 +15,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
         ส่งออก Excel
       </button>
-      <button type="button" class="btn btn-primary" data-open-modal="co-add-modal">
+      <button type="button" class="btn btn-primary" id="co-add-btn" data-open-modal="co-add-modal">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         เพิ่มกลุ่มตัวอย่าง
       </button>
@@ -24,6 +24,15 @@
 
   <div class="co-filter-bar">
     <div class="co-tabs" id="co-tabs" role="tablist"></div>
+    {{-- ตัวเลือกคอลัมน์อยู่คู่กับปุ่มค้นหา ไม่ใช่บนหัวหน้า — ทั้งสองอย่างคือการปรับมุมมองของตาราง
+         ส่วนปุ่มบนหัวหน้าเป็นการกระทำกับข้อมูล (เพิ่ม / ส่งออก) คนละหน้าที่กัน --}}
+    <div class="co-colpick" id="co-colpick">
+      <button type="button" class="co-search-btn" id="co-cols-btn" aria-expanded="false" aria-label="เลือกคอลัมน์ที่แสดง" title="เลือกคอลัมน์ที่แสดง">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v14H4zM10 5v14M15 5v14"/></svg>
+      </button>
+      <div class="co-colpick-panel" id="co-cols-panel" hidden></div>
+    </div>
+
     <div class="co-search" id="co-search">
       <button type="button" class="co-search-btn" id="co-search-btn" aria-expanded="false" aria-label="ค้นหาและกรอง">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
@@ -77,7 +86,7 @@
 <div class="modal-overlay" id="co-add-modal">
   <div class="modal co-add">
     <div class="modal-header">
-      <h3 class="modal-title">เพิ่มกลุ่มตัวอย่าง</h3>
+      <h3 class="modal-title" id="co-modal-title">เพิ่มกลุ่มตัวอย่าง</h3>
       <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
@@ -108,6 +117,26 @@
         <button type="submit" class="btn btn-primary" id="co-save" disabled>บันทึก</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ยืนยันก่อนลบ — ชื่อกับรหัสต้องเห็นก่อนกดยืนยัน ลบผิดคนแล้วกู้คืนเองไม่ได้ -->
+<div class="modal-overlay" id="co-del-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title">ยืนยันการลบ</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="mb-2">ต้องการลบ <strong id="co-del-name"></strong> ออกจากกลุ่มตัวอย่างใช่หรือไม่</p>
+      <p class="text-secondary small mb-0">ลบได้เฉพาะระเบียนที่ยังไม่มีคำตอบแบบประเมิน — ถ้าตอบไปแล้วให้ใช้ “ยุติการติดตาม” แทน</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-danger" id="co-del-confirm">ลบ</button>
+    </div>
   </div>
 </div>
 
@@ -250,28 +279,66 @@
 
   /* ความกว้างกริดผูกกับจำนวนรอบจริง ตั้งเป็นตัวแปร CSS ที่ .co-table ครั้งเดียว
      ไม่ต้องใส่ inline style ซ้ำทุกแถว และเพิ่มรอบใหม่แล้วหัวกับเนื้อไม่เลื่อนหลุดกัน */
+  /* นิยามคอลัมน์ทั้งหมดไว้ที่เดียว — หัวตาราง ความกว้าง และเนื้อแถวอ่านจากชุดนี้ชุดเดียว
+     ของเดิมเขียนแยกกันสามที่ เพิ่มคอลัมน์ทีต้องแก้ให้ตรงกันทั้งสามที่ ไม่งั้นหัวกับเนื้อเลื่อนหลุดกัน
+
+     key ของคอลัมน์รอบใช้ 'r:ชื่อรอบ' เพราะชุดรอบมาจาก master data เปลี่ยนได้ตลอด */
+  var COLUMNS = [
+    { key: 'name', label: 'ชื่อ / รหัส', width: 'minmax(190px, 1.6fr)', px: 190, fixed: true },
+    { key: 'contact', label: 'เบอร์ / อีเมล', width: 'minmax(150px, 1fr)', px: 150 },
+    { key: 'target', label: 'กลุ่มเป้าหมาย', width: '122px', px: 122 },
+    { key: 'entry', label: 'วันที่เข้ากลุ่ม', width: '108px', px: 108 },
+    { key: 'line', label: 'LINE', width: '106px', px: 106 }
+  ].concat(ROUND_COLUMNS.map(function (name) {
+    return { key: 'r:' + name, label: name, width: '52px', px: 52, center: true };
+  })).concat([
+    { key: 'next', label: 'รอบถัดไป', width: '158px', px: 158 },
+    { key: 'status', label: 'สถานะ', width: '116px', px: 116 }
+  ]);
+
+  var DEFAULT_COLUMNS = ['name', 'contact', 'entry', 'next']
+    .concat(ROUND_COLUMNS.map(function (n) { return 'r:' + n; }));
+
+  var COLUMN_STORE = 'tfc.cohort.columns';
+
+  function loadColumns() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(COLUMN_STORE) || 'null');
+      if (Array.isArray(saved) && saved.length) {
+        /* กรองด้วยชุดคอลัมน์ปัจจุบัน — รอบที่ถูกปิดใช้งานไปแล้วต้องไม่ค้างอยู่ในค่าที่เคยบันทึก */
+        var valid = saved.filter(function (k) {
+          return COLUMNS.some(function (c) { return c.key === k; });
+        });
+        if (valid.length) return valid;
+      }
+    } catch (err) { /* localStorage ปิดอยู่หรือค่าเสีย — ใช้ค่าเริ่มต้นแทน */ }
+
+    return DEFAULT_COLUMNS.slice();
+  }
+
+  var visibleColumns = loadColumns();
+
+  function shownColumns() {
+    return COLUMNS.filter(function (c) {
+      return c.fixed || visibleColumns.indexOf(c.key) > -1;
+    });
+  }
+
   function applyGridWidth() {
-    var roundCols = ROUND_COLUMNS.map(function () { return '52px'; }).join(' ');
+    var cols = shownColumns();
     var table = document.querySelector('.co-table');
 
     table.style.setProperty('--co-cols',
-      'minmax(170px, 1.6fr) 122px 108px 106px ' + roundCols + ' 158px 116px 44px');
+      cols.map(function (c) { return c.width; }).join(' ') + ' 56px');
     table.style.setProperty('--co-min-width',
-      (170 + 122 + 108 + 106 + ROUND_COLUMNS.length * 52 + 158 + 116 + 44 + 120) + 'px');
+      (cols.reduce(function (sum, c) { return sum + c.px; }, 0) + 56 + 40) + 'px');
   }
 
   function renderHead() {
     $('co-head').innerHTML =
-      '<div>ชื่อ / รหัส</div>' +
-      '<div>กลุ่มเป้าหมาย</div>' +
-      '<div>วันที่เข้ากลุ่ม</div>' +
-      '<div>LINE</div>' +
-      ROUND_COLUMNS.map(function (name) {
-        return '<div class="text-center">' + esc(name) + '</div>';
-      }).join('') +
-      '<div>รอบถัดไป</div>' +
-      '<div>สถานะ</div>' +
-      '<div></div>';
+      shownColumns().map(function (c) {
+        return '<div' + (c.center ? ' class="text-center"' : '') + '>' + esc(c.label) + '</div>';
+      }).join('') + '<div></div>';
   }
 
   var STATUS_CLASS = {
@@ -295,28 +362,65 @@
 
       var href = '{{ url('/admin/cohort') }}/' + m.id;
 
-      return '<div class="co-tr">' +
-        '<div class="co-name-cell">' +
-          '<a href="' + href + '" class="co-name">' + esc(m.name) + '</a>' +
-          '<span class="co-pid">' + esc(m.pid) + '</span>' +
+      function cellFor(c) {
+        if (c.key.indexOf('r:') === 0) {
+          var r = rMap[c.key.slice(2)];
+          return '<div class="co-round-cell">' + (r ? roundIcon(r) : '—') + '</div>';
+        }
+
+        switch (c.key) {
+          case 'name':
+            return '<div class="co-name-cell">' +
+              '<a href="' + href + '" class="co-name">' + esc(m.name) + '</a>' +
+              '<span class="co-pid">' + esc(m.pid) + '</span></div>';
+
+          /* เบอร์กับอีเมลซ้อนกันในช่องเดียว ไม่แยกสองคอลัมน์ — สองค่านี้ใช้แทนกันได้อยู่แล้ว
+             แยกออกไปก็ได้ตารางกว้างขึ้นโดยที่ช่องอีเมลว่างเกือบทั้งคอลัมน์ */
+          case 'contact':
+            return '<div class="co-contact">' +
+              '<span class="co-contact-main">' + esc(m.phone || '—') + '</span>' +
+              (m.email ? '<span class="co-contact-sub">' + esc(m.email) + '</span>' : '') +
+              '</div>';
+
+          case 'target': return '<div class="co-cell">' + esc(m.target) + '</div>';
+          case 'entry': return '<div class="co-cell">' + esc(fmt(m.entryDate)) + '</div>';
+
+          /* คนที่ยังไม่เชื่อม LINE คือคนที่ระบบส่งแจ้งเตือนให้ไม่ได้ ต้องเห็นตั้งแต่หน้ารายการ */
+          case 'line':
+            return '<div class="co-line ' + (m.line ? 'is-linked' : 'is-unlinked') + '">' +
+              (m.line ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม') + '</div>';
+
+          case 'next':
+            return '<div class="co-next">' +
+              '<span class="co-next-name">' + esc(m.nextRound || '—') + '</span>' +
+              (m.nextRoundDue
+                ? '<span class="co-next-due' + (NEXT_DUE_TONE[m.nextRoundState] || '') + '">ครบกำหนด ' + esc(fmt(m.nextRoundDue)) + '</span>'
+                : '') + '</div>';
+
+          case 'status':
+            return '<div><span class="co-status ' + (STATUS_CLASS[m.status] || '') + '">' + esc(m.status) + '</span></div>';
+        }
+
+        return '<div class="co-cell">—</div>';
+      }
+
+      /* เมนู ⋮ ชุดเดียวกับระบบกิจกรรม — สามปุ่มเรียงกันกินความกว้างจนตารางต้องเลื่อนแนวนอน
+         และปุ่มลบอยู่ติดปุ่มแก้ไขทำให้กดพลาดได้ง่าย */
+      var actions = JSON.stringify([
+        { key: 'view', icon: 'eye', label: 'รายละเอียด', href: href },
+        { key: 'edit', icon: 'edit', label: 'แก้ไข', modal: 'co-add-modal' },
+        { key: 'delete', icon: 'trash', label: 'ลบ', modal: 'co-del-modal' }
+      ]).replace(/"/g, '&quot;');
+
+      return '<div class="co-tr" data-row="' + esc(m.id) + '">' +
+        shownColumns().map(cellFor).join('') +
+        '<div class="co-actions">' +
+          '<button type="button" class="btn btn-icon btn-sm" data-action-menu="' + actions + '"' +
+            ' aria-label="เมนูเพิ่มเติม" aria-haspopup="true" aria-expanded="false">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">' +
+            '<circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/>' +
+            '</svg></button>' +
         '</div>' +
-        '<div class="co-cell">' + esc(m.target) + '</div>' +
-        '<div class="co-cell">' + esc(fmt(m.entryDate)) + '</div>' +
-        /* คนที่ยังไม่เชื่อม LINE คือคนที่ระบบส่งแจ้งเตือนให้ไม่ได้ ต้องเห็นตั้งแต่หน้ารายการ
-           ไม่ใช่ไปรู้ตอนเปิดรอบติดตามแล้วพบว่าส่งไม่ออก */
-        '<div class="co-line ' + (m.line ? 'is-linked' : 'is-unlinked') + '">' +
-          (m.line ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม') + '</div>' +
-        ROUND_COLUMNS.map(function (name) {
-          return '<div class="co-round-cell">' + (rMap[name] ? roundIcon(rMap[name]) : '—') + '</div>';
-        }).join('') +
-        '<div class="co-next">' +
-          '<span class="co-next-name">' + esc(m.nextRound || '—') + '</span>' +
-          (m.nextRoundDue
-            ? '<span class="co-next-due' + (NEXT_DUE_TONE[m.nextRoundState] || '') + '">ครบกำหนด ' + esc(fmt(m.nextRoundDue)) + '</span>'
-            : '') +
-        '</div>' +
-        '<div><span class="co-status ' + (STATUS_CLASS[m.status] || '') + '">' + esc(m.status) + '</span></div>' +
-        '<div><a href="' + href + '" class="btn btn-outline btn-sm">ดูข้อมูล</a></div>' +
         '</div>';
     }).join('');
 
@@ -411,7 +515,7 @@
     }
 
     var headers = ['รหัสบุคคล', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'เพศ', 'ช่วงอายุ', 'อาชีพ',
-      'พื้นที่', 'กลุ่มเป้าหมาย', 'แหล่งที่มา', 'วันที่เข้ากลุ่ม'];
+      'อีเมล', 'พื้นที่', 'กลุ่มเป้าหมาย', 'แหล่งที่มา', 'ที่มาของระเบียน', 'วันที่เข้ากลุ่ม'];
 
     /* รอบละสามคอลัมน์ — สถานะ / ครบกำหนด / ตอบเมื่อ ชื่อคอลัมน์มาจากรอบจริงในระบบ */
     ROUND_COLUMNS.forEach(function (name) {
@@ -425,7 +529,9 @@
       (m.rounds || []).forEach(function (r) { rMap[r.name] = r; });
 
       var row = [m.pid, m.name, m.phone, m.gender, m.age, m.job,
-        m.area, m.target, m.source, fmt(m.entryDate)];
+        /* ไฟล์ส่งออกเก็บครบทุกฟิลด์เสมอ ไม่ผูกกับคอลัมน์ที่เลือกแสดงบนหน้าจอ
+           เอาไปทำรายงานต่อ ไม่ใช่ภาพสำเนาของตาราง */
+        m.email || '', m.area, m.target, m.source, m.createdVia || 'ไม่ระบุ', fmt(m.entryDate)];
 
       ROUND_COLUMNS.forEach(function (name) {
         var r = rMap[name];
@@ -464,7 +570,12 @@
     rounds: lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; }),
     dueEdit: {}, editing: null,
     consent: false, consentFile: null, uploading: false,
-    saving: false
+    saving: false,
+    /* id ของกลุ่มตัวอย่างที่กำลังแก้ — null คือกำลังเพิ่มคนใหม่
+       ฟอร์มเดียวทำสองหน้าที่ เพราะช่องกรอกเหมือนกันทุกช่อง แยกสองฟอร์มแล้วต้องแก้สองที่ตลอด */
+    editId: null,
+    /* template_id ของใบที่ตอบไปแล้ว — ถอดออกหรือแก้วันครบกำหนดไม่ได้ */
+    lockedRounds: []
   };
 
   function optionsHtml(list, value, placeholder) {
@@ -591,11 +702,147 @@
     syncForm();
   }
 
+  /* กดปุ่มเพิ่มหลังจากเพิ่งแก้ไขคนหนึ่ง ต้องได้ฟอร์มเปล่า ไม่ใช่ค่าของคนที่แก้ค้างไว้ */
+  $('co-add-btn').addEventListener('click', function () {
+    resetForm();
+    $('co-modal-title').textContent = 'เพิ่มกลุ่มตัวอย่าง';
+  });
+
+  /* --- เลือกคอลัมน์ที่จะแสดง --- */
+  function renderColumnPicker() {
+    $('co-cols-panel').innerHTML = COLUMNS.map(function (c) {
+      var on = c.fixed || visibleColumns.indexOf(c.key) > -1;
+
+      return '<label class="co-colpick-item' + (c.fixed ? ' is-locked' : '') + '">' +
+        '<input type="checkbox" value="' + esc(c.key) + '"' +
+          (on ? ' checked' : '') + (c.fixed ? ' disabled' : '') + '>' +
+        '<span>' + esc(c.label) + '</span></label>';
+    }).join('') +
+    '<button type="button" class="co-link co-colpick-reset">คืนค่าเริ่มต้น</button>';
+  }
+
+  function saveColumns() {
+    try { window.localStorage.setItem(COLUMN_STORE, JSON.stringify(visibleColumns)); }
+    catch (err) { /* localStorage ปิดอยู่ — ใช้ได้ในรอบนี้ แต่ไม่จำข้ามครั้ง */ }
+
+    applyGridWidth();
+    renderHead();
+    renderTable();
+  }
+
+  function setColumnPanel(open) {
+    $('co-cols-panel').hidden = !open;
+    $('co-cols-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    /* is-on คือคลาสเดียวกับที่ปุ่มค้นหาข้าง ๆ ใช้ — สองปุ่มนี้ต้องดูเป็นชุดเดียวกัน */
+    $('co-cols-btn').classList.toggle('is-on', open);
+  }
+
+  $('co-cols-btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    setColumnPanel($('co-cols-panel').hidden);
+  });
+
+  /* คลิกในแผงต้องไม่ปิดแผง — ผู้ใช้ติ๊กหลายคอลัมน์ติดกันเป็นเรื่องปกติ */
+  $('co-cols-panel').addEventListener('click', function (e) { e.stopPropagation(); });
+
+  /* ปิดได้ทั้งคลิกนอกแผงและกด Esc — แผงที่ปิดยากจะบังตารางค้างอยู่อย่างนั้น */
+  document.addEventListener('click', function () { setColumnPanel(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setColumnPanel(false);
+  });
+
+  $('co-cols-panel').addEventListener('change', function (e) {
+    var box = e.target.closest('input[type="checkbox"]');
+    if (!box) return;
+
+    var at = visibleColumns.indexOf(box.value);
+    if (box.checked && at === -1) visibleColumns.push(box.value);
+    if (!box.checked && at > -1) visibleColumns.splice(at, 1);
+
+    saveColumns();
+  });
+
+  $('co-cols-panel').addEventListener('click', function (e) {
+    if (!e.target.closest('.co-colpick-reset')) return;
+    visibleColumns = DEFAULT_COLUMNS.slice();
+    renderColumnPicker();
+    saveColumns();
+  });
+
+  /* --- เมนู ⋮ ของแต่ละแถว ---
+     รายละเอียดเป็นลิงก์ตรง ส่วนแก้ไข/ลบเปิด modal — ตัวจัดการเมนูกลาง (action-menu.js)
+     เป็นคนเปิด modal ให้ ตรงนี้จึงมีหน้าที่เตรียมข้อมูลของแถวนั้นไว้ก่อนที่ modal จะถูกเปิด */
+  var removeTarget = null;
+
+  $('co-rows').addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-action-menu]');
+    if (!trigger) return;
+
+    var row = trigger.closest('[data-row]');
+    var m = row && membersList.find(function (x) { return String(x.id) === row.getAttribute('data-row'); });
+    if (!m) return;
+
+    removeTarget = m;
+
+    fillFormFrom(m);
+    $('co-modal-title').textContent = 'แก้ไขกลุ่มตัวอย่าง · ' + m.pid;
+
+    $('co-del-name').textContent = m.name + ' (' + m.pid + ')';
+  });
+
+  $('co-del-confirm').addEventListener('click', function () {
+    if (!removeTarget) return;
+
+    var target = removeTarget;
+    var btn = $('co-del-confirm');
+    btn.disabled = true;
+
+    fetch('{{ url('/admin/cohort') }}/' + target.id, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        /* IIS บนเซิร์ฟเวอร์ดัก DELETE ไว้ตั้งแต่ก่อนถึง PHP */
+        'X-HTTP-Method-Override': 'DELETE'
+      },
+      body: '{}'
+    })
+      .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
+      .then(function (res) {
+        btn.disabled = false;
+
+        if (!res.ok || !res.body.success) {
+          toast(firstError(res.body) || 'ลบไม่สำเร็จ', 'danger');
+          return;
+        }
+
+        var at = membersList.findIndex(function (x) { return String(x.id) === String(target.id); });
+        if (at >= 0) membersList.splice(at, 1);
+
+        if (window.TFC.closeModal) window.TFC.closeModal('co-del-modal');
+        renderTabs();
+        renderTable();
+        toast(res.body.message || 'ลบเรียบร้อย', 'success');
+      })
+      .catch(function () {
+        btn.disabled = false;
+        toast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
+      });
+  });
+
   /* --- เหตุการณ์ในฟอร์ม --- */
   document.addEventListener('click', function (e) {
     var chip = e.target.closest('[data-round-chip]');
     if (chip) {
       var rid = Number(chip.getAttribute('data-round-chip'));
+
+      /* ใบที่ตอบไปแล้วถอดออกไม่ได้ — คำตอบผูกกับใบนั้น ถอดแล้วคำตอบกลายเป็นข้อมูลกำพร้า */
+      if (form.lockedRounds.indexOf(rid) > -1) {
+        toast('รอบนี้มีคำตอบแล้ว จึงถอดออกไม่ได้', 'warning');
+        return;
+      }
+
       var at = form.rounds.indexOf(rid);
       if (at > -1) form.rounds.splice(at, 1); else form.rounds.push(rid);
       renderRoundChips();
@@ -702,7 +949,41 @@
     form.rounds = lookups.followUpRounds.filter(function (r) { return r.checked; }).map(function (r) { return r.value; });
     form.dueEdit = {}; form.editing = null;
     form.consent = false; form.consentFile = null;
+    form.editId = null; form.lockedRounds = [];
     $('co-consent').checked = false;
+    $('co-file').value = '';
+    renderAddModal();
+  }
+
+  /* เติมฟอร์มจากค่าดิบที่เซิร์ฟเวอร์ส่งมาใน m.edit — ค่าที่แสดงในตารางเป็นข้อความแล้ว
+     (เพศเป็น "ชาย" ไม่ใช่ "male") เอากลับเข้า <select> ไม่ได้ */
+  function fillFormFrom(m) {
+    var e = m.edit || {};
+
+    form.name = e.name || '';
+    form.phone = e.phone || '';
+    form.gender = e.gender || '';
+    form.ageRangeId = e.ageRangeId || '';
+    form.occupationId = e.occupationId || '';
+    form.areaId = e.areaId || '';
+    form.targetGroupId = e.targetGroupId || '';
+    form.sourceCode = e.sourceCode || '';
+    form.entryDate = e.entryDate || lookups.today;
+    form.status = e.status || lookups.statuses[0] || '';
+    form.rounds = (e.rounds || []).map(function (r) { return r.templateId; });
+    form.lockedRounds = (e.rounds || []).filter(function (r) { return r.answered; })
+      .map(function (r) { return r.templateId; });
+
+    /* วันครบกำหนดที่แอดมินเคยแก้ทับไว้ต้องกลับมาตามเดิม ไม่ใช่คำนวณใหม่จาก offset
+       ไม่งั้นแค่เปิดฟอร์มแก้ชื่อ วันครบกำหนดของทุกรอบก็เปลี่ยนตามไปด้วย */
+    form.dueEdit = {};
+    (e.rounds || []).forEach(function (r) { if (r.dueDate) form.dueEdit[r.templateId] = r.dueDate; });
+
+    form.editing = null;
+    form.editId = m.id;
+    /* ความยินยอมเก็บไว้แล้วตอนสร้าง ไม่ต้องให้ติ๊กซ้ำตอนแก้ */
+    form.consent = true; form.consentFile = null;
+    $('co-consent').checked = true;
     $('co-file').value = '';
     renderAddModal();
   }
@@ -733,13 +1014,19 @@
       consent_file_path: form.consentFile
     };
 
-    fetch('{{ route('admin.cohort.store') }}', {
+    var editing = form.editId;
+    var headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    };
+
+    /* IIS บนเซิร์ฟเวอร์ดัก PUT ไว้ตั้งแต่ก่อนถึง PHP — ส่งเป็น POST แล้วบอกเมธอดจริงผ่านหัวข้อนี้ */
+    if (editing) headers['X-HTTP-Method-Override'] = 'PUT';
+
+    fetch(editing ? '{{ url('/admin/cohort') }}/' + editing : '{{ route('admin.cohort.store') }}', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken
-      },
+      headers: headers,
       body: JSON.stringify(payload)
     })
       .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
@@ -749,6 +1036,21 @@
         if (!res.ok || !res.body.success) {
           syncForm();
           toast(firstError(res.body) || 'เกิดข้อผิดพลาดในการบันทึก', 'danger');
+          return;
+        }
+
+        if (editing) {
+          /* แทนที่แถวเดิมในตำแหน่งเดิม ไม่ใช่ย้ายขึ้นหัวรายการ — แอดมินกำลังไล่แก้ทีละแถว
+             แถวที่เพิ่งแก้กระโดดหนีทำให้หาแถวถัดไปไม่เจอ */
+          var at = membersList.findIndex(function (x) { return String(x.id) === String(editing); });
+          if (at >= 0) membersList[at] = res.body.data;
+
+          renderTabs();
+          renderTable();
+
+          if (window.TFC.closeModal) window.TFC.closeModal('co-add-modal');
+          toast(res.body.message || 'แก้ไขเรียบร้อย', 'success');
+          resetForm();
           return;
         }
 
@@ -793,6 +1095,7 @@
 
   applyGridWidth();
   renderHead();
+  renderColumnPicker();
   renderLegend();
   renderTabs();
   fillFilters();

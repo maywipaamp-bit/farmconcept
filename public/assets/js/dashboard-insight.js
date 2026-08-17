@@ -182,40 +182,11 @@
     if (activeKey) closeTip();
   }, { passive: true });
 
-  /* ---------------------------------------------------------------
-     3) เส้นฐานของกราฟแท่งหลักสูตร
-     ผูกความสูงกับความสูงจริงของรายการช่วงอายุที่อยู่แผงข้าง ๆ
-     ให้เส้นฐานสองกราฟอยู่ระดับเดียวกันตามที่ handoff ระบุ
-     --------------------------------------------------------------- */
-  var observer = null;
-
-  function syncBaseline() {
-    var source = body.querySelector('[data-dbo-baseline-source]');
-    var bars = body.querySelector('.dbo-bars');
-    if (!source || !bars) return;
-
-    /* จอแคบที่สองแผงตกบรรทัดคนละบรรทัดแล้ว การล็อกความสูงไม่มีความหมาย
-       ปล่อยให้กราฟใช้ความสูงของตัวเองตาม CSS */
-    if (source.getBoundingClientRect().top !== bars.getBoundingClientRect().top) {
-      bars.style.removeProperty('--dbo-chart-h');
-      return;
-    }
-
-    var height = Math.round(source.getBoundingClientRect().height);
-    if (height > 40) bars.style.setProperty('--dbo-chart-h', height + 'px');
-  }
-
-  function watchBaseline() {
-    var source = body.querySelector('[data-dbo-baseline-source]');
-    if (observer) observer.disconnect();
-    if (!source || typeof ResizeObserver === 'undefined') return;
-
-    observer = new ResizeObserver(syncBaseline);
-    observer.observe(source);
-  }
+  /* หมายเหตุ: เดิมมีขั้นตอนที่ 3 คอยล็อกความสูงกราฟแท่งหลักสูตรให้เส้นฐานตรงกับ
+     รายการช่วงอายุแผงข้าง ๆ — ถูกถอดออกพร้อมกับแผง "หลักสูตรที่มีผู้เข้าร่วมสูงสุด" */
 
   /* ---------------------------------------------------------------
-     4) กล่อง treemap ที่เตี้ยเกินกว่าจะใส่ชื่อได้
+     3) กล่อง treemap ที่เตี้ยเกินกว่าจะใส่ชื่อได้
      เซิร์ฟเวอร์เดาไว้จากสัดส่วนความสูงแล้ว ที่นี่วัดพิกเซลจริงแล้วแก้ให้ตรง
      --------------------------------------------------------------- */
   var COMPACT_HEIGHT = 62;
@@ -272,8 +243,6 @@
       })
       .then(function (payload) {
         body.innerHTML = payload.html;
-        watchBaseline();
-        syncBaseline();
         syncTiles();
 
         if (push) {
@@ -326,11 +295,8 @@
   /* ---------------------------------------------------------------
      เริ่มทำงาน
      --------------------------------------------------------------- */
-  watchBaseline();
-  syncBaseline();
   syncTiles();
   window.addEventListener('resize', function () {
-    syncBaseline();
     syncTiles();
   });
 
@@ -338,7 +304,6 @@
      วัดใหม่อีกครั้งตอนนั้น ไม่งั้นเส้นฐานสองกราฟจะเหลื่อมกันอยู่ไม่กี่พิกเซล */
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () {
-      syncBaseline();
       syncTiles();
     });
   }

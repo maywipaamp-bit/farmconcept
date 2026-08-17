@@ -17,12 +17,15 @@
    และ <link> ในหน้ายังเริ่มโหลดฟอนต์ได้เร็วกว่าโดยไม่ต้องรอ CSS มาถึงก่อน */
 
 .dbo {
-  /* ---- สเกลเขียว 5 ระดับ = "ปริมาณ" เข้ม=มาก · ใช้ร่วมกันทุกกราฟ ---- */
-  --dbo-g0: #2f6b36;
-  --dbo-g1: #4a8d51;
-  --dbo-g2: #69a870;
-  --dbo-g3: #8fc194;
-  --dbo-g4: #b6d8b9;
+  /* ---- สเกลเขียว 5 ระดับ = "ปริมาณ" เข้ม=มาก · ใช้ร่วมกันทุกกราฟ ----
+     ช่วงความสว่างกว้างกว่าเดิม (เดิม #2f6b36→#b6d8b9 ห่างกันน้อยจนชิ้นที่ 2-3-4
+     ในโดนัทแยกกันไม่ออก) และไล่โทนอุ่นขึ้นเล็กน้อยตรงกลางให้ดูมีชีวิต
+     ยังเป็นเฉดเดียวทั้งชุด เพราะเป็นสเกล "ปริมาณ" ที่ต้องอ่านเป็นลำดับ ไม่ใช่หมวดหมู่ */
+  --dbo-g0: #24603a;
+  --dbo-g1: #3d8b55;
+  --dbo-g2: #5faf74;
+  --dbo-g3: #92cca1;
+  --dbo-g4: #c6e3cd;
 
   --dbo-brand: #4f9455;
   --dbo-brand-hover: #427f48;
@@ -110,7 +113,9 @@
 
   --dbo-dur: .15s;
   --dbo-dur-bar: .3s;
-  --dbo-gap-row: 18px;
+  /* ระยะระหว่างแถวการ์ด — เดิม 18px ทำให้ทั้งหน้าดูอัดแน่น
+     ขยับเป็น 24px ตามสเกลระยะห่าง 4px ของระบบ (CLAUDE.md ข้อ 8) */
+  --dbo-gap-row: 24px;
 }
 
 /* ---- เฉดตามอันดับ: rank 0 = มากสุด = เข้มสุด ----
@@ -246,16 +251,16 @@
   background: var(--dbo-card);
   border: 1px solid var(--dbo-card-border);
   border-radius: var(--dbo-radius);
-  padding: 20px 24px 20px;
+  padding: 24px 26px;
   box-shadow: var(--dbo-shadow);
   display: flex;
   flex-direction: column;
-  /* ระยะหัวการ์ด -> เนื้อหา · 14px พอให้แยกกลุ่มได้โดยไม่เหลือช่องว่างลอย
+  /* ระยะหัวการ์ด -> เนื้อหา · 16px พอให้แยกกลุ่มได้โดยไม่เหลือช่องว่างลอย
      (เดิม 20px ทำให้หัวการ์ดดูหลุดออกจากกราฟที่มันกำกับอยู่) */
-  gap: 14px;
+  gap: 16px;
 }
 
-.dbo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+.dbo-row { display: flex; flex-wrap: wrap; gap: var(--dbo-gap-row); align-items: stretch; }
 
 .dbo-card-head {
   display: flex;
@@ -380,7 +385,8 @@
 .dbo-kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 16px;
+  /* ระยะเท่ากับช่องไฟระหว่างการ์ดแถวอื่น ทั้งหน้าจึงมีจังหวะเดียว */
+  gap: var(--dbo-gap-row);
 }
 
 .dbo-kpi { padding: 20px 22px 18px; gap: 14px; }
@@ -455,11 +461,10 @@
 
 .dbo-total-note .dbo-num { font-weight: var(--dbo-fw-num); color: var(--dbo-brand); }
 
-.dbo-panels { display: flex; flex-wrap: wrap; gap: 20px 0; align-items: stretch; }
+.dbo-panels { display: flex; flex-wrap: wrap; gap: 24px 0; align-items: stretch; }
 
-/* ระยะหัวแผง -> กราฟของแผงนั้น
-   ต้องเท่ากันทุกแผง (รวม .dbo-courses-chart ที่มีหัวแผงของตัวเอง)
-   ไม่งั้นรายการช่วงอายุกับกราฟแท่งจะเริ่มไม่พร้อมกัน แล้วเส้นฐานเหลื่อมกัน */
+/* ระยะหัวแผง -> กราฟของแผงนั้น ต้องเท่ากันทุกแผง
+   ไม่งั้นรายการช่วงอายุกับอาชีพจะเริ่มไม่พร้อมกัน แล้วเส้นฐานเหลื่อมกัน */
 .dbo-panel { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 
 /* เส้นคั่นระหว่างแผงมีเฉพาะตอนที่แผงยังอยู่บรรทัดเดียวกัน
@@ -468,10 +473,14 @@
    น้ำหนักการโตไม่เท่ากันทั้งสี่แผง — แผงเพศมีเนื้อหาคงที่แค่สามบรรทัด
    ให้พื้นที่เพิ่มไปเท่าไหร่ก็เหลือว่าง จึงไม่ให้โตเลย (flex-grow: 0)
    ที่เหลือไปลงกับสองแผงที่มีแท่งกราฟ ซึ่งยิ่งกว้างยิ่งอ่านง่ายขึ้นจริง */
-.dbo-panel--gender { flex: 0 1 180px; padding-right: 24px; border-right: 1px solid var(--dbo-divider); }
-.dbo-panel--age { flex: 1 1 220px; padding: 0 24px; border-right: 1px solid var(--dbo-divider); }
-.dbo-panel--job { flex: 1 1 240px; padding: 0 24px; border-right: 1px solid var(--dbo-divider); }
-.dbo-panel--courses { flex: 2 1 280px; padding-left: 24px; }
+/* สามแผงแรกเป็น "ใครมา" อยู่บรรทัดบนเรียงกัน ส่วนหลักสูตรยอดนิยมเป็นคนละคำถาม
+   ("มาเรียนอะไร") และมีทั้งกราฟแท่งกับตาราง จึงยกลงมาเต็มความกว้างบรรทัดล่าง
+   เดิมยัดสี่แผงบรรทัดเดียวจนแต่ละแผงเหลือที่แคบและอ่านยาก */
+/* สามแผงแบ่งความกว้างเท่า ๆ กัน — แผงเพศมีสามบรรทัดคงที่ ส่วนสองแผงที่เหลือเป็นแท่งกราฟ
+   ให้ที่เท่ากันแล้วอ่านง่ายพอกันทั้งสามในจอปกติ */
+.dbo-panel--gender { flex: 1 1 220px; padding-right: 28px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--age { flex: 1 1 260px; padding: 0 28px; border-right: 1px solid var(--dbo-divider); }
+.dbo-panel--job { flex: 1 1 260px; padding-left: 28px; }
 
 /* ---- เพศ ---- */
 /* --dbo-c ของแถวเพศไม่ได้มาจากสเกลปริมาณ แต่ต้องมีเพื่อให้จุดสีในกล่อง tooltip
@@ -589,83 +598,6 @@
   box-shadow: 0 0 0 3px rgba(79, 148, 85, .22);
   border-radius: var(--dbo-bar-lg);
 }
-
-/* ---- หลักสูตร: กราฟแท่งตั้ง ----
-   ตารางอันดับข้าง ๆ ถูกตัดออกตามที่ทีมสั่ง — ตัวเลขบนหัวแท่งกับ tooltip
-   ให้ข้อมูลเดียวกันอยู่แล้ว (ชื่อ · จำนวน · สัดส่วน) ตารางจึงเป็นการพูดซ้ำ */
-/* gap ต้องเท่ากับ .dbo-panel — หัวแผงของกราฟนี้อยู่ในกล่องนี้ ไม่ใช่ในกล่องแผง
-   ถ้าไม่เท่า กราฟแท่งจะเริ่มสูง/ต่ำกว่ารายการช่วงอายุที่ JS ใช้วัดความสูงให้ */
-.dbo-courses-chart { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-
-/* ความสูงถูก JS ตั้งให้เท่ากับความสูงจริงของรายการช่วงอายุ เส้นฐานสองกราฟจึงตรงกัน
-   ค่าเริ่มต้นเป็นค่าที่ใกล้ของจริง กันเลย์เอาต์กระโดดก่อน JS วัดเสร็จ */
-.dbo-bars {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 14px;
-  align-items: end;
-  height: var(--dbo-chart-h, 176px);
-  min-height: 120px;
-  border-bottom: 1px solid var(--dbo-axis);
-}
-
-.dbo-bar {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 2px 0;
-  border-radius: var(--dbo-bar-lg) var(--dbo-bar-lg) 0 0;
-}
-
-.dbo-bar-count { flex: none; font-size: var(--dbo-fs-small); font-weight: var(--dbo-fw-num); color: var(--dbo-text); }
-.dbo-bar-slot { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-
-.dbo-bar-fill {
-  flex: none;
-  width: 100%;
-  max-width: 22px;
-  min-height: 4px;
-  height: var(--dbo-h);
-  border-radius: var(--dbo-bar) var(--dbo-bar) 0 0;
-  background: var(--dbo-c);
-  transition: height var(--dbo-dur-bar) ease, opacity var(--dbo-dur);
-}
-
-.dbo-bar-labels {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 14px;
-}
-
-/* ชื่อหลักสูตรยาวไม่เท่ากัน บางชื่อยาวถึง 4 บรรทัดซึ่งดันความสูงการ์ดทั้งใบ
-   ตัดที่ 2 บรรทัดแล้วต่อ … ชื่อเต็มดูได้จาก tooltip ตอนชี้ (ดูแอตทริบิวต์ใน Blade)
-   line-clamp ต้องมาพร้อม display: -webkit-box จึงทำงาน — เขียนทั้งชื่อมาตรฐาน
-   และแบบ -webkit- เพราะเบราว์เซอร์รองรับไม่เท่ากัน */
-.dbo-bar-label {
-  min-width: 0;
-  text-align: center;
-  font-size: var(--dbo-fs-small);
-  line-height: 1.35;
-  color: var(--dbo-text-2);
-  overflow-wrap: break-word;
-
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  /* จองความสูงไว้ 2 บรรทัดเสมอ ป้ายสั้นกับป้ายยาวจึงเริ่มที่ระดับเดียวกัน
-     ไม่งั้นแถวป้ายจะเหลื่อมกันตามความยาวชื่อ */
-  min-height: calc(1.35em * 2);
-  cursor: default;
-}
-
-/* สไตล์ของตารางอันดับหลักสูตร (.dbo-rank-*) ถูกถอดออกพร้อมกับตารางนั้น */
 
 /* ==========================================================================
    แถว 3 ซ้าย — โดนัทกลุ่มตัวอย่าง
@@ -931,8 +863,9 @@
    แถว 5 — พื้นที่ดำเนินงาน
    ========================================================================== */
 
-.dbo-card--treemap { flex: 3 1 320px; min-width: 0; padding: 22px 24px; gap: 16px; }
-.dbo-card--areas { flex: 2 1 300px; min-width: 0; padding: 22px 24px; gap: 16px; }
+/* ระยะขอบเท่ากับ .dbo-card ปกติ ไม่ให้การ์ดแถวล่างดูอัดกว่าแถวบน */
+.dbo-card--treemap { flex: 3 1 320px; min-width: 0; padding: 24px 26px; gap: 16px; }
+.dbo-card--areas { flex: 2 1 300px; min-width: 0; padding: 24px 26px; gap: 16px; }
 
 .dbo-treemap {
   position: relative;
@@ -1034,8 +967,7 @@
   }
 
   .dbo-panel--age,
-  .dbo-panel--job,
-  .dbo-panel--courses { padding-left: 0; }
+  .dbo-panel--job { padding-left: 0; }
 }
 
 @media (max-width: 720px) {

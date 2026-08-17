@@ -36,7 +36,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var GROUPS = ['แจ้งเตือนได้ (LINE)', 'แจ้งเตือนไม่ได้ (ติดตามนอกระบบ)'];
-  var state = { group: GROUPS[0], editId: null, notifying: false };
+  var state = { group: GROUPS[0], editId: null };
 
   var STATE_CLASS = {
     'กำลังดำเนินการ': 'is-active', 'รอเริ่ม': 'is-waiting',
@@ -68,11 +68,9 @@
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div>' +
-        '<button type="button" class="btn btn-outline" id="rd-notify"' +
-          (batch.cancelled || batch.total === 0 || state.notifying ? ' disabled' : '') + '>' +
-          (state.notifying ? 'กำลังส่ง…' : 'ส่งแจ้งเตือนอีกครั้ง') + '</button>' +
-      '</div>';
+      /* ปุ่มส่งทั้งรอบถูกตัดออก — ส่งซ้ำทั้งก้อนยิงถึงคนที่ตอบไปแล้วด้วย เป็นการรบกวนที่ไม่มีเหตุผล
+         ตอนนี้ส่งเป็นรายคนได้จากตารางด้านล่าง ซึ่งเห็นสถานะของแต่ละคนก่อนกด */
+      '';
   }
 
   function renderGroups() {
@@ -118,6 +116,14 @@
         '<div><span class="cd-badge ' + (sent ? 'is-good' : (notYet ? 'is-idle' : 'is-warn')) + '">' +
           esc(notYet ? 'ยังไม่ส่ง' : p.notifyResult) + '</span></div>' +
         '<div><span class="cd-badge ' + MEMBER_CLASS[p.state] + '">' + esc(p.state) + '</span></div>' +
+        /* ส่งทีละคนโดยเห็นสถานะของคนนั้นอยู่ตรงหน้า — คนที่ตอบไปแล้วไม่ต้องส่งซ้ำให้รบกวน
+           ปุ่มจึงปิดไว้ ต่างจากการส่งทั้งรอบที่ยิงถึงทุกคนพร้อมกัน */
+        '<div class="text-center">' +
+          (p.state === 'ตอบแล้ว'
+            ? '<span class="text-muted">—</span>'
+            : '<button type="button" class="btn btn-outline btn-sm" data-notify-member="' + esc(p.memberId) + '"' +
+                (batch.cancelled ? ' disabled' : '') + '>' + (sent ? 'ส่งอีกครั้ง' : 'ส่งแจ้งเตือน') + '</button>') +
+        '</div>' +
         '</div>';
     }).join('');
 
@@ -126,6 +132,7 @@
         '<div class="fb-tr fb-th">' +
           '<div>ชื่อ / รหัส</div><div>เบอร์โทร</div><div>พื้นที่</div>' +
           '<div>รอบที่ติดตาม</div><div>ครบกำหนด</div><div>การส่ง</div><div>สถานะ</div>' +
+          '<div class="text-center">แจ้งเตือน</div>' +
         '</div>' + (rows || emptyHtml('ไม่มีคนที่แจ้งเตือนได้ในรอบนี้')) +
       '</div></div></div>';
   }
@@ -206,19 +213,18 @@
     var g = t.closest('[data-group]');
     if (g) { state.group = g.getAttribute('data-group'); state.editId = null; renderGroups(); return renderPanel(); }
 
-    if (t.closest('#rd-notify')) {
-      if ($('rd-notify').disabled) return;
-      state.notifying = true;
-      renderHeader();
-      api('{{ route('admin.tracking-rounds.send-notify', $batch['code']) }}', 'POST').then(function (res) {
-        state.notifying = false;
-        if (!res.ok) { renderHeader(); return window.TFC.showToast(res.body.message || 'ส่งแจ้งเตือนไม่สำเร็จ', 'danger'); }
-        /* โหลดรอบใหม่ทั้งก้อนเพื่อให้สถานะการส่งรายคนตรงกับที่บันทึกจริง */
-        return api('{{ route('admin.tracking-rounds.show', $batch['code']) }}', 'GET').then(function (fresh) {
-          if (fresh.ok) batch = fresh.body.data;
-          render();
-          window.TFC.showToast(res.body.message, res.body.notify.sent > 0 ? 'success' : 'warning');
-        });
+    var one = t.closest('[data-notify-member]');
+    if (one) {
+      if (one.disabled) return;
+      one.disabled = true;
+      one.textContent = 'กำลังส่ง…';
+
+      api('{{ url('admin/tracking-rounds') }}/{{ $batch['code'] }}/members/'
+        + encodeURIComponent(one.getAttribute('data-notify-member')) + '/notify', 'POST').then(function (res) {
+        if (res.ok && res.body.data) batch = res.body.data;
+        render();
+        window.TFC.showToast(res.body.message || 'ส่งแจ้งเตือนไม่สำเร็จ',
+          res.ok && res.body.success ? 'success' : 'warning');
       });
       return;
     }

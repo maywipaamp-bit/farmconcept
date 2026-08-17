@@ -22,15 +22,18 @@ class PublicPostSurveyService
             ->first();
     }
 
-    /** @param array<string, mixed> $answers */
-    public function submit(Activity $activity, array $answers): SatisfactionResponse
+    /**
+     * @param  array<string, mixed>  $answers
+     * @param  bool  $byStaff  เจ้าหน้าที่ทำแทน — ข้ามการเช็กช่วงเวลาเปิดรับคำตอบ
+     */
+    public function submit(Activity $activity, array $answers, bool $byStaff = false): SatisfactionResponse
     {
-        return DB::transaction(function () use ($activity, $answers): SatisfactionResponse {
+        return DB::transaction(function () use ($activity, $answers, $byStaff): SatisfactionResponse {
             $lockedActivity = Activity::query()->lockForUpdate()->findOrFail($activity->id);
             $form = $this->form($lockedActivity);
 
             if ($lockedActivity->visibility !== 'สาธารณะ'
-                || ! $lockedActivity->acceptsPostSurvey()
+                || ! $lockedActivity->acceptsPostSurvey($byStaff)
                 || ! $form) {
                 throw ValidationException::withMessages([
                     'survey' => 'แบบประเมินนี้ยังไม่เปิดรับคำตอบหรือปิดรับคำตอบแล้ว',

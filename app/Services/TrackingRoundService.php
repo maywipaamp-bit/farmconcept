@@ -301,6 +301,62 @@ class TrackingRoundService
      *
      * @return array{sent: int, failed: int, noChannel: int, lineConfigured: bool}
      */
+    /**
+     * ส่งแจ้งเตือนให้คนเดียว แล้วบันทึกผลลงใบสมาชิกกับประวัติของคนนั้น
+     *
+     * แยกออกมาเพราะแอดมินต้องส่งรายคนได้จากหน้ารายละเอียด — การส่งซ้ำทั้งรอบ
+     * ยิงถึงคนที่ตอบไปแล้วด้วย ซึ่งเป็นการรบกวนที่ไม่มีเหตุผล
+     *
+     * @return 'sent'|'failed'|'noChannel'  ผลที่เกิดขึ้นจริง ใช้เป็นคีย์นับในสรุปของ notify()
+     */
+    public function notifyMember(RoundBatch $batch, RoundBatchMember $member): string
+    {
+        $member->loadMissing(['cohortProfile.participant', 'followUpRound']);
+
+        $participant = $member->cohortProfile?->participant;
+        $lineUserId = $participant?->line_user_id;
+
+        if (blank($lineUserId)) {
+            $member->update([
+                'notify_channel' => RoundBatchMember::CHANNEL_NONE,
+                'notify_result' => RoundBatchMember::RESULT_NO_CHANNEL,
+            ]);
+
+            return 'noChannel';
+        }
+
+        $message = $this->fillTemplate($batch->notification_template, $participant, $member->followUpRound);
+        /* ส่งเป็นการ์ดมีปุ่มกดเสมอ — รอบกับวันครบกำหนดขึ้นบนการ์ดเป็นโครงสร้างอยู่แล้ว
+           แอดมินจึงไม่ต้องพะวงว่าลืมใส่ตัวแปรในข้อความ */
+        $ok = $this->push->pushSurveyInvite(
+            $lineUserId,
+            $message,
+            $member->followUpRound->name,
+            $this->thaiDate($member->followUpRound->due_date),
+            $this->healthUrl(),
+        );
+
+        $member->update([
+            'notified_at' => now(),
+            'notify_channel' => RoundBatchMember::CHANNEL_LINE,
+            'notify_result' => $ok ? RoundBatchMember::RESULT_SENT : RoundBatchMember::RESULT_FAILED,
+        ]);
+
+        /* ทุกครั้งที่ส่ง ต้องมีร่องรอยในประวัติของคนนั้น ไม่งั้นแอดมินที่เปิดหน้ากลุ่มตัวอย่าง
+           จะไม่รู้ว่าเคยตามไปแล้วกี่ครั้ง แล้วโทรตามซ้ำ */
+        FollowUpNote::create([
+            'participant_id' => $participant->id,
+            'source' => 'ระบบแจ้งเตือน',
+            'kind' => 'แจ้งเตือน LINE',
+            'noted_at' => now(),
+            'body' => 'ส่งแจ้งเตือน'.$member->followUpRound->name.' · '
+                .($ok ? 'ส่งสำเร็จ' : 'ส่งไม่สำเร็จ').' (รอบ '.$batch->name.')',
+            'created_by' => auth()->id(),
+        ]);
+
+        return $ok ? 'sent' : 'failed';
+    }
+
     public function notify(RoundBatch $batch): array
     {
         $batch->loadMissing(['members.cohortProfile.participant', 'members.followUpRound']);
@@ -314,49 +370,8 @@ class TrackingRoundService
                 continue;
             }
 
-            $participant = $member->cohortProfile?->participant;
-            $lineUserId = $participant?->line_user_id;
-
-            if (blank($lineUserId)) {
-                $member->update([
-                    'notify_channel' => RoundBatchMember::CHANNEL_NONE,
-                    'notify_result' => RoundBatchMember::RESULT_NO_CHANNEL,
-                ]);
-                $result['noChannel']++;
-
-                continue;
-            }
-
-            $message = $this->fillTemplate($batch->notification_template, $participant, $member->followUpRound);
-            /* ส่งเป็นการ์ดมีปุ่มกดเสมอ — รอบกับวันครบกำหนดขึ้นบนการ์ดเป็นโครงสร้างอยู่แล้ว
-               แอดมินจึงไม่ต้องพะวงว่าลืมใส่ตัวแปรในข้อความ */
-            $ok = $this->push->pushSurveyInvite(
-                $lineUserId,
-                $message,
-                $member->followUpRound->name,
-                $this->thaiDate($member->followUpRound->due_date),
-                $this->healthUrl(),
-            );
-
-            $member->update([
-                'notified_at' => now(),
-                'notify_channel' => RoundBatchMember::CHANNEL_LINE,
-                'notify_result' => $ok ? RoundBatchMember::RESULT_SENT : RoundBatchMember::RESULT_FAILED,
-            ]);
-
-            /* ทุกครั้งที่ส่ง ต้องมีร่องรอยในประวัติของคนนั้น ไม่งั้นแอดมินที่เปิดหน้ากลุ่มตัวอย่าง
-               จะไม่รู้ว่าเคยตามไปแล้วกี่ครั้ง แล้วโทรตามซ้ำ */
-            FollowUpNote::create([
-                'participant_id' => $participant->id,
-                'source' => 'ระบบแจ้งเตือน',
-                'kind' => 'แจ้งเตือน LINE',
-                'noted_at' => now(),
-                'body' => 'ส่งแจ้งเตือน'.$member->followUpRound->name.' · '
-                    .($ok ? 'ส่งสำเร็จ' : 'ส่งไม่สำเร็จ').' (รอบ '.$batch->name.')',
-                'created_by' => auth()->id(),
-            ]);
-
-            $ok ? $result['sent']++ : $result['failed']++;
+            $outcome = $this->notifyMember($batch, $member);
+            $result[$outcome]++;
         }
 
         if ($batch->state === RoundBatch::STATE_DRAFT) {

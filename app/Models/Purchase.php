@@ -28,4 +28,10 @@ class Purchase extends Model
     {
         return $this->hasMany(PurchaseItem::class);
     }
+
+    /** เจ้าหน้าที่ที่คีย์รายการนี้ — หน้ารายละเอียดกลุ่มตัวอย่างต้องบอกได้ว่าใครบันทึก */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

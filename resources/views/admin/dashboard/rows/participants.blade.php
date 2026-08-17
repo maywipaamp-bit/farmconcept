@@ -61,7 +61,7 @@
            เพื่อให้เส้นฐานของสองกราฟอยู่ระดับเดียวกัน --}}
       <div class="dbo-panel dbo-panel--age">
         <span class="dbo-panel-title">จำแนกตามอายุ</span>
-        <div class="dbo-hbars" data-dbo-baseline-source>
+        <div class="dbo-hbars">
           @foreach ($people['age_bands'] as $band)
             <div class="dbo-hbar dbo-hit"
                  {!! $tip('age-' . $loop->index, $band['label'], [
@@ -112,70 +112,6 @@
         @endif
       </div>
 
-      {{-- แผง 4 — หลักสูตรที่มีผู้เข้าร่วมสูงสุด (กราฟแท่งตั้ง)
-           ตารางอันดับข้าง ๆ ถูกตัดออก — ตัวเลขบนหัวแท่งกับ tooltip บอกข้อมูลชุดเดียวกันอยู่แล้ว --}}
-      <div class="dbo-panel dbo-panel--courses">
-        @if ($people['top_courses'] === [])
-          @include('admin.dashboard.empty', [
-            'title' => 'ยังไม่มีกิจกรรมที่ผูกหลักสูตร',
-            'note' => 'อันดับหลักสูตรนับจากผู้ลงทะเบียนของกิจกรรมที่ระบุหลักสูตรไว้แล้ว',
-          ])
-        @else
-          <div class="dbo-courses-chart">
-            {{-- ไม่ต่อท้ายว่า "N อันดับแรก" — จำนวนแท่งที่เห็นบอกอยู่แล้ว --}}
-            <span class="dbo-panel-title">หลักสูตรที่มีผู้เข้าร่วมสูงสุด</span>
-            <div class="dbo-bars">
-              @foreach ($people['top_courses'] as $course)
-                <div class="dbo-bar dbo-hit"
-                     {!! $tip('course-' . $course['no'], $course['label'], [
-                       ['ผู้เข้าร่วม', $num($course['count']) . ' คน'],
-                       ['สัดส่วน', $course['pct']],
-                     ]) !!}>
-                  <span class="dbo-bar-count dbo-num">{{ $num($course['count']) }}</span>
-                  <span class="dbo-bar-slot">
-                    <span class="dbo-bar-fill dbo-mark dbo-r{{ $course['rank'] }}"
-                          data-dbo-key="course-{{ $course['no'] }}"
-                          style="--dbo-h: {{ $course['bar'] }}%"></span>
-                  </span>
-                </div>
-              @endforeach
-            </div>
-            {{-- aria-hidden เพราะเป็นข้อความซ้ำกับตารางสำหรับโปรแกรมอ่านหน้าจอด้านล่าง
-                 ป้ายถูกตัดที่ 2 บรรทัด ชี้เพื่อดูชื่อเต็มใน tooltip (คีย์เดียวกับแท่งของมัน
-                 จึงไฮไลต์แท่งที่คู่กันให้ด้วย) · title= เป็นทางสำรองเมื่อ JS ยังไม่ทำงาน --}}
-            <div class="dbo-bar-labels" aria-hidden="true">
-              @foreach ($people['top_courses'] as $course)
-                <span class="dbo-bar-label" title="{{ $course['label'] }}"
-                      {!! $tip('course-' . $course['no'], $course['label'], [
-                        ['ผู้เข้าร่วม', $num($course['count']) . ' คน'],
-                        ['สัดส่วน', $course['pct']],
-                      ]) !!}>{{ $course['label'] }}</span>
-              @endforeach
-            </div>
-          </div>
-
-          {{-- ขนาดแท่งสื่อจำนวนให้โปรแกรมอ่านหน้าจอไม่ได้ ตารางนี้จึงเป็นค่าที่อ่านได้จริง --}}
-          <table class="dbo-sr">
-            <caption>หลักสูตรที่มีผู้เข้าร่วมสูงสุด</caption>
-            <thead>
-              <tr>
-                <th scope="col">หลักสูตร</th>
-                <th scope="col">ผู้เข้าร่วม</th>
-                <th scope="col">สัดส่วน</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach ($people['top_courses'] as $course)
-                <tr>
-                  <th scope="row">{{ $course['label'] }}</th>
-                  <td>{{ $num($course['count']) }} คน</td>
-                  <td>{{ $course['pct'] }}</td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
-        @endif
-      </div>
     </div>
   @endif
 </section>

@@ -64,9 +64,6 @@ class LinePushService
                             'color' => '#9CA3AF', 'align' => 'center', 'margin' => 'xl'],
                         ['type' => 'text', 'text' => 'ตอบได้ถึงวันที่ '.$dueDate, 'weight' => 'bold', 'size' => 'md',
                             'color' => '#2F6D45', 'align' => 'center', 'margin' => 'sm'],
-                        ['type' => 'text', 'wrap' => true, 'size' => 'xxs', 'color' => '#9CA3AF',
-                            'align' => 'center', 'margin' => 'xl',
-                            'text' => 'ใช้เวลาประมาณ 5 นาที · คำตอบถูกเก็บเป็นความลับ และรายงานเป็นภาพรวมเท่านั้น'],
                     ],
                 ],
                 'footer' => [

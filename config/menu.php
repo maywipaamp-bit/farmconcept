@@ -43,6 +43,13 @@ return [
                     'alsoMatchPatterns' => [
                         '^/admin/activities/create$',
                         '^/admin/activities/[^/]+/edit$',
+                        /* หน้าภาพรวมกิจกรรม /admin/activities/{code} — ยกเว้นคำสงวนที่เป็น
+                           หน้าของเมนูอื่นในหมวดเดียวกัน ไม่งั้นจะไฮไลต์สองเมนูพร้อมกัน */
+                        '^/admin/activities/(?!list$|create$|registrants$|checkin$|responses$)[A-Za-z0-9-]+$',
+                        '^/admin/activities/[^/]+/participants$',
+                        '^/admin/activities/[^/]+/checkins$',
+                        '^/admin/activities/[^/]+/evaluations$',
+                        '^/admin/activities/[^/]+/reports$',
                     ],
                 ],
                 [
@@ -71,6 +78,21 @@ return [
                     'href' => 'admin/activities/responses',
                     'alsoMatch' => ['admin/activities/responses.html'],
                 ],
+                /* แบบฟอร์มประเมิน — เดิมเป็นหมวดของตัวเองบนแถบไอคอน ย้ายเข้ามาอยู่ใต้ "กิจกรรม"
+                   เพราะใช้งานคู่กับกิจกรรมเสมอ (ผูกแบบฟอร์มให้กิจกรรมแล้วดูผลที่ "ประเมินกิจกรรม")
+                   คีย์ยังเป็น evaluations เหมือนเดิม สิทธิ์และการเทียบ path จึงไม่ต้องแก้ตาม */
+                [
+                    'key' => 'evaluations',
+                    'label' => 'แบบประเมิน',
+                    'icon' => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+                    'href' => 'admin/evaluations',
+                    'alsoMatch' => [
+                        'admin/evaluations/create',
+                        'admin/evaluations/list.html',
+                        'admin/evaluations/create.html',
+                    ],
+                    'alsoMatchPatterns' => ['^/admin/evaluations/[A-Za-z0-9-]+/edit$'],
+                ],
             ],
         ],
         [
@@ -84,6 +106,9 @@ return [
                     'icon' => '<path d="M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11ZM3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2M16 5.2a3 3 0 0 1 0 5.9M17.5 14.9c2 .6 3.3 2.4 3.3 4.6"/>',
                     'href' => 'admin/cohort',
                     'alsoMatch' => ['admin/cohort/list.html', 'admin/cohort/list', 'admin/cohort/detail.html', 'admin/cohort'],
+                    /* หน้ารายละเอียดรายคน /admin/cohort/{id} — ไม่มีในรายการ alsoMatch เพราะ id เปลี่ยนทุกคน
+                       ถ้าไม่ใส่ไว้ เปิดหน้ารายละเอียดแล้วเมนูจะไม่ไฮไลต์ กลายเป็นหลุดไปโชว์หมวดแดชบอร์ดแทน */
+                    'alsoMatchPatterns' => ['^/admin/cohort/[0-9]+$'],
                 ],
                 [
                     'key' => 'evaluations-rounds',
@@ -102,21 +127,29 @@ return [
                     'key' => 'evaluations-responses',
                     'label' => 'ตอบแบบประเมิน',
                     'icon' => '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>',
-                    'href' => 'admin/evaluations/responses.html',
+                    'href' => 'admin/evaluations/responses',
+                    'alsoMatch' => ['admin/evaluations/responses.html'],
                 ],
             ],
         ],
+        /* รายงาน — หน้าที่มองข้อมูลข้ามกิจกรรม/ข้ามโครงการ ไม่ผูกกับรายการใดรายการหนึ่ง
+           อยู่หลังหมวดที่ใช้ทำงานประจำวัน เพราะเป็นการ "อ่านผล" ไม่ใช่การบันทึกข้อมูล */
         [
-            'key' => 'evaluations',
-            'label' => 'แบบประเมิน',
-            'icon' => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
-            'href' => 'admin/evaluations',
-            'alsoMatch' => [
-                'admin/evaluations/create',
-                'admin/evaluations/list.html',
-                'admin/evaluations/create.html',
+            'key' => 'reports',
+            'label' => 'รายงาน',
+            'icon' => '<path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/>',
+            'children' => [
+                /* รายชื่อคนทั้งหมดที่เคยมาร่วมกิจกรรม — มองเป็น "รายคน" ไม่ใช่ "รายครั้งที่ลงทะเบียน"
+                   ตอบว่าฐานคนของโครงการมีกี่คน เป็นกลุ่มตัวอย่างกี่คน และใครกลับมาซ้ำบ้าง */
+                [
+                    'key' => 'reports-people',
+                    'label' => 'ผู้เข้าร่วมทั้งหมด',
+                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+                    'href' => 'admin/reports/people',
+                    /* พาธเดิมตอนที่หน้านี้ยังอยู่ใต้หมวดกิจกรรม — คงไว้ให้ลิงก์ที่บุ๊กมาร์กไว้ยังไฮไลต์ถูก */
+                    'alsoMatch' => ['admin/activities/people'],
+                ],
             ],
-            'alsoMatchPatterns' => ['^/admin/evaluations/[A-Za-z0-9-]+/edit$'],
         ],
         [
             'key' => 'master-data',
@@ -243,6 +276,7 @@ return [
             'master-data-consents', 'master-data-system-settings', 'master-data-follow-up-rounds',
         ],
         'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
+        'reports' => ['reports-people'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],
     ],
 

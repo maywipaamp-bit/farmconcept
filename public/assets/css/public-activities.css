@@ -592,23 +592,27 @@ body.is-home-page { background-color: var(--background); }
 .deadline-note { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: #b06a00; font-size: 13.5px; font-weight: 600; }
 .deadline-note svg { width: 17px; height: 17px; flex: 0 0 17px; stroke-width: 1.8; }
 /* ปุ่มหลัก — สี่เหลี่ยมขอบมน 14px เงาอ่อน ขนาดสัมพันธ์กับสเกลหน้ากิจกรรม */
+/* ขนาดเดียวกับปุ่ม "เข้าสู่ระบบ" ของระบบประเมินสุขภาวะ (.tr-primary-button)
+   ทั้งสอง flow อยู่ในแอปเดียวกัน ผู้ใช้สลับไปมาได้ ปุ่มหลักจึงต้องเป็นขนาดเดียวกันทั้งระบบ */
 .registration-cta,
 .registration-submit,
 .registration-phone-row button {
     display: inline-flex;
-    min-height: 48px;
+    min-height: 44px;
     align-items: center;
     justify-content: center;
-    padding: 13px;
+    padding: 10px 16px;
     border: 1px solid var(--primary);
-    border-radius: 14px;
+    border-radius: 10px;
     background: var(--primary);
     color: #fff;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
+    line-height: 1.4;
     text-decoration: none;
 }
-.registration-cta { width: 100%; margin-top: 18px; box-shadow: 0 6px 16px rgba(52, 199, 89, .25); }
+/* ไม่มีเงา — ปุ่มอ้างอิงไม่มี และเงาทำให้ปุ่มดูใหญ่กว่าที่เป็นจริง */
+.registration-cta { width: 100%; margin-top: 18px; }
 
 /* โทนสีหน้ารายละเอียดตาม handoff — เขียวชุดเดียวกับ flow ลงทะเบียน (คนละเฉดกับเขียวการ์ดหน้าแรก) */
 body.is-detail-page .detail-body h1 { color: #123c1c; }
@@ -748,6 +752,13 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
    ที่นี่มีเฉพาะส่วนที่หน้าอื่นไม่มี
    ========================================================================== */
 .tr-card { padding: 20px 16px; }
+
+/* หัวกิจกรรมบนหน้าแบบประเมิน — บอกว่ากำลังประเมินกิจกรรมไหน ราคาชิดขวาแบบหน้ารายการ */
+.sv-head { margin-top: 16px; }
+.sv-head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sv-head-name { margin: 0; color: var(--text-primary); font-size: 15.5px; font-weight: 700; line-height: 1.5; text-wrap: pretty; }
+.sv-head-fee { flex: none; color: var(--dark-green); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.sv-head-sub { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
 
 /* ปุ่ม LINE ใช้สีแบรนด์ของ LINE ไม่ใช่สีเขียวของโครงการ ผู้ใช้จำปุ่มนี้จากสีเป็นหลัก */
 .tr-line-button {
@@ -994,8 +1005,9 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-person-confirm { display: flex; flex-direction: column; gap: 9px; padding: 0 14px 14px; }
 .tr-person-confirm label { color: var(--text-primary); font-size: 12px; font-weight: 500; }
 
-.tr-prefix-input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; outline: none; background: #fff; color: var(--text-primary); font-family: inherit; font-size: 16px; letter-spacing: 2px; }
-.tr-prefix-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+/* เดิมมี .tr-prefix-input สำหรับช่องกรอกตัวอักษรสั้น ๆ (16px เว้นวรรค 2px)
+   ตอนนี้ช่องรหัสบุคคลเป็นช่องปกติเหมือนช่องอื่น จึงใช้ .registration-field input ชุดเดียวกันทั้งหมด
+   ไม่งั้นช่องรหัสตัวใหญ่กว่าช่องเบอร์ที่อยู่ติดกันโดยไม่มีเหตุผล */
 
 /* ---------- chip เลือกช่วงอายุ ---------- */
 .tr-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1207,6 +1219,8 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 /* ---------- ไทม์ไลน์รอบแบบประเมิน ---------- */
 .tr-timeline { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+/* บนหน้าหลักมีสวิตช์แจ้งเตือนต่อท้ายไทม์ไลน์ ต้องมีระยะคั่น ไม่ให้ดูเป็นรอบที่ห้า */
+.tr-timeline + .tr-row-form { margin-top: 16px; }
 
 .tr-tl { position: relative; display: flex; gap: 12px; padding: 0 0 18px 0; }
 .tr-tl:last-child { padding-bottom: 0; }

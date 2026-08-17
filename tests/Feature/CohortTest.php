@@ -21,8 +21,15 @@ class CohortTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** จำไว้ใช้ซ้ำ — เทสต์ที่เรียกสองครั้งจะชน unique ของ usr_roles.code ถ้าสร้างใหม่ทุกครั้ง */
+    private ?User $admin = null;
+
     private function admin(): User
     {
+        if ($this->admin !== null) {
+            return $this->admin;
+        }
+
         $role = Role::create(['code' => 'cohort-admin', 'name' => 'Cohort admin', 'is_active' => true]);
         $role->menuPermissions()->create(['menu_key' => 'cohort', 'is_allowed' => true]);
 
@@ -35,7 +42,7 @@ class CohortTest extends TestCase
         ]);
         $user->roles()->attach($role);
 
-        return $user;
+        return $this->admin = $user;
     }
 
     /** ค่าตั้งต้นชุดเดียวกับที่ MasterDataSeeder ใส่ให้ระบบจริง */
@@ -89,7 +96,9 @@ class CohortTest extends TestCase
     private function payload(array $overrides = []): array
     {
         $templates = FollowUpRoundTemplate::active()->get();
-        $entryDate = '2026-01-15';
+        /* วันครบกำหนดของทุกรอบนับจากวันเข้ากลุ่มเสมอ — ถ้าเทสต์เปลี่ยนวันเข้ากลุ่ม
+           แต่วันครบกำหนดยังอิงวันเดิม จะติด validation ว่าครบกำหนดก่อนวันเข้ากลุ่ม */
+        $entryDate = $overrides['entry_date'] ?? '2026-01-15';
 
         return array_merge([
             /* ไม่มี person_code ในฟอร์ม — เซิร์ฟเวอร์ออกให้เองตอนบันทึก */
@@ -426,5 +435,77 @@ class CohortTest extends TestCase
             'occupation_id' => $occupation->id,
             'gender' => 'male',
         ]);
+    }
+
+    /** สร้างกลุ่มตัวอย่างหนึ่งคนแล้วคืนโปรไฟล์ — จุดตั้งต้นของเทสต์แก้ไข/ลบ */
+    private function createProfile(array $overrides = []): CohortProfile
+    {
+        $this->seedRoundTemplates();
+
+        $this->actingAs($this->admin())
+            ->postJson('/admin/cohort', $this->payload($overrides))
+            ->assertOk();
+
+        return CohortProfile::latest('id')->firstOrFail();
+    }
+
+    public function test_แก้ไขกลุ่มตัวอย่างได้แต่รหัสบุคคลต้องไม่เปลี่ยน(): void
+    {
+        $profile = $this->createProfile();
+        $personCode = $profile->participant->person_code;
+
+        $this->actingAs($this->admin())
+            ->putJson('/admin/cohort/'.$profile->id, $this->payload([
+                'name' => 'สมชาย เปลี่ยนชื่อ',
+                'phone' => '089-999-9999',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('data.name', 'สมชาย เปลี่ยนชื่อ');
+
+        $participant = $profile->participant->fresh();
+
+        $this->assertSame('สมชาย เปลี่ยนชื่อ', $participant->name);
+        /* รหัสถูกพิมพ์ลงใบยินยอมและใช้เข้าระบบไปแล้ว เปลี่ยนเมื่อไรคนที่ถือกระดาษก็เข้าไม่ได้ */
+        $this->assertSame($personCode, $participant->person_code, 'รหัสบุคคลต้องไม่เปลี่ยนตอนแก้ไข');
+    }
+
+    public function test_แก้ไขแล้วใบติดตามที่ตอบไปแล้วต้องไม่ถูกแตะ(): void
+    {
+        $profile = $this->createProfile();
+        $answered = $profile->rounds()->orderBy('offset_days')->firstOrFail();
+        $answered->update(['answered_at' => now(), 'due_date' => '2026-01-15']);
+
+        /* ย้ายวันเข้ากลุ่มไปข้างหน้าหนึ่งเดือน วันครบกำหนดของทุกใบจะถูกคำนวณใหม่หมด */
+        $this->actingAs($this->admin())
+            ->putJson('/admin/cohort/'.$profile->id, $this->payload(['entry_date' => '2026-02-15']))
+            ->assertOk();
+
+        $this->assertSame('2026-01-15', $answered->fresh()->due_date->toDateString(),
+            'ใบที่ตอบแล้วต้องคงวันครบกำหนดเดิม ไม่งั้นคำตอบที่เก็บมาเปลี่ยนความหมาย');
+    }
+
+    public function test_ลบกลุ่มตัวอย่างที่ยังไม่มีคำตอบได้(): void
+    {
+        $profile = $this->createProfile();
+        $participantId = $profile->participant_id;
+
+        $this->actingAs($this->admin())
+            ->deleteJson('/admin/cohort/'.$profile->id)
+            ->assertOk();
+
+        $this->assertSoftDeleted('ptp_participants', ['id' => $participantId]);
+    }
+
+    public function test_ลบไม่ได้เมื่อมีคำตอบแบบประเมินแล้ว(): void
+    {
+        $profile = $this->createProfile();
+        $profile->rounds()->first()->update(['answered_at' => now()]);
+
+        $this->actingAs($this->admin())
+            ->deleteJson('/admin/cohort/'.$profile->id)
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        $this->assertDatabaseHas('ptp_cohort_profiles', ['id' => $profile->id]);
     }
 }

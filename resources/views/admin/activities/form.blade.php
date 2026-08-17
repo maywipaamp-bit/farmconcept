@@ -151,7 +151,7 @@
                 </div>
               </div>
               <div class="ac-field ac-field-half">
-                <label class="form-label">รูปแบบ<span class="form-required">*</span></label>
+                <label class="form-label">รูปแบบ</label>
                 <div class="ac-combo" id="ac-mode-combo">
                   <div class="ac-combo-control" id="ac-mode-control" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox" aria-label="รูปแบบ">
                     <span class="ac-combo-values" id="ac-mode-values"></span>
@@ -179,7 +179,7 @@
 
               <div class="ac-field ac-field-half">
                 <div class="ac-label-row">
-                  <label class="form-label">วิทยากร<span class="form-required">*</span></label>
+                  <label class="form-label">วิทยากร</label>
                   <span class="ac-hint">เลือกได้อิสระ ไม่จำกัดตามหลักสูตร</span>
                 </div>
                 <div class="ac-combo" id="ac-host-combo">

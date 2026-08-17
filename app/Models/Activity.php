@@ -18,6 +18,21 @@ class Activity extends Model
 
     public const STATUS_CANCELLED = 'ยกเลิก';
 
+    /**
+     * ค่าสถานะทั้งหมดที่เลือกได้ — ต้นฉบับเดียวที่ ActivityRequest (บันทึกฟอร์มเต็ม) และ
+     * ActivityController::updateStatus (เปลี่ยนสถานะอย่างเดียวจากหน้ารายการ) อ้างอิงร่วมกัน
+     * ไม่ให้สองจุดตรวจคนละชุดค่าจนบันทึกได้จุดหนึ่งแต่อีกจุดปฏิเสธ
+     */
+    public const STATUSES = [
+        self::STATUS_DRAFT,
+        'เปิดรับสมัคร',
+        'ปิดรับสมัคร',
+        'เต็มแล้ว',
+        'กำลังดำเนินการ',
+        'ดำเนินการเสร็จสิ้น',
+        self::STATUS_CANCELLED,
+    ];
+
     /** อีเวนท์กับกิจกรรมอยู่ตารางเดียวกัน แยกด้วยคอลัมน์ type */
     public const TYPE_EVENT = 'อีเว้นท์';
 
@@ -194,39 +209,43 @@ class Activity extends Model
         return max(0, $this->capacity - ($this->registrations_count ?? $this->registrations()->count()));
     }
 
-    /** เปิดปุ่มลงทะเบียนเฉพาะช่วงที่กำหนด และต้องยังมีที่นั่งถ้าระบุจำนวนรับไว้ */
+    /**
+     * เปิดปุ่มลงทะเบียน และต้องยังมีที่นั่งถ้าระบุจำนวนรับไว้
+     *
+     * TODO(ทดสอบ): ปลดการเช็คช่วงเวลา registration_start_at/registration_end_at ไว้ชั่วคราว
+     * ตามคำขอให้ทดสอบได้อิสระก่อน — ต้องเอากลับมาเช็คก่อนขึ้นใช้งานจริง
+     */
     public function acceptsRegistration(): bool
     {
-        $now = now();
-
         return $this->requires_registration
             && $this->status !== self::STATUS_CANCELLED
-            && (! $this->registration_start_at || $this->registration_start_at->lte($now))
-            && (! $this->registration_end_at || $this->registration_end_at->gte($now))
             && ($this->capacity === 0 || $this->seatsLeft() > 0);
     }
 
-    /** เปิดให้ผู้ลงทะเบียนยืนยันตัวตนเฉพาะช่วง Check-in ที่กิจกรรมกำหนด */
+    /**
+     * เปิดให้ผู้ลงทะเบียนยืนยันตัวตนที่ Check-in
+     *
+     * TODO(ทดสอบ): ปลดการเช็คช่วงเวลา checkin_start_at/checkin_end_at ไว้ชั่วคราว
+     * ตามคำขอให้ทดสอบได้อิสระก่อน — ต้องเอากลับมาเช็คก่อนขึ้นใช้งานจริง
+     */
     public function acceptsCheckin(): bool
     {
-        $now = now();
-
         return $this->requires_checkin
             && $this->is_published
-            && $this->status !== self::STATUS_CANCELLED
-            && (! $this->checkin_start_at || $this->checkin_start_at->lte($now))
-            && (! $this->checkin_end_at || $this->checkin_end_at->gte($now));
+            && $this->status !== self::STATUS_CANCELLED;
     }
 
-    /** แบบประเมินหลังจบเปิดตามช่วงเวลาที่กิจกรรมกำหนด */
-    public function acceptsPostSurvey(): bool
+    /**
+     * แบบประเมินหลังกิจกรรมเปิดให้ตอบ
+     *
+     * $ignoreSchedule พารามิเตอร์เดิมสำหรับเจ้าหน้าที่ทำแทน — คงไว้เพื่อไม่ต้องแก้จุดเรียกใช้
+     * TODO(ทดสอบ): ปลดการเช็คช่วงเวลา survey_start_at/survey_end_at ไว้ชั่วคราวสำหรับทุกคน
+     * (ไม่ใช่แค่เจ้าหน้าที่) ตามคำขอให้ทดสอบได้อิสระก่อน — ต้องเอากลับมาเช็คก่อนขึ้นใช้งานจริง
+     */
+    public function acceptsPostSurvey(bool $ignoreSchedule = false): bool
     {
-        $now = now();
-
         return $this->has_post_survey
             && $this->is_published
-            && $this->status !== self::STATUS_CANCELLED
-            && (! $this->survey_start_at || $this->survey_start_at->lte($now))
-            && (! $this->survey_end_at || $this->survey_end_at->gte($now));
+            && $this->status !== self::STATUS_CANCELLED;
     }
 }

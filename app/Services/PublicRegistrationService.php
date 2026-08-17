@@ -120,7 +120,10 @@ class PublicRegistrationService
         }
 
         return [
-            'name' => $participant->name,
+            /* กลุ่มตัวอย่างที่ลงทะเบียนเองผ่าน QR ไม่ได้ให้ชื่อจริงไว้ ระบบใช้รหัสบุคคลเป็นชื่อในระบบแทน
+               เอามาเติมช่อง "ชื่อ - นามสกุล" ไม่ได้ เพราะผู้ใช้จะเห็น "P0005" แล้วส่งไปทั้งอย่างนั้น
+               ปล่อยว่างให้กรอกชื่อจริงเองดีกว่าได้ชื่อที่ไม่ใช่ชื่อคน */
+            'name' => $participant->name === $participant->person_code ? null : $participant->name,
             'phone' => $this->normalizePhone((string) $participant->phone) ?: null,
             'email' => $participant->registrations()->whereNotNull('email')->latest('id')->value('email'),
         ];

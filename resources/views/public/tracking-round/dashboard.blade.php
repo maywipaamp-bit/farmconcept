@@ -49,37 +49,15 @@
             <div class="tr-notice" role="status">บัญชี LINE นี้ถูกผูกกับผู้ใช้อื่นไว้แล้ว จึงเชื่อมให้ไม่ได้ — กรุณาติดต่อเจ้าหน้าที่</div>
         @endif
 
-        {{-- การ์ดเดียวในหน้าที่ใช้สีเขียว — สิ่งที่ต้องทำตอนนี้ ที่เหลือเป็นข้อมูลประกอบ --}}
-        <div class="tr-due-card{{ $dueRound ? '' : ' is-empty' }}">
-            <div class="tr-due-head">
-                <span>รอบที่ถึงกำหนด</span>
-                <a href="{{ route('public.tracking-round-qr.rounds') }}">ดูทุกรอบ →</a>
-            </div>
+        {{-- ไทม์ไลน์เต็มชุดมาอยู่บนหน้าหลักเลย แทนการ์ด "รอบที่ถึงกำหนด" กับกล่องตัวเลข
+             การ์ดเดิมบอกแค่รอบเดียวแล้วต้องกดไปอีกหน้าเพื่อดูภาพรวม ทั้งที่เนื้อหาทั้งหมดสั้นพอ
+             จะแสดงในที่เดียว — เห็นครบว่าอยู่ตรงไหนของโครงการ และกดทำรอบที่ถึงคิวได้จากที่เดียวกัน --}}
+        <p class="tr-subheading">
+            รอบแบบประเมิน · ทำได้ทีละรอบตามลำดับ ·
+            {{ $rounds->whereNotNull('answered_at')->count() }}/{{ $rounds->count() }} รอบ
+        </p>
 
-            @if($dueRound)
-                <p class="tr-due-name">รอบที่ {{ $dueOrder }} · {{ $dueRound->name }}</p>
-                <p class="tr-due-meta">ใช้เวลา 5 นาที · ถึง @thaidate($dueBefore)</p>
-                <a class="tr-primary-button"
-                   href="{{ route('public.tracking-round-qr.survey', $dueRound->id) }}">ทำแบบประเมิน</a>
-            @else
-                <p class="tr-due-name">ยังไม่มีรอบที่ต้องทำตอนนี้</p>
-                <p class="tr-due-meta">คุณทำครบทุกรอบแล้ว ขอบคุณครับ</p>
-            @endif
-        </div>
-
-        <div class="tr-stats">
-            <div>
-                <span class="tr-stat-number">{{ $answeredRounds }}/{{ $totalRounds }}</span>
-                <span class="tr-stat-label">รอบที่ทำแล้ว</span>
-            </div>
-            <div>
-                {{-- เต็มวัน–เดือน–ปี ไม่ตัดปีทิ้ง — รอบติดตามกินเวลาข้ามปี ปีจึงไม่ใช่ส่วนที่เดาเอาได้ --}}
-                <span class="tr-stat-number is-date">
-                    @if($nextRound)@thaidate($nextRound->due_date)@else—@endif
-                </span>
-                <span class="tr-stat-label">ครบกำหนดรอบถัดไป</span>
-            </div>
-        </div>
+        @include('public.tracking-round.partials.timeline')
 
         {{-- สวิตช์แจ้งเตือน — เป็นค่าของแต่ละคน เพราะเป็นการยินยอมรับข้อความส่วนบุคคล
              ยังไม่เชื่อม LINE: สวิตช์แสดงเป็นปิด กดแล้วพาไปเชื่อม LINE เลย (จัดการที่ toggleNotify)

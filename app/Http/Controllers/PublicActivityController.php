@@ -72,13 +72,16 @@ class PublicActivityController extends Controller
                 ->with(['questions.options']),
         ]);
 
+        /* แบบประเมินย้ายไปหน้าของตัวเองแล้ว — ลิงก์เดิม ?action=post-survey ต้องยังใช้ได้
+           (QR ที่พิมพ์แจกไปแล้วชี้มาที่นี่ผ่าน /s/{token} เรียกคืนไม่ได้) */
+        if ($request->query('action') === 'post-survey') {
+            return redirect()->route('public.activities.survey', $activity->code);
+        }
+
         $registrationForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'registration'
             && $form->type === Form::TYPE_REGISTRATION);
-        $postSurveyForm = $activity->forms->first(fn (Form $form) => $form->pivot->slot === 'post_survey'
-            && $form->type === Form::TYPE_POST_ACTIVITY);
         $canRegister = $activity->acceptsRegistration() && $registrationForm !== null;
         $checkinRequested = $request->query('action') === 'checkin';
-        $postSurveyRequested = $request->query('action') === 'post-survey';
 
         return view('public.activities.show', [
             'activity' => $this->present($activity),
@@ -92,12 +95,6 @@ class PublicActivityController extends Controller
                 'enabled' => $checkinRequested && $activity->acceptsCheckin(),
                 'lookupUrl' => route('public.activities.checkin.lookup', $activity->code),
                 'storeUrl' => route('public.activities.checkin.store', $activity->code),
-            ],
-            'postSurvey' => [
-                'requested' => $postSurveyRequested,
-                'enabled' => $postSurveyRequested && $activity->acceptsPostSurvey() && $postSurveyForm !== null,
-                'form' => $postSurveyForm,
-                'storeUrl' => route('public.activities.post-survey.store', $activity->code),
             ],
         ]);
     }

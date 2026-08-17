@@ -23,7 +23,8 @@ class ActivityRequest extends FormRequest
 
     private const PARTICIPANT_TYPES = ['กลุ่มตัวอย่าง', 'กลุ่มทั่วไป'];
 
-    private const STATUSES = ['ฉบับร่าง', 'เปิดรับสมัคร', 'ปิดรับสมัคร', 'เต็มแล้ว', 'กำลังดำเนินการ', 'ดำเนินการเสร็จสิ้น', 'ยกเลิก'];
+    /* ต้นฉบับอยู่ที่ Activity::STATUSES — ที่นี่และ ActivityController::updateStatus ต้องใช้ชุดเดียวกัน */
+    private const STATUSES = Activity::STATUSES;
 
     private const VISIBILITIES = ['สาธารณะ', 'เฉพาะกลุ่มเป้าหมาย', 'เฉพาะผู้มีลิงก์'];
 
@@ -64,7 +65,9 @@ class ActivityRequest extends FormRequest
 
             'program_id' => ['nullable', 'integer', 'exists:mst_programs,id'],
             'course_id' => ['nullable', 'integer', 'exists:mst_courses,id'],
-            'format_id' => [$whenPublishing, 'integer', 'exists:mst_activity_formats,id'],
+            /* รูปแบบไม่บังคับแม้ตอนเผยแพร่ — กิจกรรมหลายรายการไม่เข้าพวกกับรูปแบบที่มีในระบบ
+               บังคับไว้แล้วแอดมินต้องเลือกมั่ว ๆ ซึ่งทำให้ตัวกรองตามรูปแบบเชื่อถือไม่ได้ */
+            'format_id' => ['nullable', 'integer', 'exists:mst_activity_formats,id'],
 
             'venue_mode' => ['nullable', 'string', 'max:60'],
             'data_source' => ['nullable', 'string', 'max:60'],
@@ -99,9 +102,10 @@ class ActivityRequest extends FormRequest
             'start_date' => [$whenPublishing, 'date'],
             'end_date' => [$whenPublishing, 'date', 'after_or_equal:start_date'],
 
-            /* ช่วงเช็คอินจำเป็นเมื่อเปิดใช้เช็คอินเท่านั้น ไม่ผูกกับการเผยแพร่ */
-            'checkin_start_at' => ['nullable', 'required_if:requires_checkin,true', 'date'],
-            'checkin_end_at' => ['nullable', 'required_if:requires_checkin,true', 'date', 'after:checkin_start_at'],
+            /* ช่วงเวลาเปิด–ปิดระบบทั้งชุด (เช็คอิน · แบบประเมิน · รับสมัคร) ไม่บังคับกรอก
+               เว้นว่าง = เปิดตลอด ไม่จำกัดช่วง — ยังตรวจลำดับก่อน/หลังอยู่เมื่อกรอกมาทั้งคู่ */
+            'checkin_start_at' => ['nullable', 'date'],
+            'checkin_end_at' => ['nullable', 'date', 'after:checkin_start_at'],
 
             'survey_start_at' => ['nullable', 'date'],
             'survey_end_at' => ['nullable', 'date', 'after:survey_start_at'],
@@ -109,7 +113,7 @@ class ActivityRequest extends FormRequest
             'publish_start_at' => ['nullable', 'date'],
             'publish_end_at' => ['nullable', 'date', 'after:publish_start_at'],
             'registration_start_at' => ['nullable', 'date'],
-            'registration_end_at' => ['nullable', 'required_if:requires_registration,true', 'date', 'after_or_equal:registration_start_at'],
+            'registration_end_at' => ['nullable', 'date', 'after_or_equal:registration_start_at'],
             'public_sort_order' => ['nullable', 'integer', 'min:0', 'max:100000'],
 
             'area_ids' => [$whenPublishing, 'array'],

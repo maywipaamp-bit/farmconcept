@@ -4490,6 +4490,15 @@ dd { margin: 0; }
   font-size: var(--font-size-caption);
 }
 
+/* ปุ่มในแถบเครื่องมือ (เช่น "คอลัมน์") ต้องสูงเท่าช่องค้นหาและปุ่มตัวกรองข้าง ๆ พอดี
+   .btn มี min-height ของตัวเอง จึงต้องทับทั้ง height และ min-height เหมือนที่ทำกับช่องค้นหา */
+.list-filter-tools .btn {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-caption);
+}
+
 /* จอแคบ: ชิปอยู่แถวบน เครื่องมือค้นหาลงมาเต็มแถวล่างแทนการบีบจนพิมพ์ไม่ได้ */
 @media (max-width: 640px) {
   .list-filter-tools { flex: 1 1 100%; }
@@ -5677,15 +5686,19 @@ button.multiselect:focus-visible {
    หกคอลัมน์กว้างกว่าเดิมต่อช่อง แต่รวมแล้วแคบลง จึงพอดีจอโน้ตบุ๊กสบายกว่าชุดเก้าคอลัมน์เดิม
    จอแคบกว่านั้น .table-scroll ยังเลื่อนข้างให้เป็น fallback */
 .grid-head,
-.grid-row { min-width: 860px; }
+/* หน้าที่ให้เลือกเปิด/ปิดคอลัมน์ได้ตั้ง --grid-min-width ตามผลรวมของคอลัมน์ที่แสดงจริง
+   เกินพื้นที่เมื่อไหร่ .table-scroll เลื่อนแนวนอนให้ แทนที่จะบีบคอลัมน์จนอ่านไม่ออก */
+.grid-head,
+.grid-row { min-width: var(--grid-min-width, 860px); }
 
 .grid-head,
 .grid-row {
   display: grid;
   /* กิจกรรม · วันและเวลา · ลงทะเบียน/เช็คอิน/ประเมิน · สถานะ · หน้าเว็บ · เมนู
      ช่องที่ยืดได้มีช่องเดียวคือชื่อกิจกรรม ที่เหลือกว้างคงที่ตามเนื้อหาที่ยาวที่สุดที่เป็นไปได้
-     (แถบความคืบหน้าต้องกว้างพอให้อ่านสัดส่วนออก จึงตรึงไว้ 210px ไม่ปล่อยให้หด) */
-  grid-template-columns: minmax(200px, 1fr) 118px 210px 116px 108px 40px;
+     (แถบความคืบหน้าต้องกว้างพอให้อ่านสัดส่วนออก จึงตรึงไว้ 210px ไม่ปล่อยให้หด)
+     หน้าที่ให้ผู้ใช้เลือกซ่อนคอลัมน์ได้ตั้ง --grid-cols ทับมาตามชุดที่แสดงจริง */
+  grid-template-columns: var(--grid-cols, minmax(200px, 1fr) 118px 210px 116px 108px 40px);
   gap: 12px;
   align-items: center;
 }
@@ -5743,6 +5756,15 @@ button.multiselect:focus-visible {
   font-size: var(--font-size-caption);
   color: var(--color-text-muted);
   margin-top: 2px;
+}
+
+/* ช่องข้อความในคอลัมน์ที่เลือกเปิดเพิ่มได้ — ยาวเกินช่องให้ตัดด้วย … ไม่ดันความสูงแถว
+   ต้องมี min-width: 0 ด้วย ไม่งั้น grid item จะไม่ยอมหดต่ำกว่าความกว้างของเนื้อหา */
+.grid-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ป้ายบอกว่าแถวนี้เป็นกิจกรรมที่อยู่ในอีเวนท์ — อยู่เหนือชื่อเพื่อให้อ่านเป็นลำดับชั้น */
@@ -11263,6 +11285,95 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   text-overflow: ellipsis;
 }
 
+/* เบอร์กับอีเมลซ้อนกันในช่องเดียว — สองค่านี้ใช้แทนกันได้ แยกสองคอลัมน์แล้วตารางกว้างขึ้น
+   โดยที่ช่องอีเมลว่างเกือบทั้งคอลัมน์ (ตอนนี้แทบไม่มีใครกรอกอีเมลไว้) */
+.co-contact { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
+.co-contact-main {
+    overflow: hidden;
+    color: var(--color-text-body);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.co-contact-sub {
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-caption);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ปุ่ม ⋮ ต้องเล็กกว่าปุ่มทั่วไป — อยู่ในแถวตารางที่สูงคงที่ ปุ่มขนาดปกติทำให้แถวดูหนัก
+   30px ยังกดติดง่ายบนเมาส์ และแถวนี้ไม่ได้ออกแบบมาให้กดด้วยนิ้วอยู่แล้ว */
+.co-actions { display: flex; align-items: center; justify-content: flex-end; }
+.co-actions .btn-icon {
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  border-color: transparent;
+  background: none;
+  color: var(--color-text-muted);
+}
+.co-actions .btn-icon svg { width: 16px; height: 16px; }
+.co-actions .btn-icon:hover { border-color: var(--color-border); background: var(--color-surface-muted); color: var(--color-text-primary); }
+
+/* ตัวเลือกคอลัมน์ — แผงลอยใต้ปุ่ม ไม่ใช่ modal เพราะเป็นการปรับมุมมองที่กดสลับไปมาบ่อย
+   อยู่ในแถบกรองคู่กับปุ่มค้นหา จึงต้องดันแท็บให้ชิดซ้ายแทน space-between เดิม */
+.co-filter-bar > .co-tabs { margin-right: auto; }
+.co-colpick { position: relative; flex: none; }
+.co-colpick-panel {
+    position: absolute;
+    z-index: 30;
+    /* ตำแหน่งเดียวกับแผงค้นหาข้าง ๆ (top: 46px) สองแผงนี้เปิดจากแถวเดียวกัน ต้องอยู่ระดับเดียวกัน */
+    top: 46px;
+    right: 0;
+    display: flex;
+    min-width: 210px;
+    /* ให้พอดีกับรายการทั้งชุดในกรณีปกติ ไม่ต้องเลื่อน — แผงที่เลื่อนได้แต่เตี้ยทำให้เห็นตัวเลือกไม่ครบ
+       แล้วเข้าใจผิดว่ามีให้เลือกแค่ที่เห็น */
+    max-height: min(70vh, 480px);
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: 0 8px 24px rgba(16, 24, 40, .12);
+}
+/* ต้องมีบรรทัดนี้ — กฎ display: flex ด้านบนเป็น author style ซึ่งชนะ [hidden] { display: none }
+   ของ user-agent เสมอ แผงจึงโผล่ค้างตั้งแต่เปิดหน้าทั้งที่ยังไม่ได้กดปุ่ม */
+.co-colpick-panel[hidden] { display: none; }
+
+.co-colpick-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    color: var(--color-text-body);
+    font-size: var(--font-size-body);
+    cursor: pointer;
+}
+.co-colpick-item:hover { background: var(--color-surface-muted); }
+.co-colpick-item input { width: 15px; height: 15px; accent-color: var(--color-primary); }
+/* คอลัมน์ชื่อปิดไม่ได้ — ปิดแล้วแถวไม่เหลืออะไรให้ระบุว่าเป็นของใคร */
+.co-colpick-item.is-locked { color: var(--color-text-muted); cursor: default; }
+.co-colpick-item.is-locked:hover { background: none; }
+.co-colpick-reset {
+    margin-top: 4px;
+    padding: 6px 8px;
+    border: 0;
+    border-top: 1px solid var(--color-border-soft);
+    background: none;
+    color: var(--color-primary-dark);
+    font-family: inherit;
+    font-size: var(--font-size-caption);
+    text-align: left;
+    cursor: pointer;
+}
+
 .co-line { font-size: var(--font-size-caption); white-space: nowrap; }
 .co-line.is-linked { color: var(--color-primary-dark); }
 .co-line.is-unlinked { color: var(--color-warning-text); }
@@ -11680,6 +11791,133 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   color: var(--color-text-primary);
 }
 
+/* ---------- แถบข้อมูลทั่วไป ----------
+   แถบเดียวเรียงเป็นกริดตามความกว้างที่มี ไม่ใช่การ์ดสิบบรรทัด
+   หน้านี้มีของสำคัญอยู่ในแท็บด้านล่าง ส่วนบนจึงต้องสั้นพอให้แท็บอยู่ในจอแรก */
+.cd-summary { padding: var(--space-4) var(--space-5); }
+
+/* สองคอลัมน์ ป้ายกับค่าอยู่บรรทัดเดียวกัน — แปดฟิลด์เรียงเป็นแถวยาวแถวเดียวอ่านยาก
+   ตากวาดหาค่าไม่เจอเพราะป้ายกับค่าอยู่คนละระดับ คู่ "ชื่อ : ค่า" อ่านทีละคู่ได้เลย */
+.cd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px var(--space-6);
+}
+.cd-facts > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.cd-facts dt {
+  flex: 0 0 118px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+.cd-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-body);
+  font-size: var(--font-size-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- แท็บใต้หน้ารายละเอียด ---------- */
+.cd-tabs-card { padding: 0; overflow: hidden; }
+
+/* ซ่อนแถบเลื่อนของแถวแท็บ — บนวินโดวส์มันโผล่เป็นลูกศรขึ้น/ลงค้างอยู่มุมขวาตลอดเวลา
+   ทั้งที่แท็บสี่อันไม่เคยล้นจอจริง แต่ยังต้องเลื่อนได้เผื่อจอแคบมาก */
+.cd-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-5);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+  scrollbar-width: none;
+}
+.cd-tabs::-webkit-scrollbar { display: none; }
+
+.cd-tab {
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease;
+}
+.cd-tab:hover { color: var(--color-text-strong); }
+.cd-tab.is-active { border-bottom-color: var(--color-primary); color: var(--color-primary-dark); font-weight: var(--font-weight-medium); }
+
+/* ตารางกว้างเกินจอต้องเลื่อนในกล่องของตัวเอง ไม่ใช่ดันทั้งหน้าให้เลื่อนแนวนอน */
+.cd-panel-body { padding: var(--space-4) var(--space-5); overflow-x: auto; }
+
+.cd-note { margin: 0 0 var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+.cd-empty { margin: 0; padding: var(--space-5) 0; color: var(--color-text-muted); text-align: center; }
+
+/* table-layout: fixed — ให้ตารางกางเต็มความกว้างและคอลัมน์ตรงกันทุกแท็บ
+   แบบ auto ปล่อยให้เนื้อหาเป็นคนกำหนดความกว้าง ตารางที่มีข้อความสั้นจึงหดไปกองซ้าย
+   และแต่ละแท็บกว้างไม่เท่ากัน สลับแท็บทีเส้นคอลัมน์ก็ขยับทั้งหน้า
+   ความกว้างจริงของแต่ละคอลัมน์กำหนดด้วย <colgroup> ในแต่ละตาราง */
+.cd-data-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cd-data-table td { overflow-wrap: anywhere; }
+.cd-data-table th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  /* หัวคอลัมน์ตัดบรรทัดได้ — ความกว้างมาจาก colgroup แล้ว ถ้าบังคับ nowrap ไว้
+     หัวที่ยาวกว่าคอลัมน์จะล้นไปทับคอลัมน์ข้าง ๆ */
+}
+.cd-data-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--color-text-body);
+  font-size: var(--font-size-body);
+  vertical-align: top;
+}
+.cd-data-table tbody tr:last-child td { border-bottom: 0; }
+.cd-data-table tfoot td { padding-top: 12px; border-top: 1px solid var(--color-border); color: var(--color-text-primary); }
+
+.cd-nowrap { white-space: nowrap; }
+.cd-right { text-align: right; }
+.cd-num { font-variant-numeric: tabular-nums; }
+.cd-sub { display: block; color: var(--color-text-muted); font-size: var(--font-size-caption); }
+
+.cd-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+.cd-pill.is-ok { border-color: var(--color-success-border); background: var(--color-success-soft); color: var(--color-success-text); }
+.cd-pill.is-wait { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning-text); }
+.cd-pill.is-over { border-color: var(--color-danger); background: #FEF2F2; color: var(--color-danger-hover); }
+
+.cd-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.cd-dot.is-done { border-color: var(--color-primary); background: var(--color-primary); }
+
 /* ---------- ข้อมูลทั่วไป ---------- */
 /* ---------- ไทม์ไลน์ ---------- */
 .cd-timeline { display: flex; flex-direction: column; }
@@ -12027,7 +12265,6 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 .cd-bubble-text.is-center { color: var(--color-text-secondary); text-align: center; }
 .cd-bubble-meta { padding-top: var(--space-3); border-top: 1px solid var(--color-border-soft); font-size: var(--font-size-caption); color: var(--color-text-muted); text-align: center; }
 .cd-bubble-due { font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); color: var(--color-primary-dark, #2F6D45); text-align: center; }
-.cd-bubble-fine { font-size: 11px; color: var(--color-text-muted); text-align: center; text-wrap: pretty; }
 
 .cd-bubble-btn {
   display: block;
@@ -12177,7 +12414,8 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 
 .fb-tr {
   display: grid;
-  grid-template-columns: 44px minmax(200px, 1.6fr) 170px minmax(170px, 1.2fr) 96px 130px 96px 110px 130px 44px;
+  /* ตัดคอลัมน์ "แบบประเมิน" ออก และ "ตอบแล้ว" เปลี่ยนจากแท่งกราฟเป็นตัวเลขจึงแคบลงได้ */
+  grid-template-columns: 44px minmax(200px, 1.8fr) 170px 96px 96px 96px 110px 130px 44px;
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-5);
@@ -12385,7 +12623,8 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
   margin-bottom: var(--space-3);
 }
 
-.fb-member-table .fb-tr { grid-template-columns: minmax(180px, 1.4fr) 140px 150px 130px 120px 100px 120px; min-width: 1000px; }
+/* คอลัมน์สุดท้ายคือปุ่มส่งแจ้งเตือนรายคน — การส่งทั้งรอบถูกตัดออกไปแล้ว */
+.fb-member-table .fb-tr { grid-template-columns: minmax(180px, 1.4fr) 140px 150px 130px 120px 100px 120px 130px; min-width: 1130px; }
 .fb-offline-table .fb-tr { grid-template-columns: minmax(180px, 1.2fr) 140px 130px 120px 120px minmax(280px, 1.6fr); min-width: 1080px; }
 
 .fb-offline { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-width: 0; }
@@ -15428,3 +15667,1168 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
     padding-right: var(--space-4);
   }
 }
+
+/* ==========================================================================
+   หน้าภาพรวมกิจกรรม (admin/activities/{code}) — ทุกกฎอยู่ใต้ .aov- จึงไม่รั่วไปหน้าอื่น
+   ========================================================================== */
+
+.aov-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.aov-title {
+  font-size: var(--font-size-t1);
+  line-height: var(--line-height-t1);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  letter-spacing: -.015em;
+  margin: 0 0 var(--space-1);
+}
+
+/* ---------- แท็บนำทาง — เส้นใต้เขียวตามแบบ ----------
+   ห้ามใส่ overflow บนตัวแถบ — แท็บใช้ margin-bottom ติดลบทับเส้นใต้
+   ถ้า overflow เป็น auto จะเกิด scrollbar จิ๋วโผล่ท้ายแถบบน Windows */
+.aov-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  border-bottom: 1px solid var(--color-border-soft);
+  margin-bottom: var(--space-5);
+}
+
+.aov-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 2px;
+  font-size: var(--font-size-btn);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast);
+}
+
+.aov-tab:hover { color: var(--color-text-strong); }
+
+.aov-tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.aov-tab.is-active {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+  border-bottom-color: var(--color-primary);
+}
+
+.aov-tab-count {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- โครงสองคอลัมน์ — ฝั่งข้อมูลหลักกว้าง ฝั่งสรุปแคบ ---------- */
+/* กริด 2x2 ระบุชื่อพื้นที่ — แถวที่ 2 (รอบกิจกรรม + QR และลิงก์) สูงเท่ากันเสมอ
+   ด้วยพฤติกรรมปกติของ grid (align-items: stretch เป็นค่าเริ่มต้น จึงไม่ต้องคำนวณความสูงเอง) */
+.aov-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas:
+    "detail  summary"
+    "rounds  qr";
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.aov-cell-detail { grid-area: detail; }
+.aov-cell-summary { grid-area: summary; }
+.aov-cell-rounds { grid-area: rounds; min-width: 0; }
+.aov-cell-qr { grid-area: qr; min-width: 0; }
+
+.aov-section-title {
+  font-size: var(--font-size-t2);
+  line-height: var(--line-height-t2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  margin: 0 0 var(--space-3);
+}
+
+/* ---------- การ์ดรายละเอียด ---------- */
+.aov-detail-card { padding: var(--space-5); }
+
+.aov-detail-top {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.aov-cover {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--color-primary-soft);
+}
+
+.aov-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.aov-cover.is-empty {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+}
+
+/* ชื่อกิจกรรมในการ์ด — สีเขียวแบรนด์ตามแบบ */
+.aov-detail-name {
+  font-size: var(--font-size-t2);
+  line-height: var(--line-height-t2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-dark);
+  margin: 0 0 var(--space-2);
+}
+
+.aov-desc {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+  color: var(--color-text-body);
+  margin: 0;
+}
+
+/* บรรทัดข้อมูลย่อใต้คำอธิบาย — ไอคอนนำหน้า เรียงลงมาทีละบรรทัด */
+.aov-info {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.aov-info-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+  color: var(--color-text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-info-line svg { flex: none; color: var(--color-text-muted); }
+
+/* นับถอยหลังปิดรับสมัคร — สีเตือนทั้งไอคอนและข้อความ */
+.aov-info-line.is-deadline,
+.aov-info-line.is-deadline svg { color: var(--color-warning-text); }
+
+/* ---------- รอบกิจกรรม ---------- */
+.aov-rounds-card { padding: var(--space-5); }
+
+/* แต่ละรอบอยู่ในกรอบของตัวเอง — เห็นขอบเขตของรอบย่อยชัดเมื่อมีหลายรอบ */
+.aov-round {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-card);
+}
+
+.aov-round + .aov-round { margin-top: var(--space-3); }
+
+.aov-round-text { min-width: 0; }
+
+.aov-round-name {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-strong);
+}
+
+.aov-round-sub {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.aov-round-count {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+}
+
+.aov-round-num {
+  font-size: var(--font-size-n-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-round-bar {
+  width: 140px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-soft);
+  overflow: hidden;
+}
+
+.aov-round-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+.aov-round-bar-fill.is-full { background: var(--color-warning); }
+
+.aov-empty {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ---------- สรุปตัวเลข ---------- */
+.aov-summary-card,
+.aov-qr-card { padding: var(--space-5); }
+
+.aov-summary { margin: 0; }
+
+.aov-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.aov-summary-row + .aov-summary-row { border-top: 1px solid var(--color-border-soft); }
+
+.aov-summary-row dt {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+}
+
+.aov-summary-row dd {
+  margin: 0;
+  font-size: var(--font-size-n-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.aov-summary-row dd.is-good { color: var(--color-primary-dark); }
+.aov-summary-row dd.is-warn { color: var(--color-warning-text); }
+
+/* ---------- QR และลิงก์ ---------- */
+.aov-qr {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-card);
+}
+
+.aov-qr + .aov-qr { margin-top: var(--space-3); }
+
+/* ส่วนที่กดได้ (รูป + ชื่อ) เพื่อเปิด QR ขนาดเต็ม — ปุ่มจริงเพื่อให้คีย์บอร์ดกดได้ */
+.aov-qr-open {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.aov-qr-open:hover .aov-qr-label { color: var(--color-primary-dark); }
+
+.aov-qr-open:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.aov-qr-thumb {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.aov-qr-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.aov-qr-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.aov-qr-label {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-strong);
+}
+
+.aov-qr-url {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aov-qr-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+/* ปุ่มไอคอนไม่มีขอบ — โผล่พื้นอ่อนเมื่อ hover พอให้รู้ว่ากดได้ */
+.aov-qr-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-action);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.aov-qr-btn:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.aov-qr-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* ---------- Modal ดู QR ขนาดเต็ม ---------- */
+.aov-qr-modal-body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.aov-qr-modal-body img {
+  width: min(280px, 70vw);
+  aspect-ratio: 1;
+  height: auto;
+  display: block;
+}
+
+.aov-qr-modal-url {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  word-break: break-all;
+  text-align: center;
+}
+
+.aov-qr-modal-url:hover { color: var(--color-primary-dark); text-decoration: underline; }
+
+/* แถบแจ้งเตือนหัวแท็บ — กิจกรรมไม่ได้เปิดฟีเจอร์ของแท็บนั้น */
+.aov-tab-notice { margin-bottom: var(--space-4); }
+
+/* ---------- แท็บผู้เข้าร่วม — ตารางรายชื่อ ---------- */
+.aov-pt-card {
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.aov-pt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.aov-pt-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---------- หน้าผู้เข้าร่วมทั้งหมด ---------- */
+/* ช่องค้นหาในแถบเครื่องมือของตาราง — สูงเท่าปุ่มข้าง ๆ (.btn สูง 38px)
+   ต้องทับ min-height ของ .input ด้วย ไม่งั้นค้างที่ 42px */
+.aov-ap-search {
+  width: 240px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-body);
+}
+
+.aov-ap-filters { margin-bottom: var(--space-4); }
+
+/* บรรทัดสรุปใต้หัวตาราง เช่น "เช็คอินแล้ว 12 จาก 30 คน" */
+.aov-pt-toolbar-sub {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* สถานะเช็คอิน / คะแนนเฉลี่ย — ข้อความสี ไม่ใส่กรอบ แบบเดียวกับสถานะชำระเงิน */
+.aov-pt-status.is-in { color: var(--color-success-text); }
+.aov-pt-status.is-out { color: var(--color-text-muted); }
+.aov-pt-status.is-mid { color: var(--color-warning-text); }
+.aov-pt-status.is-low { color: var(--color-danger-text); }
+
+/* หัวคอลัมน์คำถามในแท็บแบบประเมิน — คำถามยาวตัดด้วย … ข้อความเต็มอยู่ใน title */
+.aov-ev-th {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* ดาว + ตัวเลขเหนือป้ายเกรดในคอลัมน์เฉลี่ย — ดาวเล็ก (aov-rp-star--sm) สีเหลืองเมื่อติด
+   ใช้คลาสดาวร่วมกับแท็บรายงาน จะได้ไม่มีสองนิยามของ "ดาวติด/ไม่ติด" */
+.aov-ev-avg {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.aov-ev-avg-stars { display: inline-flex; gap: 1px; }
+
+.aov-ev-avg-num {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* dropdown สถานะเช็คอิน — โครงเดียวกับสถานะชำระเงิน กว้างขึ้นเล็กน้อยตามคำที่ยาวกว่า */
+.aov-ck-select { width: 128px; }
+
+.aov-pt-pay.is-off { color: var(--color-text-secondary); background: var(--color-background); }
+
+/* ป้าย Walk-in ใต้ชื่อ — คนที่เจ้าหน้าที่เพิ่มหน้างาน ไม่ได้ลงทะเบียนล่วงหน้า */
+.aov-pt-walkin {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* แผงเลือกคอลัมน์ — dropdown ใต้ปุ่ม ชิดขวา */
+.aov-pt-picker { position: relative; }
+
+.aov-pt-picker-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: var(--z-dropdown);
+  min-width: 220px;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.aov-pt-picker-title {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+}
+
+.aov-pt-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.aov-pt-picker-item:hover { background: var(--color-background); }
+
+.aov-pt-picker-item input { accent-color: var(--color-primary); }
+
+/* คอลัมน์หลักปิดไม่ได้ — จางลงพอให้รู้ว่าล็อกไว้ */
+.aov-pt-picker-item.is-fixed { color: var(--color-text-muted); cursor: default; }
+
+/* ตารางเลื่อนแนวนอนในกรอบของตัวเอง — กิจกรรมที่เก็บหลายฟิลด์คอลัมน์จะเยอะ */
+.aov-pt-scroll { overflow-x: auto; }
+
+.aov-pt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aov-pt-table th {
+  font-size: var(--font-size-t4);
+  line-height: var(--line-height-t4);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: left;
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.aov-pt-table td {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+  color: var(--color-text-body);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-pt-table tbody tr:hover { background: var(--color-background); }
+
+.aov-pt-table tbody tr:last-child td { border-bottom: 0; }
+
+/* คอลัมน์ลำดับ — แคบและจาง เป็นข้อมูลประกอบ */
+.aov-pt-table th.aov-pt-num,
+.aov-pt-table td.aov-pt-num {
+  width: 40px;
+  color: var(--color-text-muted);
+}
+
+/* ลูกค้าประจำ — บรรทัดย่อใต้ชื่อ สีเขียวแบรนด์ กดแล้วเปิด popup ประวัติ */
+.aov-pt-history {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-t5);
+  line-height: var(--line-height-t5);
+  color: var(--color-primary-dark);
+  margin-top: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.aov-pt-history:hover { text-decoration: underline; }
+
+.aov-pt-history:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ปุ่มดูสลิป — เปิด popup ตรวจสลิป */
+.aov-pt-slip {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  color: var(--color-primary-dark);
+  cursor: pointer;
+}
+
+.aov-pt-slip:hover { text-decoration: underline; }
+
+.aov-pt-slip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* รูปสลิปใน popup — จำกัดความสูงให้ปุ่มตัดสินยังอยู่ในจอ */
+.aov-pt-slip-body { display: grid; justify-items: center; }
+
+.aov-pt-slip-body img {
+  max-width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* ปุ่มปฏิเสธสลิป — โทนแดงแบบปุ่มรอง ไม่ทึบ */
+.aov-pt-slip-reject { color: var(--color-danger-text); }
+
+.aov-pt-slip-reject:hover { color: var(--color-danger-text-hover); }
+
+/* dropdown สถานะชำระเงินในตาราง — ป้ายพื้นอ่อนแบบ badge ไม่มีเส้นขอบ
+   ความกว้างคงที่เท่ากันทุกสถานะ คอลัมน์จะได้ไม่ขยับเมื่อค่าเปลี่ยน */
+.aov-pt-pay {
+  width: 116px;
+  font-family: inherit;
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-body);
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.aov-pt-pay:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.aov-pt-pay:disabled { opacity: .55; cursor: default; }
+
+/* สีของสถานะ — พื้นอ่อน + ตัวอักษรโทนเดียวกับป้ายสถานะทั่วระบบ */
+.aov-pt-pay.is-paid { color: var(--color-success-text); background: var(--color-success-soft); }
+.aov-pt-pay.is-unpaid { color: var(--color-danger-text); background: var(--color-danger-soft); }
+.aov-pt-pay.is-pending { color: var(--color-warning-text); background: var(--color-warning-soft); }
+
+/* บรรทัดรองใต้ชื่อ popup ประวัติ — บอกว่ากำลังดูของใคร */
+.aov-pt-history-sub {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ตารางใน popup ประวัติ — โครงเดียวกับตารางหลักแต่แถวเตี้ยกว่า */
+.aov-pt-history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aov-pt-history-table th {
+  font-size: var(--font-size-t4);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: left;
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.aov-pt-history-table td {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+  color: var(--color-text-body);
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--color-border-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-pt-history-table tbody tr:last-child td { border-bottom: 0; }
+
+.aov-pt-history-table th.aov-pt-num,
+.aov-pt-history-table td.aov-pt-num {
+  width: 36px;
+  color: var(--color-text-muted);
+}
+
+.aov-pt-foot {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-soft);
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- จอแคบ — สรุปตัวเลขย้ายลงใต้ข้อมูลหลัก ---------- */
+@media (max-width: 1100px) {
+  .aov-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "detail" "rounds" "summary" "qr";
+  }
+}
+
+@media (max-width: 720px) {
+  .aov-detail-top { grid-template-columns: minmax(0, 1fr); }
+  .aov-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ==========================================================================
+   แท็บรายงานภาพรวมกิจกรรม (admin/activities/{code}/reports)
+   กราฟทั้งหมดสร้างด้วย SVG/HTML ฝั่งเซิร์ฟเวอร์ ไม่ใช้ไลบรารีกราฟ — ใช้ตัวแปรสีสถานะ
+   เดียวกับที่ป้ายสถานะทั่วระบบใช้อยู่แล้ว (success/warning/danger) จึงคุ้นตาและไม่ฉูดฉาด
+   ทุกกฎอยู่ใต้ .aov- จึงไม่รั่วไปหน้าอื่น
+   ========================================================================== */
+
+/* ---------- แถวตัวเลขสรุป ---------- */
+.aov-rp-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.aov-rp-kpi {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+}
+
+.aov-rp-kpi-label {
+  display: block;
+  font-size: var(--font-size-t5);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.aov-rp-kpi-value {
+  font-size: var(--font-size-t7);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-rp-kpi-of {
+  font-size: var(--font-size-t5);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+}
+
+/* ---------- โครงการ์ดกราฟ ---------- */
+.aov-rp-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+/* display: grid/flex ด้านบนชนะ [hidden] ของเบราว์เซอร์ — แถวที่หน้าจอสั่งซ่อนต้องซ่อนจริง
+   ไม่งั้นแถวที่การ์ดข้างในถูกซ่อนหมดจะยังกิน margin-bottom ทิ้งช่องว่างค้างไว้ */
+.aov-rp-row[hidden],
+.aov-rp-card[hidden],
+.aov-rp-section-heading[hidden] { display: none; }
+
+.aov-rp-card { padding: var(--space-5); }
+
+.aov-rp-card--wide { margin-bottom: var(--space-5); }
+
+/* ---------- โดนัท ---------- */
+.aov-rp-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.aov-rp-donut { position: relative; width: 140px; height: 140px; flex: none; }
+
+.aov-rp-donut svg { transform: rotate(-90deg); }
+
+.aov-rp-donut-seg { fill: none; stroke-width: 30; }
+
+.aov-rp-donut-seg.is-success { stroke: var(--color-success); }
+.aov-rp-donut-seg.is-warning { stroke: var(--color-warning); }
+.aov-rp-donut-seg.is-danger { stroke: var(--color-danger); }
+.aov-rp-donut-seg.is-muted { stroke: var(--color-border); }
+
+/* ตัวเลขกลางโดนัท — ต้องเป็น flex column ไม่ใช่ grid + place-items
+   grid จะสร้างสองแถวเต็มความสูงแล้วจัดกลางแยกแถว ตัวเลขเลยไปติดขอบบนและหน่วยไปติดขอบล่าง
+   แทนที่จะเกาะกลุ่มกันตรงกลางวง */
+.aov-rp-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.aov-rp-donut-num {
+  display: block;
+  font-size: var(--font-size-n-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-rp-donut-unit {
+  display: block;
+  font-size: var(--font-size-t6);
+  color: var(--color-text-muted);
+}
+
+.aov-rp-legend { display: grid; gap: var(--space-2); flex: 1; min-width: 160px; }
+
+.aov-rp-legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+}
+
+.aov-rp-swatch { width: 10px; height: 10px; border-radius: var(--radius-full); flex: none; }
+
+.aov-rp-swatch.is-success { background: var(--color-success); }
+.aov-rp-swatch.is-warning { background: var(--color-warning); }
+.aov-rp-swatch.is-danger { background: var(--color-danger); }
+.aov-rp-swatch.is-muted { background: var(--color-border); }
+
+.aov-rp-legend-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aov-rp-legend-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-medium);
+}
+
+.aov-rp-legend-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  width: 40px;
+  text-align: right;
+}
+
+
+/* ---------- แถบเครื่องมือบนสุด — คำอธิบายสั้น + ปุ่มเลือกกราฟ ---------- */
+.aov-rp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.aov-rp-toolbar-note {
+  margin: 0;
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+}
+
+/* คำกำกับท้ายหัวการ์ด (เช่น "ผู้ที่มาจริง") — บอกว่าการ์ดนี้นับจากชุดข้อมูลย่อยไหน */
+.aov-rp-card-note {
+  font-size: var(--font-size-t5);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+/* ปุ่มเลือกชุดรายงาน — ใช้ .status-pill ของระบบ จึงเหมือนชิปกรองสถานะในหน้ารายการ */
+.aov-rp-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.aov-rp-picker-panel { max-height: 320px; overflow-y: auto; }
+
+/* หัวข้อคั่นระหว่างกลุ่มกราฟ (เช่น "คำตอบแยกตามคำถาม") — ใหญ่กว่าหัวการ์ดเดี่ยว */
+.aov-rp-section-heading {
+  font-size: var(--font-size-t2);
+  line-height: var(--line-height-t2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+/* โทนเพิ่มเติมของโดนัท/สวอตช์ — info ใช้กับ Walk-in หน้างาน */
+.aov-rp-donut-seg.is-info { stroke: var(--color-info); }
+.aov-rp-swatch.is-info { background: var(--color-info); }
+
+/* สีวนตามอันดับ (rank 0–4) — ใช้กับข้อมูลที่ไม่มีความหมายสถานะตายตัว เช่น เพศ ช่องทางที่รู้จัก
+   วนผ่านโทนหลักของระบบที่มีอยู่แล้ว ไม่เพิ่มสีใหม่ จึงยังกลมกลืนไม่ฉูดฉาด */
+.aov-rp-donut-seg.aov-rp-r0 { stroke: var(--color-primary); }
+.aov-rp-donut-seg.aov-rp-r1 { stroke: var(--color-info); }
+.aov-rp-donut-seg.aov-rp-r2 { stroke: var(--color-warning); }
+.aov-rp-donut-seg.aov-rp-r3 { stroke: var(--color-danger); }
+.aov-rp-donut-seg.aov-rp-r4 { stroke: var(--color-text-faint); }
+
+.aov-rp-swatch.aov-rp-r0 { background: var(--color-primary); }
+.aov-rp-swatch.aov-rp-r1 { background: var(--color-info); }
+.aov-rp-swatch.aov-rp-r2 { background: var(--color-warning); }
+.aov-rp-swatch.aov-rp-r3 { background: var(--color-danger); }
+.aov-rp-swatch.aov-rp-r4 { background: var(--color-text-faint); }
+
+/* ---------- แท่งกราฟแนวนอน (label + แท่ง + ตัวเลข) — ใช้ร่วมหลายกราฟ ---------- */
+.aov-rp-hbars { display: grid; gap: var(--space-2); }
+
+.aov-rp-hbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) 1fr 44px;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.aov-rp-hbar-label {
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aov-rp-hbar-track {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-soft);
+  overflow: hidden;
+}
+
+.aov-rp-hbar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  transition: width var(--transition-slow);
+}
+
+.aov-rp-hbar-fill.is-good { background: var(--color-success); }
+.aov-rp-hbar-fill.is-mid { background: var(--color-warning); }
+.aov-rp-hbar-fill.is-low { background: var(--color-danger); }
+
+.aov-rp-hbar-count {
+  text-align: right;
+  font-size: var(--font-size-body);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- แท็กพร้อมจำนวน (เช่น ความสนใจ) ---------- */
+.aov-rp-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.aov-rp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+}
+
+.aov-rp-pill-count {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- คะแนนความพึงพอใจโดยรวม — การ์ดสไตล์รีวิว ตัวเลขใหญ่นำสายตา ---------- */
+.aov-rp-survey-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.aov-rp-survey-sub {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  margin: var(--space-4) 0 0;
+}
+
+.aov-rp-survey-sub--tight { margin: 0 0 var(--space-3); }
+
+.aov-rp-score {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.aov-rp-score-main {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 2px;
+  flex: none;
+  min-width: 140px;
+}
+
+.aov-rp-score-num {
+  font-size: 44px;
+  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.aov-rp-score-stars { margin-top: var(--space-1); }
+
+.aov-rp-star {
+  font-size: 18px;
+  color: var(--color-border);
+}
+
+.aov-rp-star.is-filled { color: var(--color-warning); }
+
+.aov-rp-star--sm { font-size: 12px; }
+
+.aov-rp-score-total {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+}
+
+.aov-rp-score-rate {
+  font-size: var(--font-size-t6);
+  color: var(--color-text-muted);
+}
+
+.aov-rp-score-bars { display: grid; gap: var(--space-2); flex: 1; min-width: 220px; }
+
+.aov-rp-score-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 32px;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.aov-rp-score-row-label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- จอแคบ ---------- */
+@media (max-width: 600px) {
+  .aov-rp-hbar-row,
+  .aov-rp-score-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .aov-rp-hbar-count { text-align: left; }
+
+  .aov-rp-donut-wrap { justify-content: center; }
+
+  .aov-rp-score { justify-content: center; }
+
+  .aov-rp-toolbar { flex-direction: column; align-items: flex-start; }
+}
+
+/* ==========================================================================
+   ตอบแบบประเมิน — คำตอบรายข้อใน popup
+   ========================================================================== */
+.rl-answers { display: flex; flex-direction: column; gap: 0; margin: 0; }
+.rl-answers > div { padding: 10px 0; border-bottom: 1px solid var(--color-border-soft); }
+.rl-answers > div:last-child { border-bottom: 0; }
+.rl-answers dt {
+  margin-bottom: 3px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+.rl-answers dd {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+/* คอลัมน์สุดท้ายเป็นปุ่มดูคำตอบ — ของเดิมมีห้าคอลัมน์ ไม่มีที่ให้ปุ่ม */
+.rl-row {
+  grid-template-columns: 44px minmax(180px, 1.3fr) minmax(160px, 1fr) minmax(200px, 1.3fr) 170px 130px;
+}
+.rl-table { min-width: 1000px; }
+
+/* แผงค้นหาของหน้านี้ใช้โครงเดียวกับแผงเลือกคอลัมน์ แต่เป็นฟอร์มจึงต้องกว้างกว่า */
+.rl-search-panel { min-width: 300px; gap: var(--space-3); padding: var(--space-4); }
+
+/* ==========================================================================
+   แท็บ "ข้อมูลกลุ่มตัวอย่าง" — ข้อมูลทั่วไปซ้าย ไทม์ไลน์ขวา
+   ========================================================================== */
+.cd-profile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--space-6);
+}
+/* จอแคบวางซ้อนกันแทน — สองคอลัมน์ที่ถูกบีบจะตัดบรรทัดจนอ่านยากกว่าเรียงลงมา */
+@media (max-width: 1100px) {
+  .cd-profile { grid-template-columns: minmax(0, 1fr); }
+}
+
+.cd-profile > section { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.cd-profile-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.cd-profile-note { color: var(--color-text-muted); font-size: var(--font-size-caption); }
+
+/* ---------- ไทม์ไลน์ ---------- */
+.cd-tl { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+
+.cd-tl-item { position: relative; display: flex; gap: var(--space-3); padding-bottom: var(--space-4); }
+/* เส้นเชื่อมวาดจากจุด ไม่ใช่ border ของแถว — แถวสุดท้ายจะได้ไม่มีเส้นห้อยลงมาลอย ๆ */
+.cd-tl-item:not(:last-child)::before {
+  position: absolute;
+  top: 22px;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background: var(--color-border);
+  content: "";
+}
+.cd-tl-item.is-done:not(:last-child)::before { background: var(--color-success); }
+
+.cd-tl-dot {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+}
+.cd-tl-item.is-done .cd-tl-dot { border-color: var(--color-success); background: var(--color-success); }
+.cd-tl-item.is-over .cd-tl-dot { border-color: var(--color-danger); }
+
+.cd-tl-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cd-tl-head { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
+.cd-tl-head strong { color: var(--color-text-strong); font-weight: var(--font-weight-medium); }
+.cd-tl-line { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }

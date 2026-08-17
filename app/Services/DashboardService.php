@@ -40,8 +40,6 @@ class DashboardService
     /** จำนวนอันดับที่เฉดเขียวใน CSS รองรับ — เกินจากนี้วนกลับไปใช้เฉดอ่อนสุด */
     private const SCALE_STEPS = 5;
 
-    /** จำนวนหลักสูตรที่แสดงในแผง "หลักสูตรที่มีผู้เข้าร่วมสูงสุด" */
-    private const TOP_COURSE_LIMIT = 5;
 
     /** จำนวนเขตที่แสดงใน treemap — ที่เหลือถูกรวบเป็นบรรทัดสรุป */
     private const TREEMAP_LIMIT = 6;
@@ -175,7 +173,6 @@ class DashboardService
             'gender' => $this->genderBreakdown($since, $total),
             'age_bands' => $this->ageBands($since, $total),
             'occupations' => $this->occupations($since, $total),
-            'top_courses' => $this->topCourses($since, $total),
         ];
     }
 
@@ -303,42 +300,6 @@ class DashboardService
                 'bar' => round(($band['count'] / $max) * 100, 2),
                 /* เฉดเข้มขึ้นตามอายุ ให้อ่านลำดับช่วงได้จากสีเหมือนต้นแบบ */
                 'rank' => $last - $index,
-            ])
-            ->all();
-    }
-
-    /**
-     * หลักสูตรที่มีผู้เข้าร่วมสูงสุด
-     *
-     * ผูกผ่าน act_activities.course_id — กิจกรรมที่ยังไม่ผูกหลักสูตรจะไม่ถูกนับ
-     * (โชว์เป็น "ไม่ระบุหลักสูตร" จะทำให้อันดับเพี้ยนเพราะเป็นถังรวมของทุกกิจกรรมที่ยังกรอกไม่ครบ)
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function topCourses(?Carbon $since, int $total): array
-    {
-        $rows = $this->registrations($since)
-            ->join('act_activities', 'act_activities.id', '=', 'act_registrations.activity_id')
-            ->join('mst_courses', 'mst_courses.id', '=', 'act_activities.course_id')
-            ->whereNull('act_activities.deleted_at')
-            ->select('mst_courses.name', $this->personKey('people'))
-            ->groupBy('mst_courses.id', 'mst_courses.name')
-            ->orderByDesc('people')
-            ->orderBy('mst_courses.name')
-            ->limit(self::TOP_COURSE_LIMIT)
-            ->get();
-
-        $max = $rows->max('people') ?: 1;
-
-        return $rows
-            ->values()
-            ->map(fn (object $row, int $index) => [
-                'rank' => $index,
-                'no' => $index + 1,
-                'label' => $row->name,
-                'count' => (int) $row->people,
-                'pct' => $this->percentText((int) $row->people, $total),
-                'bar' => round(((int) $row->people / $max) * 100, 2),
             ])
             ->all();
     }

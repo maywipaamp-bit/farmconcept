@@ -199,12 +199,13 @@ class TrackingRoundQrTest extends TestCase
 
         $this->confirmName()->assertRedirect($this->url('/home'));
 
-        /* หน้าแรกหลังยืนยันคือแดชบอร์ด — เห็นรอบที่ถึงกำหนดกับปุ่มทำได้ทันที */
+        /* หน้าแรกหลังยืนยันคือแดชบอร์ด — เห็นไทม์ไลน์ครบทุกรอบและกดทำรอบที่ถึงคิวได้ทันที */
         $this->get($this->url('/home'))
             ->assertOk()
-            ->assertSee('รอบที่ถึงกำหนด')
+            ->assertSee('รอบแบบประเมิน')
             ->assertSee($round->name)
-            ->assertSee('ทำแบบประเมิน');
+            ->assertSee('ทำได้เลย')
+            ->assertSee('เริ่มทำ');
 
         $this->get($this->url('/rounds'))
             ->assertOk()
@@ -212,6 +213,77 @@ class TrackingRoundQrTest extends TestCase
             ->assertSee($round->name)
             ->assertSee('ทำได้เลย')
             ->assertSee('เริ่มทำ');
+    }
+
+    public function test_typing_the_person_code_with_the_phone_signs_in_from_one_screen(): void
+    {
+        /* คนที่เจ้าหน้าที่เพิ่มให้จากหลังบ้านมีชื่อจริงกับรหัสคนละค่ากัน
+           รหัสบุคคลต้องใช้เข้าระบบได้ ไม่ใช่รับแต่ชื่อตามที่หน้าจอไม่ได้บอก */
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+
+        $this->post($this->url('/verify'), ['phone' => '0812345678', 'person_code' => 'P0001'])
+            ->assertRedirect($this->url('/home'));
+
+        $this->get($this->url('/home'))->assertOk()->assertSee('รอบแบบประเมิน');
+    }
+
+    /** รหัสบุคคลต้องตรงทั้งรหัส — พิมพ์แค่ต้นรหัสแล้วชนหลายคนพร้อมกันต้องไม่ผ่าน */
+    public function test_a_partial_person_code_is_not_enough(): void
+    {
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $this->member('P0002', '081-234-5678', null, null, 'มานี รักเรียน');
+
+        $this->post($this->url('/verify'), ['phone' => '0812345678', 'person_code' => 'P000'])
+            ->assertRedirect($this->url('/choose'));
+
+        $this->get($this->url('/home'))->assertRedirect($this->url());
+    }
+
+    public function test_a_wrong_person_code_does_not_get_in_and_says_why(): void
+    {
+        $this->member('P0001', '081-234-5678', null, null, 'P0001');
+
+        $this->post($this->url('/verify'), ['phone' => '0812345678', 'person_code' => 'P9999'])
+            ->assertRedirect($this->url('/choose'))
+            ->assertSessionHasErrors('name_prefix');
+
+        $this->get($this->url('/home'))->assertRedirect($this->url());
+    }
+
+    /** อีเมลเป็นทางเลือกในช่องเดียวกับเบอร์ — สำหรับคนที่ไม่สะดวกใช้เบอร์ */
+    public function test_an_email_works_in_the_same_field_as_the_phone(): void
+    {
+        $round = $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+        $round->cohortProfile->participant->update(['email' => 'Somchai@Example.com']);
+
+        /* เทียบแบบไม่สนตัวพิมพ์ใหญ่เล็กและช่องว่างหัวท้าย ข้อมูลที่คีย์เข้ามามีทั้งสองแบบ */
+        $this->post($this->url('/verify'), ['phone' => '  somchai@example.com  ', 'person_code' => 'P0001'])
+            ->assertRedirect($this->url('/home'));
+
+        $this->get($this->url('/home'))->assertOk();
+    }
+
+    public function test_an_unknown_email_says_so_instead_of_pushing_to_registration(): void
+    {
+        $this->member('P0001', '081-234-5678', null, null, 'สมชาย ใจดี');
+
+        /* ฟอร์มลงทะเบียนรับเฉพาะเบอร์ ส่งคนที่กรอกอีเมลไปที่นั่นก็ไปต่อไม่ได้ */
+        $this->post($this->url('/verify'), ['phone' => 'nobody@example.com'])
+            ->assertSessionHasErrors('phone');
+
+        $this->get($this->url('/home'))->assertRedirect($this->url());
+    }
+
+    public function test_someone_without_a_cohort_profile_is_not_found_by_email(): void
+    {
+        Participant::create([
+            'code' => 'P9999', 'person_code' => 'P9999',
+            'name' => 'ยังไม่เป็นกลุ่มตัวอย่าง', 'phone' => '082-000-0000',
+            'email' => 'outsider@example.com',
+        ]);
+
+        $this->post($this->url('/verify'), ['phone' => 'outsider@example.com'])
+            ->assertSessionHasErrors('phone');
     }
 
     public function test_rounds_screen_cannot_be_opened_without_verifying_first(): void
@@ -343,18 +415,20 @@ class TrackingRoundQrTest extends TestCase
             ->assertSee('รหัสบุคคลของคุณคือ');
     }
 
-    public function test_dashboard_shows_the_due_round_progress_and_coordinator(): void
+    public function test_dashboard_shows_the_whole_timeline(): void
     {
         $this->template('ก่อนเข้าร่วม', 0);
         $this->post($this->url('/register'), $this->registerPayload());
 
+        /* หน้าหลักแสดงไทม์ไลน์เต็มชุด ไม่ใช่การ์ดรอบเดียวแล้วต้องกดไปอีกหน้าเพื่อดูภาพรวม */
         $this->get($this->url('/home'))
             ->assertOk()
-            ->assertSee('รอบที่ถึงกำหนด')
-            ->assertSee('รอบที่ 1 · ก่อนเข้าร่วม')
-            ->assertSee('ทำแบบประเมิน')
+            ->assertSee('รอบแบบประเมิน')
+            ->assertSee('รอบที่ 1')
+            ->assertSee('ก่อนเข้าร่วม')
+            ->assertSee('ทำได้เลย')
+            ->assertSee('เริ่มทำ')
             ->assertSee('0/1')
-            ->assertSee('รอบที่ทำแล้ว')
             ->assertSee('แจ้งเตือนรอบถัดไปผ่าน LINE')
             ->assertSee('ทำแทนคนอื่น')
             /* คำชี้แจงการใช้ข้อมูลอยู่ที่หน้าเข้าสู่ระบบเท่านั้น หน้าหลักเหลือเฉพาะสิ่งที่ต้องทำ */

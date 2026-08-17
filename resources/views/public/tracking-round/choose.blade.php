@@ -7,7 +7,8 @@
         <h1 class="tr-heading">ยืนยันตัวตน</h1>
         {{-- ไม่แสดงรายชื่อในเบอร์นี้เลย แม้แบบปิดบัง — แค่รู้เบอร์ของบ้านหนึ่งไม่ควรอ่านได้ว่ามีใครอยู่ในโครงการ
              ผู้ตอบพิมพ์ชื่อตัวเองจากความจำ ระบบเป็นฝ่ายจับคู่ให้ ไม่ใช่ยื่นตัวเลือกให้เดา --}}
-        <p class="tr-subheading">เบอร์ {{ $phone }} · กรอกรหัสบุคคลของคุณเพื่อเข้าใช้งาน</p>
+        {{-- ค่าที่กรอกมาอาจเป็นเบอร์หรืออีเมล ขึ้นตามที่พิมพ์มาจริง ไม่ต้องนำหน้าด้วยคำว่า "เบอร์" --}}
+        <p class="tr-subheading">{{ $phone }} · กรอกรหัสบุคคลของคุณเพื่อเข้าใช้งาน</p>
 
         @error('name_prefix')<div class="tr-error" role="alert">{{ $message }}</div>@enderror
 
@@ -16,7 +17,7 @@
 
             <div class="registration-field">
                 <label for="tr-prefix">รหัสบุคคล <span>*</span></label>
-                <input type="text" id="tr-prefix" name="name_prefix" class="tr-prefix-input"
+                <input type="text" id="tr-prefix" name="name_prefix"
                        maxlength="6" autocomplete="off" inputmode="text" autofocus
                        value="{{ old('name_prefix') }}" required>
                 <span class="tr-field-hint">เช่น P0001</span>

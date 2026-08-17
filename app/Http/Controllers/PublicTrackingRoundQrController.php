@@ -84,8 +84,14 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         $data = $request->validate(
-            ['phone' => ['required', 'string', 'max:30']],
-            ['phone.required' => 'กรุณากรอกเบอร์โทรศัพท์']
+            [
+                /* ช่องเดียวรับทั้งเบอร์และอีเมล — 160 เท่าความยาวคอลัมน์อีเมล */
+                'phone' => ['required', 'string', 'max:160'],
+                /* ไม่บังคับ — กล่องเชื่อม LINE ส่งมาแต่เบอร์ และคนที่จำรหัสไม่ได้ตอนนั้น
+                   ยังต้องเข้าต่อได้ โดยไปถามรหัสที่หน้าถัดไปแทน */
+                'person_code' => ['nullable', 'string', 'max:30'],
+            ],
+            ['phone.required' => 'กรุณากรอกเบอร์โทรศัพท์หรืออีเมล']
         );
 
         $key = 'health-verify:'.$request->ip();
@@ -98,11 +104,19 @@ class PublicTrackingRoundQrController extends Controller
 
         RateLimiter::hit($key, 600);
 
-        $matches = $this->participantsByPhone($data['phone']);
+        $matches = $this->participantsByContact($data['phone']);
 
-        /* ไม่พบเบอร์นี้ = คนใหม่ พาไปลงทะเบียนเป็นกลุ่มตัวอย่างเอง ไม่ใช่ตอบว่า "ไม่พบข้อมูล"
-           แล้วปล่อยให้เขาไปตามหาเจ้าหน้าที่ ซึ่งส่วนใหญ่แปลว่าเลิกทำไปเลย */
         if ($matches->isEmpty()) {
+            /* อีเมลที่หาไม่เจอ พาไปหน้าลงทะเบียนไม่ได้ เพราะฟอร์มนั้นรับเฉพาะเบอร์
+               ส่งไปก็ไปติดอยู่ตรงนั้นต่อไม่ได้ — บอกตรง ๆ ว่าไม่พบ พร้อมทางออกที่ทำได้จริง */
+            if (str_contains($data['phone'], '@')) {
+                return back()->withInput()->withErrors([
+                    'phone' => 'ไม่พบอีเมลนี้ในระบบ — ลองใช้เบอร์โทรศัพท์แทน หรือติดต่อเจ้าหน้าที่เพื่อเพิ่มอีเมลให้',
+                ]);
+            }
+
+            /* ไม่พบเบอร์นี้ = คนใหม่ พาไปลงทะเบียนเป็นกลุ่มตัวอย่างเอง ไม่ใช่ตอบว่า "ไม่พบข้อมูล"
+               แล้วปล่อยให้เขาไปตามหาเจ้าหน้าที่ ซึ่งส่วนใหญ่แปลว่าเลิกทำไปเลย */
             return redirect()
                 ->route('public.tracking-round-qr.register')
                 ->with('prefillPhone', $this->digits($data['phone']))
@@ -112,15 +126,50 @@ class PublicTrackingRoundQrController extends Controller
 
         RateLimiter::clear($key);
 
-        /* เจอเบอร์แล้วยังเข้าไม่ได้ทันที ต้องยืนยันด้วยชื่อจริงอีกชั้นเสมอ
+        $ids = $matches->pluck('id')->all();
+        $typed = trim((string) ($data['person_code'] ?? ''));
+
+        /* กรอกรหัสมาพร้อมเบอร์ในจอเดียวแล้ว ก็ให้เข้าได้เลย ไม่ต้องเด้งไปถามซ้ำอีกจอ */
+        if ($typed !== '') {
+            $matched = $this->matchesCode($ids, $typed);
+
+            if ($matched->count() === 1) {
+                return $this->signIn($request, $matched->first());
+            }
+        }
+
+        /* เจอเบอร์แล้วยังเข้าไม่ได้ทันที ต้องยืนยันด้วยรหัสบุคคลอีกชั้นเสมอ
            เบอร์โทรเป็นสิ่งที่คนอื่นรู้ได้ ถ้าให้ผ่านด้วยเบอร์อย่างเดียวเท่ากับใครก็ตอบแทนได้
            และเบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ ต้องรู้ให้ชัดว่ากำลังตอบในนามใคร */
-        return redirect()
+        $redirect = redirect()
             ->route('public.tracking-round-qr.choose')
-            ->with('candidateIds', $matches->pluck('id')->all())
-            ->with('candidatePhone', $this->formatPhone($this->digits($data['phone'])))
-            /* คงสถานะ "กำลังเชื่อม LINE" ไว้ข้ามหน้ายืนยันชื่อ ไม่งั้นข้อความอธิบายหายกลางทาง */
+            ->with('candidateIds', $ids)
+            /* อีเมลแสดงตามที่พิมพ์มา — จับเป็นเบอร์แล้ว digits() จะเหลือแต่ตัวเลขในอีเมล กลายเป็นค่าที่อ่านไม่ออก */
+            ->with('candidatePhone', str_contains($data['phone'], '@')
+                ? trim($data['phone'])
+                : $this->formatPhone($this->digits($data['phone'])))
+            /* คงสถานะ "กำลังเชื่อม LINE" ไว้ข้ามหน้ายืนยันรหัส ไม่งั้นข้อความอธิบายหายกลางทาง */
             ->with('linkLine', $request->session()->get('linkLine'));
+
+        /* พิมพ์รหัสมาแล้วแต่ไม่ตรง ต้องบอกเหตุผลที่จอถัดไป ไม่ใช่ให้เจอช่องเปล่าโดยไม่รู้ว่าพลาดตรงไหน */
+        return $typed === ''
+            ? $redirect
+            : $redirect->withErrors(['name_prefix' => 'รหัสบุคคลไม่ตรงกับข้อมูลของเบอร์นี้ กรุณาตรวจสอบอีกครั้ง']);
+    }
+
+    /**
+     * คนในเบอร์นั้นที่ตรงกับรหัสบุคคลที่พิมพ์เข้ามา
+     *
+     * ตรงมากกว่าหนึ่งคนแปลว่าเดาไม่ได้ ต้องไม่เลือกให้ — เดาผิดคือคำตอบลงระเบียนผิดคนโดยไม่มีใครรู้
+     *
+     * @param  array<int>  $ids
+     * @return \Illuminate\Support\Collection<int, Participant>
+     */
+    private function matchesCode(array $ids, string $typed): \Illuminate\Support\Collection
+    {
+        return Participant::whereIn('id', $ids)->get()
+            ->filter(fn (Participant $p) => $p->matchesNamePrefix($typed))
+            ->values();
     }
 
     /**
@@ -202,11 +251,9 @@ class PublicTrackingRoundQrController extends Controller
             ['name_prefix.required' => 'กรุณากรอกรหัสบุคคล หรือชื่อที่ลงทะเบียนไว้']
         );
 
-        /* จับคู่เองจากชื่อที่พิมพ์ ไม่รับ id จากฟอร์ม — ฟอร์มไม่เคยรู้ว่ามีใครอยู่ในเบอร์นี้
+        /* จับคู่เองจากรหัสที่พิมพ์ ไม่รับ id จากฟอร์ม — ฟอร์มไม่เคยรู้ว่ามีใครอยู่ในเบอร์นี้
            จึงไม่มีทางยิง id ของคนอื่นเข้ามาสวมสิทธิ์ได้ตั้งแต่ต้น */
-        $matches = Participant::whereIn('id', $ids)->get()
-            ->filter(fn (Participant $p) => $p->matchesNamePrefix($data['name_prefix']))
-            ->values();
+        $matches = $this->matchesCode($ids, $data['name_prefix']);
 
         $request->session()->reflash();
 
@@ -273,7 +320,7 @@ class PublicTrackingRoundQrController extends Controller
         ]);
 
         /* เบอร์นี้มีคนใช้อยู่แล้ว = เขาเคยลงทะเบียนไว้ ไม่ต้องสร้างซ้ำ ให้ไปยืนยันตัวตนตามปกติ */
-        if ($this->participantsByPhone($data['phone'])->isNotEmpty()) {
+        if ($this->participantsByContact($data['phone'])->isNotEmpty()) {
             return redirect()
                 ->route('public.tracking-round-qr')
                 ->withErrors(['phone' => 'เบอร์นี้ลงทะเบียนไว้แล้ว กรุณายืนยันตัวตนด้วยเบอร์โทร']);
@@ -313,38 +360,11 @@ class PublicTrackingRoundQrController extends Controller
         /* ป้ายบนหัวแสดงรหัสกลุ่มตัวอย่าง — โหลดล่วงหน้าเพราะระบบปิด lazy loading */
         $participant->loadMissing('cohortProfile');
 
-        $all = $this->allRoundsFor($participant);
-        $due = $this->rounds->openRoundsFor($participant);
-        $dueRound = $due->first();
-
-        /* ใบถัดไปนับจากใบที่ทำได้ตอนนี้ — ใช้ทั้งบอกเส้นตายของรอบนี้และวันครบกำหนดของรอบหน้า */
-        $nextRound = $dueRound
-            ? $all->first(fn (FollowUpRound $r) => $r->due_date->gt($dueRound->due_date))
-            : $all->whereNull('answered_at')->first();
-
         return view('public.tracking-round.dashboard', [
             'participant' => $participant,
-            'dueRound' => $dueRound,
-            /* ลำดับของรอบในชุดทั้งหมดของคนนี้ — ผู้ตอบเข้าใจ "รอบที่ 2" ง่ายกว่าชื่อรอบลอย ๆ */
-            'dueOrder' => $dueRound
-                ? $all->pluck('id')->search($dueRound->id) + 1
-                : null,
-            /* เส้นตายของรอบนี้คือหนึ่งวันก่อนรอบถัดไปครบกำหนด — สองรอบต้องไม่คาบเกี่ยวกัน
-               ถ้าเป็นใบสุดท้ายก็ใช้วันครบกำหนดของตัวเองตามเดิม */
-            'dueBefore' => $nextRound && $dueRound
-                ? $nextRound->due_date->copy()->subDay()
-                : $dueRound?->due_date,
-            'answeredRounds' => $all->whereNotNull('answered_at')->count(),
-            'totalRounds' => $all->count(),
-            /* วันครบกำหนดของรอบถัดไป — ตอนนี้ตอบก่อนกำหนดได้แล้ว "วันที่เปิด" จึงไม่มีความหมาย
-               สิ่งที่ผู้ตอบต้องรู้คือรอบหน้าครบกำหนดวันไหน */
-            'nextRound' => $nextRound,
-            /* ผู้ประสานงานของพื้นที่ก่อน ถ้าพื้นที่นั้นยังไม่ได้กรอกไว้ค่อยใช้เบอร์กลางของโครงการ
-               ผู้เข้าร่วมต้องมีคนให้ติดต่อได้เสมอ ไม่ใช่หายไปเพราะข้อมูลพื้นที่ยังไม่ครบ */
-            'coordinator' => filled($participant->area?->coordinator_phone)
-                ? ['name' => $participant->area->coordinator_name ?: $participant->area->name,
-                    'phone' => $participant->area->coordinator_phone]
-                : config('farmconcept.tracking_round.coordinator'),
+            /* หน้าหลักแสดงไทม์ไลน์เต็มชุดแทนการ์ดรอบเดียว จึงใช้ข้อมูลชุดเดียวกับหน้ารายการรอบ */
+            'rounds' => $this->allRoundsFor($participant),
+            'openIds' => $this->rounds->openRoundsFor($participant)->pluck('id')->all(),
         ]);
     }
 
@@ -432,14 +452,15 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         $data = $request->validate([
-            'phone' => ['required', 'string', 'max:30'],
+            /* 160 เท่าความยาวคอลัมน์อีเมล — ช่องเดียวรับได้ทั้งเบอร์และอีเมล */
+            'phone' => ['required', 'string', 'max:160'],
             'name_prefix' => ['required', 'string', 'max:20'],
         ], [
-            'phone.required' => 'กรุณากรอกเบอร์โทร 10 หลัก',
+            'phone.required' => 'กรุณากรอกเบอร์โทรหรืออีเมลผู้ถูกประเมิน',
             'name_prefix.required' => 'กรุณากรอกรหัสบุคคลผู้ถูกประเมิน',
         ]);
 
-        $target = $this->participantsByPhone($data['phone'])
+        $target = $this->participantsByContact($data['phone'])
             ->first(fn (Participant $p) => $p->matchesNamePrefix($data['name_prefix']));
 
         if ($target === null) {
@@ -666,9 +687,25 @@ class PublicTrackingRoundQrController extends Controller
     }
 
     /** @return \Illuminate\Support\Collection<int, Participant> */
-    private function participantsByPhone(string $phone): \Illuminate\Support\Collection
+    private function participantsByContact(string $contact): \Illuminate\Support\Collection
     {
-        $digits = $this->digits($phone);
+        $contact = trim($contact);
+
+        if ($contact === '') {
+            return collect();
+        }
+
+        /* ช่องเดียวรับได้ทั้งเบอร์และอีเมล — แยกทางด้วย @ ซึ่งไม่มีทางอยู่ในเบอร์โทร
+           มีไว้เป็นทางเลือกให้คนที่ไม่สะดวกใช้เบอร์ ไม่ได้มาแทนเบอร์ */
+        if (str_contains($contact, '@')) {
+            /* เทียบแบบไม่สนตัวพิมพ์และช่องว่างหัวท้าย ข้อมูลที่เจ้าหน้าที่คีย์เข้ามามีทั้งสองแบบ */
+            return Participant::with('cohortProfile')
+                ->whereHas('cohortProfile')
+                ->whereRaw('LOWER(TRIM(email)) = ?', [mb_strtolower($contact)])
+                ->get();
+        }
+
+        $digits = $this->digits($contact);
 
         if ($digits === '') {
             return collect();

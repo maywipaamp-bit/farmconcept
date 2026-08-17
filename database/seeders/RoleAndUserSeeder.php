@@ -22,6 +22,7 @@ class RoleAndUserSeeder extends Seeder
     private const MENU_KEYS = [
         'dashboard',
         'activities', 'activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses',
+        'reports', 'reports-people',
         'health-assessment', 'cohort', 'evaluations-rounds', 'evaluations-responses',
         'evaluations',
         'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',

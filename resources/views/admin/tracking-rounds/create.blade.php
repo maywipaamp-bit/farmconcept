@@ -58,7 +58,6 @@
             <span class="cd-bubble-text is-center" id="rc-bubble"></span>
             <span class="cd-bubble-meta" id="rc-bubble-round"></span>
             <span class="cd-bubble-due" id="rc-bubble-due"></span>
-            <span class="cd-bubble-fine">ใช้เวลาประมาณ 5 นาที · คำตอบถูกเก็บเป็นความลับ และรายงานเป็นภาพรวมเท่านั้น</span>
             <span class="cd-bubble-btn">เริ่มทำแบบประเมิน</span>
           </div>
         </div>
