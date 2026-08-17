@@ -9,7 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
 /**
- * รายชื่อผู้เข้าร่วมกิจกรรมทั้งหมด (admin/activities/people)
+ * รายชื่อผู้เข้าร่วมกิจกรรมทั้งหมด (admin/reports/people)
  *
  * ตอบสองคำถามที่ตารางรายกิจกรรมตอบไม่ได้ เพราะที่นั่นนับเป็น "ครั้งที่ลงทะเบียน" ไม่ใช่ "คน":
  *   1. คนที่เคยมาร่วมกิจกรรมกับเราทั้งหมดมีกี่คน และในนั้นเป็นกลุ่มตัวอย่างกี่คน
@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  * คนคนเดียวจะถูกนับเป็นสองคนและ "จำนวนกิจกรรมที่เคยมา" ของเขาจะถูกหารครึ่ง
  * เบอร์โทรเป็นค่าที่ผู้ใช้กรอกเองทุกครั้งและซ้ำกันได้ยาก จึงเป็นตัวรวมที่ตรงกับความจริงมากกว่า
  */
-class ActivityPeopleController extends Controller
+class ReportPeopleController extends Controller
 {
     /** เกินจำนวนนี้ถือว่าเป็นคนที่กลับมาซ้ำ ไม่ใช่คนหน้าใหม่ */
     private const REPEAT_FROM = 2;
@@ -141,7 +141,7 @@ class ActivityPeopleController extends Controller
         ]);
         $maxBucket = max(1, $buckets->max('count'));
 
-        return view('admin.activities.people', [
+        return view('admin.reports.people', [
             'people' => $people,
             'summary' => $summary,
             'frequency' => $buckets->map(fn (array $b) => $b + [

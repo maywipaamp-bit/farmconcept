@@ -212,12 +212,6 @@ return [
                     'icon' => '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/>',
                     'href' => 'admin/master/consent-documents',
                 ],
-                [
-                    'key' => 'master-data-system-settings',
-                    'label' => 'ตั้งค่าระบบ',
-                    'icon' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6v.2h-4V21a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9A1.7 1.7 0 003 14H2.8v-4H3a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 009 4.6 1.7 1.7 0 0010 3V2.8h4V3a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1h.2v4H21a1.7 1.7 0 00-1.6 1z"/>',
-                    'href' => 'admin/master/system-settings',
-                ],
             ],
         ],
         [
@@ -273,7 +267,7 @@ return [
         'master_data' => [
             'master-data-target-groups', 'master-data-programs', 'master-data-instructors',
             'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-registration-options',
-            'master-data-consents', 'master-data-system-settings', 'master-data-follow-up-rounds',
+            'master-data-consents', 'master-data-follow-up-rounds',
         ],
         'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
         'reports' => ['reports-people'],

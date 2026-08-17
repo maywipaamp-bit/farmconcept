@@ -18,8 +18,8 @@ use Illuminate\Validation\Validator;
  */
 class ActivityRequest extends FormRequest
 {
-    /** ค่าที่อนุญาต — ต้องตรงกับ master list ฝั่งหน้าจอใน mock-data.js */
-    private const TYPES = ['กิจกรรม', 'อีเว้นท์', 'ข่าวสาร'];
+    /** ค่าที่อนุญาต — ต้องตรงกับ config('farmconcept.activity_types') และ master list ฝั่งหน้าจอ */
+    private const TYPES = ['กิจกรรม', 'อีเว้นท์', 'ข่าวสาร', Activity::TYPE_GENERAL];
 
     private const PARTICIPANT_TYPES = ['กลุ่มตัวอย่าง', 'กลุ่มทั่วไป'];
 
@@ -48,8 +48,13 @@ class ActivityRequest extends FormRequest
     {
         $publishing = $this->boolean('is_published');
 
+        /* ประเภท "ทั่วไป" บังคับกรอกแค่ชื่อ แม้ตอนเผยแพร่ — งานอย่างแบบสอบถามการเยี่ยมชมสวน
+           ไม่มีวันจัด ไม่มีรอบ ไม่มีพื้นที่/กลุ่มเป้าหมายให้กรอกตั้งแต่แรก
+           บังคับไปก็ได้แต่ข้อมูลกรอกส่ง ๆ ซึ่งทำให้รายงานที่อิงฟิลด์เหล่านี้เชื่อถือไม่ได้ */
+        $isGeneral = $this->input('type') === Activity::TYPE_GENERAL;
+
         /* required_if แบบนี้อ่านง่ายกว่าเขียน if/else สองชุด และข้อความ error ออกมาถูกอัตโนมัติ */
-        $whenPublishing = $publishing ? 'required' : 'nullable';
+        $whenPublishing = ($publishing && ! $isGeneral) ? 'required' : 'nullable';
 
         return [
             'name' => ['required', 'string', 'max:200'],

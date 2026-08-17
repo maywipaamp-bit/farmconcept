@@ -27,7 +27,7 @@ class RoleAndUserSeeder extends Seeder
         'evaluations',
         'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',
         'master-data-instructors', 'master-data-activity-formats', 'master-data-payment-accounts',
-        'master-data-registration-options', 'master-data-consents', 'master-data-system-settings', 'master-data-follow-up-rounds',
+        'master-data-registration-options', 'master-data-consents', 'master-data-follow-up-rounds',
         'users', 'users-list', 'users-roles',
     ];
 
@@ -41,11 +41,20 @@ class RoleAndUserSeeder extends Seeder
         $this->seedUsers();
     }
 
-    private function seedRoles(): void
+    /**
+     * บทบาทและเมนูที่แต่ละบทบาทเข้าไม่ได้
+     *
+     * deny = คีย์เมนูที่บทบาทนั้นเข้าไม่ได้ ที่เหลืออนุญาตหมด
+     * เขียนแบบ deny-list เพราะสั้นกว่าและอ่านออกว่าบทบาทไหนถูกตัดอะไรบ้าง
+     *
+     * เปิดเป็น public เพราะคำสั่ง menu:sync-permissions ใช้กติกาชุดเดียวกันนี้
+     * ตอนเติมสิทธิ์ของเมนูที่เพิ่งเพิ่มใหม่ — ถ้าแยกสองที่จะเพี้ยนกันเมื่อแก้ที่เดียว
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function roleDefinitions(): array
     {
-        /* deny = คีย์เมนูที่บทบาทนั้นเข้าไม่ได้ ที่เหลืออนุญาตหมด
-           เขียนแบบ deny-list เพราะสั้นกว่าและอ่านออกว่าบทบาทไหนถูกตัดอะไรบ้าง */
-        $roles = [
+        return [
             [
                 'code' => 'super_admin', 'name' => 'ผู้ดูแลระบบสูงสุด',
                 'description' => 'จัดการโครงการ ผู้ใช้งาน และข้อมูลกลางทั้งหมดของระบบ',
@@ -62,7 +71,7 @@ class RoleAndUserSeeder extends Seeder
                 'deny' => [
                     'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',
                     'master-data-instructors', 'master-data-activity-formats', 'master-data-payment-accounts',
-                    'master-data-registration-options', 'master-data-consents', 'master-data-system-settings', 'master-data-follow-up-rounds',
+                    'master-data-registration-options', 'master-data-consents', 'master-data-follow-up-rounds',
                     'users', 'users-list', 'users-roles',
                 ],
             ],
@@ -72,8 +81,11 @@ class RoleAndUserSeeder extends Seeder
                 'deny' => self::MENU_KEYS,
             ],
         ];
+    }
 
-        foreach ($roles as $role) {
+    private function seedRoles(): void
+    {
+        foreach (self::roleDefinitions() as $role) {
             DB::table('usr_roles')->updateOrInsert(['code' => $role['code']], [
                 'name' => $role['name'], 'description' => $role['description'], 'is_active' => true,
                 'created_at' => now(), 'updated_at' => now(),

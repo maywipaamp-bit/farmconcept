@@ -149,10 +149,15 @@ class ActivitySatisfactionService
 
         $byQuestion = $answers->groupBy('question_id');
 
+        /* ความยินยอมต้องเทียบกับ "ผู้ตอบทั้งหมด" ไม่ใช่เฉพาะคนที่ติ๊ก
+           เพราะคนที่ไม่ยอมรับจะไม่มีแถวคำตอบเลย ถ้านับจากแถวจะได้ 100% เสมอ */
+        $totalResponses = DB::table('evl_satisfaction_responses')->where('activity_id', $activity->id)->count();
+
         return $form->questions->map(fn (Question $question) => match ($question->question_type) {
             'rating' => $this->ratingBreakdown($question, $byQuestion->get($question->id, collect())),
             'single', 'dropdown' => $this->choiceBreakdown($question, $byQuestion->get($question->id, collect()), false),
             'multi', 'chips' => $this->choiceBreakdown($question, $byQuestion->get($question->id, collect()), true),
+            'consent' => $this->consentBreakdown($question, $byQuestion->get($question->id, collect()), $totalResponses),
             default => [
                 'id' => $question->id,
                 'label' => $question->text,
@@ -160,6 +165,33 @@ class ActivitySatisfactionService
                 'answered' => $byQuestion->get($question->id, collect())->pluck('response_id')->unique()->count(),
             ],
         })->values()->all();
+    }
+
+    /**
+     * ความยินยอม → แท่งสองแถว ยอมรับ / ไม่ได้ยอมรับ
+     * "ไม่ได้ยอมรับ" คำนวณจากผู้ตอบทั้งหมดลบคนที่ยอมรับ เพราะการไม่ติ๊กไม่ได้สร้างแถวคำตอบ
+     */
+    private function consentBreakdown(Question $question, Collection $rows, int $totalResponses): array
+    {
+        $accepted = $rows->pluck('response_id')->unique()->count();
+        $declined = max(0, $totalResponses - $accepted);
+
+        $bar = fn (string $label, int $count, string $tone) => [
+            'label' => $label,
+            'count' => $count,
+            'pct' => $totalResponses > 0 ? (int) round($count / $totalResponses * 100) : 0,
+            'tone' => $tone,
+        ];
+
+        return [
+            'id' => $question->id,
+            'label' => $question->text,
+            'type' => 'consent',
+            /* ใช้ยอดผู้ตอบทั้งหมดเป็น answered เพื่อไม่ให้การ์ดขึ้น "ยังไม่มีคำตอบ" ทั้งที่มีคนตอบแต่ไม่ยอมรับ */
+            'answered' => $totalResponses,
+            'accepted' => $accepted,
+            'bars' => [$bar('ยอมรับ', $accepted, 'good'), $bar('ไม่ได้ยอมรับ', $declined, 'low')],
+        ];
     }
 
     /** แท่งกระจายคะแนน 1–5 ของคำถามเดียว (ต่างจาก distribution() ใน summary() ที่เป็นค่าเฉลี่ยรวมทั้งชุดคำตอบ) */

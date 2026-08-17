@@ -284,6 +284,9 @@
           @elseif ($q['type'] === 'rating')
             <p class="aov-rp-survey-sub aov-rp-survey-sub--tight">เฉลี่ย {{ number_format($q['average'], 1) }} / 5 · ตอบแล้ว {{ $q['answered'] }} คน</p>
             @include('admin.activities.partials.report-bar-list', ['bars' => $q['bars'], 'unit' => 'คน'])
+          @elseif ($q['type'] === 'consent')
+            <p class="aov-rp-survey-sub aov-rp-survey-sub--tight">ยอมรับ {{ number_format($q['accepted']) }} จาก {{ number_format($q['answered']) }} คน</p>
+            @include('admin.activities.partials.report-bar-list', ['bars' => $q['bars'], 'unit' => 'คน'])
           @elseif ($q['type'] === 'single')
             <p class="aov-rp-survey-sub aov-rp-survey-sub--tight">ตอบแล้ว {{ $q['answered'] }} คน</p>
             @include('admin.activities.partials.report-donut', ['donut' => $q['donut'], 'unit' => 'คน'])

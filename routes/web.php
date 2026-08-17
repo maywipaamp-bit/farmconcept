@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityCheckinController;
 use App\Http\Controllers\Admin\ActivityController;
-use App\Http\Controllers\Admin\ActivityPeopleController;
+use App\Http\Controllers\Admin\ReportPeopleController;
 use App\Http\Controllers\Admin\ActivityQrController;
 use App\Http\Controllers\Admin\ActivityResponseController;
 use App\Http\Controllers\Admin\CohortController;
@@ -220,7 +220,7 @@ Route::middleware('auth')->group(function () {
          */
         Route::prefix('reports')->name('reports.')->group(function () {
             /* รายชื่อผู้เข้าร่วมทั้งหมด — รวมทุกกิจกรรมเป็นรายคน (ยึดเบอร์โทร/อีเมล) */
-            Route::get('/people', [ActivityPeopleController::class, 'index'])
+            Route::get('/people', [ReportPeopleController::class, 'index'])
                 ->middleware('menu:reports-people')
                 ->name('people');
         });
@@ -398,12 +398,6 @@ Route::middleware('auth')->group(function () {
                     Route::post('/', [MasterData\RegistrationOptionController::class, 'store'])->name('store');
                     Route::put('/{key}', [MasterData\RegistrationOptionController::class, 'update'])->name('update');
                     Route::delete('/{key}', [MasterData\RegistrationOptionController::class, 'destroy'])->name('destroy');
-                });
-
-            Route::prefix('system-settings')->name('system-settings.')
-                ->middleware('menu:master-data-system-settings')->group(function () {
-                    Route::get('/', [MasterData\SystemSettingController::class, 'index'])->name('index');
-                    Route::post('/', [MasterData\SystemSettingController::class, 'update'])->name('update');
                 });
 
             /* รูปวิทยากรแยก endpoint เพราะ PHP อ่าน multipart จาก PUT ไม่ได้ — แบบเดียวกับรูปปกกิจกรรม */

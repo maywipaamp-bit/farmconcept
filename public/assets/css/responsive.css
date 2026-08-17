@@ -291,3 +291,25 @@
   .form-actions { flex-wrap: wrap; }
   .form-actions .btn { flex: 1; }
 }
+
+/* ---------- หน้าข้อมูลพื้นฐาน: วิทยากร ---------- */
+@media (max-width: 767px) {
+  /* แถบกรอง: pill สถานะกับช่องค้นหาเรียงลงมา — วางแถวเดียวแล้วช่องค้นหาเหลือกว้างไม่ถึงครึ่งนิ้ว */
+  .list-filter-bar { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .list-filter-tools { width: 100%; }
+  .list-search-input { flex: 1; min-width: 0; }
+
+  /* ป้ายฟิลด์ในโปรไฟล์วิทยากรกว้างคงที่ 190px ซึ่งกินเกินครึ่งจอมือถือ
+     วางป้ายไว้เหนือช่องกรอกแทน ช่องกรอกจะได้ความกว้างเต็ม */
+  .instructor-profile-field {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+  }
+  .instructor-profile-field.is-align-start { align-items: stretch; }
+
+  /* แท็บประวัติในโปรไฟล์เลื่อนแนวนอนได้ ไม่ให้ดันความกว้าง popup */
+  .instructor-history-tabs { overflow-x: auto; scrollbar-width: none; }
+  .instructor-history-tabs::-webkit-scrollbar { display: none; }
+}

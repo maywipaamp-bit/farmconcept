@@ -51,6 +51,8 @@ class ActivityController extends Controller
             ->withCount([
                 'registrations as checked_in_count' => fn ($q) => $q->whereNotNull('checked_in_at'),
                 'satisfactionResponses as responses_count',
+                /* ใช้บอกว่าอีเวนท์นี้ลบไม่ได้เพราะยังมีกิจกรรมอยู่ข้างใน — เกณฑ์เดียวกับ ActivityPolicy::delete */
+                'childActivities as child_count',
             ])
             ->with([
                 'rounds:id,activity_id,round_date,time_start,time_end,location,capacity',
@@ -412,6 +414,18 @@ class ActivityController extends Controller
             ->orderBy('id')
             ->get(['id', 'text']);
 
+        /* ความยินยอมเก็บเป็นข้อความ ("ยอมรับ") เหมือนคำถามปลายเปิด
+           ถ้าไม่แยกออกมา ข้อความนี้จะไปโผล่ปนในคอลัมน์ความคิดเห็น */
+        $consentQuestions = Question::query()
+            ->whereIn('id', $responses->flatMap(fn (SatisfactionResponse $r) => $r->answers->pluck('question_id'))->unique())
+            ->where('question_type', 'consent')
+            ->orderBy('form_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'text']);
+
+        $consentIds = $consentQuestions->pluck('id')->all();
+
         $roundOrder = $activity->rounds
             ->sortBy(fn ($round) => $round->round_date->toDateString())
             ->values()
@@ -419,7 +433,7 @@ class ActivityController extends Controller
 
         $thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
-        $rows = $responses->map(function (SatisfactionResponse $r) use ($activity, $roundOrder, $questions, $thMonths, $satisfaction) {
+        $rows = $responses->map(function (SatisfactionResponse $r) use ($activity, $roundOrder, $questions, $consentQuestions, $consentIds, $thMonths, $satisfaction) {
             $roundLabel = 'รอบเดียว';
             if ($activity->rounds->count() > 1) {
                 $roundLabel = $r->activity_round_id
@@ -437,7 +451,9 @@ class ActivityController extends Controller
                 /* คำอธิบายระดับแบบเข้าใจง่าย (ดีมาก/ดี/ปานกลาง/ต้องปรับปรุง) — เกณฑ์เดียวกับ
                    ป้ายเกรดรวมในแท็บรายงาน ไม่คิดเกณฑ์แยกที่นี่ */
                 'grade' => $average === null ? null : $satisfaction->grade($average),
-                'comment' => $r->answers->pluck('text_value')->map(fn ($t) => trim((string) $t))->filter()->implode(' · '),
+                'comment' => $r->answers
+                    ->reject(fn ($a) => in_array($a->question_id, $consentIds, true))
+                    ->pluck('text_value')->map(fn ($t) => trim((string) $t))->filter()->implode(' · '),
                 'submitted_at' => $r->submitted_at
                     ? $r->submitted_at->day.' '.$thMonths[$r->submitted_at->month - 1].' '.($r->submitted_at->year + 543)
                         .' · '.$r->submitted_at->format('H:i').' น.'
@@ -455,6 +471,12 @@ class ActivityController extends Controller
                     : '';
             }
 
+            /* ไม่ยอมรับ = ไม่มีแถวคำตอบ จึงเทียบจากการมีแถวเท่านั้น */
+            $answeredIds = $r->answers->pluck('question_id')->all();
+            foreach ($consentQuestions as $question) {
+                $row['q'.$question->id] = in_array($question->id, $answeredIds, true) ? 'ยอมรับ' : 'ไม่ได้ยอมรับ';
+            }
+
             return $row;
         })->values();
 
@@ -462,6 +484,12 @@ class ActivityController extends Controller
             ['key' => 'round', 'label' => 'รอบ', 'fixed' => true, 'show' => $activity->rounds->count() > 1],
         ])
             ->concat($questions->map(fn (Question $q) => [
+                'key' => 'q'.$q->id,
+                'label' => $q->text,
+                'fixed' => false,
+                'show' => true,
+            ]))
+            ->concat($consentQuestions->map(fn (Question $q) => [
                 'key' => 'q'.$q->id,
                 'label' => $q->text,
                 'fixed' => false,
@@ -1340,6 +1368,8 @@ class ActivityController extends Controller
             'registered' => $activity->registrations_count,
             'checkedIn' => (int) ($activity->checked_in_count ?? 0),
             'responses' => (int) ($activity->responses_count ?? 0),
+            /* จำนวนกิจกรรมที่อยู่ใต้อีเวนท์นี้ — กล่องยืนยันการลบใช้ตัดสินว่าลบได้หรือไม่ */
+            'childCount' => (int) ($activity->child_count ?? 0),
             'startDate' => $activity->start_date?->toDateString(),
             'endDate' => $activity->end_date?->toDateString(),
             'hasFee' => $activity->has_fee,

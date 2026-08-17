@@ -91,6 +91,16 @@
                                     <option value="{{ $option->id }}" @selected(old('answer_'.$question->id) == $option->id)>{{ $option->label }}</option>
                                 @endforeach
                             </select>
+                        @elseif($question->question_type === 'consent')
+                            {{-- ความยินยอม: ข้อความอยู่ที่ตัวคำถามด้านบนแล้ว ตรงนี้เหลือแค่ช่องติ๊กยอมรับช่องเดียว --}}
+                            <div class="tr-options">
+                                <label class="tr-option">
+                                    <input type="checkbox" name="answer_{{ $question->id }}" value="1"
+                                           @checked(old('answer_'.$question->id))>
+                                    <span class="tr-option-dot is-square"></span>
+                                    <span class="tr-option-label">ยอมรับ</span>
+                                </label>
+                            </div>
                         @else
                             <div class="tr-options">
                                 @foreach($question->options as $option)

@@ -18,7 +18,7 @@ class RegistrationMasterDataTest extends TestCase
     private function admin(): User
     {
         $role = Role::create(['code' => 'registration-master-admin', 'name' => 'Registration master admin', 'is_active' => true]);
-        foreach (['master-data-registration-options', 'master-data-consents', 'master-data-system-settings'] as $menuKey) {
+        foreach (['master-data-registration-options', 'master-data-consents'] as $menuKey) {
             $role->menuPermissions()->create(['menu_key' => $menuKey, 'is_allowed' => true]);
         }
 
@@ -80,18 +80,11 @@ class RegistrationMasterDataTest extends TestCase
         $this->assertSame(1, ConsentDocument::where('consent_type', 'pdpa')->where('is_active', true)->count());
     }
 
-    public function test_system_settings_are_saved_as_allowed_keys(): void
+    /** หน้า "ตั้งค่าระบบ" ถูกถอดออกแล้ว — เส้นทางต้องหายไปจริง ไม่ใช่แค่ซ่อนเมนู */
+    public function test_หน้าตั้งค่าระบบถูกถอดออกแล้ว(): void
     {
-        $user = $this->admin();
-        $this->actingAs($user)->post('/admin/master/system-settings', [
-            'organization_name' => 'The Farm Concept',
-            'system_name' => 'ระบบติดตามสุขภาพ',
-            'contact_email' => 'contact@example.test',
-            'manual_url' => 'https://example.test/manual',
-        ])->assertRedirect();
-
-        $this->assertSame('The Farm Concept', SystemSetting::value('organization_name'));
-        $this->assertSame('https://example.test/manual', SystemSetting::value('manual_url'));
-        $this->assertDatabaseMissing('sys_settings', ['setting_key' => 'unexpected_key']);
+        $this->actingAs($this->admin())
+            ->get('/admin/master/system-settings')
+            ->assertNotFound();
     }
 }

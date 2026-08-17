@@ -284,7 +284,7 @@
 
   /* ป้ายประเภทหน้าชื่อ — รายการนี้ปนทั้งกิจกรรม อีเวนท์ และข่าวสาร
      ซึ่งมีคอลัมน์ที่ใช้ได้ไม่เท่ากัน (ข่าวสารไม่มีคนลงทะเบียน) ต้องแยกออกจากกันตั้งแต่แรกเห็น */
-  var TYPE_TONE = { 'ข่าวสาร': 'is-news', 'อีเว้นท์': 'is-event' };
+  var TYPE_TONE = { 'ข่าวสาร': 'is-news', 'อีเว้นท์': 'is-event', 'ทั่วไป': 'is-general' };
 
   function typeChip(activity) {
     if (!activity.type) return '';
@@ -335,9 +335,7 @@
     /* ช่องกิจกรรมเหลือชื่อกับป้ายประเภทเท่านั้น — วิทยากรแยกเป็นคอลัมน์ของตัวเองแล้ว
        (เปิดได้จากปุ่ม "คอลัมน์") จึงไม่ต้องซ้ำเป็นบรรทัดรองใต้ชื่ออีก */
     if (key === 'name') {
-      /* อีเวนท์กับกิจกรรมอยู่ปนกันในรายการเดียว จึงต้องบอกให้เห็นว่าแถวนี้อยู่ในอีเวนท์ไหน */
       return '<div>' +
-        (activity.parentEventName ? '<div class="grid-parent">อีเวนท์ · ' + window.TFC.escapeHtml(activity.parentEventName) + '</div>' : '') +
         '<div class="grid-name-line">' + typeChip(activity) +
           '<a class="grid-name" href="/admin/activities/' + activity.id + '" title="' + window.TFC.escapeHtml(activity.name) + '">' + window.TFC.escapeHtml(truncate(activity.name, 34)) + '</a>' +
         '</div></div>';
@@ -397,9 +395,19 @@
       '</div>';
   }
 
-  /* ลบได้เฉพาะกิจกรรมที่ยังเป็นฉบับร่าง — เผยแพร่แล้วมีคนลงทะเบียน การลบทิ้งจะทำให้ข้อมูลผู้เข้าร่วมหายด้วย */
+  /* ลบได้ทุกสถานะ — ระบบเก็บเป็นการลบแบบซ่อน ข้อมูลลงทะเบียน/Check-in/คำตอบยังอยู่ครบ
+     ที่ลบไม่ได้มีอย่างเดียวคืออีเวนท์ที่ยังมีกิจกรรมอยู่ข้างใน (เกณฑ์เดียวกับ ActivityPolicy::delete) */
   function canDelete(activity) {
-    return activity.status === 'ฉบับร่าง';
+    return (activity.childCount || 0) === 0;
+  }
+
+  /* ข้อมูลที่จะถูกซ่อนตามไปด้วย — บอกเป็นตัวเลขก่อนกดจะได้ตัดสินใจได้ ไม่ใช่รู้ทีหลัง */
+  function deleteImpact(activity) {
+    return [
+      { label: 'ผู้ลงทะเบียน', n: activity.registered || 0 },
+      { label: 'Check-in', n: activity.checkedIn || 0 },
+      { label: 'คำตอบแบบประเมิน', n: activity.responses || 0 }
+    ].filter(function (i) { return i.n > 0; });
   }
 
   /* เมนู ⋮ ของแถว — สามรายการล่างพาไป "แท็บ" ในหน้ารายละเอียดของกิจกรรมนั้น
@@ -414,10 +422,11 @@
       { key: 'act-eval-' + activity.id, label: 'แบบประเมิน', icon: 'evaluation', href: base + '/evaluations' },
       { key: 'act-report-' + activity.id, label: 'รายงาน', icon: 'report', href: base + '/reports' }
     ];
-    if (canDelete(activity)) {
-      items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',
-                   modal: 'activity-delete-modal', perm: 'activities', danger: true });
-    }
+    /* แสดงเสมอ แม้แถวที่ลบไม่ได้ — กดแล้วกล่องยืนยันจะบอกเหตุผลให้ ดีกว่าเมนูหายไปเฉย ๆ
+       โดยไม่มีอะไรอธิบายว่าทำไมแถวนี้ถึงไม่มีให้ลบ */
+    items.push({ key: 'act-delete-' + activity.id, label: 'ลบกิจกรรม', icon: 'delete',
+                 modal: 'activity-delete-modal', perm: 'activities', danger: true });
+
     return items;
   }
 
@@ -560,14 +569,23 @@
     var messageEl = document.getElementById('activity-delete-message');
     if (!activity) return;
 
+    var name = window.TFC.escapeHtml(activity.name);
+
     if (!canDelete(activity)) {
-      messageEl.innerHTML = 'กิจกรรม "' + window.TFC.escapeHtml(activity.name) + '" เผยแพร่ไปแล้ว จึงลบไม่ได้' +
-        '<br>หากต้องการยุติกิจกรรม ให้เปลี่ยนสถานะเป็น "ยกเลิก" แทน';
+      messageEl.innerHTML = 'อีเวนท์ "' + name + '" ยังมีกิจกรรมอยู่ ' + activity.childCount + ' รายการ จึงลบไม่ได้' +
+        '<br>ให้ย้ายกิจกรรมออกจากอีเวนท์ หรือลบกิจกรรมเหล่านั้นก่อน';
       confirmBtn.disabled = true;
-    } else {
-      messageEl.textContent = 'ต้องการลบกิจกรรม "' + activity.name + '" ใช่หรือไม่ การลบนี้ไม่สามารถย้อนกลับได้';
-      confirmBtn.disabled = false;
+      return;
     }
+
+    var impact = deleteImpact(activity);
+
+    messageEl.innerHTML = 'ต้องการลบ "' + name + '" ใช่หรือไม่' +
+      (impact.length
+        ? '<br><span class="text-danger">ข้อมูลที่ผูกอยู่จะถูกซ่อนตามไปด้วย — ' +
+          impact.map(function (i) { return i.label + ' ' + i.n; }).join(' · ') + '</span>'
+        : '');
+    confirmBtn.disabled = false;
   });
 
   /* ลบจริงที่เซิร์ฟเวอร์ ไม่ใช่ลบแค่ในหน่วยความจำ

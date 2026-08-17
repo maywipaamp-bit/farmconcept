@@ -16,6 +16,10 @@ use Illuminate\Validation\ValidationException;
  */
 class SurveyAnswerBuilder
 {
+    /** ค่าที่บันทึกใน evl_answers.text_value เมื่อผู้ตอบยอมรับความยินยอม */
+    public const CONSENT_ACCEPTED = 'ยอมรับ';
+
+
     /**
      * @param  array<string, mixed>  $answers  คีย์เป็น id ของคำถาม
      * @return array<int, array<string, mixed>>
@@ -41,6 +45,23 @@ class SurveyAnswerBuilder
     /** @return array<int, array<string, mixed>> */
     private function rowsForQuestion(Question $question, mixed $value): array
     {
+        /* ความยินยอมต้องมาก่อนการตรวจ "ค่าว่าง" — ช่องติ๊กที่ไม่ได้ติ๊กจะไม่ถูกส่งมาเลย
+           ถ้าปล่อยให้ตกไปที่ด้านล่างจะได้ข้อความ "กรุณาตอบคำถาม" ซึ่งไม่ตรงกับสิ่งที่ต้องทำ
+           (ต้องกดยอมรับ ไม่ใช่กรอกคำตอบ)
+
+           เก็บเป็นข้อความ "ยอมรับ" เพื่อให้ย้อนดูได้ว่าใครยินยอมบ้าง ส่วนเวลาอยู่ที่ตัวคำตอบแล้ว */
+        if ($question->question_type === 'consent') {
+            if (! filter_var($value, FILTER_VALIDATE_BOOL)) {
+                if ($question->is_required) {
+                    $this->fail($question, 'ต้องยอมรับ “'.$question->text.'” ก่อนส่งแบบประเมิน');
+                }
+
+                return [];
+            }
+
+            return [['question_id' => $question->id, 'text_value' => self::CONSENT_ACCEPTED]];
+        }
+
         if ($value === null || $value === '' || $value === []) {
             if ($question->is_required) {
                 $this->fail($question, 'กรุณาตอบคำถาม “'.$question->text.'”');

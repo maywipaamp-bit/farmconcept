@@ -239,6 +239,10 @@
         return '<span class="el-q-choice">' +
           '<span class="el-q-mark' + (q.multi ? ' is-box' : '') + '"></span>' + esc(c) + '</span>';
       }).join('') + '</div>';
+    } else if (q.kind === 'consent') {
+      /* ความยินยอม: ข้อความอยู่ที่หัวข้อคำถามแล้ว เหลือช่องติ๊กเดียว */
+      body = '<div class="el-q-choices">' +
+        '<span class="el-q-choice"><span class="el-q-mark is-box"></span>ยอมรับ</span></div>';
     } else if (q.kind === 'dropdown') {
       body = '<div class="el-q-select"><span>' + esc((q.choices || [])[0] || 'เลือกตัวเลือก') + '</span>' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>';

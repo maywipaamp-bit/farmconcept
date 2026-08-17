@@ -85,9 +85,10 @@
           <div class="instructor-profile-field">
             <div class="instructor-profile-label">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.69 2.8a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0122 16.92z"/></svg>
-              <label for="instr-phone">เบอร์โทร<span class="form-required">*</span></label>
+              {{-- ไม่บังคับ — วิทยากรบางคนติดต่อผ่านหน่วยงานต้นสังกัด ไม่ได้ให้เบอร์ส่วนตัวไว้ --}}
+              <label for="instr-phone">เบอร์โทร</label>
             </div>
-            <input class="input" type="tel" id="instr-phone" data-validate required maxlength="30" placeholder="เช่น 081-234-5678">
+            <input class="input" type="tel" id="instr-phone" maxlength="30" placeholder="เช่น 081-234-5678">
           </div>
 
           <div class="instructor-profile-field is-align-start">

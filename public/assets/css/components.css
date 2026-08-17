@@ -5805,6 +5805,8 @@ button.multiselect:focus-visible {
 .grid-type.is-activity { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .grid-type.is-event    { background: var(--color-info-soft);    color: var(--color-info-text); }
 .grid-type.is-news     { background: var(--color-warning-soft); color: var(--color-warning-text); }
+/* ทั่วไป — โทนกลาง ไม่แย่งความสนใจจากสามประเภทหลักที่มีความหมายเฉพาะ */
+.grid-type.is-general  { background: var(--color-background);   color: var(--color-text-secondary); }
 
 /* ---------- สามตัวเลขในช่องเดียว ----------
    ยอดลงทะเบียนเป็นตัวหลัก เช็คอิน/ประเมินเป็นข้อมูลประกอบ จึงจางกว่าหนึ่งระดับ */
@@ -14993,6 +14995,19 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   font-size: var(--font-size-small);
   color: var(--color-text-body);
 }
+
+/* ตัวอย่างข้อความยินยอม — ข้อความยาวกว่าตัวเลือกทั่วไป จึงจัดชิดบนและตัดบรรทัดได้ */
+.ec-pv-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--font-size-small);
+  line-height: 1.55;
+  color: var(--color-text-body);
+  min-width: 0;
+}
+
+.ec-pv-consent .ec-mark { margin-top: 2px; }
 
 .ec-view-text {
   font-size: var(--font-size-small);

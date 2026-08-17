@@ -62,11 +62,16 @@
      หมวดที่ไม่มีเมนูย่อย (แดชบอร์ด) ถือเป็นหมวดที่มีรายการเดียวคือตัวมันเอง
      แผงจึงมีเนื้อหาเสมอ ไม่มีหมวดไหนที่กดแล้วแผงว่าง */
   var categories = window.TFC_MENU.map(function (item) {
+    var hasChildren = !!(item.children && item.children.length);
+
     return {
       key: item.key,
       label: item.label,
       icon: item.icon,
-      items: (item.children && item.children.length) ? item.children : [item]
+      /* หมวดจริงที่มีเมนูย่อย ต่างจากหมวดที่เป็นหน้าเดี่ยว (แดชบอร์ด) ซึ่งตัวมันเองคือรายการเดียว
+         breadcrumb ใช้ค่านี้ตัดสินว่าจะใส่ชื่อหมวดนำหน้าไหม */
+      hasChildren: hasChildren,
+      items: hasChildren ? item.children : [item]
     };
   });
 
@@ -92,8 +97,11 @@
     var item = cat.items.filter(isActiveItem)[0];
     if (!item) return;
 
+    /* ใส่ชื่อหมวดนำหน้าเมื่อเป็นหมวดที่มีเมนูย่อยจริง — หมวดที่เป็นหน้าเดี่ยว (แดชบอร์ด)
+       ชื่อหมวดกับชื่อรายการเป็นตัวเดียวกัน ใส่แล้วจะได้ "แดชบอร์ด / แดชบอร์ด"
+       เช็คด้วย hasChildren ไม่ใช่จำนวนรายการ ไม่งั้นหมวดที่มีเมนูย่อยแค่ตัวเดียวจะหายไปจาก breadcrumb */
     var trail = [];
-    if (cat.items.length > 1 || cat.items[0] !== item) trail.push({ label: cat.label });
+    if (cat.hasChildren) trail.push({ label: cat.label });
 
     trail.push({
       label: item.label,

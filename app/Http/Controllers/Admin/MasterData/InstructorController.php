@@ -93,7 +93,9 @@ class InstructorController extends MasterDataController
     {
         return [
             'name' => ['required', 'string', 'max:150', Rule::unique('mst_instructors', 'name')->ignore($current?->id)],
-            'phone' => ['required', 'string', 'max:30'],
+            /* ไม่บังคับ — วิทยากรบางคนติดต่อผ่านหน่วยงานต้นสังกัด ไม่ได้ให้เบอร์ส่วนตัวไว้
+               บังคับกรอกทำให้เจ้าหน้าที่ต้องใส่เลขมั่ว ๆ ลงไปเพื่อให้บันทึกผ่าน */
+            'phone' => ['nullable', 'string', 'max:30'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'active' => ['required', 'boolean'],
 
@@ -129,7 +131,7 @@ class InstructorController extends MasterDataController
     {
         return [
             'name' => $data['name'],
-            'phone' => $data['phone'],
+            'phone' => $data['phone'] ?? null,
             'bio' => $data['bio'] ?? null,
             'search_tags' => $data['searchTags'] ?: null,
             'is_active' => $data['active'],

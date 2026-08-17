@@ -15,7 +15,9 @@ class EvaluationRequest extends FormRequest
 
     public const REQUIRED_FIELD_KEYS = ['name', 'phone', 'pdpa'];
 
-    public const QUESTION_TYPES = ['section', 'rating', 'single', 'multi', 'chips', 'dropdown', 'text'];
+    /* consent = ข้อความยินยอมพร้อมช่องติ๊ก ใช้ขอความยินยอมในแบบประเมินชุดไหนก็ได้
+       ต่างจากฟิลด์ pdpa ตรงที่ฟิลด์นั้นมีเฉพาะแบบลงทะเบียนและแก้ข้อความไม่ได้ */
+    public const QUESTION_TYPES = ['section', 'rating', 'single', 'multi', 'chips', 'dropdown', 'text', 'consent'];
 
     public const CHOICE_TYPES = ['single', 'multi', 'chips', 'dropdown'];
 
