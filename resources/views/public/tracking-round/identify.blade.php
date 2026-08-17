@@ -102,6 +102,23 @@
                 </svg>
                 เข้าสู่ระบบด้วย LINE
             </a>
+            {{-- เปิดจากกล้องของ iPhone จะได้เบราว์เซอร์ในแอปกล้อง ซึ่ง LINE สลับไปแอป LINE ไม่ได้
+                 แล้วขึ้น "ไม่สามารถเข้าสู่ระบบได้" ที่หน้าของ LINE เอง เราแก้ฝั่งนั้นไม่ได้
+                 ทางออกคือย้ายไปเปิดใน Safari ก่อน แล้วค่อยกดเชื่อม LINE
+
+                 popup นี้เปิดตอนกดปุ่ม LINE ไม่ใช่ตอนเข้าหน้า — คนที่เข้ามาแล้วจะกรอกเบอร์อยู่แล้ว
+                 ไม่ควรโดนกล่องมาบังตั้งแต่ยังไม่ได้ทำอะไร เตือนตอนที่กำลังจะเจอปัญหาจริงพอ --}}
+            <dialog class="tr-dialog" id="tr-inapp">
+                <div class="tr-dialog-body">
+                    <h2 class="tr-dialog-title">เปิดใน Safari</h2>
+
+                    <div class="tr-dialog-actions">
+                        <button type="button" class="tr-ghost-button"
+                                onclick="this.closest('dialog').close()">ปิด</button>
+                        <a class="tr-primary-button" id="tr-open-safari" href="#">เปิดใน Safari</a>
+                    </div>
+                </div>
+            </dialog>
         @endif
 
         <p class="tr-note">
@@ -110,3 +127,36 @@
         </p>
     </section>
 @endsection
+
+@push('page-script')
+<script>
+/* เบราว์เซอร์ในแอป (กล้อง iPhone, Facebook, IG ฯลฯ) เปิด LINE Login ไม่ผ่าน
+   เพราะสลับไปแอป LINE ไม่ได้ ทางออกเดียวคือย้ายไปเปิดใน Safari ก่อน
+
+   ตรวจแบบ "ไม่ใช่ Safari เต็มตัวบน iOS" แทนการไล่รายชื่อแอป
+   เพราะรายชื่อแอปที่มีเบราว์เซอร์ในตัวเพิ่มขึ้นเรื่อย ๆ ตามไม่ไหว */
+(function () {
+    var dialog = document.getElementById('tr-inapp');
+    var lineButton = document.querySelector('.tr-line-outline');
+
+    if (!dialog || !lineButton) return;
+
+    var ua = navigator.userAgent || '';
+    var isIos = /iPad|iPhone|iPod/.test(ua);
+    /* Safari เต็มตัวบน iOS มี "Safari/" ใน UA ส่วนเบราว์เซอร์ในแอปไม่มี
+       Chrome/Firefox/Edge บน iOS มีคำระบุของตัวเอง และเปิด LINE ได้ปกติ จึงไม่ต้องเตือน */
+    var isRealBrowser = /Safari\//.test(ua) || /CriOS|FxiOS|EdgiOS/.test(ua);
+
+    if (!isIos || isRealBrowser) return;
+
+    /* x-safari-https:// เป็นสคีมที่ iOS ใช้เด้งออกไป Safari จากเบราว์เซอร์ในแอป
+       ไม่ได้ผลทุกแอป จึงต้องมีวิธีกดปุ่มแชร์บอกไว้เป็นทางสำรองเสมอ */
+    document.getElementById('tr-open-safari').href = 'x-safari-' + window.location.href;
+
+    lineButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        dialog.showModal();
+    });
+})();
+</script>
+@endpush
