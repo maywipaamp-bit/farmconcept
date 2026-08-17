@@ -23,7 +23,7 @@ class RoleAndUserSeeder extends Seeder
         'dashboard',
         'activities', 'activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses',
         'reports', 'reports-people',
-        'health-assessment', 'cohort', 'evaluations-rounds', 'evaluations-responses',
+        'health-assessment', 'cohort', 'evaluations-rounds', 'evaluations-responses', 'evaluations-person-results', 'evaluations-summary', 'evaluations-analysis',
         'evaluations',
         'master-data', 'master-data-areas', 'master-data-target-groups', 'master-data-programs',
         'master-data-instructors', 'master-data-activity-formats', 'master-data-payment-accounts',

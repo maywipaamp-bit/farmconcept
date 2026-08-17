@@ -16953,3 +16953,221 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 .cd-lock-time { margin: 0; color: #fff; font-size: 30px; font-weight: var(--font-weight-medium); line-height: 1.1; }
 .cd-lock-date { margin: 2px 0 var(--space-3); color: rgba(255, 255, 255, .72); font-size: var(--font-size-caption); }
 .cd-push.is-onlock { border-color: transparent; background: rgba(255, 255, 255, .92); text-align: left; }
+
+/* ==========================================================================
+   ผลตอบรายคน (pr-) — ตารางคำถาม × รอบประเมิน ของคนหนึ่งคน
+   ========================================================================== */
+
+.pr-subtitle { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-t5); line-height: var(--line-height-t5); }
+.pr-search { width: 260px; }
+.pr-head-pid { margin-left: 8px; color: var(--text-muted); font-size: var(--font-size-t3); font-weight: var(--font-weight-regular); }
+
+/* รายชื่อคน — ใช้โครง .rl-table เดิม เปลี่ยนแค่สัดส่วนคอลัมน์ */
+.pr-people .rl-row { grid-template-columns: 44px minmax(0, 1.4fr) minmax(0, 1.6fr) 110px minmax(0, 1fr) 120px; }
+
+.pr-card { margin-bottom: var(--space-6); padding: 0; overflow: hidden; }
+.pr-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pr-form-name { margin: 0; color: var(--text-strong); font-size: var(--font-size-t2); font-weight: var(--font-weight-semibold); line-height: var(--line-height-t2); }
+.pr-legend { display: inline-flex; gap: var(--space-3); color: var(--text-muted); font-size: var(--font-size-t6); }
+
+/* ตารางเทียบรอบ — คอลัมน์คำถามตรึงซ้าย ที่เหลือเลื่อนแนวนอนได้เมื่อรอบเยอะ */
+.pr-scroll { overflow-x: auto; }
+.pr-matrix { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 640px; }
+.pr-col-q { width: 320px; }
+.pr-matrix th, .pr-matrix td { padding: 10px var(--space-4); border-bottom: 1px solid var(--border-subtle); text-align: left; vertical-align: top; }
+.pr-matrix thead th { color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); line-height: var(--line-height-t4); background: var(--bg-subtle); }
+.pr-q-head, .pr-q {
+  position: sticky;
+  left: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+}
+.pr-matrix thead .pr-q-head { background: var(--bg-subtle); }
+.pr-round { display: block; }
+.pr-round-at { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--font-size-t6); font-weight: var(--font-weight-regular); font-variant-numeric: tabular-nums; }
+.pr-section td { color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); background: var(--bg-subtle); }
+.pr-q { color: var(--text-primary); font-size: var(--font-size-t3); line-height: var(--line-height-t3); }
+.pr-cell { font-size: var(--font-size-t3); line-height: var(--line-height-t3); }
+.pr-answer { color: var(--text-primary); overflow-wrap: anywhere; }
+.pr-cell-meta { display: inline-flex; gap: 6px; margin-left: 6px; white-space: nowrap; }
+.pr-pos { color: var(--text-muted); font-size: var(--font-size-t6); font-variant-numeric: tabular-nums; }
+.pr-trend { font-size: var(--font-size-t6); }
+.pr-trend.is-up { color: var(--status-success-text); }
+.pr-trend.is-down { color: var(--status-danger-text); }
+.pr-trend.is-changed { color: var(--status-warning-text); }
+
+/* สรุปภาพรวมรอบแรก → รอบล่าสุด — นับเป็นจำนวนข้อ */
+.pr-overall {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+.pr-overall-label { margin-right: var(--space-2); color: var(--text-secondary); font-size: var(--font-size-t5); }
+.pr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-body);
+  font-size: var(--font-size-t5);
+}
+.pr-chip b { font-weight: var(--font-weight-semibold); }
+.pr-chip.is-up { border-color: var(--status-success-border); background: var(--status-success-bg); color: var(--status-success-text); }
+.pr-chip.is-down { border-color: var(--status-danger-border); background: var(--status-danger-bg); color: var(--status-danger-text); }
+.pr-chip.is-changed { border-color: var(--status-warning-border); background: var(--status-warning-bg); color: var(--status-warning-text); }
+.pr-section-name { margin-right: var(--space-3); }
+.pr-section-summary { display: inline-flex; gap: var(--space-3); color: var(--text-muted); font-size: var(--font-size-t6); font-weight: var(--font-weight-regular); }
+
+/* ==========================================================================
+   ผลการวิเคราะห์ (an-) — ชุดตารางและกราฟรูปแบบรายงานวิจัย
+   ========================================================================== */
+
+.an-section { padding: var(--space-3) var(--space-5) var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+.an-section:last-child { border-bottom: 0; }
+.an-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.an-section-name { margin: 0; color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); line-height: var(--line-height-t4); }
+.an-section-nums { display: inline-flex; gap: var(--space-3); color: var(--text-muted); font-size: var(--font-size-t6); }
+
+/* หัวข้อของแต่ละตารางพับได้ — summary เป็นแถวหัวเดิม เพิ่มตัวบอกว่ากดได้ */
+details.an-section > summary { list-style: none; cursor: pointer; }
+details.an-section > summary::-webkit-details-marker { display: none; }
+.an-section-toggle { color: var(--text-brand); }
+details.an-section[open] .an-section-toggle::after { content: ' ▴'; }
+details.an-section:not([open]) .an-section-toggle::after { content: ' ▾'; }
+
+/* ---- กราฟแท่งซ้อนตั้ง 100% เทียบสัดส่วนคำตอบระหว่างรอบ ----
+   สีเรียงตามความหมายของสเกล: 0 แดง (ปรับปรุง) → 4 เขียวเข้ม (ดี)
+   ข้อที่บอกทิศไม่ได้ใช้โทนเทากลาง ไม่แสร้งตัดสินว่าฝั่งไหนดี */
+.an-graph-note { margin: 0 0 var(--space-3); }
+.an-graphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-5) var(--space-6); }
+.an-graph { margin: 0; min-width: 0; }
+.an-graph-title { margin: 0 0 var(--space-3); color: var(--text-body); font-size: var(--font-size-t5); line-height: var(--line-height-t5); }
+.an-graph-bars { display: flex; align-items: flex-end; gap: var(--space-4); }
+.an-graph-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+/* column-reverse: ชิ้นแรกใน DOM (ฝั่งแย่) อยู่ล่าง ฝั่งดีลอยขึ้นบน */
+.an-graph-bar { display: flex; flex-direction: column-reverse; width: 100%; max-width: 64px; height: 150px; border-radius: 8px; overflow: hidden; background: var(--bg-subtle); }
+.an-graph-bar.is-empty { border: 1px dashed var(--border-default); background: transparent; }
+.an-graph-seg { display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; }
+.an-graph-seg i { font-style: normal; color: #fff; font-size: var(--font-size-t6); font-variant-numeric: tabular-nums; }
+.an-graph-col-label { color: var(--text-muted); font-size: var(--font-size-t6); text-align: center; }
+
+.is-tone-0 { background: var(--status-danger-text); }
+.is-tone-1 { background: var(--status-warning-text); }
+.is-tone-2 { background: var(--status-warning-border); }
+.is-tone-3 { background: var(--status-success-border); }
+.is-tone-4 { background: var(--status-success-text); }
+/* พื้นอ่อน (เหลือง/เขียวอ่อน) ตัวเลขขาวจม — ใช้สีเข้มของข้อความแทน */
+.an-graph-seg.is-tone-2 i, .an-graph-seg.is-tone-3 i { color: var(--text-strong); }
+
+.is-neutral-0 { background: var(--text-secondary); }
+.is-neutral-1 { background: var(--text-muted); }
+.is-neutral-2 { background: var(--text-faint); }
+.is-neutral-3 { background: var(--border-default); }
+.is-neutral-4 { background: var(--bg-subtle); }
+.an-graph-seg.is-neutral-2 i, .an-graph-seg.is-neutral-3 i, .an-graph-seg.is-neutral-4 i { color: var(--text-strong); }
+
+.an-graph-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: var(--space-2); }
+.an-graph-key { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--font-size-t6); }
+.an-graph-key i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/* การ์ดที่ยกมาจากแดชบอร์ด บนหน้าผลการวิเคราะห์ — จัดระยะแถวเหมือนบนแดชบอร์ด */
+.an-overview { display: flex; flex-direction: column; gap: var(--dbo-gap-row, 24px); margin-bottom: var(--space-5); font-family: var(--dbo-font); color: var(--dbo-text); }
+
+/* กรอบเลื่อนแนวนอนของตารางสรุป — จอแคบเลื่อนในกรอบ ไม่ดันทั้งหน้า */
+.an-dist-wrap { grid-column: 1 / -1; overflow-x: auto; margin: 2px 0 6px; }
+
+/* ตารางสรุปแบบงานวิจัย — n (%) เส้นแนวนอนเท่านั้น ตัวเลข tabular ให้คอลัมน์ตรงกัน */
+.an-research-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin: var(--space-2) 0 var(--space-3); }
+.an-research-note { margin: 0; color: var(--text-muted); font-size: var(--font-size-t6); line-height: var(--line-height-t6); }
+.an-research-table { width: 100%; border-collapse: collapse; }
+.an-research-table th, .an-research-table td { padding: 7px 12px; border-bottom: 1px solid var(--border-subtle); text-align: left; }
+.an-research-table thead th { color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); line-height: var(--line-height-t4); background: var(--bg-subtle); white-space: nowrap; border-bottom: 1px solid var(--border-default); }
+.an-research-table thead th:not(.is-head-q) { text-align: right; }
+.an-research-n { display: block; color: var(--text-muted); font-size: var(--font-size-t6); font-weight: var(--font-weight-regular); font-variant-numeric: tabular-nums; }
+.an-research-table .is-section td { color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); background: var(--bg-subtle); }
+.an-research-table .is-question td { color: var(--text-body); font-size: var(--font-size-t3); font-weight: var(--font-weight-medium); }
+.an-research-table .is-option { padding-left: 28px; color: var(--text-secondary); font-size: var(--font-size-t5); }
+.an-research-cell { color: var(--text-primary); font-size: var(--font-size-t5); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.an-research-cell.is-zero { color: var(--text-faint); }
+
+.an-scale-note { color: var(--text-muted); font-size: var(--font-size-t6); }
+
+/* ---- กราฟการเปลี่ยนแปลงสุทธิ — แท่งขึ้น/ลงจากเส้นศูนย์กลาง ---- */
+.an-net { display: flex; align-items: stretch; gap: var(--space-3); }
+.an-net-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.an-net-value { font-size: var(--font-size-t6); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.an-net-value.is-plus { color: var(--status-success-text); font-weight: var(--font-weight-semibold); }
+.an-net-value.is-minus { color: var(--status-danger-text); font-weight: var(--font-weight-semibold); }
+.an-net-plot { display: flex; flex-direction: column; width: 100%; max-width: 44px; height: 130px; }
+/* เส้นศูนย์อยู่กึ่งกลาง — ครึ่งบนของแดนบวก ครึ่งล่างของแดนลบ สูงเท่ากันเสมอ */
+.an-net-up { flex: 1; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1.5px solid var(--border-default); }
+.an-net-down { flex: 1; display: flex; align-items: flex-start; justify-content: center; }
+.an-net-bar { display: block; width: 70%; border-radius: 4px; }
+.an-net-caption { margin: var(--space-2) 0 0; color: var(--text-secondary); font-size: var(--font-size-t6); line-height: var(--line-height-t6); text-wrap: pretty; }
+
+/* ---- การย้ายระดับรายบุคคล — แถวละระดับตั้งต้น แถบสีคือปลายทาง ---- */
+.an-flow { display: flex; flex-direction: column; gap: 8px; }
+.an-flow-row { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr); gap: var(--space-3); align-items: center; }
+.an-flow-from { color: var(--text-secondary); font-size: var(--font-size-t6); line-height: var(--line-height-t6); overflow-wrap: anywhere; }
+.an-flow-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--bg-subtle); }
+.an-flow-seg { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; }
+.an-flow-seg i { font-style: normal; color: #fff; font-size: var(--font-size-t6); font-variant-numeric: tabular-nums; }
+.an-flow-seg.is-tone-2 i, .an-flow-seg.is-tone-3 i,
+.an-flow-seg.is-neutral-2 i, .an-flow-seg.is-neutral-3 i, .an-flow-seg.is-neutral-4 i { color: var(--text-strong); }
+
+/* โดนัทเพศ/ช่วงอายุ ในส่วนข้อมูลทั่วไป — เคียงกันเป็นแถว จอแคบตกบรรทัด */
+.an-demo-donuts { display: flex; gap: var(--space-6); flex-wrap: wrap; margin: var(--space-2) 0 var(--space-4); }
+.an-demo-donut { flex: 1; min-width: 280px; }
+.an-demo-donut-title { margin: 0 0 var(--space-2); color: var(--text-primary); font-size: var(--font-size-t4); font-weight: var(--font-weight-semibold); }
+
+/* หัวเรื่องแบบประเมินบนหน้าสรุปผล — คั่นระหว่างชุดการ์ดของแต่ละแบบ */
+.sm-form-head { display: flex; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; margin: var(--space-6) 0 var(--space-4); }
+.sm-form-head:first-of-type { margin-top: 0; }
+.sm-form-name { margin: 0; color: var(--text-strong); font-size: var(--font-size-t2); font-weight: var(--font-weight-semibold); line-height: var(--line-height-t2); }
+.sm-form-meta { color: var(--text-secondary); font-size: var(--font-size-t5); }
+.sm-card-body { padding: var(--space-4) var(--space-5); }
+
+/* หน้าโหมดวิเคราะห์: แถวโดนัท 3 วง (กลุ่มเป้าหมาย/เพศ/ช่วงอายุ)
+   ป้ายต้องอยู่ "ข้าง" วงเสมอ — ห้ามตกลงใต้วงแม้การ์ดแคบ (ยกเลิก flex-wrap ของ dbo) */
+.an-donut-row > .dbo-card { flex: 1 1 320px; min-width: 0; }
+.an-donut-row .dbo-card--cohort { flex: 1 1 320px; }
+.an-donut-row .dbo-donut-wrap, .an-area-row .an-donut-card .dbo-donut-wrap { flex-wrap: nowrap; }
+.an-donut-row .dbo-donut-legend, .an-area-row .an-donut-card .dbo-donut-legend { flex: 1 1 0; }
+
+/* คอลัมน์ตัวเลขของ legend บนแดชบอร์ดกว้างตายตัว (48px+44px) — ในการ์ดแคบของหน้านี้
+   ตัวเลขจะทะลุขอบการ์ดออกไปลอยกลางช่องว่าง ให้หดตามเนื้อหาแทน */
+.an-overview .dbo-donut-row { grid-template-columns: 10px minmax(0, 1fr) auto auto; }
+
+/* แถวพื้นที่ + การตอบรายรอบ — การ์ดพื้นที่กว้างเท่าคอลัมน์แรกของแถวโดนัทข้างบนเป๊ะ
+   (หนึ่งในสามของแถว หักช่องไฟสองช่อง) การตอบรายรอบกินที่เหลือ ขอบสองแถวจึงตรงกันเป็นตาราง
+   จอแคบ basis เล็กกว่า min-width แล้วการ์ดตกบรรทัดเองตาม flex-wrap ของ .dbo-row */
+.an-area-row .an-donut-card { flex: 0 0 calc((100% - 2 * var(--dbo-gap-row, 24px)) / 3); min-width: 300px; }
+
+/* โดนัทประชากรบนหน้าวิเคราะห์ใช้สีหมวดหมู่ ไม่ใช่สเกลเขียวล้วน — แยกวงต่อวงอ่านง่ายขึ้น
+   จำกัดผลเฉพาะภายในวงโดนัท (donut-wrap) ไม่แตะแท่งรายรอบที่เป็นสเกลปริมาณเขียวตามเดิม
+   ทุกสีคือโทนที่ระบบมีอยู่แล้ว (แบรนด์เขียว · ฟ้า/ชมพูของแผงเพศ · ส้มเตือน) + ม่วงหม่นหนึ่งสี */
+.an-overview .dbo-donut-wrap .dbo-r0 { --dbo-c: var(--dbo-cat-0); }
+.an-overview .dbo-donut-wrap .dbo-r1 { --dbo-c: var(--dbo-cat-1); }
+.an-overview .dbo-donut-wrap .dbo-r2 { --dbo-c: var(--dbo-cat-2); }
+.an-overview .dbo-donut-wrap .dbo-r3 { --dbo-c: var(--dbo-cat-3); }
+.an-overview .dbo-donut-wrap .dbo-r4 { --dbo-c: var(--dbo-cat-4); }
+
+/* แถบที่มาของตัวเลข — ท้ายชุดกราฟ อ่านเป็นเชิงอรรถ ไม่แย่งสายตา */
+.an-sources { margin: 0; color: var(--dbo-text-3, #7d8a7c); font-size: 12px; line-height: 1.6; text-wrap: pretty; }
+.an-sources a { color: var(--text-brand); text-decoration: underline; text-underline-offset: 2px; }
+.an-sources b { font-weight: var(--font-weight-semibold); color: var(--dbo-text-2, #4a564a); }

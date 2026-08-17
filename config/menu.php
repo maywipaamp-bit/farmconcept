@@ -130,6 +130,25 @@ return [
                     'href' => 'admin/evaluations/responses',
                     'alsoMatch' => ['admin/evaluations/responses.html'],
                 ],
+                [
+                    'key' => 'evaluations-person-results',
+                    'label' => 'ผลตอบรายคน',
+                    'icon' => '<circle cx="8.5" cy="7" r="2.8"/><path d="M4 19.5c0-3 2-5 4.5-5"/><path d="M12 18.5l3-3.2 2.2 2.2 3.8-4"/>',
+                    'href' => 'admin/evaluations/person-results',
+                    'alsoMatchPatterns' => ['^/admin/evaluations/person-results/[0-9]+$'],
+                ],
+                [
+                    'key' => 'evaluations-summary',
+                    'label' => 'สรุปผลแบบประเมิน',
+                    'icon' => '<rect x="4.5" y="4" width="15" height="16.5" rx="2"/><path d="M9 2.75h6v3H9z"/><path d="M8.5 13.5l2.2 2.2 4.8-4.8"/>',
+                    'href' => 'admin/evaluations/summary',
+                ],
+                [
+                    'key' => 'evaluations-analysis',
+                    'label' => 'ผลการวิเคราะห์',
+                    'icon' => '<path d="M4 20.5V13M9.5 20.5V8M15 20.5v-9M20.5 20.5v-14"/>',
+                    'href' => 'admin/evaluations/analysis',
+                ],
             ],
         ],
         /* รายงาน — หน้าที่มองข้อมูลข้ามกิจกรรม/ข้ามโครงการ ไม่ผูกกับรายการใดรายการหนึ่ง

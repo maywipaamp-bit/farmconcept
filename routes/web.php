@@ -8,7 +8,10 @@ use App\Http\Controllers\Admin\ActivityResponseController;
 use App\Http\Controllers\Admin\CohortController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
+use App\Http\Controllers\Admin\EvaluationAnalysisController;
+use App\Http\Controllers\Admin\EvaluationPersonResultController;
 use App\Http\Controllers\Admin\EvaluationResponseController;
+use App\Http\Controllers\Admin\EvaluationSummaryController;
 use App\Http\Controllers\Admin\MasterData;
 use App\Http\Controllers\Admin\RegistrantController;
 use App\Http\Controllers\Admin\RoleController;
@@ -531,6 +534,21 @@ Route::middleware('auth')->group(function () {
                 Route::get('/{id}', [EvaluationResponseController::class, 'show'])
                     ->where('id', '[0-9]+')->name('show');
             });
+
+        /* อยู่ก่อนกลุ่ม evaluations ด้วยเหตุผลเดียวกับ responses ข้างบน —
+           "person-results" เข้า pattern รหัสแบบประเมิน [A-Za-z0-9-]+ พอดี */
+        Route::prefix('evaluations/person-results')->name('evaluations.person-results.')
+            ->middleware('menu:evaluations-person-results')->group(function () {
+                Route::get('/', [EvaluationPersonResultController::class, 'index'])->name('index');
+                Route::get('/{participant}', [EvaluationPersonResultController::class, 'show'])
+                    ->where('participant', '[0-9]+')->name('show');
+            });
+
+        Route::get('/evaluations/summary', [EvaluationSummaryController::class, 'index'])
+            ->middleware('menu:evaluations-summary')->name('evaluations.summary');
+
+        Route::get('/evaluations/analysis', [EvaluationAnalysisController::class, 'index'])
+            ->middleware('menu:evaluations-analysis')->name('evaluations.analysis');
 
         Route::prefix('evaluations')->name('evaluations.')->middleware('menu:evaluations')->group(function () {
             Route::get('/', [EvaluationController::class, 'index'])->name('index');

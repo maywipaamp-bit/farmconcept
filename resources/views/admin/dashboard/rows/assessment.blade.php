@@ -64,9 +64,11 @@
               @foreach ($series['dots'] as $dot)
                 <span class="dbo-dot dbo-mark dbo-series--{{ $series['key'] }}"
                       style="--dbo-x: {{ $dot['left'] }}%; --dbo-y: {{ $dot['top'] }}%"
+                      {{-- "คะแนนเฉลี่ย" ไม่ใช่ "ผู้ผ่านเกณฑ์" — ค่านี้คือค่าเฉลี่ยของหัวข้อเป็น %
+                           ไม่มีเกณฑ์ผ่าน/ตกในการคำนวณ ป้ายเดิมชวนให้อ่านผิดความหมาย --}}
                       {!! $tip('trend-' . $series['key'], $seriesLabels[$series['key']], [
                         ['หัวข้อ', $dot['topic']],
-                        ['สัดส่วนผู้ผ่านเกณฑ์', number_format($dot['value'], 1) . '%'],
+                        ['คะแนนเฉลี่ย', number_format($dot['value'], 1) . '%'],
                       ]) !!}><span></span></span>
 
                 @if ($dot['label_top'] !== null)

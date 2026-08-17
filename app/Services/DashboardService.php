@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\Question;
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -26,6 +27,10 @@ use Illuminate\Support\Facades\DB;
  */
 class DashboardService
 {
+    public function __construct(private readonly SurveyTrendService $trend)
+    {
+    }
+
     /**
      * ตัวกรองช่วงเวลาบนหัวหน้า — คีย์คือค่าที่ยอมรับใน query string ?range=
      * ตัวแรกเป็นค่าตั้งต้น
@@ -68,6 +73,73 @@ class DashboardService
             'survey_rounds' => $this->surveyRounds($cohort['total']),
             'assessment' => $assessment,
             'areas' => $this->areas($since, $cohort['total']),
+        ];
+    }
+
+    /**
+     * เฉพาะก้อนที่เกี่ยวกับสุขภาวะ — ให้หน้า "ผลการวิเคราะห์" ยกการ์ดของแดชบอร์ด
+     * ไปแสดงซ้ำได้โดยใช้ตัวคำนวณเดียวกันเป๊ะ ไม่ลอกสูตรไปไว้สองที่
+     *
+     * @return array<string, mixed>
+     */
+    public function healthOverview(): array
+    {
+        $cohort = $this->cohort();
+
+        return [
+            'cohort' => $cohort,
+            'survey_rounds' => $this->surveyRounds($cohort['total']),
+            'assessment' => $this->assessment(),
+            'demographic_donuts' => $this->cohortDemographicDonuts(),
+            /* ที่มาของตัวเลข — จำนวนข้อมูลดิบที่กราฟก่อน–หลังคำนวณมา ให้ผู้อ่านตามไปตรวจได้ */
+            'sources' => [
+                'responses' => (int) DB::table('evl_survey_responses')->count(),
+                'answers' => (int) DB::table('evl_answers')->where('response_type', 'survey')->count(),
+                'people' => (int) DB::table('evl_survey_responses')->distinct()->count('participant_id'),
+            ],
+        ];
+    }
+
+    /**
+     * โดนัทเพศและช่วงอายุของกลุ่มตัวอย่าง — ฐานเดียวกับโดนัทกลุ่มเป้าหมาย (cohort)
+     * เพื่อให้สามวงบนหน้าเดียวกันเล่าประชากรก้อนเดียวกัน ไม่ใช่คนละฐานแล้วตัวเลขเถียงกัน
+     *
+     * @return array<int, array{name: string, data: array{total: int, groups: array<int, array<string, mixed>>}}>
+     */
+    private function cohortDemographicDonuts(): array
+    {
+        $members = DB::table('ptp_cohort_profiles')
+            ->join('ptp_participants', 'ptp_participants.id', '=', 'ptp_cohort_profiles.participant_id')
+            ->leftJoin('mst_options', 'mst_options.id', '=', 'ptp_participants.age_range_id')
+            ->leftJoin('mst_areas', 'mst_areas.id', '=', 'ptp_participants.area_id')
+            ->whereNull('ptp_participants.deleted_at')
+            ->whereNull('ptp_cohort_profiles.stopped_at')
+            ->get(['ptp_participants.gender', 'mst_options.label as age_label', 'mst_areas.name as area_label']);
+
+        /* ค่าเพศในฐานเป็นรหัสอังกฤษจากฟอร์มลงทะเบียน — หน้ารายงานต้องเป็นคำไทย */
+        $genderLabels = ['female' => 'หญิง', 'male' => 'ชาย', 'other' => 'อื่น ๆ'];
+
+        $counts = fn (callable $label) => $members
+            ->groupBy($label)
+            ->map(fn (Collection $group, string $key) => ['label' => $key, 'n' => $group->count()])
+            ->values()
+            ->all();
+
+        return [
+            [
+                'name' => 'เพศ',
+                'data' => $this->donut($counts(
+                    fn (object $m) => filled($m->gender) ? ($genderLabels[$m->gender] ?? $m->gender) : 'ไม่ระบุ'
+                )),
+            ],
+            [
+                'name' => 'ช่วงอายุ',
+                'data' => $this->donut($counts(fn (object $m) => $m->age_label ?? 'ไม่ระบุ')),
+            ],
+            [
+                'name' => 'พื้นที่',
+                'data' => $this->donut($counts(fn (object $m) => $m->area_label ?? 'ไม่ระบุ')),
+            ],
         ];
     }
 
@@ -334,6 +406,25 @@ class DashboardService
             'total' => $total,
             'groups' => $this->donutSegments($rows, $total),
         ];
+    }
+
+    /**
+     * โดนัทจากข้อมูลนับสำเร็จรูป — ให้หน้าอื่น (ผลการวิเคราะห์) วาดโดนัทหน้าตาเดียว
+     * กับแดชบอร์ดโดยไม่ต้องลอกสูตรเรขาคณิต
+     *
+     * @param  array<int, array{label: string, n: int}>  $rows
+     * @return array{total: int, groups: array<int, array<string, mixed>>}
+     */
+    public function donut(array $rows): array
+    {
+        $collection = collect($rows)
+            ->map(fn (array $row) => (object) ['label' => $row['label'], 'people' => $row['n']])
+            ->sortByDesc('people')
+            ->values();
+
+        $total = (int) $collection->sum('people');
+
+        return ['total' => $total, 'groups' => $this->donutSegments($collection, $total)];
     }
 
     /**
@@ -640,26 +731,126 @@ class DashboardService
     /**
      * คะแนนเฉลี่ยรายหัวข้อของรอบหนึ่ง เป็นเปอร์เซ็นต์ 0–100
      *
+     * คำตอบมาได้สองแบบ และต้องรองรับทั้งคู่:
+     *   - score ตัวเลข (1..score_max) — แบบที่โค้ดเดิมรองรับ
+     *   - ตัวเลือก (option) — แบบที่แบบประเมินจริงในระบบใช้ ซึ่งเดิมถูกมองข้าม
+     *     ทำให้การ์ดก่อน–หลังว่างทั้งที่มีคำตอบครบสี่รอบ
+     *     ตำแหน่งบนสเกลถูกแปลงเป็น % โดยกลับทิศให้เมื่อสเกลของข้อนั้นท้ายคือแย่
+     *     (รู้/ไม่รู้) — ทิศอ่านจาก SurveyTrendService กติกาเดียวกับหน้าผลตอบรายคน
+     *     ข้อที่บอกทิศไม่ได้ถูกข้าม ไม่ใช่เดา
+     *
+     * หัวข้อ (dimension) ใช้คอลัมน์ evl_questions.dimension ก่อน ถ้าว่างใช้ชื่อหมวด
+     * (คำถาม type=section ที่นำหน้าอยู่) — แบบประเมินจริงจัดกลุ่มด้วยหมวด ไม่ได้กรอก dimension
+     *
+     * สูตร % : (ค่า - 1) / (สูงสุด - 1) เพราะค่าต่ำสุดที่ตอบได้คือ 1 ไม่ใช่ 0
+     *
      * @return Collection<string, float>
      */
     private function dimensionScores(int $offsetDays, int $scoreMax): Collection
     {
-        return DB::table('evl_answers')
-            ->join('evl_questions', 'evl_questions.id', '=', 'evl_answers.question_id')
+        $rows = DB::table('evl_answers')
             ->join('evl_survey_responses', 'evl_survey_responses.id', '=', 'evl_answers.response_id')
             ->join('ptp_follow_up_rounds', 'ptp_follow_up_rounds.id', '=', 'evl_survey_responses.cohort_round_id')
             ->where('evl_answers.response_type', 'survey')
-            ->whereNotNull('evl_answers.score')
-            ->whereNotNull('evl_questions.dimension')
             ->where('ptp_follow_up_rounds.offset_days', $offsetDays)
-            ->groupBy('evl_questions.dimension')
-            /* ต้องตั้ง alias ให้ค่าเฉลี่ยแล้ว pluck จาก alias นั้น
-               ใส่ DB::raw() เป็นชื่อคอลัมน์ของ pluck ตรง ๆ ไม่ได้ — Laravel หา property
-               ชื่อ "avg(evl_answers.score)" ในผลลัพธ์ไม่เจอ แล้วคืน null ทุกแถวเงียบ ๆ
-               ทำให้คะแนนทุกหัวข้อกลายเป็น 0% โดยไม่มี error (เจอตอนมีข้อมูลจริงเข้ามา) */
-            ->select('evl_questions.dimension', DB::raw('avg(evl_answers.score) as average'))
-            ->pluck('average', 'evl_questions.dimension')
-            ->map(fn ($average) => max(0, min(100, (((float) $average - 1) / ($scoreMax - 1)) * 100)));
+            ->get(['evl_answers.question_id', 'evl_answers.option_id', 'evl_answers.score']);
+
+        if ($rows->isEmpty()) {
+            return collect();
+        }
+
+        $questions = Question::query()
+            ->whereIn('id', $rows->pluck('question_id')->unique())
+            ->with('options')
+            ->get()
+            ->keyBy('id');
+
+        $dimensions = $this->questionDimensions($questions->pluck('form_id')->unique());
+
+        $sums = [];
+
+        foreach ($rows as $row) {
+            $question = $questions->get($row->question_id);
+            $dimension = $dimensions[$row->question_id] ?? null;
+
+            if ($question === null || $dimension === null) {
+                continue;
+            }
+
+            $value = $this->normalizedValue($question, $row, $scoreMax);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $sums[$dimension]['total'] = ($sums[$dimension]['total'] ?? 0) + $value;
+            $sums[$dimension]['count'] = ($sums[$dimension]['count'] ?? 0) + 1;
+        }
+
+        return collect($sums)->map(
+            fn (array $sum) => max(0, min(100, $sum['total'] / $sum['count'] * 100))
+        );
+    }
+
+    /**
+     * ค่าคำตอบหนึ่งข้อเป็นสัดส่วน 0–1 โดย 1 = ดีที่สุดของสเกลนั้นเสมอ — null คือใช้เทียบไม่ได้
+     *
+     * @param  object{option_id: int|string|null, score: int|string|null}  $row
+     */
+    private function normalizedValue(Question $question, object $row, int $scoreMax): ?float
+    {
+        if ($row->score !== null) {
+            return (((float) $row->score) - 1) / ($scoreMax - 1);
+        }
+
+        if ($row->option_id === null) {
+            return null;
+        }
+
+        $option = $question->options->firstWhere('id', (int) $row->option_id);
+        $max = $question->options->count();
+        $direction = $this->trend->scaleDirection($question);
+
+        if ($option === null || $max < 2 || $direction === 0) {
+            return null;
+        }
+
+        $position = (int) $option->sort_order;
+
+        return $direction === 1
+            ? ($position - 1) / ($max - 1)
+            : ($max - $position) / ($max - 1);
+    }
+
+    /**
+     * หัวข้อของแต่ละข้อ: dimension ที่กรอกไว้ ก่อนตกไปที่ชื่อหมวด (section) ที่นำหน้าข้อนั้น
+     *
+     * @param  Collection<int, int|string>  $formIds
+     * @return array<int, string>  question id → ชื่อหัวข้อ
+     */
+    private function questionDimensions(Collection $formIds): array
+    {
+        $map = [];
+
+        foreach ($formIds as $formId) {
+            $section = null;
+
+            foreach (Question::where('form_id', $formId)->orderBy('sort_order')->get() as $question) {
+                if ($question->question_type === 'section') {
+                    $section = $question->text;
+
+                    continue;
+                }
+
+                $dimension = $question->dimension ?? $section;
+
+                if ($dimension !== null) {
+                    $map[$question->id] = $dimension;
+                }
+            }
+        }
+
+        return $map;
     }
 
     /** ชื่อรอบที่ผู้ใช้อ่าน — ใช้ชื่อที่บันทึกไว้จริง ไม่แปลงจากจำนวนวันเอง */
@@ -690,51 +881,63 @@ class DashboardService
         $avgBefore = $collection->avg('before');
         $avgAfter = $collection->avg('after');
         $best = $collection->sortByDesc('gain')->first();
-        $worst = $collection->sortBy('after')->first();
+        /* "ต้องพัฒนาต่อ" = หัวข้อที่ขยับน้อยที่สุด ไม่ใช่หัวข้อที่คะแนนปลายทางต่ำสุด —
+           หัวข้อที่ต่ำแต่พุ่งแรงคือความสำเร็จ ส่วนหัวข้อที่นิ่งสนิทต่างหากที่รอบหน้าต้องออกแรงเพิ่ม */
+        $worst = $collection->sortBy('gain')->first();
 
-        $pending = DB::table('ptp_follow_up_rounds')
+        /* Retention: ตอบครบถึงรอบสุดท้ายกี่คนจากที่ถึงกำหนด — ฐานความน่าเชื่อถือของผลเปรียบเทียบ */
+        $assigned = DB::table('ptp_follow_up_rounds')
             ->join('ptp_cohort_profiles', 'ptp_cohort_profiles.id', '=', 'ptp_follow_up_rounds.cohort_profile_id')
             ->whereNull('ptp_cohort_profiles.stopped_at')
-            ->where('ptp_follow_up_rounds.offset_days', $lastOffset)
-            ->whereNull('ptp_follow_up_rounds.answered_at')
-            ->count();
+            ->where('ptp_follow_up_rounds.offset_days', $lastOffset);
+
+        $assignedCount = (clone $assigned)->count();
+        $answeredCount = (clone $assigned)->whereNotNull('ptp_follow_up_rounds.answered_at')->count();
+        $retention = $assignedCount > 0 ? round($answeredCount / $assignedCount * 100) : 0;
 
         $lastLabel = $this->roundLabel($lastOffset);
         $gap = $avgAfter - $avgBefore;
 
+        /* ถ้อยคำเขียนเป็นประโยครายงาน ให้กรรมการหรือผู้อ่านทั่วไปยกไปใช้ในเล่มวิจัยได้ทันที
+           ตัวเลขทุกตัวมาจากข้อมูลจริง — แม่แบบประโยคเป็นของตายตัว แต่ไม่มีการแต่งตัวเลข */
         return [
             [
                 'icon' => 'trend',
                 'tone' => $gap >= 0 ? 'good' : 'warn',
-                'value' => ($gap >= 0 ? '+' : '').number_format($gap, 1),
-                'title' => 'จุดโดยเฉลี่ย',
-                'note' => 'ค่าเฉลี่ยทุกหัวข้อเปลี่ยนจาก '.number_format($avgBefore, 1)
-                    .'% เป็น '.number_format($avgAfter, 1).'%'
-                    .' · ดีขึ้น '.$collection->where('gain', '>', 0)->count()
-                    .' จาก '.$collection->count().' หัวข้อ',
+                'value' => ($gap >= 0 ? '+' : '').number_format($gap, 1).' จุด',
+                'title' => 'ภาพรวมความสำเร็จ',
+                'note' => 'หลังเข้าร่วมโปรแกรม คะแนนเฉลี่ยรวมทุกด้าน'
+                    .($gap >= 0 ? 'เพิ่มขึ้น' : 'ลดลง').'จากร้อยละ '.number_format($avgBefore, 1)
+                    .' เป็นร้อยละ '.number_format($avgAfter, 1)
+                    .' โดยพัฒนาขึ้น '.$collection->where('gain', '>', 0)->count()
+                    .' จากทั้งหมด '.$collection->count().' ด้าน',
             ],
             [
                 'icon' => 'star',
                 'tone' => 'good',
-                'value' => ($best['gain'] >= 0 ? '+' : '').number_format($best['gain'], 1),
-                'title' => $best['label'],
-                'note' => 'พัฒนามากที่สุด แนะนำถอดบทเรียนหลักสูตรนี้ไปใช้กับหัวข้ออื่น',
+                'value' => ($best['gain'] >= 0 ? '+' : '').number_format($best['gain'], 1).' จุด',
+                'title' => 'จุดเด่นที่สุด',
+                'note' => 'ด้านที่พัฒนามากที่สุดคือ "'.$best['label'].'" (จากร้อยละ '
+                    .number_format($best['before'], 1).' เป็นร้อยละ '.number_format($best['after'], 1)
+                    .') สะท้อนว่าโปรแกรมให้ผลชัดเจนที่สุดในเรื่องนี้',
             ],
             [
                 'icon' => 'alert',
                 'tone' => 'warn',
-                'value' => number_format($worst['after'], 1).'%',
-                'title' => $worst['label'],
-                'note' => 'ยังต่ำที่สุดหลังเข้าร่วม ควรเพิ่มกิจกรรมและติดตามกลุ่มนี้เป็นพิเศษ',
+                'value' => ($worst['gain'] >= 0 ? '+' : '').number_format($worst['gain'], 1).' จุด',
+                'title' => 'จุดที่ต้องพัฒนาต่อ',
+                'note' => 'ด้านที่เปลี่ยนแปลงน้อยที่สุดคือ "'.$worst['label'].'" (จากร้อยละ '
+                    .number_format($worst['before'], 1).' เป็นร้อยละ '.number_format($worst['after'], 1)
+                    .') ควรระบุเป็นข้อเสนอแนะสำหรับการดำเนินงานระยะถัดไป',
             ],
             [
                 'icon' => 'clock',
-                'tone' => $pending > 0 ? 'muted' : 'good',
-                'value' => number_format($pending),
-                'title' => 'รายที่ยังไม่ตอบรอบ'.($lastLabel ? ' '.$lastLabel : 'สุดท้าย'),
-                'note' => $pending > 0
-                    ? 'ตามให้ครบจะทำให้แนวโน้มนี้แม่นยำขึ้น'
-                    : 'ตอบครบทุกรายแล้ว แนวโน้มนี้ใช้อ้างอิงได้เต็มที่',
+                'tone' => $retention >= 80 ? 'good' : 'muted',
+                'value' => $retention.'%',
+                'title' => 'ความสมบูรณ์ของข้อมูล',
+                'note' => 'กลุ่มตัวอย่างติดตามครบถึงรอบ'.($lastLabel ? ' '.$lastLabel : 'สุดท้าย')
+                    .' จำนวน '.number_format($answeredCount).' จาก '.number_format($assignedCount)
+                    .' คน (อัตราคงอยู่ร้อยละ '.$retention.') สนับสนุนความน่าเชื่อถือของผลการเปรียบเทียบก่อน–หลัง',
             ],
         ];
     }

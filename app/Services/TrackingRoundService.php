@@ -267,7 +267,12 @@ class TrackingRoundService
                 'answer_due_date' => $data['answer_due_date'] ?? null,
                 'form_id' => $data['form_id'],
                 'notification_template' => $data['notification_template'] ?: $this->defaultTemplate(),
-                'state' => $notify ? RoundBatch::STATE_RUNNING : RoundBatch::STATE_DRAFT,
+                /* ตั้งใจส่งแต่ลิงก์ในการ์ดยังเปิดจากมือถือไม่ได้ = ไม่มีใครได้รับอะไร
+                   เก็บเป็นร่างไว้ก่อน แอดมินตั้งค่าเสร็จแล้วกดส่งจากหน้ารายละเอียดได้เลย
+                   ไม่ต้องเลือกรายชื่อใหม่ทั้งชุด */
+                'state' => $notify && $this->publicLinkReady()
+                    ? RoundBatch::STATE_RUNNING
+                    : RoundBatch::STATE_DRAFT,
                 'created_by' => auth()->id(),
             ]);
 
@@ -309,10 +314,16 @@ class TrackingRoundService
      * แยกออกมาเพราะแอดมินต้องส่งรายคนได้จากหน้ารายละเอียด — การส่งซ้ำทั้งรอบ
      * ยิงถึงคนที่ตอบไปแล้วด้วย ซึ่งเป็นการรบกวนที่ไม่มีเหตุผล
      *
-     * @return 'sent'|'failed'|'noChannel'  ผลที่เกิดขึ้นจริง ใช้เป็นคีย์นับในสรุปของ notify()
+     * @return 'sent'|'failed'|'noChannel'|'badLink'  ผลที่เกิดขึ้นจริง ใช้เป็นคีย์นับในสรุปของ notify()
      */
     public function notifyMember(RoundBatch $batch, RoundBatchMember $member): string
     {
+        /* กันตั้งแต่ต้นทาง ไม่แตะสถานะของสมาชิกเลย — ครั้งนี้ถือว่ายังไม่ได้ส่ง
+           กดส่งใหม่หลังตั้งค่าลิงก์ถูกแล้วต้องยิงถึงคนนี้ได้เหมือนเดิม */
+        if (! $this->publicLinkReady()) {
+            return 'badLink';
+        }
+
         $member->loadMissing(['cohortProfile.participant', 'followUpRound']);
 
         $participant = $member->cohortProfile?->participant;
@@ -363,7 +374,11 @@ class TrackingRoundService
     {
         $batch->loadMissing(['members.cohortProfile.participant', 'members.followUpRound']);
 
-        $result = ['sent' => 0, 'failed' => 0, 'noChannel' => 0, 'lineConfigured' => $this->push->isConfigured()];
+        $result = [
+            'sent' => 0, 'failed' => 0, 'noChannel' => 0, 'badLink' => 0,
+            'lineConfigured' => $this->push->isConfigured(),
+            'publicLink' => $this->publicLinkReady(),
+        ];
 
         foreach ($batch->members as $member) {
             if ($member->notify_result === RoundBatchMember::RESULT_SENT) {
@@ -376,7 +391,9 @@ class TrackingRoundService
             $result[$outcome]++;
         }
 
-        if ($batch->state === RoundBatch::STATE_DRAFT) {
+        /* ลิงก์ยังใช้ไม่ได้ = ยังไม่ได้เริ่มส่งจริง ห้ามเลื่อนรอบออกจากสถานะร่าง
+           ไม่งั้นแอดมินจะเห็นว่ารอบนี้ "กำลังดำเนินการ" ทั้งที่ไม่มีใครได้รับอะไรเลย */
+        if ($batch->state === RoundBatch::STATE_DRAFT && $result['badLink'] === 0) {
             $batch->update(['state' => RoundBatch::STATE_RUNNING]);
         }
 
@@ -439,12 +456,40 @@ class TrackingRoundService
     /**
      * ลิงก์หน้าแบบประเมิน — ปลายทางของปุ่มบนการ์ดและตัวแปร {ลิงก์}
      *
-     * ยึด APP_URL เสมอ ไม่ใช่ host ของคำขอ เพราะข้อความถูกส่งนอกบริบท HTTP ได้ (คิวรัน/สั่งจาก CLI)
+     * ยึดค่าคงที่ ไม่ใช่ host ของคำขอ เพราะข้อความถูกส่งนอกบริบท HTTP ได้ (คิวรัน/สั่งจาก CLI)
      * คนที่เชื่อม LINE แล้วเปิดลิงก์นี้จะกดปุ่ม LINE เข้าได้เลยโดยไม่ต้องกรอกเบอร์
+     *
+     * ปกติใช้ APP_URL แต่เปิดให้ตั้ง HEALTH_PUBLIC_URL ทับได้ เพราะบนเครื่องพัฒนา
+     * APP_URL คือโดเมนที่มีแต่เครื่องนั้นเปิดได้ (เช่น .test ของ Herd) — ส่งการ์ดออกไป
+     * แล้วปุ่มบนมือถือจะกดไม่ติด ตั้งค่านี้ชี้ไปเซิร์ฟเวอร์จริงจะทดสอบจากเครื่องพัฒนาได้
      */
     public function healthUrl(): string
     {
-        return rtrim((string) config('app.url'), '/').'/health';
+        $base = config('farmconcept.tracking_round.public_url') ?: config('app.url');
+
+        return rtrim((string) $base, '/').'/health';
+    }
+
+    /**
+     * ลิงก์ที่จะส่งออกไป เปิดจากมือถือได้จริงหรือไม่
+     *
+     * โดเมนของเครื่องพัฒนา (.test ของ Herd, localhost, เลข IP ในวง) เปิดได้แต่บนเครื่องนั้น
+     * ส่งการ์ดที่มีลิงก์แบบนี้ออกไปคือส่งปุ่มที่กดแล้วไม่ไปไหน แล้วยัง stamp notified_at
+     * ทับไว้ด้วย ทำให้ส่งซ้ำทั้งรอบไม่ยิงถึงคนนั้นอีก — เสียโอกาสแจ้งเตือนไปเลยหนึ่งครั้ง
+     */
+    public function publicLinkReady(): bool
+    {
+        $host = parse_url($this->healthUrl(), PHP_URL_HOST);
+
+        if (! is_string($host) || $host === '') {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return false;
+        }
+
+        return ! preg_match('/(^localhost$|\.test$|\.local$|\.localhost$)/i', $host);
     }
 
     /**

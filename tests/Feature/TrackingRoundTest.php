@@ -24,6 +24,18 @@ class TrackingRoundTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * เทสรันด้วย APP_URL=http://localhost ซึ่งเป็นโดเมนที่เปิดจากมือถือไม่ได้
+     * ระบบจึงกันไม่ให้ส่งการ์ด — ตั้งลิงก์สาธารณะให้เหมือนตอนใช้งานจริง
+     * ตัวกันเองมีเทสของมันแยกอยู่ที่ test_ไม่ส่งการ์ด...
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['farmconcept.tracking_round.public_url' => 'https://farmconcept.example.com']);
+    }
+
     private function admin(): User
     {
         $role = Role::create(['code' => 'tracking-admin', 'name' => 'Tracking admin', 'is_active' => true]);
@@ -281,6 +293,42 @@ class TrackingRoundTest extends TestCase
                 && $button['label'] === 'เริ่มทำแบบประเมิน'
                 && str_ends_with($button['uri'], '/health');
         });
+    }
+
+    /**
+     * ปุ่มบนการ์ดพาไปหน้าแบบประเมิน ถ้าลิงก์ชี้ไปโดเมนของเครื่องพัฒนา (.test ของ Herd)
+     * ผู้รับกดแล้วจะไม่ไปไหนเลย — และการ์ดที่ส่งไปแล้วเรียกคืนไม่ได้
+     *
+     * ต้องไม่แตะสถานะของสมาชิกด้วย ไม่งั้นการส่งซ้ำหลังตั้งค่าถูกแล้วจะข้ามคนนี้ไป
+     * เพราะระบบจำว่า "ส่งไปแล้ว" ทั้งที่ผู้รับไม่เคยได้รับอะไร
+     */
+    public function test_ไม่ส่งการ์ดเมื่อลิงก์แบบประเมินเปิดจากมือถือไม่ได้(): void
+    {
+        Http::fake(['api.line.me/*' => Http::response([], 200)]);
+        config([
+            'services.line.messaging_token' => 'test-token',
+            'farmconcept.tracking_round.public_url' => 'http://farmconcept.test',
+        ]);
+
+        $admin = $this->admin();
+        $group = $this->targetGroup('TG-1', 'ผู้สูงอายุ');
+        $round = $this->member('PID-0001', $group, '2026-08-12', 'U-line-1');
+
+        $this->actingAs($admin)->postJson('/admin/tracking-rounds', $this->payload([
+            'follow_up_round_ids' => [$round->id], 'notify' => true,
+        ]))->assertOk()
+            ->assertJsonPath('notify.sent', 0)
+            ->assertJsonPath('notify.badLink', 1)
+            ->assertJsonPath('notify.publicLink', false);
+
+        Http::assertNothingSent();
+
+        $member = RoundBatchMember::firstOrFail();
+        $this->assertNull($member->notified_at);
+        $this->assertNull($member->notify_result);
+
+        /* ยังไม่ได้ส่งจริง รอบต้องคงเป็นร่างไว้ ไม่ใช่ขึ้นว่ากำลังดำเนินการ */
+        $this->assertSame(RoundBatch::STATE_DRAFT, RoundBatch::firstOrFail()->state);
     }
 
     public function test_resending_does_not_message_people_who_already_received_it(): void

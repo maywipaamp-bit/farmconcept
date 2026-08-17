@@ -81,6 +81,9 @@
 @endsection
 
 @push('page-script')
+{{-- TFC.exportCsv อยู่ในไฟล์นี้ — ไม่ได้อยู่ในชุดสคริปต์กลางของ layout
+     ก่อนหน้านี้ไม่ได้โหลด ทำให้ปุ่มส่งออกกดแล้วเงียบ (TypeError ใน console) --}}
+<script src="@assetv('assets/js/activity-module.js')"></script>
 <script>
 /* ตอบแบบประเมิน — รายการคำตอบที่ส่งเข้ามาจริง ไม่ใช่รายชื่อแบบประเมิน
 

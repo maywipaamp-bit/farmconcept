@@ -184,6 +184,8 @@ class TrackingRoundController extends Controller
             'message' => match ($outcome) {
                 'sent' => 'ส่งแจ้งเตือนเรียบร้อย',
                 'noChannel' => 'คนนี้ยังไม่ผูก LINE จึงส่งแจ้งเตือนไม่ได้',
+                'badLink' => 'ยังส่งไม่ได้ — ลิงก์แบบประเมินในการ์ดชี้ไปที่โดเมนที่เปิดได้เฉพาะบนเครื่องนี้ '
+                    .'ให้ส่งจากเซิร์ฟเวอร์จริง หรือตั้ง HEALTH_PUBLIC_URL ให้เป็นที่อยู่เว็บที่เปิดจากมือถือได้',
                 default => 'ส่งแจ้งเตือนไม่สำเร็จ กรุณาลองใหม่',
             },
             'outcome' => $outcome,
@@ -250,6 +252,13 @@ class TrackingRoundController extends Controller
     /** @param  array{sent: int, failed: int, noChannel: int, lineConfigured: bool}  $result */
     private function notifyMessage(array $result): string
     {
+        /* ลิงก์ในการ์ดเปิดจากมือถือไม่ได้ = ไม่ได้ส่งสักคน บอกสาเหตุตรง ๆ ไปเลย
+           ต่อรายละเอียดอื่นท้ายข้อความจะกลบสิ่งเดียวที่แอดมินต้องไปแก้ */
+        if (($result['badLink'] ?? 0) > 0) {
+            return 'ยังส่งไม่ได้ — ลิงก์แบบประเมินในการ์ดชี้ไปที่โดเมนที่เปิดได้เฉพาะบนเครื่องนี้ '
+                .'ให้ส่งจากเซิร์ฟเวอร์จริง หรือตั้ง HEALTH_PUBLIC_URL ให้เป็นที่อยู่เว็บที่เปิดจากมือถือได้';
+        }
+
         $parts = ['ส่งสำเร็จ '.$result['sent'].' คน'];
 
         if ($result['failed'] > 0) {
