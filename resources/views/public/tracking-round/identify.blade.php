@@ -154,8 +154,18 @@
     document.getElementById('tr-open-safari').href = 'x-safari-' + window.location.href;
 
     lineButton.addEventListener('click', function (event) {
+        /* ห้ามยกเลิกการกดก่อนรู้ว่า popup ขึ้นจริง
+           iOS ต่ำกว่า 15.4 ไม่มี <dialog> เลย ถ้า preventDefault ไปก่อนแล้ว showModal พัง
+           ผู้ใช้จะกดปุ่มแล้วไม่มีอะไรเกิดขึ้น ซึ่งแย่กว่าปล่อยให้ไป LINE แล้วเจอ error ของ LINE */
+        try {
+            dialog.showModal();
+        } catch (e) {
+            return;
+        }
+
+        if (!dialog.open) return;
+
         event.preventDefault();
-        dialog.showModal();
     });
 })();
 </script>

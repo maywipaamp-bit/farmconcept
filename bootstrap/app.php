@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'menu' => \App\Http\Middleware\EnsureMenuAccess::class,
         ]);
 
+        /* LINE ยิง webhook มาจากเซิร์ฟเวอร์ของตัวเอง ไม่มี CSRF token ให้ ถ้าไม่ยกเว้นจะได้ 419
+           แล้ว LINE จะถือว่า endpoint เสียและปิดการส่งให้เอง
+           ตัวกันของ endpoint นี้คือลายเซ็น X-Line-Signature ซึ่งตรวจใน LineWebhookController */
+        $middleware->validateCsrfTokens(except: ['line/webhook']);
+
         /* คนที่ถูกระงับสิทธิ์ระหว่างที่เปิดหน้าจอค้างไว้ ต้องถูกดีดออกในคำขอถัดไป
            ใส่ไว้ในกลุ่ม web เพื่อให้ครอบทุกหน้ารวมถึงหน้า static เดิม ไม่ใช่เฉพาะที่ประกาศเอง */
         $middleware->web(append: [

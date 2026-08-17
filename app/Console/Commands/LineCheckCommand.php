@@ -150,21 +150,51 @@ class LineCheckCommand extends Command
             return self::SUCCESS;
         }
 
-        /* C = กลุ่ม · R = ห้องแชต · U = ผู้ใช้รายคน — LINE ใช้ตัวอักษรแรกแยกชนิดปลายทาง */
-        $kind = match (substr($target, 0, 1)) {
-            'C' => 'กลุ่ม',
-            'R' => 'ห้องแชต',
-            'U' => 'ผู้ใช้รายคน',
-            default => null,
-        };
+        $push = app(\App\Services\LinePushService::class);
+        $targets = $push->adminTargets();
+        $bad = [];
 
-        if ($kind === null) {
-            $this->error('✗ ค่า LINE_ADMIN_NOTIFY_TO ไม่เข้าเค้า id ของ LINE (ต้องขึ้นต้นด้วย C, R หรือ U)');
+        foreach ($targets as $one) {
+            /* C = กลุ่ม · R = ห้องแชต · U = ผู้ใช้รายคน — LINE ใช้ตัวอักษรแรกแยกชนิดปลายทาง */
+            $kind = match (substr($one, 0, 1)) {
+                'C' => 'กลุ่ม',
+                'R' => 'ห้องแชต',
+                'U' => 'ผู้ใช้รายคน',
+                default => null,
+            };
+
+            if ($kind === null || strlen($one) !== 33) {
+                $bad[] = $one;
+
+                continue;
+            }
+
+            $this->info('✓ '.$one.'  ('.$kind.')');
+        }
+
+        /* ความผิดพลาดที่เจอบ่อยที่สุดคือใส่ "LINE ID" (ไอดีที่ใช้ค้นหาเพื่อน) แทน userId
+           สองอย่างนี้แปลงหากันไม่ได้ และ LINE จะตอบแค่ 400 ตอนส่งจริงโดยไม่บอกว่าเพราะอะไร */
+        if ($bad !== []) {
+            $this->line('');
+
+            foreach ($bad as $one) {
+                $this->error('✗ ใช้ไม่ได้: '.$one.' ('.strlen($one).' ตัวอักษร)');
+            }
+
+            $this->line('  ที่ต้องการ: ขึ้นต้นด้วย U (รายคน) C (กลุ่ม) หรือ R (ห้องแชต) + อีก 32 ตัว รวม 33 ตัว');
+            $this->line('');
+            $this->warn('  ถ้าใส่ LINE ID ที่ใช้ค้นหาเพื่อนไว้ (เช่น ammy300837) ใช้ไม่ได้ครับ คนละอย่างกัน');
+            $this->line('  หาค่าที่ถูกต้อง:');
+            $this->line('   · รายคน → Console → channel Messaging API → แท็บ Messaging API → Your user ID');
+            $this->line('   · กลุ่ม  → ตั้ง Webhook URL = '.rtrim((string) config('app.url'), '/').'/line/webhook');
+            $this->line('             แล้วพิมพ์อะไรก็ได้ในกลุ่มที่เชิญบอทเข้าไป บอทจะตอบ id กลับมาให้');
+            $this->line('');
+            $this->line('  ใส่หลายคนได้ คั่นด้วยจุลภาค: LINE_ADMIN_NOTIFY_TO=Uxxxx...,Uyyyy...');
 
             return self::FAILURE;
         }
 
-        $this->info('✓ ตั้งปลายทางแล้ว — ชนิด: '.$kind);
+        $this->line('  ส่งถึง '.count($targets).' ปลายทาง · ใส่เพิ่มได้โดยคั่นด้วยจุลภาค');
         $this->line('  ลองส่งจริงได้ด้วย: php artisan line:check --notify-test');
 
         if (! $this->option('notify-test')) {

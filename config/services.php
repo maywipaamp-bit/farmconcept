@@ -45,6 +45,10 @@ return [
            (ใส่ user id ของคนคนเดียวก็ได้) ไม่ตั้งค่า = ไม่ส่ง ไม่ใช่ error
            ใช้ค่าคอนฟิกแทนการเก็บ LINE id รายคนในตาราง users เพราะทีมงานเปลี่ยนคนบ่อยกว่ากลุ่ม */
         'admin_notify_to' => env('LINE_ADMIN_NOTIFY_TO'),
+
+        /* secret ของ channel ชนิด Messaging API — ใช้ตรวจลายเซ็น webhook เท่านั้น
+           คนละตัวกับ channel_secret ด้านบนซึ่งเป็นของ LINE Login */
+        'messaging_channel_secret' => env('LINE_MESSAGING_CHANNEL_SECRET'),
     ],
 
     'slack' => [

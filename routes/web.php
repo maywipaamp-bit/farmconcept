@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\TrackingRoundController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
+use App\Http\Controllers\LineWebhookController;
 use App\Http\Controllers\PublicActivityController;
 use App\Http\Controllers\PublicCheckinController;
 use App\Http\Controllers\PublicLineLoginController;
@@ -123,6 +124,11 @@ Route::get('/auth/line/callback', [PublicLineLoginController::class, 'callback']
 Route::post('/activities/{activity}/line/logout', [PublicLineLoginController::class, 'logout'])
     ->where('activity', '[A-Za-z0-9-]+')
     ->name('public.line.logout');
+
+/* Webhook ของ Messaging API — ใช้หา id ปลายทางสำหรับตั้ง LINE_ADMIN_NOTIFY_TO
+   ยกเว้น CSRF ไว้ที่ bootstrap/app.php (LINE ยิงมาจากเซิร์ฟเวอร์ภายนอก ไม่มี token ให้)
+   ตัวกันคือการตรวจลายเซ็น X-Line-Signature ในคอนโทรลเลอร์ */
+Route::post('/line/webhook', LineWebhookController::class)->name('line.webhook');
 
 /* QR สาธารณะของกิจกรรม — token สุ่ม ไม่เปิดเผย activity id และ QR ที่ถูกปิดต้องได้หน้าอธิบายแทน 404 */
 Route::get('/r/{token}', [PublicQrController::class, 'registration'])

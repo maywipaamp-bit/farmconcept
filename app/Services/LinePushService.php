@@ -82,25 +82,51 @@ class LinePushService
         ]]);
     }
 
+    /**
+     * ปลายทางแจ้งเตือนแอดมินทั้งหมด
+     *
+     * รับได้หลายค่าคั่นด้วยจุลภาค เพราะบาง OA ถูกปิดไม่ให้เข้ากลุ่มแชต
+     * (ตั้งค่าใน LINE Official Account Manager) ทีมงานจึงต้องรับทีละคนแทน
+     *
+     * @return array<int, string>
+     */
+    public function adminTargets(): array
+    {
+        if (! $this->isConfigured()) {
+            return [];
+        }
+
+        return collect(explode(',', (string) config('services.line.admin_notify_to')))
+            ->map(fn (string $id) => trim($id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     /** ตั้งปลายทางแจ้งเตือนแอดมินไว้หรือยัง — ไม่ตั้ง = ไม่ส่ง ไม่ใช่ความผิดพลาด */
     public function hasAdminTarget(): bool
     {
-        return $this->isConfigured() && filled(config('services.line.admin_notify_to'));
+        return $this->adminTargets() !== [];
     }
 
     /**
      * แจ้งเตือนทีมงานว่ามีคนลงทะเบียนเข้ามาใหม่
      *
-     * ส่งเข้ากลุ่ม LINE ของทีม ไม่ใช่รายคน — ทีมงานเปลี่ยนคนบ่อยกว่ากลุ่ม
-     * และไม่ต้องเก็บ LINE id ของพนักงานไว้ในฐานข้อมูล
+     * ปลายทางเป็นกลุ่ม LINE ของทีม หรือรายคนหลายคนก็ได้ (คั่นด้วยจุลภาค)
+     * ไม่เก็บ LINE id ของพนักงานไว้ในฐานข้อมูล เพราะทีมงานเปลี่ยนคนบ่อย
+     * และการเพิ่ม/ลดคนควรทำที่ .env จุดเดียว ไม่ต้องมีหน้าจอจัดการเพิ่ม
+     *
+     * คืน true เมื่อส่งถึงอย่างน้อยหนึ่งปลายทาง — คนหนึ่งรับไม่ได้
+     * ไม่ควรทำให้ถือว่าทีมทั้งทีมไม่ได้รับแจ้ง
      *
      * @param  array<int, array{label: string, value: string}>  $rows
      */
     public function pushAdminAlert(string $title, string $headline, array $rows, string $url, string $buttonLabel): bool
     {
-        $target = (string) config('services.line.admin_notify_to');
+        $targets = $this->adminTargets();
 
-        if (! $this->hasAdminTarget()) {
+        if ($targets === []) {
             return false;
         }
 
@@ -115,7 +141,7 @@ class LinePushService
             ],
         ], $rows);
 
-        return $this->push($target, [[
+        $message = [[
             'type' => 'flex',
             /* altText คือบรรทัดที่เด้งบนแถบแจ้งเตือน — ต้องอ่านรู้เรื่องโดยไม่ต้องเปิดแอป */
             'altText' => mb_substr($title.' · '.$headline, 0, 400),
@@ -145,7 +171,17 @@ class LinePushService
                     ]],
                 ],
             ],
-        ]]);
+        ]];
+
+        $sent = false;
+
+        foreach ($targets as $target) {
+            /* ส่งให้ครบทุกปลายทางเสมอ ไม่หยุดเมื่อเจอตัวที่ส่งไม่ได้
+               คนหนึ่งบล็อกบอทไว้ ไม่ควรทำให้คนที่เหลือไม่ได้รับแจ้ง */
+            $sent = $this->push($target, $message) || $sent;
+        }
+
+        return $sent;
     }
 
     /** @param  array<int, array<string, mixed>>  $messages */
