@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Http;
  */
 class LineCheckCommand extends Command
 {
-    protected $signature = 'line:check';
+    protected $signature = 'line:check {--notify-test : ส่งข้อความทดสอบไปยังปลายทางแจ้งเตือนทีมงานจริง}';
 
     protected $description = 'ตรวจว่าค่า LINE Login ใน .env ใช้งานได้จริงหรือไม่';
 
@@ -125,6 +125,64 @@ class LineCheckCommand extends Command
         $this->info('✓ Messaging API พร้อมส่ง — บอท: '.$bot->json('displayName').' ('.$bot->json('basicId').')');
         $this->line('  ผู้รับต้องเป็นเพื่อนกับบอทนี้ด้วย ไม่งั้น LINE จะปฏิเสธการส่งรายคน');
 
-        return self::SUCCESS;
+        return $this->checkAdminTarget();
+    }
+
+    /**
+     * ปลายทางแจ้งเตือนทีมงาน (เช่น มีผู้ลงทะเบียนใหม่)
+     *
+     * ไม่มี API ให้ตรวจว่า group id ถูกต้องหรือไม่โดยไม่ส่งข้อความจริง
+     * จึงตรวจได้แค่ว่าตั้งค่าไว้แล้วและรูปแบบเข้าเค้า — ที่เหลือต้องลองส่งด้วย --notify-test
+     */
+    private function checkAdminTarget(): int
+    {
+        $target = (string) config('services.line.admin_notify_to');
+
+        $this->line('');
+        $this->line('ตรวจปลายทางแจ้งเตือนทีมงาน (ผู้ลงทะเบียนใหม่)');
+        $this->line(str_repeat('─', 46));
+
+        if ($target === '') {
+            $this->warn('△ ยังไม่ได้ตั้ง LINE_ADMIN_NOTIFY_TO ใน .env — ระบบจะไม่ส่งแจ้งเตือนให้ทีมงาน');
+            $this->line('  ใส่ group id ของกลุ่ม LINE ทีมงานที่เชิญบอทนี้เข้าไปแล้ว (หรือ user id ของคนเดียว)');
+            $this->line('  group id อยู่ใน webhook event ที่ LINE ส่งมาตอนมีข้อความในกลุ่ม (source.groupId)');
+
+            return self::SUCCESS;
+        }
+
+        /* C = กลุ่ม · R = ห้องแชต · U = ผู้ใช้รายคน — LINE ใช้ตัวอักษรแรกแยกชนิดปลายทาง */
+        $kind = match (substr($target, 0, 1)) {
+            'C' => 'กลุ่ม',
+            'R' => 'ห้องแชต',
+            'U' => 'ผู้ใช้รายคน',
+            default => null,
+        };
+
+        if ($kind === null) {
+            $this->error('✗ ค่า LINE_ADMIN_NOTIFY_TO ไม่เข้าเค้า id ของ LINE (ต้องขึ้นต้นด้วย C, R หรือ U)');
+
+            return self::FAILURE;
+        }
+
+        $this->info('✓ ตั้งปลายทางแล้ว — ชนิด: '.$kind);
+        $this->line('  ลองส่งจริงได้ด้วย: php artisan line:check --notify-test');
+
+        if (! $this->option('notify-test')) {
+            return self::SUCCESS;
+        }
+
+        $sent = app(\App\Services\LinePushService::class)->pushAdminAlert(
+            'ทดสอบการแจ้งเตือน',
+            'ข้อความนี้ส่งจากคำสั่ง line:check เพื่อตรวจว่าปลายทางถูกต้อง',
+            [['label' => 'สถานะ', 'value' => 'ถ้าเห็นข้อความนี้แปลว่าตั้งค่าถูกแล้ว']],
+            rtrim((string) config('app.url'), '/').'/admin/dashboard',
+            'เปิดระบบหลังบ้าน',
+        );
+
+        $sent
+            ? $this->info('✓ ส่งข้อความทดสอบแล้ว — ไปดูในกลุ่ม/แชตปลายทาง')
+            : $this->error('✗ ส่งไม่สำเร็จ — ดูรายละเอียดใน storage/logs/laravel.log');
+
+        return $sent ? self::SUCCESS : self::FAILURE;
     }
 }

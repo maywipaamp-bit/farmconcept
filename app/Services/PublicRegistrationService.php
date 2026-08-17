@@ -13,6 +13,7 @@ use App\Models\Registration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -156,6 +157,67 @@ class PublicRegistrationService
      * @return Collection<int, Registration>
      */
     public function register(Activity $activity, array $data, ?array $lineProfile = null): Collection
+    {
+        $registrations = $this->createRegistrations($activity, $data, $lineProfile);
+
+        /* แจ้งทีมงานหลัง commit เท่านั้น — ส่งในทรานแซกชันแล้วเกิดข้อผิดพลาดทีหลัง
+           จะได้แจ้งเตือนของการจองที่ถูก rollback ไปแล้ว */
+        $this->notifyAdminOfNewRegistration($activity, $registrations);
+
+        return $registrations;
+    }
+
+    /**
+     * แจ้งทีมงานผ่าน LINE ว่ามีคนลงทะเบียนเข้ามาใหม่
+     *
+     * ส่งไม่สำเร็จไม่ทำให้การลงทะเบียนล้ม — ผู้เข้าร่วมจองที่นั่งได้แล้วจริง
+     * การแจ้งเตือนเป็นความสะดวกของทีมงาน ไม่ใช่เงื่อนไขของการจอง
+     *
+     * @param  Collection<int, Registration>  $registrations
+     */
+    private function notifyAdminOfNewRegistration(Activity $activity, Collection $registrations): void
+    {
+        $push = app(LinePushService::class);
+
+        if (! $push->hasAdminTarget() || $registrations->isEmpty()) {
+            return;
+        }
+
+        $lead = $registrations->first();
+        $seats = $registrations->count();
+
+        $rows = [
+            ['label' => 'กิจกรรม', 'value' => $activity->name],
+            ['label' => 'ผู้ลงทะเบียน', 'value' => $lead->name.($seats > 1 ? ' และอีก '.($seats - 1).' คน' : '')],
+            ['label' => 'เบอร์โทร', 'value' => $lead->phone ?: '—'],
+            ['label' => 'จำนวนที่นั่ง', 'value' => $seats.' ที่นั่ง'],
+        ];
+
+        /* กิจกรรมที่เก็บเงินต้องบอกยอดด้วย ทีมงานจะได้รู้ว่าต้องรอตรวจสลิปเท่าไร */
+        if ($activity->has_fee && (float) $activity->fee > 0) {
+            $rows[] = ['label' => 'ยอดที่ต้องชำระ', 'value' => number_format((float) $activity->fee * $seats).' บาท'];
+        }
+
+        try {
+            $push->pushAdminAlert(
+                'มีผู้ลงทะเบียนใหม่',
+                $lead->name.' ลงทะเบียน '.$activity->name,
+                $rows,
+                route('admin.activities.participants', $activity->code),
+                'ดูรายชื่อลงทะเบียน',
+            );
+        } catch (\Throwable $e) {
+            /* เครือข่ายล่มหรือ LINE ตอบผิดพลาด — บันทึกไว้แล้วปล่อยผ่าน
+               ห้ามให้การแจ้งเตือนทำให้ผู้เข้าร่วมเห็นว่าลงทะเบียนไม่สำเร็จ */
+            Log::warning('แจ้งเตือนแอดมินผ่าน LINE ไม่สำเร็จ', [
+                'activity' => $activity->code,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /** @return Collection<int, Registration> */
+    private function createRegistrations(Activity $activity, array $data, ?array $lineProfile): Collection
     {
         return DB::transaction(function () use ($activity, $data, $lineProfile): Collection {
             $lockedActivity = Activity::query()->lockForUpdate()->findOrFail($activity->id);

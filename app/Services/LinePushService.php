@@ -82,6 +82,72 @@ class LinePushService
         ]]);
     }
 
+    /** ตั้งปลายทางแจ้งเตือนแอดมินไว้หรือยัง — ไม่ตั้ง = ไม่ส่ง ไม่ใช่ความผิดพลาด */
+    public function hasAdminTarget(): bool
+    {
+        return $this->isConfigured() && filled(config('services.line.admin_notify_to'));
+    }
+
+    /**
+     * แจ้งเตือนทีมงานว่ามีคนลงทะเบียนเข้ามาใหม่
+     *
+     * ส่งเข้ากลุ่ม LINE ของทีม ไม่ใช่รายคน — ทีมงานเปลี่ยนคนบ่อยกว่ากลุ่ม
+     * และไม่ต้องเก็บ LINE id ของพนักงานไว้ในฐานข้อมูล
+     *
+     * @param  array<int, array{label: string, value: string}>  $rows
+     */
+    public function pushAdminAlert(string $title, string $headline, array $rows, string $url, string $buttonLabel): bool
+    {
+        $target = (string) config('services.line.admin_notify_to');
+
+        if (! $this->hasAdminTarget()) {
+            return false;
+        }
+
+        $detail = array_map(fn (array $row) => [
+            'type' => 'box',
+            'layout' => 'baseline',
+            'spacing' => 'sm',
+            'margin' => 'md',
+            'contents' => [
+                ['type' => 'text', 'text' => $row['label'], 'size' => 'sm', 'color' => '#9CA3AF', 'flex' => 2],
+                ['type' => 'text', 'text' => $row['value'], 'size' => 'sm', 'color' => '#374151', 'flex' => 5, 'wrap' => true],
+            ],
+        ], $rows);
+
+        return $this->push($target, [[
+            'type' => 'flex',
+            /* altText คือบรรทัดที่เด้งบนแถบแจ้งเตือน — ต้องอ่านรู้เรื่องโดยไม่ต้องเปิดแอป */
+            'altText' => mb_substr($title.' · '.$headline, 0, 400),
+            'contents' => [
+                'type' => 'bubble',
+                'body' => [
+                    'type' => 'box',
+                    'layout' => 'vertical',
+                    'paddingAll' => '20px',
+                    'contents' => array_merge([
+                        ['type' => 'text', 'text' => $title, 'weight' => 'bold', 'size' => 'md', 'color' => '#2F6D45'],
+                        ['type' => 'text', 'text' => $headline, 'wrap' => true, 'size' => 'sm',
+                            'color' => '#374151', 'margin' => 'sm'],
+                        ['type' => 'separator', 'margin' => 'lg'],
+                    ], $detail),
+                ],
+                'footer' => [
+                    'type' => 'box',
+                    'layout' => 'vertical',
+                    'paddingAll' => '12px',
+                    'contents' => [[
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'color' => '#81C060',
+                        'height' => 'md',
+                        'action' => ['type' => 'uri', 'label' => $buttonLabel, 'uri' => $url],
+                    ]],
+                ],
+            ],
+        ]]);
+    }
+
     /** @param  array<int, array<string, mixed>>  $messages */
     private function push(string $lineUserId, array $messages): bool
     {

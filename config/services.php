@@ -40,6 +40,11 @@ return [
         /* คนละ channel กับ LINE Login — ตัวนี้ใช้ "ส่งข้อความหา" ผู้ใช้ (Messaging API)
            ยังไม่ตั้งค่า = ระบบจะรายงานว่าส่งแจ้งเตือนไม่สำเร็จ ไม่ใช่ทำเป็นว่าส่งแล้ว */
         'messaging_token' => env('LINE_MESSAGING_CHANNEL_ACCESS_TOKEN'),
+
+        /* ปลายทางแจ้งเตือนแอดมิน — ปกติเป็น "group id" ของกลุ่ม LINE ทีมงานที่เชิญ OA เข้าไปแล้ว
+           (ใส่ user id ของคนคนเดียวก็ได้) ไม่ตั้งค่า = ไม่ส่ง ไม่ใช่ error
+           ใช้ค่าคอนฟิกแทนการเก็บ LINE id รายคนในตาราง users เพราะทีมงานเปลี่ยนคนบ่อยกว่ากลุ่ม */
+        'admin_notify_to' => env('LINE_ADMIN_NOTIFY_TO'),
     ],
 
     'slack' => [
