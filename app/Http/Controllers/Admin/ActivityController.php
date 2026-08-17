@@ -212,6 +212,8 @@ class ActivityController extends Controller
             return [
                 'code' => $r->code,
                 'name' => $r->name,
+                /* ค่าดิบสำหรับ popup แก้ไข — ต่างจาก round/registered_at ที่จัดรูปแบบไว้อ่านในตาราง */
+                'roundId' => $r->activity_round_id,
                 'prior' => $prior->count(),
                 'priorList' => $prior->all(),
                 'phone' => $r->phone,
@@ -286,6 +288,17 @@ class ActivityController extends Controller
             'rows' => $rows,
             'registerQr' => $registerQr,
             'registerUrl' => $registerUrl,
+            /* ตัวเลือกรอบใน popup แก้ไข — เรียงตามวันที่เหมือนที่ใช้คิดลำดับรอบในตาราง */
+            'roundOptions' => $activity->rounds
+                ->sortBy(fn ($round) => $round->round_date->toDateString())
+                ->values()
+                ->map(fn ($round, int $index) => [
+                    'id' => $round->id,
+                    'label' => 'รอบที่ '.($index + 1).' · '
+                        .$round->round_date->day.' '.$thMonths[$round->round_date->month - 1].' '
+                        .($round->round_date->year + 543)
+                        .' · '.substr((string) $round->time_start, 0, 5).' น.',
+                ])->all(),
         ]);
     }
 

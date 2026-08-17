@@ -30,7 +30,9 @@
 
         if (step.querySelectorAll('input:checked').length > 0) return true;
 
-        const free = step.querySelector('textarea, select');
+        /* input[type=text] คือคำถามแบบ "ตอบแบบสั้น" — ต้องอยู่ในรายการนี้ด้วย
+           ไม่งั้นข้อที่บังคับตอบจะกดข้อถัดไปไม่ได้ทั้งที่พิมพ์คำตอบแล้ว */
+        const free = step.querySelector('textarea, select, input[type="text"]');
 
         return !!(free && free.value.trim() !== '');
     }
@@ -63,7 +65,7 @@
                 return;
             }
 
-            const selected = question.querySelector('input:checked, select, textarea');
+            const selected = question.querySelector('input:checked, select, textarea, input[type="text"]');
             result[id] = selected ? selected.value : null;
         });
 

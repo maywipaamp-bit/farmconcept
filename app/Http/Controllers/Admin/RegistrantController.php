@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -106,6 +107,71 @@ class RegistrantController extends Controller
                 : 'ทำเครื่องหมายสลิปของ '.$registration->name.' ว่าไม่ถูกต้อง',
             'pay' => $confirmed ? self::PAID : self::UNPAID,
         ]);
+    }
+
+    /**
+     * แก้ไขข้อมูลผู้ลงทะเบียน
+     *
+     * แก้ได้เฉพาะข้อมูลติดต่อกับรอบที่เข้าร่วม — สิ่งที่เจ้าหน้าที่ต้องซ่อมจริงหน้างาน
+     * (พิมพ์เบอร์ผิด สะกดชื่อผิด มาผิดรอบ) ไม่เปิดให้แก้สถานะชำระเงินหรือเวลาเช็คอินจากที่นี่
+     * เพราะสองอย่างนั้นมีเส้นทางของตัวเองที่บันทึกร่องรอยไว้ด้วย
+     */
+    public function update(Request $request, Registration $registration): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'phone' => ['required', 'string', 'max:30'],
+            'email' => ['nullable', 'email', 'max:160'],
+            /* รอบต้องเป็นรอบของกิจกรรมเดียวกัน ย้ายข้ามกิจกรรมจากที่นี่ไม่ได้ */
+            'activity_round_id' => [
+                'nullable', 'integer',
+                Rule::exists('act_activity_rounds', 'id')->where('activity_id', $registration->activity_id),
+            ],
+        ], [
+            'name.required' => 'กรุณากรอกชื่อผู้ลงทะเบียน',
+            'phone.required' => 'กรุณากรอกเบอร์โทรศัพท์',
+            'email.email' => 'รูปแบบอีเมลไม่ถูกต้อง',
+            'activity_round_id.exists' => 'รอบที่เลือกไม่ใช่รอบของกิจกรรมนี้',
+        ]);
+
+        $registration->update([
+            'name' => trim($data['name']),
+            'phone' => trim($data['phone']),
+            'email' => $data['email'] ? trim($data['email']) : null,
+            /* กิจกรรมรอบเดียวไม่มีช่องเลือกรอบในฟอร์ม คีย์นี้จึงไม่ถูกส่งมา — คงค่าเดิมไว้
+               ไม่ใช่ล้างเป็น null ซึ่งจะทำให้แถวหลุดออกจากรอบที่ผูกไว้ */
+            'activity_round_id' => array_key_exists('activity_round_id', $data)
+                ? ($data['activity_round_id'] ?: null)
+                : $registration->activity_round_id,
+        ]);
+
+        return response()->json([
+            'message' => 'บันทึกข้อมูลของ '.$registration->name.' แล้ว',
+            'registration' => [
+                'code' => $registration->code,
+                'name' => $registration->name,
+                'phone' => $registration->phone,
+                'email' => $registration->email ?: '',
+                'activityRoundId' => $registration->activity_round_id,
+            ],
+        ]);
+    }
+
+    /**
+     * ลบผู้ลงทะเบียน
+     *
+     * ลบจริง ไม่ใช่ซ่อน — ต่างจากกิจกรรมที่ใช้ soft delete
+     * เพราะที่นั่งที่จองไว้ต้องคืนกลับเข้าโควตาทันที ถ้าเหลือแถวไว้จะยังนับกินที่นั่งอยู่
+     * ตารางลูก (สลิป · ประวัติเช็คอิน · ความสนใจ · ใบเสร็จแบบประเมิน) ตั้ง FK เป็น CASCADE ไว้แล้ว
+     * ส่วนโปรไฟล์กลุ่มตัวอย่างเป็น SET NULL จึงไม่หายตามไปด้วย
+     */
+    public function destroy(Registration $registration): JsonResponse
+    {
+        $name = $registration->name;
+
+        DB::transaction(fn () => $registration->delete());
+
+        return response()->json(['message' => 'ลบผู้ลงทะเบียน '.$name.' แล้ว']);
     }
 
     /**

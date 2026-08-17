@@ -9882,6 +9882,9 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   color: var(--color-text-faint);
 }
 
+/* ตอบแบบยาว — กล่องสูงกว่าให้เห็นความต่างจากแบบสั้นตั้งแต่ในตัวอย่าง ไม่ต้องอ่านชื่อชนิด */
+.ec-pv-text.is-long { min-height: 68px; }
+
 .ec-registration-preview-field { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .ec-registration-preview-label {
@@ -10166,10 +10169,10 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   border-color: var(--color-border);
 }
 
+/* fixed ไม่ใช่ absolute — กรอบตารางมี overflow-x: auto ซึ่งทำให้ overflow-y เป็น auto ตามไปด้วย
+   เมนูแบบ absolute จึงถูกกรอบตัดหาย ตำแหน่งจริงคำนวณด้วย positionMenu() ใน evaluation-list.js */
 .el-menu {
-  position: absolute;
-  top: 38px;
-  right: 0;
+  position: fixed;
   box-sizing: border-box;
   z-index: 40;
   width: 232px;
@@ -10182,8 +10185,6 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
   padding: var(--space-2);
   box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 16px 40px rgba(16,24,40,0.10);
 }
-/* พลิกขึ้นบนเมื่อที่ด้านล่างไม่พอ ไม่งั้นเมนูของแถวท้ายจะถูกกรอบตารางตัดหาย */
-.el-menu.is-up { top: auto; bottom: 38px; }
 
 .el-menu-item {
   font-family: inherit;
@@ -14996,6 +14997,11 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   color: var(--color-text-body);
 }
 
+/* ตัวเลือกเอกสารความยินยอมในการ์ดคำถาม */
+.ec-consent-pick { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-3); }
+.ec-consent-label { font-size: var(--font-size-caption); font-weight: 500; color: var(--color-text-secondary); }
+.ec-consent-pick .ec-text-hint { margin-top: 0; }
+
 /* ตัวอย่างข้อความยินยอม — ข้อความยาวกว่าตัวเลือกทั่วไป จึงจัดชิดบนและตัดบรรทัดได้ */
 .ec-pv-consent {
   display: flex;
@@ -15014,6 +15020,14 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
   color: var(--color-text-secondary);
   border-bottom: 1px dashed var(--color-border);
   padding-bottom: var(--space-1);
+}
+
+/* ตอบแบบยาว — เส้นประกลายเป็นกรอบกล่อง บอกว่าเป็นพื้นที่หลายบรรทัด ไม่ใช่บรรทัดเดียว */
+.ec-view-text.is-long {
+  min-height: 52px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-input);
 }
 
 /* ---------- แถบเครื่องมือลอยข้างการ์ด ---------- */
@@ -16277,6 +16291,29 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .aov-pt-slip:hover { text-decoration: underline; }
 
+/* คอลัมน์จัดการ — ชิดขวาสุดและไม่ยุบตามคอลัมน์อื่นที่เปิด/ปิดได้ */
+.aov-pt-actions-head { text-align: right; white-space: nowrap; }
+
+.aov-pt-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.aov-pt-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  color: var(--color-primary-dark);
+  cursor: pointer;
+}
+
+.aov-pt-action:hover { text-decoration: underline; }
+.aov-pt-action.is-danger { color: var(--color-danger-text); }
+
 .aov-pt-slip:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -16847,3 +16884,72 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 .cd-tl-head { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
 .cd-tl-head strong { color: var(--color-text-strong); font-weight: var(--font-weight-medium); }
 .cd-tl-line { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }
+
+/* ==========================================================================
+   ตัวอย่างการแจ้งเตือน — สามจุดที่ข้อความไปโผล่จริง (แจ้งเตือนเด้ง · LINE OA · หน้าจอล็อก)
+   ไม่มี in-app bottom sheet / banner เพราะระบบนี้ไม่มีแอปของตัวเอง
+   ========================================================================== */
+.cd-notif-previews { display: flex; flex-direction: column; gap: var(--space-4); }
+.cd-notif { display: flex; flex-direction: column; gap: 6px; }
+.cd-notif-tag {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  letter-spacing: .02em;
+}
+
+/* การ์ดแจ้งเตือนของระบบปฏิบัติการ — ใช้ทั้งบนหน้าจอปกติและบนหน้าจอล็อก ต่างกันแค่ฉากหลัง */
+.cd-push {
+  display: flex;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+.cd-push-icon {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--color-primary-soft);
+  font-size: 15px;
+}
+.cd-push-body { min-width: 0; }
+.cd-push-app {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 0 2px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+.cd-push-title {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.45;
+}
+.cd-push-text {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  /* ระบบปฏิบัติการตัดเนื้อแจ้งเตือนที่สองบรรทัด — พรีวิวต้องตัดเท่ากันถึงจะเชื่อถือได้ */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cd-lock {
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  border-radius: 16px;
+  background: #1b2620;
+  text-align: center;
+}
+.cd-lock-time { margin: 0; color: #fff; font-size: 30px; font-weight: var(--font-weight-medium); line-height: 1.1; }
+.cd-lock-date { margin: 2px 0 var(--space-3); color: rgba(255, 255, 255, .72); font-size: var(--font-size-caption); }
+.cd-push.is-onlock { border-color: transparent; background: rgba(255, 255, 255, .92); text-align: left; }

@@ -154,6 +154,10 @@
 <script>
 window.TFC_EVALUATION_FORM = @json($formPayload);
 window.TFC_EVALUATION_INDEX_URL = @json(route('admin.evaluations.index'));
+{{-- เอกสารความยินยอมที่เปิดใช้อยู่ — คำถามชนิด "ความยินยอม" เลือกอ้างถึงฉบับใดฉบับหนึ่ง
+     แก้เนื้อหาได้ที่ /admin/master/consent-documents ไม่ใช่ในหน้านี้ --}}
+window.TFC_CONSENT_DOCS = @json($consentDocs);
+window.TFC_CONSENT_DOCS_URL = @json(route('admin.master.consent-documents.index'));
 </script>
 <script src="@assetv('assets/js/evaluation-create.js')"></script>
 @endpush

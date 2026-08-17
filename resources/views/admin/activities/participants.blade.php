@@ -14,7 +14,7 @@
 
   <div class="card aov-pt-card">
     <div class="aov-pt-toolbar">
-      <h2 class="aov-section-title mb-0">รายชื่อผู้เข้าร่วม</h2>
+      <h2 class="aov-section-title mb-0">รายชื่อลงทะเบียน</h2>
       <div class="aov-pt-tools">
         @if ($registerQr)
           {{-- เปิด QR ให้ผู้เข้าร่วมสแกนลงทะเบียนเองหน้างาน --}}
@@ -68,6 +68,8 @@
               @foreach ($columns as $col)
                 <th data-col="{{ $col['key'] }}">{{ $col['label'] }}</th>
               @endforeach
+              {{-- คอลัมน์จัดการอยู่นอกชุดเลือกคอลัมน์ — ปิดไม่ได้ เพราะเป็นทางเดียวที่แก้/ลบได้ --}}
+              <th class="aov-pt-actions-head">จัดการ</th>
             </tr>
           </thead>
           <tbody>
@@ -111,6 +113,10 @@
                     <td data-col="{{ $col['key'] }}">{{ $row[$col['key']] !== '' ? $row[$col['key']] : '—' }}</td>
                   @endif
                 @endforeach
+                <td class="aov-pt-actions">
+                  <button type="button" class="aov-pt-action" data-edit-index="{{ $index }}">แก้ไข</button>
+                  <button type="button" class="aov-pt-action is-danger" data-delete-index="{{ $index }}">ลบ</button>
+                </td>
               </tr>
             @endforeach
           </tbody>
@@ -168,6 +174,69 @@
   </div>
 </div>
 
+{{-- แก้ไขผู้ลงทะเบียน — เฉพาะข้อมูลติดต่อกับรอบ ส่วนสถานะชำระเงินและเช็คอินมีทางของตัวเอง --}}
+<div class="modal-overlay" id="aov-pt-edit-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">แก้ไขข้อมูลผู้ลงทะเบียน</h3>
+        <div class="aov-pt-history-sub">ช่องที่มี * จำเป็นต้องกรอก</div>
+      </div>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="aov-pt-edit-form">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="aov-pt-edit-name">ชื่อผู้ลงทะเบียน<span class="form-required">*</span></label>
+          <input class="input" id="aov-pt-edit-name" maxlength="160" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="aov-pt-edit-phone">เบอร์โทรศัพท์<span class="form-required">*</span></label>
+          <input class="input" id="aov-pt-edit-phone" maxlength="30" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="aov-pt-edit-email">อีเมล</label>
+          <input class="input" id="aov-pt-edit-email" type="email" maxlength="160">
+        </div>
+        @if (count($roundOptions) > 1)
+          <div class="form-group">
+            <label class="form-label" for="aov-pt-edit-round">รอบที่เข้าร่วม</label>
+            <select class="select" id="aov-pt-edit-round">
+              <option value="">ไม่ระบุรอบ</option>
+              @foreach ($roundOptions as $round)
+                <option value="{{ $round['id'] }}">{{ $round['label'] }}</option>
+              @endforeach
+            </select>
+          </div>
+        @endif
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="aov-pt-edit-save">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- ยืนยันการลบ — ลบจริง ไม่ใช่ซ่อน เพราะที่นั่งต้องคืนเข้าโควตาทันที --}}
+<div class="modal-overlay" id="aov-pt-delete-modal">
+  <div class="modal modal-sm">
+    <div class="modal-body text-center">
+      <span class="modal-confirm-icon is-danger mx-auto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      </span>
+      <h3 class="modal-title mb-3">ยืนยันการลบผู้ลงทะเบียน</h3>
+      <p class="text-secondary" id="aov-pt-delete-message"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-danger" id="aov-pt-delete-confirm">ลบผู้ลงทะเบียน</button>
+    </div>
+  </div>
+</div>
+
 {{-- ประวัติการเข้าร่วมกิจกรรมของเบอร์นี้ — เปิดจากบรรทัด "เคยร่วมกิจกรรม N ครั้ง" --}}
 <div class="modal-overlay" id="aov-pt-history-modal">
   <div class="modal modal-sm">
@@ -206,6 +275,15 @@
   var rows = @json($rows);
   var storageKey = 'tfc-aov-participants-cols-' + @json($activity->code);
   var paymentUrl = @json(route('admin.activities.registrants.payment', ['registration' => '__CODE__']));
+
+  /* ข้อความจากการกระทำก่อนโหลดหน้า (แก้ไข/ลบผู้ลงทะเบียน) — แสดงแล้วลบทิ้ง ไม่ให้ค้างไปรอบหน้า */
+  try {
+    var savedMessage = sessionStorage.getItem('tfc-activity-success');
+    if (savedMessage) {
+      sessionStorage.removeItem('tfc-activity-success');
+      window.TFC.showToast(savedMessage, 'success');
+    }
+  } catch (e) {}
 
   var qrBtn = document.getElementById('aov-pt-qr-btn');
   if (qrBtn) {
@@ -410,6 +488,113 @@
 
       window.TFC.openModal('aov-pt-history-modal');
     });
+  });
+
+  /* ---------- แก้ไข / ลบ ผู้ลงทะเบียน ----------
+     บันทึกแล้วรีโหลดหน้า ไม่อัปเดตแถวเองในหน้าจอ เพราะการแก้รอบมีผลต่อ
+     ตัวเลขสรุปบนหัวหน้าและป้าย "รอบที่ N" ที่คำนวณจากทั้งชุด — วาดใหม่เองให้ครบยากกว่าที่ได้ */
+  var updateUrl = @json(route('admin.activities.registrants.update', ['registration' => '__CODE__']));
+  var deleteUrl = @json(route('admin.activities.registrants.destroy', ['registration' => '__CODE__']));
+
+  var editForm = document.getElementById('aov-pt-edit-form');
+  var editSave = document.getElementById('aov-pt-edit-save');
+  var deleteConfirm = document.getElementById('aov-pt-delete-confirm');
+  var editingCode = null;
+  var deletingCode = null;
+
+  function send(url, code, method, body) {
+    return fetch(url.replace('__CODE__', encodeURIComponent(code)), {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : '',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': method
+      },
+      body: body ? JSON.stringify(body) : null
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (payload) {
+        if (!res.ok) {
+          throw new Error(Object.values(payload.errors || {}).flat()[0] || payload.message || 'ดำเนินการไม่สำเร็จ');
+        }
+        return payload;
+      });
+    });
+  }
+
+  /* กลับมาที่หน้าเดิมพร้อม toast — sessionStorage เพราะข้อความต้องข้ามการโหลดหน้า */
+  function reloadWith(message) {
+    try { sessionStorage.setItem('tfc-activity-success', message); } catch (e) {}
+    window.location.reload();
+  }
+
+  document.querySelectorAll('[data-edit-index]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = rows[parseInt(btn.getAttribute('data-edit-index'), 10)];
+      if (!row) return;
+
+      editingCode = row.code;
+      document.getElementById('aov-pt-edit-name').value = row.name || '';
+      document.getElementById('aov-pt-edit-phone').value = row.phone || '';
+      document.getElementById('aov-pt-edit-email').value = row.email || '';
+
+      var roundSelect = document.getElementById('aov-pt-edit-round');
+      if (roundSelect) roundSelect.value = row.roundId ? String(row.roundId) : '';
+
+      window.TFC.openModal('aov-pt-edit-modal');
+    });
+  });
+
+  editForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!editingCode) return;
+
+    var roundSelect = document.getElementById('aov-pt-edit-round');
+    var label = editSave.textContent;
+    editSave.disabled = true;
+    editSave.textContent = 'กำลังบันทึก…';
+
+    send(updateUrl, editingCode, 'PUT', {
+      name: document.getElementById('aov-pt-edit-name').value.trim(),
+      phone: document.getElementById('aov-pt-edit-phone').value.trim(),
+      email: document.getElementById('aov-pt-edit-email').value.trim() || null,
+      activity_round_id: roundSelect && roundSelect.value ? Number(roundSelect.value) : null
+    })
+      .then(function (payload) { reloadWith(payload.message || 'บันทึกข้อมูลแล้ว'); })
+      .catch(function (err) {
+        window.TFC.showToast(err.message, 'danger');
+        editSave.disabled = false;
+        editSave.textContent = label;
+      });
+  });
+
+  document.querySelectorAll('[data-delete-index]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = rows[parseInt(btn.getAttribute('data-delete-index'), 10)];
+      if (!row) return;
+
+      deletingCode = row.code;
+      document.getElementById('aov-pt-delete-message').textContent =
+        'ต้องการลบ "' + row.name + '" ออกจากรายชื่อลงทะเบียนใช่หรือไม่ ' +
+        'ข้อมูลการชำระเงินและประวัติเช็คอินของคนนี้จะถูกลบตามไปด้วย และย้อนกลับไม่ได้';
+      window.TFC.openModal('aov-pt-delete-modal');
+    });
+  });
+
+  deleteConfirm.addEventListener('click', function () {
+    if (!deletingCode) return;
+
+    var label = deleteConfirm.textContent;
+    deleteConfirm.disabled = true;
+    deleteConfirm.textContent = 'กำลังลบ…';
+
+    send(deleteUrl, deletingCode, 'DELETE', null)
+      .then(function (payload) { reloadWith(payload.message || 'ลบผู้ลงทะเบียนแล้ว'); })
+      .catch(function (err) {
+        window.TFC.showToast(err.message, 'danger');
+        deleteConfirm.disabled = false;
+        deleteConfirm.textContent = label;
+      });
   });
 
   applyColumns();

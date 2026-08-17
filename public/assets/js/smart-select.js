@@ -238,27 +238,62 @@ window.TFC = window.TFC || {};
     saveBtn.classList.add('btn-loading');
     saveBtn.disabled = true;
 
-    /* Simulated AJAX save — no backend in this prototype phase */
-    setTimeout(function () {
+    var widget = addModalTarget.widget;
+
+    /* เพิ่มรายการเข้า <select> แล้วเลือกให้เลย — ใช้ร่วมกันทั้งกรณีบันทึกจริงและกรณีจำลอง */
+    function applyNewOption(optionValue, optionLabel) {
       saveBtn.classList.remove('btn-loading');
       saveBtn.disabled = false;
 
       var option = document.createElement('option');
-      option.value = value;
-      option.textContent = value;
+      option.value = optionValue;
+      option.textContent = optionLabel;
       select.appendChild(option);
-      select.value = value;
+      select.value = optionValue;
       select.dispatchEvent(new Event('change', { bubbles: true }));
 
-      rebuildOptionsList(addModalTarget.widget, select);
-      addModalTarget.widget.querySelector('.smart-select-value').textContent = value;
+      rebuildOptionsList(widget, select);
+      widget.querySelector('.smart-select-value').textContent = optionLabel;
 
       if (window.TFC && window.TFC.closeModal) window.TFC.closeModal('smart-select-add-modal');
       if (window.TFC && window.TFC.showToast) {
-        window.TFC.showToast('เพิ่ม "' + value + '" สำเร็จ และเลือกให้อัตโนมัติแล้ว', 'success');
+        window.TFC.showToast('เพิ่ม "' + optionLabel + '" สำเร็จ และเลือกให้อัตโนมัติแล้ว', 'success');
       }
       input.value = '';
-    }, 700);
+    }
+
+    /* มี data-new-item-url = บันทึกลงฐานจริง ปลายทางต้องตอบ { value, label } กลับมา
+       ไม่มี = หน้าต้นแบบที่ยังไม่มี backend ให้จำลองไว้เหมือนเดิม จะได้ไม่กระทบหน้าที่ใช้อยู่ */
+    var url = select.getAttribute('data-new-item-url');
+
+    if (!url) {
+      setTimeout(function () { applyNewOption(value, value); }, 700);
+      return;
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ label: value })
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (!res.ok) {
+            throw new Error(Object.values(body.errors || {}).flat()[0] || body.message || 'บันทึกไม่สำเร็จ');
+          }
+          return body;
+        });
+      })
+      .then(function (body) { applyNewOption(body.value, body.label || value); })
+      .catch(function (error) {
+        saveBtn.classList.remove('btn-loading');
+        saveBtn.disabled = false;
+        showAddError(error.message);
+      });
   }
 
   function openAddModal(widget, select) {

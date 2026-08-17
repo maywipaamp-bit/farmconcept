@@ -30,7 +30,13 @@
     <form id="consent-form">
       <div class="modal-body">
         <div class="consent-form-grid">
-          <div class="form-group"><label class="form-label" for="consent-type">ประเภท<span class="form-required">*</span></label><select class="select" id="consent-type" required>@foreach ($consentTypes as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
+          <div class="form-group"><label class="form-label" for="consent-type">ประเภท<span class="form-required">*</span></label>{{-- data-new-item-url ทำให้ปุ่ม "เพิ่มประเภทเอกสาร" ในดรอปดาวน์บันทึกลงฐานจริง
+                 ไม่ใช่เพิ่มไว้ในหน้าจอเฉย ๆ แล้วหายไปตอนโหลดใหม่ --}}
+            <select class="select" id="consent-type" required
+                    data-smart-select
+                    data-new-item-label="ประเภทเอกสาร"
+                    data-new-item-placeholder="เช่น ยินยอมให้ถ่ายภาพและเผยแพร่"
+                    data-new-item-url="{{ route('admin.master.consent-documents.types.store') }}">@foreach ($consentTypes as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
           <div class="form-group"><label class="form-label" for="consent-version">เวอร์ชัน<span class="form-required">*</span></label><input class="input" id="consent-version" required maxlength="20" placeholder="เช่น 1.0"></div>
         </div>
         <div class="form-group"><label class="form-label" for="consent-title">ชื่อเอกสาร<span class="form-required">*</span></label><input class="input" id="consent-title" required maxlength="160"></div>

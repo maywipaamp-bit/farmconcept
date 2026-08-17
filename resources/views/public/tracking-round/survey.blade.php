@@ -82,6 +82,10 @@
                                 @endforeach
                             </div>
                         @elseif($question->question_type === 'text')
+                            {{-- ตอบแบบสั้น: ช่องบรรทัดเดียว กล่องสูง ๆ ชวนให้เขียนยาวเกินกว่าที่ถาม --}}
+                            <input type="text" class="tr-input" name="answer_{{ $question->id }}" maxlength="5000"
+                                   placeholder="พิมพ์คำตอบ…" value="{{ old('answer_'.$question->id) }}">
+                        @elseif($question->question_type === 'paragraph')
                             <textarea class="tr-textarea" name="answer_{{ $question->id }}" rows="4" maxlength="5000"
                                       placeholder="พิมพ์คำตอบ…">{{ old('answer_'.$question->id) }}</textarea>
                         @elseif($question->question_type === 'dropdown')
@@ -92,13 +96,16 @@
                                 @endforeach
                             </select>
                         @elseif($question->question_type === 'consent')
-                            {{-- ความยินยอม: ข้อความอยู่ที่ตัวคำถามด้านบนแล้ว ตรงนี้เหลือแค่ช่องติ๊กยอมรับช่องเดียว --}}
+                            {{-- ความยินยอม: ติ๊กช่องเดียว ข้อความในลิงก์กดแล้วเปิดอ่านเอกสารฉบับเต็ม --}}
                             <div class="tr-options">
                                 <label class="tr-option">
                                     <input type="checkbox" name="answer_{{ $question->id }}" value="1"
                                            @checked(old('answer_'.$question->id))>
                                     <span class="tr-option-dot is-square"></span>
-                                    <span class="tr-option-label">ยอมรับ</span>
+                                    {{-- ข้อความในลิงก์คือชื่อเอกสาร ไม่ใช่ชื่อคำถาม — ชื่อคำถามอยู่หัวข้อด้านบนแล้ว --}}
+                                    <span class="tr-option-label">
+                                        อ่านและยอมรับ@if(isset($consentDocs[$question->dimension]))<a href="#" data-consent-doc="{{ $question->dimension }}">{{ $consentDocs[$question->dimension]['title'] }}</a>@else{{ $question->text }}@endif
+                                    </span>
                                 </label>
                             </div>
                         @else
@@ -124,6 +131,8 @@
             </form>
         @endif
     </section>
+
+    @include('public.partials.consent-dialog', ['consentDocs' => $consentDocs])
 @endsection
 
 @push('page-script')
@@ -147,7 +156,8 @@
         var picked = step.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked');
         if (picked.length > 0) return true;
 
-        var free = step.querySelector('textarea, select');
+        /* input[type=text] คือคำถามแบบ "ตอบแบบสั้น" — ขาดไปแล้วข้อบังคับตอบจะกดต่อไม่ได้ */
+        var free = step.querySelector('textarea, select, input[type="text"]');
 
         return !! (free && free.value.trim() !== '');
     }

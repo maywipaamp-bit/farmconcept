@@ -77,6 +77,9 @@
                                 @endforeach
                             </div>
                         @elseif($question->question_type === 'text')
+                            {{-- ตอบแบบสั้น: ช่องบรรทัดเดียว กล่องสูง ๆ ชวนให้เขียนยาวเกินกว่าที่ถาม --}}
+                            <input type="text" class="tr-input" name="answer_{{ $question->id }}" maxlength="5000" placeholder="พิมพ์คำตอบ…">
+                        @elseif($question->question_type === 'paragraph')
                             <textarea class="tr-textarea" name="answer_{{ $question->id }}" rows="4" maxlength="5000" placeholder="พิมพ์คำตอบ…"></textarea>
                         @elseif($question->question_type === 'dropdown')
                             <select class="tr-select" name="answer_{{ $question->id }}">
@@ -86,12 +89,17 @@
                                 @endforeach
                             </select>
                         @elseif($question->question_type === 'consent')
-                            {{-- ความยินยอม: ข้อความอยู่ที่ตัวคำถามด้านบนแล้ว ตรงนี้เหลือแค่ช่องติ๊กยอมรับช่องเดียว --}}
+                            {{-- ความยินยอม: ติ๊กช่องเดียว ข้อความในลิงก์กดแล้วเปิดอ่านเอกสารฉบับเต็ม
+                                 เนื้อหามาจาก mst_consent_documents ตามรหัสที่คำถามข้อนี้อ้างถึง --}}
                             <div class="tr-options">
                                 <label class="tr-option">
                                     <input type="checkbox" name="answer_{{ $question->id }}" value="1">
                                     <span class="tr-option-dot is-square"></span>
-                                    <span class="tr-option-label">ยอมรับ</span>
+                                    {{-- ข้อความในลิงก์คือชื่อเอกสาร ไม่ใช่ชื่อคำถาม
+                                         ชื่อคำถามแสดงเป็นหัวข้อด้านบนอยู่แล้ว ซ้ำสองที่จะอ่านเหมือนพูดเรื่องเดิมสองรอบ --}}
+                                    <span class="tr-option-label">
+                                        อ่านและยอมรับ@if(isset($consentDocs[$question->dimension]))<a href="#" data-consent-doc="{{ $question->dimension }}">{{ $consentDocs[$question->dimension]['title'] }}</a>@else{{ $question->text }}@endif
+                                    </span>
                                 </label>
                             </div>
                         @else
@@ -124,6 +132,8 @@
                 </div>
             </form>
         </section>
+
+        @include('public.partials.consent-dialog', ['consentDocs' => $consentDocs])
     @endif
 @endsection
 

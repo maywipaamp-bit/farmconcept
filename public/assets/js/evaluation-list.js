@@ -210,21 +210,34 @@
       onPageSizeChange: function (size) { state.pageSize = size; state.page = 1; render(); }
     });
 
-    flipMenuIfClipped();
+    positionMenu();
   }
 
-  /* กรอบตารางมี overflow-x: auto ซึ่งบังคับให้ overflow-y เป็น auto ตามไปด้วย
-     เมนูของแถวท้ายๆ จึงถูกตัดที่ขอบล่างของกรอบ ถ้าไม่พอที่ให้เปิดลงล่างก็พลิกขึ้นบนแทน */
-  function flipMenuIfClipped() {
+  /* กรอบตารางมี overflow-x: auto ซึ่งบังคับให้ overflow-y เป็น auto ตามไปด้วย (ตามสเปก CSS)
+     เมนูที่วางแบบ absolute ในกรอบนั้นจึงถูกตัดหายที่ขอบตาราง ไม่ว่าจะพลิกขึ้นหรือลง
+     ทางแก้เดียวที่ได้ผลจริงคือวางแบบ fixed เทียบกับหน้าจอ กรอบตารางจะตัดไม่ได้อีก
+
+     ต้องคำนวณตำแหน่งเองทุกครั้งที่เปิด เพราะ fixed ไม่ผูกกับปุ่มให้อัตโนมัติ */
+  function positionMenu() {
     var menu = document.querySelector('.el-menu');
     if (!menu) return;
-    var scroller = document.querySelector('.el-table-scroll');
-    if (!scroller) return;
 
-    menu.classList.remove('is-up');
-    if (menu.getBoundingClientRect().bottom > scroller.getBoundingClientRect().bottom) {
-      menu.classList.add('is-up');
-    }
+    var button = document.querySelector('.el-menu-btn.is-on');
+    if (!button) return;
+
+    var rect = button.getBoundingClientRect();
+    var width = menu.offsetWidth || 232;
+    var height = menu.offsetHeight || 240;
+    var gap = 6;
+
+    /* ชิดขวาของปุ่ม แต่ห้ามล้นขอบจอทั้งสองด้าน */
+    var left = Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8);
+
+    /* ล่างไม่พอแล้วค่อยพลิกขึ้น — ค่าเริ่มต้นคือเปิดลงล่างเหมือนดรอปดาวน์ทั่วไป */
+    var openUpward = rect.bottom + height + gap > window.innerHeight && rect.top - height - gap > 0;
+
+    menu.style.left = left + 'px';
+    menu.style.top = (openUpward ? rect.top - height - gap : rect.bottom + gap) + 'px';
   }
 
   /* ---------- Preview มือถือ ---------- */
@@ -386,6 +399,16 @@
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (!$('el-preview').hidden) return closePreview();
+    if (state.menu) { state.menu = null; render(); }
+  });
+
+  /* เมนูวางแบบ fixed จึงไม่เลื่อนตามแถวเวลาหน้าเลื่อน — ปิดไปเลยดีกว่าปล่อยให้ลอยค้างผิดที่
+     true ใน addEventListener เพื่อดักการเลื่อนของกรอบตารางด้วย ไม่ใช่แค่ของทั้งหน้า */
+  window.addEventListener('scroll', function () {
+    if (state.menu) { state.menu = null; render(); }
+  }, true);
+
+  window.addEventListener('resize', function () {
     if (state.menu) { state.menu = null; render(); }
   });
 

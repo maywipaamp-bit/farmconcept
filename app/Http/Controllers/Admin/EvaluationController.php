@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EvaluationRequest;
 use App\Models\Answer;
+use App\Models\ConsentDocument;
 use App\Models\Form;
 use App\Services\EvaluationService;
 use Illuminate\Contracts\View\View;
@@ -32,6 +33,7 @@ class EvaluationController extends Controller
         return view('admin.evaluations.form', [
             'form' => null,
             'formPayload' => null,
+            'consentDocs' => $this->consentDocOptions(),
         ]);
     }
 
@@ -42,7 +44,29 @@ class EvaluationController extends Controller
         return view('admin.evaluations.form', [
             'form' => $form,
             'formPayload' => $this->formPayload($form),
+            'consentDocs' => $this->consentDocOptions(),
         ]);
+    }
+
+    /**
+     * เอกสารความยินยอมที่เปิดใช้อยู่ — คำถามชนิด consent เลือกอ้างถึงฉบับใดฉบับหนึ่ง
+     *
+     * ไม่ให้พิมพ์เนื้อหายาว ๆ ซ้ำในแต่ละแบบประเมิน เพราะข้อความยินยอมเป็นเอกสารที่ต้องมีเวอร์ชัน
+     * และตรวจย้อนหลังได้ว่าใครยอมรับฉบับไหน — ก๊อบไว้หลายที่แล้วแก้ไม่ครบคือปัญหาที่แก้ทีหลังไม่ได้
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function consentDocOptions(): array
+    {
+        return ConsentDocument::query()
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['code', 'title', 'version'])
+            ->map(fn (ConsentDocument $doc) => [
+                'code' => $doc->code,
+                'title' => $doc->title,
+                'version' => (string) $doc->version,
+            ])->all();
     }
 
     /** ลิงก์ต้นแบบเดิมยังเปิดได้ แต่ URL หลักของระบบไม่มี .html */
@@ -151,7 +175,7 @@ class EvaluationController extends Controller
                     'kind' => $question->question_type,
                     'multi' => in_array($question->question_type, ['multi', 'chips'], true),
                     'choices' => $question->options->pluck('label')->values(),
-                    'placeholder' => $question->question_type === 'text' ? 'พิมพ์คำตอบ…' : null,
+                    'placeholder' => in_array($question->question_type, ['text', 'paragraph'], true) ? 'พิมพ์คำตอบ…' : null,
                 ])->values(),
         ];
     }

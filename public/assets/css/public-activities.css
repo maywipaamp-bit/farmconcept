@@ -942,8 +942,10 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-option:has(input:focus-visible) { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 
 .tr-textarea,
+.tr-input,
 .tr-select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 12px; outline: none; background: #fff; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; }
 .tr-textarea:focus,
+.tr-input:focus,
 .tr-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 
 /* ปุ่มหลักต้องกว้างกว่าปุ่มย้อนกลับชัดเจน — ทางเดินหลักคือเดินหน้า */

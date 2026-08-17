@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ConsentDocument;
 use App\Models\Form;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -17,7 +18,9 @@ class EvaluationRequest extends FormRequest
 
     /* consent = ข้อความยินยอมพร้อมช่องติ๊ก ใช้ขอความยินยอมในแบบประเมินชุดไหนก็ได้
        ต่างจากฟิลด์ pdpa ตรงที่ฟิลด์นั้นมีเฉพาะแบบลงทะเบียนและแก้ข้อความไม่ได้ */
-    public const QUESTION_TYPES = ['section', 'rating', 'single', 'multi', 'chips', 'dropdown', 'text', 'consent'];
+    /* text = ตอบแบบสั้น (ช่องบรรทัดเดียว) · paragraph = ตอบแบบยาว (กล่องหลายบรรทัด)
+       ต่างกันที่หน้าตาช่องตอบเท่านั้น การตรวจและการเก็บใช้ทางเดียวกัน */
+    public const QUESTION_TYPES = ['section', 'rating', 'single', 'multi', 'chips', 'dropdown', 'text', 'paragraph', 'consent'];
 
     public const CHOICE_TYPES = ['single', 'multi', 'chips', 'dropdown'];
 
@@ -109,10 +112,22 @@ class EvaluationRequest extends FormRequest
             $validator->errors()->add('questions', 'แบบประเมินที่เปิดใช้งานต้องมีคำถามอย่างน้อย 1 ข้อ');
         }
 
+        /* รหัสเอกสารความยินยอมที่เปิดใช้อยู่ — ดึงครั้งเดียวนอกลูป */
+        $consentCodes = $questions->contains(fn ($q) => ($q['type'] ?? null) === 'consent')
+            ? ConsentDocument::query()->where('is_active', true)->pluck('code')->all()
+            : [];
+
         foreach ($questions as $index => $question) {
             if (in_array($question['type'] ?? null, self::CHOICE_TYPES, true)
                 && collect($question['options'] ?? [])->pluck('label')->filter(fn ($label) => trim((string) $label) !== '')->count() < 2) {
                 $validator->errors()->add("questions.{$index}.options", 'คำถามแบบเลือกต้องมีตัวเลือกอย่างน้อย 2 ข้อ');
+            }
+
+            /* คำถามความยินยอมต้องชี้ไปเอกสารที่มีจริงและยังเปิดใช้อยู่
+               ไม่งั้นผู้ตอบจะเจอลิงก์ที่กดแล้วไม่มีอะไรให้อ่าน แล้วยังต้องติ๊กยอมรับ */
+            if (($question['type'] ?? null) === 'consent'
+                && ! in_array($question['dimension'] ?? null, $consentCodes, true)) {
+                $validator->errors()->add("questions.{$index}.dimension", 'กรุณาเลือกเอกสารความยินยอมของคำถามข้อนี้');
             }
         }
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PublicPostSurveyRequest;
 use App\Models\Activity;
 use App\Services\PublicPostSurveyService;
+use App\Services\SurveyAnswerBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,8 +16,12 @@ class PublicPostSurveyController extends Controller
      * หน้าแบบประเมินหลังกิจกรรม — หน้าของตัวเอง ไม่ปนกับหน้ารายละเอียดกิจกรรม
      * เจ้าหน้าที่ที่ล็อกอินอยู่เปิดทำแทนได้โดยไม่ติดช่วงเวลาเปิดรับคำตอบ
      */
-    public function page(Request $request, string $activity, PublicPostSurveyService $service): View
-    {
+    public function page(
+        Request $request,
+        string $activity,
+        PublicPostSurveyService $service,
+        SurveyAnswerBuilder $answers,
+    ): View {
         $activity = Activity::forPublicListing()
             ->where('code', $activity)
             ->firstOrFail();
@@ -29,6 +34,9 @@ class PublicPostSurveyController extends Controller
             'form' => $form,
             'enabled' => $activity->acceptsPostSurvey($isStaff) && $form !== null,
             'storeUrl' => route('public.activities.post-survey.store', $activity->code),
+            /* เนื้อหาเอกสารความยินยอมของคำถามชนิด consent — ส่งมาพร้อมหน้า
+               เพื่อให้กดลิงก์แล้วเปิดอ่านได้ทันที ไม่ต้องรอโหลด */
+            'consentDocs' => $answers->consentDocsFor($form),
         ]);
     }
 

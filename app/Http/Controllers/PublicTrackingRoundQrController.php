@@ -9,6 +9,7 @@ use App\Models\Participant;
 use App\Models\QrCode;
 use App\Models\TargetGroup;
 use App\Services\LineLoginService;
+use App\Services\SurveyAnswerBuilder;
 use App\Services\TrackingRoundService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -531,12 +532,15 @@ class PublicTrackingRoundQrController extends Controller
 
         $round = $this->openRoundFor($participant, $round);
 
+        $form = $this->rounds->formForRound($round);
+
         return view('public.tracking-round.survey', [
-            
             'participant' => $participant,
             'round' => $round,
-            'form' => $this->rounds->formForRound($round),
+            'form' => $form,
             'proxyFor' => $this->proxyFor($request),
+            /* เนื้อหาเอกสารความยินยอมของคำถามชนิด consent — ชุดเดียวกับแบบประเมินหลังกิจกรรม */
+            'consentDocs' => app(SurveyAnswerBuilder::class)->consentDocsFor($form),
         ]);
     }
 

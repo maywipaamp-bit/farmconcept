@@ -283,6 +283,9 @@ Route::middleware('auth')->group(function () {
             Route::prefix('registrants')->name('registrants.')
                 ->middleware('menu:activities-registrants|activities-list')->group(function () {
                     Route::get('/', [RegistrantController::class, 'index'])->name('index');
+                    /* แก้ไข/ลบผู้ลงทะเบียน — เรียกจากแท็บ "รายชื่อลงทะเบียน" ในหน้ารายละเอียดกิจกรรม */
+                    Route::put('/{registration:code}', [RegistrantController::class, 'update'])->name('update');
+                    Route::delete('/{registration:code}', [RegistrantController::class, 'destroy'])->name('destroy');
                     Route::patch('/{registration:code}/payment', [RegistrantController::class, 'updatePayment'])->name('payment');
                     Route::post('/{registration:code}/checkin', [RegistrantController::class, 'checkin'])->name('checkin');
                     Route::delete('/{registration:code}/checkin', [RegistrantController::class, 'undoCheckin'])->name('checkin.undo');
@@ -397,6 +400,12 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/{code}', [$controller, 'destroy'])->name('destroy');
                 });
             }
+
+            /* เพิ่มประเภทเอกสารความยินยอมจากดรอปดาวน์ในฟอร์ม — ต้องประกาศแยกเพราะชุด CRUD
+               ด้านบนสร้างจากอาร์เรย์ $tables ซึ่งมีแค่สี่เส้นทางมาตรฐาน */
+            Route::post('/consent-documents/types', [MasterData\ConsentDocumentController::class, 'storeType'])
+                ->middleware('menu:master-data-consents')
+                ->name('consent-documents.types.store');
 
             Route::prefix('registration-options')->name('registration-options.')
                 ->middleware('menu:master-data-registration-options')->group(function () {

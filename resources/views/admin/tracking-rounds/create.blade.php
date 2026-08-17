@@ -50,15 +50,52 @@
       </div>
       <div class="fb-msg-col">
         <span class="co-field-label">ตัวอย่างที่ผู้รับเห็น</span>
-        {{-- โครงเดียวกับการ์ด Flex ที่ส่งจริง (LinePushService::pushSurveyInvite) — แก้ฝั่งนั้นต้องแก้ฝั่งนี้ตาม --}}
-        <div class="cd-line-preview">
-          <div class="cd-bubble">
-            <span class="cd-bubble-hero" aria-hidden="true">💚</span>
-            <span class="cd-bubble-title">แบบประเมินสุขภาวะ</span>
-            <span class="cd-bubble-text is-center" id="rc-bubble"></span>
-            <span class="cd-bubble-meta" id="rc-bubble-round"></span>
-            <span class="cd-bubble-due" id="rc-bubble-due"></span>
-            <span class="cd-bubble-btn">เริ่มทำแบบประเมิน</span>
+
+        {{-- สามจุดที่ข้อความเดียวกันไปโผล่จริงบนเครื่องผู้รับ — แจ้งเตือนเด้ง · แชท LINE OA · หน้าจอล็อก
+             ไม่ทำ in-app bottom sheet กับ in-app banner เพราะระบบนี้ไม่มีแอปของตัวเอง
+             ผู้ตอบเปิดผ่านเบราว์เซอร์จาก LINE ไม่มีจังหวะที่จะแสดงสองอย่างนั้นได้จริง --}}
+        <div class="cd-notif-previews">
+          <div class="cd-notif">
+            <span class="cd-notif-tag">แจ้งเตือนเด้ง</span>
+            <div class="cd-push">
+              <span class="cd-push-icon" aria-hidden="true">🌱</span>
+              <div class="cd-push-body">
+                <p class="cd-push-app">The Farm Concept <span>ตอนนี้</span></p>
+                <p class="cd-push-title" id="rc-push-title"></p>
+                <p class="cd-push-text" id="rc-push-text"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="cd-notif">
+            <span class="cd-notif-tag">LINE OA</span>
+            {{-- โครงเดียวกับการ์ด Flex ที่ส่งจริง (LinePushService::pushSurveyInvite) — แก้ฝั่งนั้นต้องแก้ฝั่งนี้ตาม --}}
+            <div class="cd-line-preview">
+              <div class="cd-bubble">
+                <span class="cd-bubble-hero" aria-hidden="true">💚</span>
+                <span class="cd-bubble-title">แบบประเมินสุขภาวะ</span>
+                <span class="cd-bubble-text is-center" id="rc-bubble"></span>
+                <span class="cd-bubble-meta" id="rc-bubble-round"></span>
+                <span class="cd-bubble-due" id="rc-bubble-due"></span>
+                <span class="cd-bubble-btn">เริ่มทำแบบประเมิน</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cd-notif">
+            <span class="cd-notif-tag">หน้าจอล็อก</span>
+            <div class="cd-lock">
+              <p class="cd-lock-time">09:00</p>
+              <p class="cd-lock-date" id="rc-lock-date"></p>
+              <div class="cd-push is-onlock">
+                <span class="cd-push-icon" aria-hidden="true">🌱</span>
+                <div class="cd-push-body">
+                  <p class="cd-push-app">The Farm Concept <span>ตอนนี้</span></p>
+                  <p class="cd-push-title" id="rc-lock-title"></p>
+                  <p class="cd-push-text" id="rc-lock-text"></p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -317,6 +354,19 @@
     /* รอบกับวันครบกำหนดบนการ์ดมาจากข้อมูลรายคน ไม่ใช่จากข้อความ — พรีวิวใช้คนแรกในผลค้นหา */
     $('rc-bubble-round').textContent = 'รอบติดตาม ' + p.round;
     $('rc-bubble-due').textContent = 'ตอบได้ถึงวันที่ ' + fmt(p.due);
+
+    /* แจ้งเตือนเด้งกับหน้าจอล็อกใช้ข้อความชุดเดียวกัน ต่างกันแค่ฉากหลัง
+       บรรทัดแรกเป็นหัวเรื่อง ที่เหลือเป็นเนื้อ — ระบบปฏิบัติการตัดแบบนี้เอง */
+    var lines = fillMsg(form.msg, p).split('\n').filter(function (l) { return l.trim() !== ''; });
+    var title = lines.shift() || '';
+    var body = lines.join(' ');
+
+    ['rc-push', 'rc-lock'].forEach(function (prefix) {
+      $(prefix + '-title').textContent = title;
+      $(prefix + '-text').textContent = body;
+    });
+
+    $('rc-lock-date').textContent = window.TFC.formatThaiDate(new Date().toISOString().slice(0, 10));
   }
 
   /* ---------- แถบล่าง ---------- */
@@ -439,7 +489,7 @@
       form.msg = ta.value;
       ta.focus();
       ta.setSelectionRange(start + token.length, start + token.length);
-      $('rc-bubble').textContent = fillMsg(form.msg, sampleMember());
+      renderMsg();
       return;
     }
 
@@ -466,7 +516,7 @@
     if (id === 'rc-name') { form.name = e.target.value; return renderBottom(); }
     if (id === 'rc-from') { form.from = e.target.value; return; }
     if (id === 'rc-to') { form.to = e.target.value; return; }
-    if (id === 'rc-msg') { form.msg = e.target.value; $('rc-bubble').textContent = fillMsg(form.msg, sampleMember()); }
+    if (id === 'rc-msg') { form.msg = e.target.value; renderMsg(); }
   });
 
   /* ---------- เริ่มต้น ---------- */

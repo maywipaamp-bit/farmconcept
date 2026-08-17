@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ConsentDocument;
 use App\Models\Form;
 use App\Models\Question;
 use Illuminate\Support\Collection;
@@ -42,6 +43,35 @@ class SurveyAnswerBuilder
         return $form->questions->where('question_type', '!=', 'section');
     }
 
+    /**
+     * เอกสารความยินยอมที่คำถามในแบบฟอร์มนี้อ้างถึง — คีย์เป็นรหัสเอกสาร (CNS-001)
+     *
+     * คำถามชนิด consent เก็บรหัสเอกสารไว้ในคอลัมน์ dimension
+     * ดึงมาทีเดียวทั้งชุดเพื่อให้หน้าจอวาด popup ได้โดยไม่ต้องยิงเพิ่มตอนผู้ตอบกดลิงก์
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function consentDocsFor(?Form $form): array
+    {
+        $codes = $form
+            ? $form->questions->where('question_type', 'consent')->pluck('dimension')->filter()->unique()
+            : collect();
+
+        if ($codes->isEmpty()) {
+            return [];
+        }
+
+        return ConsentDocument::query()
+            ->whereIn('code', $codes)
+            ->where('is_active', true)
+            ->get(['code', 'title', 'version', 'content'])
+            ->mapWithKeys(fn (ConsentDocument $doc) => [$doc->code => [
+                'title' => $doc->title,
+                'version' => (string) $doc->version,
+                'content' => (string) $doc->content,
+            ]])->all();
+    }
+
     /** @return array<int, array<string, mixed>> */
     private function rowsForQuestion(Question $question, mixed $value): array
     {
@@ -80,7 +110,8 @@ class SurveyAnswerBuilder
             return [['question_id' => $question->id, 'score' => $score]];
         }
 
-        if ($question->question_type === 'text') {
+        /* ตอบแบบสั้นกับแบบยาวต่างกันแค่หน้าตาช่องตอบ เก็บและตรวจทางเดียวกัน */
+        if (in_array($question->question_type, ['text', 'paragraph'], true)) {
             $text = trim((string) $value);
 
             if (mb_strlen($text) > 5000) {

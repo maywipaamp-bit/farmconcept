@@ -17,12 +17,29 @@
     multi: 'เลือกหลายข้อ',
     chips: 'เลือกแบบป้าย (หลายข้อ)',
     dropdown: 'เลือกจากรายการ',
-    text: 'ข้อความ',
+    /* ข้อความมีสองแบบเหมือน Google Form — สั้นคือช่องบรรทัดเดียว ยาวคือกล่องหลายบรรทัด
+       ต่างกันที่หน้าตาช่องตอบ ไม่ใช่ความยาวที่ระบบยอมรับ (เก็บได้ 5,000 ตัวอักษรเท่ากัน) */
+    text: 'ข้อความ · ตอบแบบสั้น',
+    paragraph: 'ข้อความ · ตอบแบบยาว',
     /* ความยินยอม — ช่องติ๊กที่ผู้ตอบต้องกดยอมรับ ข้อความยินยอมคือตัวคำถามเอง
        ใช้ได้กับแบบประเมินทุกชนิด ต่างจากฟิลด์ PDPA ที่มีเฉพาะแบบลงทะเบียนและแก้ข้อความไม่ได้ */
     consent: 'ความยินยอม (ติ๊กยอมรับ)'
   };
-  var KIND_ORDER = ['rating', 'single', 'multi', 'chips', 'dropdown', 'text', 'consent'];
+  var KIND_ORDER = ['rating', 'single', 'multi', 'chips', 'dropdown', 'text', 'paragraph', 'consent'];
+
+  /* ชนิดที่ผู้ตอบพิมพ์คำตอบเอง — กติกาการตรวจและการเก็บเหมือนกัน ต่างแค่หน้าตาช่อง */
+  function isFreeText(kind) { return kind === 'text' || kind === 'paragraph'; }
+
+  /* เอกสารความยินยอมที่เปิดใช้อยู่ มาจาก master data ไม่ได้พิมพ์ในหน้านี้ */
+  var CONSENT_DOCS = window.TFC_CONSENT_DOCS || [];
+  var CONSENT_DOCS_URL = window.TFC_CONSENT_DOCS_URL || '/admin/master/consent-documents';
+
+  /* ชื่อเอกสารที่คำถามข้อนี้อ้างถึง — ใช้เป็นข้อความในลิงก์ที่ผู้ตอบกดอ่าน */
+  function consentDocTitle(q) {
+    var found = CONSENT_DOCS.filter(function (doc) { return doc.code === q.consentCode; })[0];
+
+    return found ? found.title : 'เอกสารที่ยังไม่ได้เลือก';
+  }
 
   var STAGES = [
     { label: 'ตอนลงทะเบียน', hint: 'ผู้เข้าร่วมกรอกตอนจองที่นั่ง' },
@@ -359,14 +376,36 @@
       '</div>' +
       (hasChoices(q.kind) ? choicesHtml(q) : '') +
       (q.kind === 'rating' ? ratingHtml() : '') +
-      (q.kind === 'text' ? '<div class="ec-text-hint">ผู้ตอบจะพิมพ์คำตอบเองในช่องนี้</div>' : '') +
-      /* ข้อความยินยอมคือตัวคำถามเอง ช่องพิมพ์ด้านบนจึงเป็นที่เขียนข้อความนั้น
-         บอกไว้ตรงนี้เพราะคำว่า "พิมพ์คำถาม" ทำให้เข้าใจผิดว่าต้องเขียนเป็นประโยคคำถาม */
-      (q.kind === 'consent'
-        ? '<div class="ec-text-hint">พิมพ์ข้อความยินยอมในช่องด้านบน · ผู้ตอบจะเห็นเป็นช่องติ๊ก "ยอมรับ"' +
-          (q.required ? ' และต้องติ๊กก่อนส่งแบบประเมิน' : ' โดยติ๊กหรือไม่ก็ได้') + '</div>'
-        : '') +
+      (q.kind === 'text' ? '<div class="ec-text-hint">ผู้ตอบพิมพ์คำตอบสั้น ๆ ในช่องบรรทัดเดียว</div>' : '') +
+      (q.kind === 'paragraph' ? '<div class="ec-text-hint">ผู้ตอบพิมพ์คำตอบยาวได้ในกล่องหลายบรรทัด</div>' : '') +
+      (q.kind === 'consent' ? consentPickerHtml(q) : '') +
       footHtml(q, false);
+  }
+
+  /* ตัวเลือกเอกสารความยินยอมของคำถามชนิด consent
+     ช่องพิมพ์ด้านบนคือ "ข้อความในลิงก์" ส่วนเนื้อหาฉบับเต็มมาจากเอกสารที่เลือกตรงนี้
+     ไม่ให้พิมพ์เนื้อหายาว ๆ ซ้ำในแต่ละแบบประเมิน เพราะข้อความยินยอมต้องมีเวอร์ชัน
+     และตรวจย้อนหลังได้ว่าใครยอมรับฉบับไหน */
+  function consentPickerHtml(q) {
+    if (!CONSENT_DOCS.length) {
+      return '<div class="ec-text-hint">ยังไม่มีเอกสารความยินยอมที่เปิดใช้ในระบบ — ' +
+        'สร้างก่อนที่ <a href="' + esc(CONSENT_DOCS_URL) + '" target="_blank" rel="noopener">จัดการเอกสารความยินยอม</a></div>';
+    }
+
+    return '<div class="ec-consent-pick">' +
+      '<label class="ec-consent-label" for="ec-consent-' + q.id + '">เนื้อหาที่ผู้ตอบจะเห็นเมื่อกดลิงก์</label>' +
+      '<select class="select" id="ec-consent-' + q.id + '" data-consent-doc="' + q.id + '">' +
+        '<option value=""' + (q.consentCode ? '' : ' selected') + '>เลือกเอกสารความยินยอม</option>' +
+        CONSENT_DOCS.map(function (doc) {
+          return '<option value="' + esc(doc.code) + '"' + (q.consentCode === doc.code ? ' selected' : '') + '>' +
+            esc(doc.title + (doc.version ? ' · ฉบับ ' + doc.version : '')) + '</option>';
+        }).join('') +
+      '</select>' +
+      '<div class="ec-text-hint">ผู้ตอบจะเห็นเป็น "อ่านและยอมรับ<u>' + esc(consentDocTitle(q)) + '</u>" ' +
+        'กดแล้วเปิดอ่านเนื้อหาเต็ม' +
+        (q.required ? ' และต้องติ๊กก่อนส่งแบบประเมิน' : ' โดยติ๊กหรือไม่ก็ได้') +
+        ' · แก้เนื้อหาได้ที่ <a href="' + esc(CONSENT_DOCS_URL) + '" target="_blank" rel="noopener">จัดการเอกสารความยินยอม</a></div>' +
+      '</div>';
   }
 
   function viewBody(q, n) {
@@ -377,7 +416,7 @@
       '</div>' +
       multiHint(q.kind) +
       answerHtml(q, 'ec-view') +
-      (q.kind === 'text' ? '<div class="ec-view-text">พิมพ์คำตอบ…</div>' : '');
+      (isFreeText(q.kind) ? '<div class="ec-view-text' + (q.kind === 'paragraph' ? ' is-long' : '') + '">พิมพ์คำตอบ…</div>' : '');
   }
 
   /* ชนิดที่ตอบได้หลายข้อต้องบอกให้ชัด โดยเฉพาะแบบป้ายที่ไม่มีช่องติ๊กให้เดาจากรูป */
@@ -390,12 +429,14 @@
   function answerHtml(q, prefix) {
     if (q.kind === 'rating') return ratingHtml();
 
-    /* ความยินยอม — ช่องติ๊กหนึ่งช่องคู่กับข้อความยินยอมที่ผู้ดูแลเขียนไว้ในตัวคำถาม
-       ตรงนี้แสดงเป็นตัวอย่างเฉย ๆ ติ๊กจริงเกิดที่หน้าผู้ตอบ */
+    /* ความยินยอม — ช่องติ๊กหนึ่งช่อง คู่กับลิงก์ที่กดแล้วเปิดอ่านเอกสารฉบับเต็ม
+       ข้อความในลิงก์คือ "ชื่อเอกสาร" ที่เลือกไว้ ไม่ใช่ชื่อคำถาม — ชื่อคำถามแสดงเป็นหัวข้ออยู่แล้ว
+       ซ้ำสองที่จะอ่านเหมือนพูดเรื่องเดิมสองรอบ
+       ตรงนี้แสดงเป็นตัวอย่างเฉย ๆ ติ๊กและเปิดอ่านจริงเกิดที่หน้าผู้ตอบ */
     if (q.kind === 'consent') {
       return '<label class="ec-pv-consent">' +
         '<span class="ec-mark is-box"></span>' +
-        '<span>' + esc((q.title || '').trim() || 'ข้อความยินยอมจะแสดงตรงนี้') + '</span>' +
+        '<span>อ่านและยอมรับ<u>' + esc(consentDocTitle(q)) + '</u></span>' +
         '</label>';
     }
 
@@ -519,7 +560,7 @@
           return '<div class="ec-registration-preview-heading">' + esc(q.title.trim() || 'หัวข้อส่วน') + '</div>';
         }
         return '<div class="ec-pv-q"><span class="ec-pv-title">' + esc((q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
-          multiHint(q.kind) + answerHtml(q, 'ec-pv') + (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') + '</div>';
+          multiHint(q.kind) + answerHtml(q, 'ec-pv') + (isFreeText(q.kind) ? '<div class="ec-pv-text' + (q.kind === 'paragraph' ? ' is-long' : '') + '">พิมพ์คำตอบ…</div>' : '') + '</div>';
       }).join('');
   }
 
@@ -561,7 +602,7 @@
         '<span class="ec-pv-title">' + esc(n.no + '. ' + (q.title.trim() || 'คำถามที่ยังไม่ได้พิมพ์') + (q.required ? ' *' : '')) + '</span>' +
         multiHint(q.kind) +
         answerHtml(q, 'ec-pv') +
-        (q.kind === 'text' ? '<div class="ec-pv-text">พิมพ์คำตอบ…</div>' : '') +
+        (isFreeText(q.kind) ? '<div class="ec-pv-text' + (q.kind === 'paragraph' ? ' is-long' : '') + '">พิมพ์คำตอบ…</div>' : '') +
         '</div>';
     }).join('');
   }
@@ -890,6 +931,14 @@
       return;
     }
 
+    /* เลือกเอกสารความยินยอมที่คำถามข้อนี้อ้างถึง */
+    var consent = e.target.closest('[data-consent-doc]');
+    if (consent) {
+      var cq = itemById(consent.getAttribute('data-consent-doc'));
+      if (cq) { cq.consentCode = consent.value; touch(false); }
+      return;
+    }
+
     /* ชนิดคำถามเป็น dropdown แบบ Google Form ไม่ใช่ชิปเรียงกัน — ประหยัดที่และเลือกได้อันเดียวชัดเจน */
     var kind = e.target.closest('[data-kind]');
     if (kind) {
@@ -1042,7 +1091,9 @@
         return {
           type: item.kind,
           text: item.title.trim(),
-          dimension: item.dimension || null,
+          /* คำถามความยินยอมใช้ dimension เก็บรหัสเอกสารที่อ้างถึง (CNS-001…)
+             ชนิดอื่นยังใช้ช่องนี้เป็นชื่อกลุ่มคำถามตามเดิม */
+          dimension: (item.kind === 'consent' ? item.consentCode : item.dimension) || null,
           is_required: item.kind === 'section' ? false : !!item.required,
           sort_order: index + 1,
           options: (item.choices || []).map(function (choice) {
@@ -1215,6 +1266,9 @@
         title: question.text,
         kind: question.type,
         dimension: question.dimension,
+        /* ความยินยอมเก็บรหัสเอกสารไว้ใน dimension — แยกออกมาเป็นคีย์ของตัวเองตอนอ่านกลับ
+           จะได้ไม่ต้องคอยเช็คชนิดทุกครั้งที่ใช้ */
+        consentCode: question.type === 'consent' ? (question.dimension || '') : '',
         required: !!question.is_required,
         choices: (question.options || []).map(function (option) { return option.label; })
       };
