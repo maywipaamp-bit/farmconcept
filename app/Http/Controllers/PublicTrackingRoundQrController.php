@@ -649,8 +649,12 @@ class PublicTrackingRoundQrController extends Controller
 
         /* ผูกไม่ได้เพราะ LINE นี้เป็นของคนอื่น — ต้องบอกผู้ใช้ตรง ๆ ไม่ใช่เงียบ
            ไม่งั้นเขาจะกดเชื่อมวนไปเรื่อย ๆ โดยไม่รู้ว่าติดอะไร */
+        /* withTrashed สำคัญ — unique index ที่ฐานข้อมูลนับแถวที่ soft delete ไปแล้วด้วย
+           ถ้าเช็กด้วย scope ปกติจะมองไม่เห็นเจ้าของเดิมที่ถูกลบไป แล้วสั่ง update ทับ
+           ได้ 500 duplicate entry คาหน้าผู้ใช้แทนที่จะบอกว่าเชื่อมไม่ได้ */
         $ownedByOther = $lineUserId
-            && Participant::where('line_user_id', $lineUserId)->where('id', '!=', $participant->id)->exists();
+            && Participant::withTrashed()
+                ->where('line_user_id', $lineUserId)->where('id', '!=', $participant->id)->exists();
 
         $justLinked = $lineUserId && blank($participant->line_user_id) && ! $ownedByOther;
 

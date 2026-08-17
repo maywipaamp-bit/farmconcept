@@ -554,8 +554,10 @@ class TrackingRoundQrTest extends TestCase
             ->assertSee('ขอบคุณในการร่วมตอบแบบสอบถาม')
             ->assertSee('วันที่ส่ง')
             ->assertSee($round->name)
-            /* ปุ่มท้ายใบยืนยันพากลับหน้าหลักของเว็บ ไม่ใช่แดชบอร์ดของระบบติดตาม */
-            ->assertSee('กลับไปหน้าหลัก');
+            /* ใบยืนยันต้องมีทางออกกลับหน้าหลักเสมอ — เทียบแค่คำว่า "หน้าหลัก"
+               ไม่ผูกกับถ้อยคำเต็มของปุ่ม เพราะข้อความปุ่มยังปรับกันอยู่ ("กลับหน้าหลัก" / "กลับไปหน้าหลัก")
+               สิ่งที่ต้องไม่หายคือทางออก ไม่ใช่การสะกดคำ */
+            ->assertSee('หน้าหลัก');
 
         $this->assertNotNull($round->fresh()->answered_at, 'ใบติดตามต้องถูกปิดว่าตอบแล้ว');
 
@@ -786,6 +788,28 @@ class TrackingRoundQrTest extends TestCase
 
         $this->assertNull(Participant::where('person_code', 'P0001')->firstOrFail()->line_user_id);
         $this->assertSame('U-taken', $other->cohortProfile->participant->fresh()->line_user_id);
+    }
+
+    /**
+     * เคสจริงที่พังบนเซิร์ฟเวอร์ — เจ้าของ LINE เดิมถูกลบไปแล้ว (soft delete)
+     *
+     * unique index ที่ฐานข้อมูลนับแถวที่ soft delete ด้วย แต่ scope ปกติของ Eloquent มองไม่เห็น
+     * ตัวเช็ก "LINE นี้เป็นของคนอื่นไหม" จึงตอบว่าว่าง แล้วสั่ง update ทับจนได้
+     * SQLSTATE[23000] Duplicate entry คาหน้าผู้ใช้
+     */
+    public function test_a_line_account_left_by_a_deleted_person_does_not_crash_the_link(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $deleted = $this->member('P0002', '089-999-9999', 'U-taken');
+        $deleted->cohortProfile->participant->delete();
+
+        $this->withSession(['line_profile' => ['userId' => 'U-taken', 'name' => 'ใครก็ไม่รู้']])
+            ->post($this->url('/verify'), ['phone' => '0812345678']);
+
+        /* ต้องเข้าระบบได้ตามปกติ แค่ผูก LINE ไม่ได้ — ไม่ใช่ 500 */
+        $this->confirmName()->assertRedirect($this->url('/home'));
+
+        $this->assertNull(Participant::where('person_code', 'P0001')->firstOrFail()->line_user_id);
     }
 
     public function test_linking_never_replaces_a_line_account_the_person_already_has(): void

@@ -282,6 +282,13 @@
 
             {{-- หน้าจอ 5 — ชำระเงิน --}}
             <section class="reg-screen-pay" data-screen="pay" hidden>
+                {{-- ขึ้นเฉพาะตอนกลับเข้ามาใหม่หลังออกไปโอนเงิน — บอกว่าที่นั่งยังอยู่ ไม่ต้องลงทะเบียนซ้ำ
+                     ถ้าไม่บอก คนจะนึกว่าระบบพากลับมาที่เดิมเพราะลงทะเบียนไม่สำเร็จ แล้วกรอกใหม่ทั้งชุด --}}
+                <div class="reg-resume-note" id="reg-resume-note" hidden>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <span>จองที่นั่งไว้ให้แล้ว — แนบสลิปต่อได้เลย ไม่ต้องกรอกข้อมูลใหม่</span>
+                </div>
+
                 {{-- แถบสรุปยอด — ชื่อกิจกรรม + "n ที่นั่ง × ราคา" ซ้าย ยอดรวมขวา --}}
                 <div class="reg-pay-summary-bar">
                     <div class="reg-pay-summary-text">

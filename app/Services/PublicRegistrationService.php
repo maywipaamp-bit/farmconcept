@@ -383,7 +383,9 @@ class PublicRegistrationService
             ];
         }
 
-        $takenByOther = Participant::query()
+        /* withTrashed สำคัญ — unique index ที่ฐานข้อมูลนับแถวที่ soft delete ไปแล้วด้วย
+           ถ้าเช็กด้วย scope ปกติจะมองไม่เห็นเจ้าของเดิมที่ถูกลบไป แล้วเขียนทับจนได้ duplicate entry */
+        $takenByOther = Participant::withTrashed()
             ->where('line_user_id', $lineProfile['userId'])
             ->when($participant, fn ($query) => $query->whereKeyNot($participant->id))
             ->exists();

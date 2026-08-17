@@ -54,6 +54,7 @@
     const copyIcon = document.getElementById('reg-copy-icon');
     const copiedPill = document.getElementById('reg-copied-pill');
     const bankAmount = document.getElementById('reg-bank-amount');
+    const resumeNote = document.getElementById('reg-resume-note');
     const payFeeLabel = document.getElementById('reg-pay-fee-label');
     const payTotal = document.getElementById('reg-pay-total');
     const slipInput = document.getElementById('reg-slip-input');
@@ -271,7 +272,9 @@
     /* ---------- ปุ่มย้อนกลับมุมซ้ายบน ----------
        ย้อนทีละขั้นตามเส้นทางที่ผู้ใช้เดินมา ไม่ใช่กระเด็นออกจากหน้าลงทะเบียนทันที
        หน้าจอกรอกข้อมูลเป็นจุดเริ่มแล้ว (หน้าจอตรวจสอบสิทธิ์ถูกปิดไว้) กดกลับ = ออกไปหน้ากิจกรรม */
-    const PREVIOUS_SCREEN = { pay: 'form' };
+    /* หน้าจอก่อนหน้าของแต่ละขั้น — ตัวแปร ไม่ใช่ค่าคงที่ เพราะกรณีกลับมาแนบสลิปต่อ
+       จะไม่มีฟอร์มให้ย้อนกลับไป (ลงทะเบียนเสร็จไปแล้ว) ปุ่มย้อนกลับต้องพาออกไปหน้ากิจกรรมแทน */
+    let PREVIOUS_SCREEN = { pay: 'form' };
 
     const backLink = document.getElementById('reg-back');
 
@@ -638,6 +641,9 @@
             closeGuestModal();
 
             if (config.payment.required) {
+                /* จำไว้ทันทีที่เข้าหน้าชำระเงิน ไม่ใช่ตอนกดคัดลอกเลขบัญชี
+                   เพราะผู้ใช้ออกจากหน้าไปได้ทุกจังหวะ ไม่ใช่เฉพาะหลังกดคัดลอก */
+                savePending();
                 renderPay();
                 showScreen('pay');
             } else {
@@ -650,6 +656,84 @@
         } finally {
             setBusy(button, false);
         }
+    }
+
+    /* ---------- จำหน้าจอชำระเงินที่ค้างไว้ ----------
+
+       ผู้ลงทะเบียนต้องออกจากหน้านี้ไปเปิดแอปธนาคารเพื่อโอนเงิน กลับมาแล้วแท็บมักถูกระบบปิดทิ้ง
+       (มือถือคืนหน่วยความจำให้แอปที่กำลังใช้) พอเปิดลิงก์เดิมอีกครั้งจึงเจอฟอร์มเปล่า
+       และแนบสลิปไม่ได้ทั้งที่จองสำเร็จไปแล้ว
+
+       การลงทะเบียนถูกบันทึกลงฐานตั้งแต่ก่อนเข้าหน้านี้ (ดู submitRegistration) ที่หายคือสถานะฝั่งหน้าจอ
+       จึงเก็บเฉพาะรหัสการจองไว้ในเครื่อง แล้วเปิดหน้าชำระเงินคืนให้ตอนกลับมา
+
+       ใช้ localStorage ไม่ใช่ sessionStorage เพราะ sessionStorage หายไปพร้อมแท็บที่ถูกปิด
+       ซึ่งเป็นกรณีที่ต้องแก้พอดี · ไม่เก็บข้อมูลส่วนตัวใด ๆ นอกจากรหัสการจองกับยอดที่ต้องโอน */
+
+    var PENDING_KEY = 'tfc-pending-payment-' + config.activity.code;
+
+    /* หมดอายุใน 1 วัน — นานพอสำหรับคนที่โอนพรุ่งนี้เช้า แต่ไม่ค้างจนคนที่จะลงทะเบียนรอบใหม่
+       เปิดหน้ามาแล้วเจอของเก่าโดยไม่เข้าใจว่ามาจากไหน */
+    var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+
+    function savePending() {
+        if (!state.codes.length) return;
+
+        try {
+            localStorage.setItem(PENDING_KEY, JSON.stringify({
+                codes: state.codes,
+                booking: state.booking,
+                seats: state.seats,
+                savedAt: Date.now()
+            }));
+        } catch (e) {
+            /* โหมดส่วนตัวของบางเบราว์เซอร์เขียนไม่ได้ — ไม่ใช่เรื่องคอขาดบาดตาย
+               คนยังแนบสลิปได้ตามปกติถ้าไม่ออกจากหน้า */
+        }
+    }
+
+    function clearPending() {
+        try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+    }
+
+    function readPending() {
+        var raw = null;
+
+        try { raw = localStorage.getItem(PENDING_KEY); } catch (e) { return null; }
+        if (!raw) return null;
+
+        try {
+            var saved = JSON.parse(raw);
+            if (!saved || !saved.codes || !saved.codes.length) return null;
+            if (Date.now() - (saved.savedAt || 0) > PENDING_TTL_MS) { clearPending(); return null; }
+
+            return saved;
+        } catch (e) {
+            clearPending();
+
+            return null;
+        }
+    }
+
+    /* คืนหน้าจอชำระเงินตอนเปิดหน้ามาใหม่ — คืน true เมื่อรับช่วงต่อแล้ว
+       เพื่อให้ตัวเริ่มต้นไม่ต้องพาไปหน้าฟอร์มทับ */
+    function resumePending() {
+        var saved = readPending();
+        if (!saved) return false;
+
+        state.codes = saved.codes;
+        state.booking = saved.booking;
+        state.seats = saved.seats || 1;
+        state.submitted = true;
+        /* ไม่มีฟอร์มให้ย้อนกลับไปแล้ว — ปล่อยให้ปุ่มย้อนกลับทำงานตามลิงก์เดิม (ออกไปหน้ากิจกรรม) */
+        PREVIOUS_SCREEN = {};
+
+        renderPay();
+        showScreen('pay');
+
+        if (resumeNote) resumeNote.hidden = false;
+
+        return true;
     }
 
     /* ---------- หน้าจอ 5: ชำระเงิน ---------- */
@@ -757,6 +841,8 @@
                 throw new Error(Object.values(errors).flat()[0] || data.message || 'ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้งนะคะ');
             }
             state.booking = data.booking;
+            /* แจ้งชำระเงินแล้ว = ไม่มีอะไรค้างให้กลับมาทำต่อ ล้างทิ้งไม่ให้เด้งขึ้นมาอีก */
+            clearPending();
             renderDone();
             showScreen('done');
         } catch (error) {
@@ -1050,7 +1136,7 @@
         state.booking = line.booking;
         renderFound();
         showScreen('found');
-    } else {
+    } else if (!resumePending()) {
         /* เข้าหน้ากรอกข้อมูลทันที — หน้าจอตรวจสอบสิทธิ์ถูกปิดไว้
            การกันลงทะเบียนซ้ำย้ายไปตรวจตอนกรอกเบอร์/อีเมลในฟอร์มแทน (ดู bindDuplicateCheck) */
         fillFromLine();
