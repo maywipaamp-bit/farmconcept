@@ -6,7 +6,7 @@
     {{-- ไม่มีหัวกิจกรรมด้านบน — หน้านี้ทำเรื่องเดียวคือเช็กอิน
          ชื่อกิจกรรมไปอยู่ที่หน้าจอผลลัพธ์ ซึ่งเป็นจุดที่ต้องยืนยันว่าเข้าร่วมงานไหน --}}
     @if(! $enabled)
-        <section class="registration-card is-closed">
+        <section class="registration-card checkin-card is-closed">
             <h2>ยังไม่เปิดเช็กอิน</h2>
             <p>กิจกรรมนี้ยังไม่อยู่ในช่วงเช็กอิน หรือสิ้นสุดช่วงเช็กอินแล้ว</p>
             <a class="tr-primary-button" href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรม</a>
@@ -18,14 +18,18 @@
             <form id="public-checkin-form" novalidate>
                 @csrf
 
-                {{-- หน้าที่ 1 — กรอกเบอร์ --}}
+                {{-- หน้าที่ 1 — กรอกเบอร์โทรศัพท์หรืออีเมล
+                     ช่องเดียวรับทั้งสองแบบ หน้างานคนจำไม่ได้ว่าลงทะเบียนไว้ด้วยอะไร
+                     type="text" ไม่ใช่ "tel" เพราะต้องพิมพ์อีเมลได้ด้วย --}}
                 <div class="ck-step" id="ck-step-phone">
-                    <h2 class="ck-title">กรอกเบอร์โทรศัพท์<br>เพื่อเช็กอิน</h2>
-                    <p class="ck-sub">ใช้เบอร์โทรศัพท์ที่ท่านใช้ลงทะเบียนกิจกรรมไว้</p>
+                    <h2 class="ck-title">กรอกเบอร์โทรศัพท์เพื่อเช็กอิน</h2>
+                    <p class="ck-sub">ใช้เบอร์โทรศัพท์หรืออีเมลที่ท่านใช้ลงทะเบียนกิจกรรมไว้</p>
 
                     <div class="registration-field">
-                        <label for="checkin-phone">เบอร์โทรศัพท์ <span>*</span></label>
-                        <input id="checkin-phone" name="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="08X-XXX-XXXX" required>
+                        <label for="checkin-phone">เบอร์โทรศัพท์ หรือ อีเมล <span>*</span></label>
+                        <input id="checkin-phone" name="contact" type="text" inputmode="email" maxlength="160"
+                               autocomplete="tel" autocapitalize="off" autocorrect="off" spellcheck="false"
+                               placeholder="08X-XXX-XXXX หรือ name@email.com" required>
                         <p class="registration-message" id="checkin-message" aria-live="polite"></p>
                     </div>
 

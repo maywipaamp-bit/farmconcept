@@ -106,8 +106,6 @@
             steps.forEach(function (step) { step.hidden = true; });
             document.getElementById('post-survey-actions').hidden = true;
             document.getElementById('post-survey-progress').hidden = true;
-            const exitNote = document.querySelector('#post-survey-form .tr-note');
-            if (exitNote) exitNote.hidden = true;
             success.hidden = false;
             success.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (error) {

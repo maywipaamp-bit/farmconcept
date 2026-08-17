@@ -35,7 +35,7 @@ class PublicCheckinController extends Controller
         Activity $activity,
         PublicCheckinService $service,
     ): JsonResponse {
-        $registrations = $service->registrationsForPhone($activity, $request->validated('phone'));
+        $registrations = $service->registrationsFor($activity, $request->validated('contact'));
 
         return response()->json([
             'message' => 'พบรายชื่อผู้ลงทะเบียน '.$registrations->count().' คน',
@@ -55,7 +55,7 @@ class PublicCheckinController extends Controller
     ): JsonResponse {
         $registration = $service->checkIn(
             $activity,
-            $request->validated('phone'),
+            $request->validated('contact'),
             $request->validated('registration_code'),
         );
 

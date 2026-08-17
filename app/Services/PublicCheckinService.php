@@ -16,41 +16,45 @@ class PublicCheckinService
         return preg_replace('/\D+/', '', $phone) ?: '';
     }
 
-    /** @return Collection<int, Registration> */
-    public function registrationsForPhone(Activity $activity, string $phone): Collection
+    /**
+     * ค้นรายชื่อจากเบอร์โทรศัพท์หรืออีเมล — ช่องเดียวรับได้ทั้งสองแบบ
+     *
+     * @return Collection<int, Registration>
+     */
+    public function registrationsFor(Activity $activity, string $contact): Collection
     {
         $this->ensureAvailable($activity);
 
         $registrations = $activity->registrations()
-            ->whereIn('phone', $this->phoneVariants($phone))
+            ->where($this->matchContact($contact))
             ->orderBy('id')
-            ->get(['id', 'code', 'name', 'phone', 'checkin_status', 'checked_in_at']);
+            ->get(['id', 'code', 'name', 'phone', 'email', 'checkin_status', 'checked_in_at']);
 
         if ($registrations->isEmpty()) {
             throw ValidationException::withMessages([
-                'phone' => 'ไม่พบรายชื่อที่ลงทะเบียนด้วยเบอร์โทรศัพท์นี้',
+                'contact' => 'ไม่พบรายชื่อที่ลงทะเบียนด้วยเบอร์โทรศัพท์หรืออีเมลนี้',
             ]);
         }
 
         return $registrations;
     }
 
-    public function checkIn(Activity $activity, string $phone, string $registrationCode): Registration
+    public function checkIn(Activity $activity, string $contact, string $registrationCode): Registration
     {
-        return DB::transaction(function () use ($activity, $phone, $registrationCode): Registration {
+        return DB::transaction(function () use ($activity, $contact, $registrationCode): Registration {
             $lockedActivity = Activity::query()->lockForUpdate()->findOrFail($activity->id);
             $this->ensureAvailable($lockedActivity);
 
             $registration = Registration::query()
                 ->where('activity_id', $lockedActivity->id)
                 ->where('code', $registrationCode)
-                ->whereIn('phone', $this->phoneVariants($phone))
+                ->where($this->matchContact($contact))
                 ->lockForUpdate()
                 ->first();
 
             if (! $registration) {
                 throw ValidationException::withMessages([
-                    'registration_code' => 'ไม่พบรายชื่อที่เลือกสำหรับเบอร์โทรศัพท์นี้',
+                    'registration_code' => 'ไม่พบรายชื่อที่เลือกสำหรับเบอร์โทรศัพท์หรืออีเมลนี้',
                 ]);
             }
 
@@ -86,7 +90,25 @@ class PublicCheckinService
         }
     }
 
-    /** @return array<int, string> */
+    /**
+     * เงื่อนไขจับคู่ผู้ลงทะเบียนจากค่าที่ผู้ใช้พิมพ์มาช่องเดียว
+     *
+     * มี @ = อีเมล (เทียบแบบไม่สนตัวพิมพ์เล็กใหญ่) นอกนั้นถือเป็นเบอร์โทรศัพท์
+     * คืนเป็น closure เพื่อให้ทุกที่ที่ค้นใช้เกณฑ์เดียวกัน — ค้นเจอแล้วแต่เช็กอินไม่ผ่าน
+     * เพราะเกณฑ์ต่างกันคืออาการที่หาสาเหตุยากที่สุดของ flow นี้
+     */
+    private function matchContact(string $contact): \Closure
+    {
+        $contact = trim($contact);
+
+        if (str_contains($contact, '@')) {
+            return fn ($query) => $query->whereRaw('LOWER(email) = ?', [mb_strtolower($contact)]);
+        }
+
+        return fn ($query) => $query->whereIn('phone', $this->phoneVariants($contact));
+    }
+
+    /** เบอร์ถูกเก็บมาทั้งแบบมีขีดและไม่มี ขึ้นกับว่าลงทะเบียนผ่านทางไหน จึงต้องค้นทั้งสองแบบ */
     private function phoneVariants(string $phone): array
     {
         $phone = $this->normalizePhone($phone);

@@ -122,10 +122,6 @@
                     <button type="submit" class="tr-primary-button tr-next" id="tr-next">ส่งแบบประเมิน</button>
                 </div>
             </form>
-
-            <p class="tr-note">
-                <a href="{{ route('public.tracking-round-qr.rounds') }}">ออกโดยไม่บันทึก</a>
-            </p>
         @endif
     </section>
 @endsection

@@ -1357,3 +1357,16 @@ body[data-screen="check"] .reg-hero-desc[data-for="check"] { display: block; }
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
     button:active { transform: none; }
 }
+
+/* ห้ามหน้าจอซูมเข้าเองตอนโฟกัสช่องกรอก — Safari บน iOS ซูมทันทีถ้าตัวอักษรเล็กกว่า 16px
+   แล้วไม่ซูมกลับให้เมื่อออกจากช่อง ผู้ใช้ต้องมาถ่างนิ้วย่อเอง
+
+   ไฟล์นี้โหลดหลัง public-activities.css จึงต้องประกาศซ้ำ ไม่งั้นกฎรายฟิลด์ด้านบน
+   (select/textarea ที่ตั้ง 14px ไว้) จะทับกฎกลางไป
+   ข้อความตัวอย่างยังเล็กได้ตามเดิม เพราะ ::placeholder ไม่มีผลกับการซูม */
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea { font-size: 16px; }
+
+input::placeholder,
+textarea::placeholder { font-size: 13px; }

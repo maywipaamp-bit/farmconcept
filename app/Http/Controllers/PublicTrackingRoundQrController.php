@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConsentDocument;
 use App\Models\FollowUpRound;
 use App\Models\Option;
 use App\Models\Participant;
@@ -288,7 +289,28 @@ class PublicTrackingRoundQrController extends Controller
             'genders' => collect(config('farmconcept.genders'))->only(['female', 'male'])->all(),
             /* ตัวเลือกช่วงอายุมาจาก master data ชุดเดียวกับแบบลงทะเบียนกิจกรรม */
             'ageRanges' => Option::group('age_range')->active()->get(['id', 'label']),
+            /* เอกสารความยินยอมฉบับที่เปิดใช้อยู่ (แก้ที่ admin/master/consent-documents)
+               ไม่ hardcode ข้อความไว้ในหน้า เพราะเนื้อหาความยินยอมเปลี่ยนได้และต้องตรวจย้อนหลังได้ว่าใครยอมรับฉบับไหน */
+            'consentDocs' => collect([
+                'cohort' => 'cohort_data',
+                'privacy' => 'pdpa',
+            ])->map(fn (string $type) => $this->consentDoc($type))->all(),
         ]);
+    }
+
+    /** เอกสารความยินยอมฉบับที่เปิดใช้ของประเภทนั้น — null เมื่อยังไม่มีฉบับ active */
+    private function consentDoc(string $type): ?array
+    {
+        $document = ConsentDocument::query()
+            ->where('consent_type', $type)
+            ->where('is_active', true)
+            ->first();
+
+        return $document ? [
+            'title' => $document->title,
+            'version' => $document->version,
+            'content' => $document->content,
+        ] : null;
     }
 
     public function registerSubmit(Request $request): RedirectResponse

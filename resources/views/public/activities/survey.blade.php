@@ -3,35 +3,8 @@
 @section('title', 'แบบประเมิน · '.$activity->name)
 
 @section('content')
-    @php
-        /* บรรทัดวันเวลาแบบย่อ "พ. 19 ส.ค. 69 · 13:00–15:00 น." — รูปแบบเดียวกับหน้ารายละเอียด */
-        $thDaysShort = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-        $thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        $firstRound = $activity->rounds->first();
-
-        $dateLine = '';
-        if ($activity->start_date) {
-            $d = $activity->start_date;
-            $dateLine = $thDaysShort[$d->dayOfWeek].' '.$d->day.' '.$thMonths[$d->month - 1].' '.(($d->year + 543) % 100);
-            if ($firstRound) {
-                $dateLine .= ' · '.substr((string) $firstRound->time_start, 0, 5).'–'.substr((string) $firstRound->time_end, 0, 5).' น.';
-            }
-        }
-    @endphp
-
-    {{-- หัวกิจกรรม — ให้รู้ว่ากำลังประเมินกิจกรรมไหน ราคาชิดขวาแบบหน้ารายการ --}}
-    <section class="sv-head">
-        <div class="sv-head-row">
-            <h1 class="sv-head-name">{{ $activity->name }}</h1>
-            @if($activity->has_fee && (float) $activity->fee > 0)
-                <span class="sv-head-fee">{{ number_format((float) $activity->fee) }} ฿/ท่าน</span>
-            @endif
-        </div>
-        @if($dateLine)
-            <p class="sv-head-sub">{{ $dateLine }}</p>
-        @endif
-    </section>
-
+    {{-- ไม่มีหัวกิจกรรมด้านบน — ชื่อชุดแบบประเมินในแถบความคืบหน้าบอกอยู่แล้วว่ากำลังตอบเรื่องอะไร
+         ที่นี่เหลือแค่คำถามทีละข้อ เหมือนหน้าเช็กอิน --}}
     @if(! $enabled)
         <section class="detail-card tr-card">
             <div class="tr-done">
@@ -150,10 +123,6 @@
                     <a class="tr-primary-button" href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรม</a>
                 </div>
             </form>
-
-            <p class="tr-note">
-                <a href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรมโดยไม่บันทึก</a>
-            </p>
         </section>
     @endif
 @endsection

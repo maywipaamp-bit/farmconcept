@@ -52,14 +52,34 @@
             </div>
 
             {{-- ต้องมีความยินยอมก่อนเก็บข้อมูลสุขภาพเสมอ ไม่ว่าจะเก็บทางไหน
-                 ระเบียนความยินยอมถูกบันทึกแยกไว้ที่ ptp_consents ตรวจย้อนหลังได้ --}}
+                 ระเบียนความยินยอมถูกบันทึกแยกไว้ที่ ptp_consents ตรวจย้อนหลังได้
+
+                 ข้อความในลิงก์เปิดอ่านฉบับเต็มได้ — ยินยอมโดยไม่มีทางอ่านว่ายินยอมอะไร
+                 ไม่นับเป็นความยินยอมที่ได้แจ้งแล้ว ฉบับที่ไม่มีใน master จะแสดงเป็นข้อความเฉย ๆ --}}
             <label class="registration-consent">
                 <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
-                <span>ยินยอมให้เก็บและใช้ข้อมูลเพื่อการวิจัยของโครงการ ตามนโยบายคุ้มครองข้อมูลส่วนบุคคล <b>*</b></span>
+                <span>ยินยอมให้เก็บและใช้@if($consentDocs['cohort'])<a href="#" data-consent-doc="cohort">ข้อมูลเพื่อการวิจัยของโครงการ</a>@else<b style="font-weight:500">ข้อมูลเพื่อการวิจัยของโครงการ</b>@endif ตาม@if($consentDocs['privacy'])<a href="#" data-consent-doc="privacy">นโยบายคุ้มครองข้อมูลส่วนบุคคล</a>@else<b style="font-weight:500">นโยบายคุ้มครองข้อมูลส่วนบุคคล</b>@endif <b>*</b></span>
             </label>
 
             <button type="submit" class="tr-primary-button tr-form-submit">ลงทะเบียน</button>
         </form>
+
+        {{-- popup ใบเดียวใช้ทั้งสองฉบับ JS เปลี่ยนหัวและเนื้อหาตามลิงก์ที่กด
+             ใช้ <dialog> ชุดเดียวกับ popup เชื่อม LINE ในหน้าเข้าสู่ระบบ --}}
+        @if($consentDocs['cohort'] || $consentDocs['privacy'])
+            <dialog class="tr-dialog" id="tr-consent-dialog">
+                <div class="tr-dialog-body">
+                    <h2 class="tr-dialog-title" id="tr-consent-title"></h2>
+                    <p class="tr-dialog-text" id="tr-consent-version"></p>
+
+                    <div class="tr-consent-doc" id="tr-consent-content"></div>
+
+                    <div class="tr-dialog-actions">
+                        <button type="button" class="tr-primary-button" id="tr-consent-close">ปิด</button>
+                    </div>
+                </div>
+            </dialog>
+        @endif
 
         <p class="tr-note">
             เคยลงทะเบียนแล้ว?
@@ -67,3 +87,45 @@
         </p>
     </section>
 @endsection
+
+@push('page-script')
+    @if($consentDocs['cohort'] || $consentDocs['privacy'])
+        <script>
+        (function () {
+            /* เนื้อหามาจาก master data ฝั่งแอดมิน — ใส่เป็น textContent ไม่ใช่ innerHTML
+               เพราะเป็นข้อความที่คนพิมพ์เข้ามา ไม่ใช่มาร์กอัปที่ระบบสร้าง */
+            var docs = @json($consentDocs);
+            var dialog = document.getElementById('tr-consent-dialog');
+            var title = document.getElementById('tr-consent-title');
+            var version = document.getElementById('tr-consent-version');
+            var content = document.getElementById('tr-consent-content');
+
+            document.addEventListener('click', function (event) {
+                var link = event.target.closest('[data-consent-doc]');
+                if (!link) return;
+
+                event.preventDefault();
+
+                var doc = docs[link.dataset.consentDoc];
+                if (!doc) return;
+
+                title.textContent = doc.title;
+                version.textContent = doc.version ? 'ฉบับ ' + doc.version : '';
+                version.hidden = !doc.version;
+                content.textContent = doc.content || 'ยังไม่มีเนื้อหาในเอกสารฉบับนี้';
+                dialog.showModal();
+                content.scrollTop = 0;
+            });
+
+            document.getElementById('tr-consent-close').addEventListener('click', function () {
+                dialog.close();
+            });
+
+            /* กดพื้นหลังนอกกล่องแล้วปิด — ปุ่มปิดอยู่ล่างสุดของเนื้อหาที่ยาว ต้องมีทางออกที่มือถึงเสมอ */
+            dialog.addEventListener('click', function (event) {
+                if (event.target === dialog) dialog.close();
+            });
+        })();
+        </script>
+    @endif
+@endpush

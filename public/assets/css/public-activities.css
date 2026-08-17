@@ -29,6 +29,19 @@
 
 html { background: var(--background); }
 
+/* ห้ามหน้าจอซูมเข้าเองตอนโฟกัสช่องกรอก — Safari บน iOS จะซูมทันทีถ้าตัวอักษรเล็กกว่า 16px
+   แล้วไม่ซูมกลับให้เมื่อออกจากช่อง ผู้ใช้ต้องมาถ่างนิ้วย่อเอง
+   ต้องครอบทุกชนิดของช่องกรอกฝั่งผู้เข้าร่วม ไม่ใช่เฉพาะหน้าใดหน้าหนึ่ง
+   เพราะช่องเดียวที่ตกหล่นก็ทำให้ทั้งหน้าซูมได้ */
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea { font-size: 16px; }
+
+/* ข้อความตัวอย่างในช่องต้องเล็กกว่าค่าที่พิมพ์จริง — อ่านออกว่าเป็นคำอธิบาย ไม่ใช่ค่าที่กรอกไว้แล้ว
+   ตัวช่องยังเป็น 16px ตามกฎด้านบน จึงไม่กระทบเรื่องซูม */
+input::placeholder,
+textarea::placeholder { font-size: 13px; opacity: 1; color: var(--text-muted); }
+
 body {
     margin: 0;
     background: var(--background);
@@ -669,8 +682,18 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .registration-success p { margin: 0; color: var(--text-secondary); }
 /* หน้าจอเช็กอินทีละขั้น — หนึ่งหน้าจอทำเรื่องเดียว ชื่อหัวข้อจึงใหญ่กว่าหัวการ์ดทั่วไป
    ไม่มีเลข "1" "2" นำหน้าแล้ว เพราะไม่ได้เห็นพร้อมกันจึงไม่มีอะไรให้เทียบลำดับ */
+/* ไม่มีเส้นคั่นบนสุด — หน้านี้มีการ์ดใบเดียว เส้นจึงไม่ได้คั่นอะไรกับอะไร */
+.checkin-card { margin-top: 0; padding-top: 4px; border-top: 0; }
+
 .ck-title { margin: 0 0 6px; color: var(--text-primary); font-size: 20px; font-weight: 600; line-height: 1.35; }
-.ck-sub { margin: 0 0 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+.ck-sub { margin: 0 0 18px; color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+
+/* ระยะช่องกรอก→ปุ่มให้กระชับ — ของเดิมเว้น 15+20+16px จนดูเหมือนคนละส่วนกัน
+   ยังจองที่ให้ข้อความเตือนไว้ (min-height) เพื่อไม่ให้ปุ่มกระโดดตอนขึ้นข้อความ */
+.ck-step .registration-field { margin-bottom: 0; }
+.ck-step .registration-message { min-height: 18px; margin-top: 5px; }
+.ck-step .registration-submit { margin-top: 6px; }
+
 .ck-back {
     display: inline-flex;
     align-items: center;
@@ -787,13 +810,6 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
    ที่นี่มีเฉพาะส่วนที่หน้าอื่นไม่มี
    ========================================================================== */
 .tr-card { padding: 20px 16px; }
-
-/* หัวกิจกรรมบนหน้าแบบประเมิน — บอกว่ากำลังประเมินกิจกรรมไหน ราคาชิดขวาแบบหน้ารายการ */
-.sv-head { margin-top: 16px; }
-.sv-head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.sv-head-name { margin: 0; color: var(--text-primary); font-size: 15.5px; font-weight: 700; line-height: 1.5; text-wrap: pretty; }
-.sv-head-fee { flex: none; color: var(--dark-green); font-size: 14px; font-weight: 600; white-space: nowrap; }
-.sv-head-sub { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
 
 /* ปุ่ม LINE ใช้สีแบรนด์ของ LINE ไม่ใช่สีเขียวของโครงการ ผู้ใช้จำปุ่มนี้จากสีเป็นหลัก */
 .tr-line-button {
@@ -1135,7 +1151,9 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
    เขียนทับค่าด้านบนโดยตั้งใจ ไม่ไปแก้ของเดิมทีละจุด จะได้เห็นชัดว่าอะไรถูกบีบบ้าง
    ระวัง: ห้ามต่ำกว่า 12px กับข้อความที่ต้องอ่านจริง เพราะกลุ่มตัวอย่างมีผู้สูงอายุ
    -------------------------------------------------------------------------- */
-.tr-card { padding: 16px 14px 18px; }
+/* การ์ดนี้ไม่มีพื้นหลังและไม่มีขอบ (ดู .detail-card) ระยะบนจึงเป็นที่ว่างเปล่า ๆ
+   ที่ดันเนื้อหาลงไปจากหัวเว็บโดยไม่ได้คั่นอะไร — เหลือไว้พอไม่ให้ติดกันก็พอ */
+.tr-card { padding: 6px 14px 18px; }
 
 .tr-eyebrow { margin-bottom: 4px; font-size: 11px; }
 
@@ -1177,7 +1195,9 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 /* ---------- หน้าอื่นกระชับตามกัน ---------- */
 .tr-question { margin-bottom: 12px; padding: 13px 14px; border-radius: 12px; }
-.tr-question-text { font-size: 14.5px; }
+/* คำถามบางข้อยาวหลายบรรทัด ขนาดเดิมกินพื้นที่จนตัวเลือกตกจอ
+   14.5/600 → 14/500 อ่านง่ายเท่าเดิมแต่เห็นคำถามกับคำตอบพร้อมกันได้ */
+.tr-question-text { font-size: 14px; font-weight: 500; line-height: 1.55; }
 .tr-option { min-height: 44px; padding: 11px 13px; font-size: 13.5px; }
 .tr-actions { margin-top: 14px; }
 
@@ -1204,7 +1224,7 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 /* --------------------------------------------------------------------------
    หน้าเข้าสู่ระบบ — เหลือเฉพาะสิ่งที่ต้องกด รายละเอียดโครงการซ่อนไว้ให้กดอ่านเอง
    -------------------------------------------------------------------------- */
-.tr-login-title { margin: 2px 0 12px; color: var(--text-primary); font-size: 17px; font-weight: 600; line-height: 1.4; }
+.tr-login-title { margin: 0 0 12px; color: var(--text-primary); font-size: 17px; font-weight: 600; line-height: 1.4; }
 
 .tr-about { margin-bottom: 14px; }
 .tr-about summary { display: inline-flex; align-items: center; gap: 6px; color: var(--dark-green); font-size: 12.5px; cursor: pointer; list-style: none; }
@@ -1410,6 +1430,21 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-dialog-body { padding: 20px 18px 18px; }
 .tr-dialog-title { margin: 0 0 6px; color: var(--text-primary); font-size: 16px; font-weight: 600; }
 .tr-dialog-text { margin: 0 0 14px; color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; text-wrap: pretty; }
+/* เนื้อหาเอกสารความยินยอม — ยาวไม่จำกัด จึงต้องเลื่อนในกล่องเอง ไม่ใช่ดันกล่องยาวเกินจอ
+   white-space: pre-wrap เพราะข้อความมาจากช่องพิมพ์ของแอดมิน ย่อหน้าที่เขาเคาะไว้ต้องคงอยู่ */
+.tr-consent-doc {
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    padding: 12px 13px;
+    border-radius: 10px;
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overscroll-behavior: contain;
+}
+
 .tr-dialog-actions { display: flex; gap: 8px; margin-top: 12px; }
 .tr-dialog-actions .tr-primary-button { flex: 2; }
 .tr-dialog-actions .tr-ghost-button { flex: 1; }

@@ -24,14 +24,22 @@
     const doneTitle = document.getElementById('checkin-done-title');
     const doneName = document.getElementById('checkin-done-name');
     const doneTime = document.getElementById('checkin-done-time');
-    let verifiedPhone = '';
+    let verifiedContact = '';
 
     function csrfToken() {
         return form.querySelector('input[name="_token"]').value;
     }
 
-    function normalizedPhone() {
-        return phone.value.replace(/\D/g, '').slice(0, 10);
+    /* ช่องเดียวรับได้ทั้งเบอร์และอีเมล — มี @ ถือเป็นอีเมล นอกนั้นตัดให้เหลือแต่ตัวเลข
+       เกณฑ์เดียวกับ PublicCheckinLookupRequest ฝั่งเซิร์ฟเวอร์ */
+    function normalizedContact() {
+        const raw = phone.value.trim();
+
+        return raw.includes('@') ? raw : raw.replace(/\D/g, '').slice(0, 10);
+    }
+
+    function isValidContact(value) {
+        return /^0[689]\d{8}$/.test(value) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
 
     function showStep(name) {
@@ -113,7 +121,7 @@
         }
 
         const data = await jsonRequest(config.storeUrl, {
-            phone: verifiedPhone,
+            contact: verifiedContact,
             registration_code: registration.code
         });
 
@@ -121,12 +129,12 @@
     }
 
     async function lookup() {
-        const value = normalizedPhone();
+        const value = normalizedContact();
         phone.value = value;
-        verifiedPhone = '';
+        verifiedContact = '';
 
-        if (!/^0[689]\d{8}$/.test(value)) {
-            setMessage(message, 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก', 'error');
+        if (!isValidContact(value)) {
+            setMessage(message, 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก หรืออีเมลที่ใช้ลงทะเบียน', 'error');
             phone.focus();
 
             return;
@@ -136,17 +144,17 @@
         setMessage(message, '', '');
 
         try {
-            const data = await jsonRequest(config.lookupUrl, { phone: value });
+            const data = await jsonRequest(config.lookupUrl, { contact: value });
             const registrations = data.registrations || [];
 
             /* ไม่พบ = อยู่หน้าเดิม บอกตรงนั้นเลย ดีกว่าพาไปหน้าว่าง ๆ แล้วให้ย้อนกลับเอง */
             if (registrations.length === 0) {
-                setMessage(message, 'ไม่พบรายชื่อที่ลงทะเบียนด้วยเบอร์นี้ กรุณาตรวจสอบเบอร์อีกครั้ง', 'error');
+                setMessage(message, 'ไม่พบรายชื่อที่ลงทะเบียนด้วยข้อมูลนี้ กรุณาตรวจสอบอีกครั้ง', 'error');
 
                 return;
             }
 
-            verifiedPhone = value;
+            verifiedContact = value;
 
             if (registrations.length === 1) {
                 await checkInOnly(registrations[0]);
@@ -154,7 +162,7 @@
                 return;
             }
 
-            peopleSub.textContent = 'เบอร์ ' + value + ' มีผู้ลงทะเบียน ' + registrations.length + ' คน — กดเช็กอินทีละคน';
+            peopleSub.textContent = value + ' มีผู้ลงทะเบียน ' + registrations.length + ' คน — กดเช็กอินทีละคน';
             renderRegistrations(registrations);
             setMessage(peopleMessage, '', '');
             showStep('people');
@@ -166,8 +174,8 @@
     }
 
     phone.addEventListener('input', function () {
-        if (normalizedPhone() !== verifiedPhone) {
-            verifiedPhone = '';
+        if (normalizedContact() !== verifiedContact) {
+            verifiedContact = '';
             setMessage(message, '', '');
         }
     });
@@ -182,7 +190,7 @@
     lookupButton.addEventListener('click', lookup);
 
     backButton.addEventListener('click', function () {
-        verifiedPhone = '';
+        verifiedContact = '';
         setMessage(message, '', '');
         showStep('phone');
         phone.focus({ preventScroll: true });
@@ -192,14 +200,14 @@
        มักเช็กอินให้ทุกคนในคราวเดียว การเด้งไปหน้าผลลัพธ์ทุกครั้งจะต้องเดินกลับมาใหม่ */
     nameList.addEventListener('click', async function (event) {
         const button = event.target.closest('[data-checkin-code]');
-        if (!button || button.disabled || !verifiedPhone) return;
+        if (!button || button.disabled || !verifiedContact) return;
 
         setBusy(button, true, 'กำลังบันทึก…');
         setMessage(peopleMessage, '', '');
 
         try {
             const data = await jsonRequest(config.storeUrl, {
-                phone: verifiedPhone,
+                contact: verifiedContact,
                 registration_code: button.dataset.checkinCode
             });
             const row = button.closest('[data-registration-row]');
