@@ -1503,3 +1503,10 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 /* ตัวเลือก placeholder ต้องดูจางกว่าค่าจริง จะได้รู้ว่ายังไม่ได้เลือก */
 .tr-card select:has(option[value=""]:checked),
 .registration-field select:has(option[value=""]:checked) { color: var(--text-muted); }
+
+/* กล่องถามก่อนสลับบัญชี — ปุ่มสองปุ่มเรียงกัน "ใช้บัญชีเดิม" ต้องเด่นพอ ๆ กับ "สลับ"
+   ไม่ใช่ทำให้ปุ่มสลับเด่นข้างเดียวจนคนกดตามโดยไม่ทันคิด */
+.tr-switch { display: flex; flex-direction: column; gap: 10px; }
+.tr-switch-text { margin: 0; line-height: 1.55; }
+.tr-switch-actions { display: flex; gap: 8px; }
+.tr-switch-actions > * { flex: 1; }

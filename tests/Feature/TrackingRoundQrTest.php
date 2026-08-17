@@ -812,6 +812,109 @@ class TrackingRoundQrTest extends TestCase
         $this->assertNull(Participant::where('person_code', 'P0001')->firstOrFail()->line_user_id);
     }
 
+    /** สวิตช์แจ้งเตือนคือทางเข้าเดียวของการเชื่อม LINE — คนที่ยังไม่เชื่อมกดแล้วต้องถูกพาไป LINE */
+    public function test_the_notify_switch_sends_an_unlinked_person_to_line(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $this->signInWithPhone('0812345678');
+
+        $this->post($this->url('/notify'))->assertRedirect($this->url('/line'));
+    }
+
+    /**
+     * เชื่อมไม่สำเร็จต้องบอกเหตุผลเสมอ — เดิมเด้งกลับหน้าเดิมเงียบ ๆ
+     * ผู้ใช้เห็นแค่หน้าเดิมกลับมาแล้วสรุปว่า "กดปุ่มแล้วไม่มีอะไรเกิดขึ้น"
+     *
+     * เคสนี้จำลอง "เจ้าของเดิมถูกลบไปแล้ว" ซึ่งเป็นเคสที่พังจริงบนเซิร์ฟเวอร์
+     */
+    public function test_a_failed_line_link_tells_the_user_why(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $deleted = $this->member('P0002', '089-999-9999', 'U-taken');
+        $deleted->cohortProfile->participant->delete();
+
+        $this->signInWithPhone('0812345678');
+
+        $this->withSession(['line_profile' => ['userId' => 'U-taken', 'name' => 'ใครก็ไม่รู้']])
+            ->get($this->url('/line/return'))
+            ->assertRedirect($this->url('/home'))
+            ->assertSessionHas('lineConflict', true);
+
+        $this->get($this->url('/home'))
+            ->assertOk()
+            ->assertSee('ถูกผูกกับผู้ใช้อื่นไว้แล้ว');
+    }
+
+    /**
+     * บัญชี LINE เป็นของกลุ่มตัวอย่างอีกคนที่ยังใช้งานอยู่ — ต้องถามก่อนสลับ
+     *
+     * สลับให้เงียบ ๆ แปลว่าคนที่กำลังใช้งานในนาม A กลายเป็น B กลางคัน
+     * แล้วคำตอบรอบถัดไปจะไปลงระเบียนผิดคนโดยไม่มีใครรู้
+     */
+    public function test_switching_to_another_account_asks_before_doing_it(): void
+    {
+        $mine = $this->member('P0001', '081-234-5678');
+        $theirs = $this->member('P0002', '089-999-9999', 'U-line-2');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->withSession(['line_profile' => ['userId' => 'U-line-2', 'name' => 'อีกคน']])
+            ->get($this->url('/line/return'))
+            ->assertRedirect($this->url('/home'));
+
+        /* ยังเป็นคนเดิมอยู่ ยังไม่ถูกสลับ */
+        $this->get($this->url('/home'))
+            ->assertOk()
+            ->assertSee('P0002')
+            ->assertSee('สลับไปใช้');
+
+        $this->assertSame(
+            $mine->cohortProfile->participant_id,
+            session(PublicTrackingRoundQrController::SESSION_KEY.'.id'),
+            'ยังไม่กดยืนยันก็ต้องยังเป็นคนเดิม'
+        );
+
+        /* ตอบว่าใช้บัญชีเดิมต่อ — ต้องไม่สลับ และคำถามต้องหายไป ไม่ถามซ้ำ */
+        $this->post($this->url('/switch'), ['confirm' => 0])->assertRedirect($this->url('/home'));
+
+        $this->assertSame($mine->cohortProfile->participant_id, session(PublicTrackingRoundQrController::SESSION_KEY.'.id'));
+        $this->get($this->url('/home'))->assertOk()->assertDontSee('สลับไปใช้');
+    }
+
+    public function test_confirming_the_switch_moves_to_the_other_account(): void
+    {
+        $this->member('P0001', '081-234-5678');
+        $theirs = $this->member('P0002', '089-999-9999', 'U-line-2');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->withSession(['line_profile' => ['userId' => 'U-line-2', 'name' => 'อีกคน']])
+            ->get($this->url('/line/return'));
+
+        $this->post($this->url('/switch'), ['confirm' => 1])->assertRedirect($this->url('/home'));
+
+        $this->assertSame(
+            $theirs->cohortProfile->participant_id,
+            session(PublicTrackingRoundQrController::SESSION_KEY.'.id')
+        );
+    }
+
+    /** ปลายทางอ่านจาก session เท่านั้น — ยิง id ของคนอื่นเข้ามาต้องไม่ได้ผล */
+    public function test_the_switch_cannot_be_pointed_at_an_arbitrary_person(): void
+    {
+        $mine = $this->member('P0001', '081-234-5678');
+        $theirs = $this->member('P0002', '089-999-9999');
+
+        $this->signInWithPhone('0812345678');
+
+        $this->post($this->url('/switch'), [
+            'confirm' => 1,
+            'participant_id' => $theirs->cohortProfile->participant_id,
+        ])->assertRedirect($this->url('/home'));
+
+        $this->assertSame($mine->cohortProfile->participant_id, session(PublicTrackingRoundQrController::SESSION_KEY.'.id'));
+    }
+
     public function test_linking_never_replaces_a_line_account_the_person_already_has(): void
     {
         $round = $this->member('P0001', '081-234-5678', 'U-original');

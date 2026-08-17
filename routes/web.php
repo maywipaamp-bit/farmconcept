@@ -154,6 +154,9 @@ Route::prefix('health')->group(function () {
     Route::get('/home', [PublicTrackingRoundQrController::class, 'dashboard'])->name('public.tracking-round-qr.dashboard');
     Route::post('/notify', [PublicTrackingRoundQrController::class, 'toggleNotify'])->name('public.tracking-round-qr.notify');
 
+    /* ยืนยันการสลับบัญชี — ปลายทางอ่านจาก session เท่านั้น ไม่รับ id จากฟอร์ม */
+    Route::post('/switch', [PublicTrackingRoundQrController::class, 'switchAccount'])->name('public.tracking-round-qr.switch');
+
     Route::get('/proxy', [PublicTrackingRoundQrController::class, 'proxy'])->name('public.tracking-round-qr.proxy');
     Route::post('/proxy', [PublicTrackingRoundQrController::class, 'proxySubmit'])->name('public.tracking-round-qr.proxy.submit');
     Route::post('/proxy/stop', [PublicTrackingRoundQrController::class, 'proxyStop'])->name('public.tracking-round-qr.proxy.stop');

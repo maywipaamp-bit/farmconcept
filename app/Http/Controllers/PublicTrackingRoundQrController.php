@@ -41,6 +41,9 @@ class PublicTrackingRoundQrController extends Controller
     /** ผู้ถูกประเมิน กรณีกำลังกรอกแทนคนอื่น — คนละคนกับเจ้าของ session */
     public const PROXY_KEY = 'health_survey_proxy_for';
 
+    /** คนที่รอการยืนยันว่าจะสลับไปใช้บัญชีนั้นไหม — ตั้งตอนกลับจาก LINE ที่เป็นของคนอื่น */
+    public const SWITCH_KEY = 'health_survey_switch_to';
+
     public function __construct(
         private readonly TrackingRoundService $rounds,
         private readonly LineLoginService $line,
@@ -200,6 +203,17 @@ class PublicTrackingRoundQrController extends Controller
             : null;
 
         if ($participant !== null) {
+            $current = $this->verifiedParticipant($request);
+
+            /* กำลังใช้งานในนามคนหนึ่งอยู่ แต่บัญชี LINE ที่เพิ่งล็อกอินเป็นของอีกคน
+               ห้ามสลับให้เงียบ ๆ — คนที่กดสวิตช์แจ้งเตือนอยู่ดี ๆ จะกลายเป็นอีกคนกลางคัน
+               แล้วคำตอบรอบถัดไปจะไปลงระเบียนผิดคนโดยไม่มีใครรู้ ต้องถามก่อนเสมอ */
+            if ($current !== null && $current->id !== $participant->id) {
+                $request->session()->put(self::SWITCH_KEY, $participant->id);
+
+                return redirect()->route('public.tracking-round-qr.dashboard');
+            }
+
             return $this->signIn($request, $participant);
         }
 
@@ -387,8 +401,15 @@ class PublicTrackingRoundQrController extends Controller
         /* ป้ายบนหัวแสดงรหัสกลุ่มตัวอย่าง — โหลดล่วงหน้าเพราะระบบปิด lazy loading */
         $participant->loadMissing('cohortProfile');
 
+        /* คนที่รอยืนยันการสลับบัญชี — แสดงแค่รหัสบุคคล ไม่ใช่ชื่อเต็ม
+           เพราะคนที่เห็นหน้าจอนี้ยังไม่ได้พิสูจน์ว่าเป็นเจ้าของระเบียนนั้น */
+        $switchTo = $request->session()->has(self::SWITCH_KEY)
+            ? Participant::find($request->session()->get(self::SWITCH_KEY))?->person_code
+            : null;
+
         return view('public.tracking-round.dashboard', [
             'participant' => $participant,
+            'switchTo' => $switchTo,
             /* หน้าหลักแสดงไทม์ไลน์เต็มชุดแทนการ์ดรอบเดียว จึงใช้ข้อมูลชุดเดียวกับหน้ารายการรอบ */
             'rounds' => $this->allRoundsFor($participant),
             'openIds' => $this->rounds->openRoundsFor($participant)->pluck('id')->all(),
@@ -439,6 +460,29 @@ class PublicTrackingRoundQrController extends Controller
         $participant->update(['line_notify' => ! $participant->line_notify]);
 
         return back();
+    }
+
+    /**
+     * ตอบคำถาม "จะสลับไปใช้บัญชีที่ผูกกับ LINE นี้ไหม"
+     *
+     * id ของปลายทางอ่านจาก session เท่านั้น ไม่รับจากฟอร์ม — ไม่งั้นยิง id ของใครก็ได้
+     * เข้ามาแล้วสวมสิทธิ์ได้ทันทีโดยไม่ต้องมีบัญชี LINE ของเขาเลย
+     */
+    public function switchAccount(Request $request): RedirectResponse
+    {
+        $targetId = $request->session()->pull(self::SWITCH_KEY);
+
+        if (! $request->boolean('confirm') || ! $targetId) {
+            return redirect()->route('public.tracking-round-qr.dashboard');
+        }
+
+        $target = Participant::with('cohortProfile')->whereHas('cohortProfile')->find($targetId);
+
+        if ($target === null) {
+            return redirect()->route('public.tracking-round-qr.dashboard');
+        }
+
+        return $this->signIn($request, $target);
     }
 
     /** หน้ายืนยันตัวตนของผู้ถูกประเมิน ก่อนกรอกแทน */

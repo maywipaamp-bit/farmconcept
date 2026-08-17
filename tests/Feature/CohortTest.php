@@ -496,6 +496,24 @@ class CohortTest extends TestCase
         $this->assertSoftDeleted('ptp_participants', ['id' => $participantId]);
     }
 
+    /**
+     * ลบแล้วต้องคืนบัญชี LINE ให้ว่าง
+     *
+     * unique index ของ line_user_id นับแถวที่ soft delete ด้วย ไม่ล้างไว้
+     * เจ้าของบัญชี LINE ตัวจริงจะเชื่อมไม่ได้อีกเลยเพราะติดแถวที่ถูกลบไปแล้ว
+     */
+    public function test_ลบแล้วต้องคืนบัญชี_line_ให้ว่าง(): void
+    {
+        $profile = $this->createProfile();
+        $profile->participant->update(['line_user_id' => 'U-line-1']);
+
+        $this->actingAs($this->admin())
+            ->deleteJson('/admin/cohort/'.$profile->id)
+            ->assertOk();
+
+        $this->assertNull(Participant::withTrashed()->find($profile->participant_id)->line_user_id);
+    }
+
     public function test_ลบไม่ได้เมื่อมีคำตอบแบบประเมินแล้ว(): void
     {
         $profile = $this->createProfile();

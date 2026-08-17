@@ -47,6 +47,22 @@
             <div class="tr-notice" role="alert">{{ session('lineError') }}</div>
         @endif
 
+        {{-- บัญชี LINE ที่เพิ่งล็อกอินเป็นของกลุ่มตัวอย่างอีกคน — ต้องถามก่อนสลับ
+             สลับให้เงียบ ๆ แปลว่าคำตอบรอบถัดไปจะไปลงระเบียนผิดคนโดยไม่มีใครรู้ --}}
+        @if($switchTo)
+            <div class="tr-notice tr-switch" role="alert">
+                <p class="tr-switch-text">
+                    บัญชี LINE ที่คุณเพิ่งเข้าสู่ระบบ ผูกอยู่กับรหัสบุคคล <b>{{ $switchTo }}</b>
+                    ซึ่งไม่ใช่บัญชีที่คุณใช้อยู่ตอนนี้ ({{ $participant->person_code }})
+                </p>
+                <form method="POST" action="{{ route('public.tracking-round-qr.switch') }}" class="tr-switch-actions">
+                    @csrf
+                    <button type="submit" name="confirm" value="0" class="tr-ghost-button">ใช้บัญชีเดิมต่อ</button>
+                    <button type="submit" name="confirm" value="1" class="tr-primary-button">สลับไปใช้ {{ $switchTo }}</button>
+                </form>
+            </div>
+        @endif
+
         @if(session('lineLinked'))
             <div class="tr-notice is-success" role="status">เชื่อม LINE เรียบร้อยแล้ว · จะได้รับแจ้งเตือนรอบถัดไปทาง LINE</div>
         @endif

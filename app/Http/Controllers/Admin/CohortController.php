@@ -342,6 +342,12 @@ class CohortController extends Controller
             $cohortProfile->rounds()->delete();
             $cohortProfile->delete();
 
+            /* คืนบัญชี LINE ให้ว่างก่อนลบ — unique index ของ line_user_id นับแถวที่ soft delete ด้วย
+               ไม่ล้างไว้ เจ้าของบัญชี LINE ตัวจริงจะเชื่อมไม่ได้อีกเลยเพราะติดแถวที่ถูกลบไปแล้ว
+               ต่างจากรหัสบุคคลกับเบอร์ที่ต้องคงไว้ (ดูเหตุผลด้านล่าง) เพราะบัญชี LINE
+               ไม่ใช่ข้อมูลระบุตัวตนในงานวิจัย เป็นแค่ปลายทางแจ้งเตือน */
+            $cohortProfile->participant?->update(['line_user_id' => null]);
+
             /* ผู้เข้าร่วมถูก soft delete ไว้ ไม่ล้างทิ้งจริง — รหัสบุคคลกับเบอร์มี unique index
                ถ้าลบออกจริงแล้วมีคนใช้รหัสเดิมซ้ำ ประวัติเก่าจะย้ายไปติดคนใหม่โดยไม่มีใครรู้ */
             $cohortProfile->participant?->delete();
