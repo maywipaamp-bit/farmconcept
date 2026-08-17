@@ -7,6 +7,7 @@ use App\Http\Requests\PublicCheckinRequest;
 use App\Models\Activity;
 use App\Services\PublicCheckinService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class PublicCheckinController extends Controller
@@ -42,6 +43,7 @@ class PublicCheckinController extends Controller
                 'code' => $registration->code,
                 'name' => $registration->name,
                 'checkedIn' => $registration->checked_in_at !== null,
+                'checkedInAt' => $this->thaiMoment($registration->checked_in_at),
             ])->values(),
         ]);
     }
@@ -58,12 +60,30 @@ class PublicCheckinController extends Controller
         );
 
         return response()->json([
-            'message' => 'Check-in '.$registration->name.' เรียบร้อย',
+            'message' => 'เช็กอิน '.$registration->name.' เรียบร้อย',
             'registration' => [
                 'code' => $registration->code,
                 'name' => $registration->name,
                 'checkedIn' => true,
+                'checkedInAt' => $this->thaiMoment($registration->checked_in_at),
             ],
         ]);
+    }
+
+    /**
+     * "16:42 น. · 17 ส.ค. 2569" — เวลาก่อนวันที่ ตามที่หน้าจอผลลัพธ์ต้องการ
+     *
+     * จัดรูปแบบที่นี่ ไม่ใช่ฝั่งหน้าจอ เพราะเป็นเวลาของเซิร์ฟเวอร์
+     * เครื่องผู้ใช้ที่ตั้งเวลาผิดจะได้ไม่แสดงเวลาที่ไม่ตรงกับที่บันทึกไว้จริง
+     */
+    private function thaiMoment(?Carbon $moment): ?string
+    {
+        if (! $moment) {
+            return null;
+        }
+
+        $thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        return $moment->format('H:i').' น. · '.$moment->day.' '.$thMonths[$moment->month - 1].' '.($moment->year + 543);
     }
 }

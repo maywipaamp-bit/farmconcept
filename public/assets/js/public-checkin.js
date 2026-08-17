@@ -1,3 +1,6 @@
+/* เช็กอินหน้างาน — แยกเป็นทีละหน้าจอ: กรอกเบอร์ → (เลือกชื่อถ้ามีหลายคน) → ผลลัพธ์
+   เบอร์ที่มีชื่อเดียวไม่ต้องให้กดเลือกซ้ำ ระบบเช็กอินให้เลยแล้วขึ้นผลลัพธ์
+   ทุกหน้าจออยู่ใน DOM ตั้งแต่แรก ที่นี่แค่สลับว่าจะให้เห็นอันไหน */
 (function () {
     'use strict';
 
@@ -5,11 +8,22 @@
     const form = document.getElementById('public-checkin-form');
     if (!config || !form) return;
 
+    const steps = {
+        phone: document.getElementById('ck-step-phone'),
+        people: document.getElementById('ck-step-people'),
+        done: document.getElementById('ck-step-done')
+    };
+
     const phone = document.getElementById('checkin-phone');
     const lookupButton = document.getElementById('checkin-lookup');
+    const backButton = document.getElementById('checkin-back');
     const message = document.getElementById('checkin-message');
-    const results = document.getElementById('checkin-results');
+    const peopleMessage = document.getElementById('checkin-people-message');
+    const peopleSub = document.getElementById('checkin-people-sub');
     const nameList = document.getElementById('checkin-name-list');
+    const doneTitle = document.getElementById('checkin-done-title');
+    const doneName = document.getElementById('checkin-done-name');
+    const doneTime = document.getElementById('checkin-done-time');
     let verifiedPhone = '';
 
     function csrfToken() {
@@ -20,15 +34,21 @@
         return phone.value.replace(/\D/g, '').slice(0, 10);
     }
 
-    function setMessage(text, type) {
-        message.textContent = text || '';
-        message.className = 'registration-message' + (type ? ' is-' + type : '');
+    function showStep(name) {
+        Object.keys(steps).forEach(function (key) { steps[key].hidden = key !== name; });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function setBusy(button, busy, label) {
-        if (busy) button.dataset.label = button.textContent;
+    function setMessage(target, text, type) {
+        target.textContent = text || '';
+        target.className = 'registration-message' + (type ? ' is-' + type : '');
+    }
+
+    /* จำข้อความเดิมไว้ตั้งแต่ครั้งแรกที่กด แล้วคืนค่านั้นตอนเลิกรอ — ไม่ต้องส่งข้อความเดิมกลับมาทุกที่ */
+    function setBusy(button, busy, busyLabel) {
+        if (busy && !button.dataset.label) button.dataset.label = button.textContent;
         button.disabled = busy;
-        button.textContent = busy ? label : (button.dataset.label || button.textContent);
+        button.textContent = busy ? busyLabel : button.dataset.label;
     }
 
     function escapeHtml(value) {
@@ -60,6 +80,15 @@
         return data;
     }
 
+    /* moment มาจากเซิร์ฟเวอร์แล้วในรูป "16:42 น. · 17 ส.ค. 2569" — ไม่จัดรูปแบบเองที่นี่
+       เพราะเครื่องที่ตั้งเวลาผิดจะแสดงคนละเวลากับที่บันทึกไว้จริง */
+    function showDone(title, name, moment) {
+        doneTitle.textContent = title;
+        doneName.textContent = name;
+        doneTime.textContent = moment || '';
+        showStep('done');
+    }
+
     function renderRegistrations(registrations) {
         nameList.innerHTML = registrations.map(function (registration) {
             const checkedIn = Boolean(registration.checkedIn);
@@ -67,46 +96,79 @@
                 '<span class="checkin-person-icon" aria-hidden="true">' + (checkedIn ? '✓' : '•') + '</span>' +
                 '<strong>' + escapeHtml(registration.name) + '</strong>' +
                 '<button type="button" data-checkin-code="' + escapeHtml(registration.code) + '"' + (checkedIn ? ' disabled' : '') + '>' +
-                    (checkedIn ? 'Check-in แล้ว' : 'Check-in') +
+                    (checkedIn ? 'เช็กอินแล้ว' : 'เช็กอิน') +
                 '</button>' +
                 '</div>';
         }).join('');
-        results.hidden = false;
+    }
+
+    /* เบอร์ที่มีชื่อเดียว — เช็กอินให้เลย ไม่ต้องให้กดยืนยันชื่อตัวเองซ้ำอีกครั้ง */
+    async function checkInOnly(registration) {
+        if (registration.checkedIn) {
+            /* เคยเช็กอินไว้แล้ว — ไม่ใช่ข้อผิดพลาด บอกให้รู้ว่าเรียบร้อยอยู่แล้ว
+               พร้อมเวลาที่เช็กอินไว้เดิม ไม่ใช่เวลาที่เพิ่งกด */
+            showDone('คุณเช็กอินเรียบร้อยแล้ว', registration.name, registration.checkedInAt);
+
+            return;
+        }
+
+        const data = await jsonRequest(config.storeUrl, {
+            phone: verifiedPhone,
+            registration_code: registration.code
+        });
+
+        showDone('เช็กอินเรียบร้อยแล้ว', registration.name, (data.registration || {}).checkedInAt);
     }
 
     async function lookup() {
         const value = normalizedPhone();
         phone.value = value;
         verifiedPhone = '';
-        results.hidden = true;
 
         if (!/^0[689]\d{8}$/.test(value)) {
-            setMessage('กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก', 'error');
+            setMessage(message, 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก', 'error');
             phone.focus();
+
             return;
         }
 
-        setBusy(lookupButton, true, 'กำลังค้นหา…');
-        setMessage('', '');
+        setBusy(lookupButton, true, 'กำลังตรวจสอบ…');
+        setMessage(message, '', '');
 
         try {
             const data = await jsonRequest(config.lookupUrl, { phone: value });
+            const registrations = data.registrations || [];
+
+            /* ไม่พบ = อยู่หน้าเดิม บอกตรงนั้นเลย ดีกว่าพาไปหน้าว่าง ๆ แล้วให้ย้อนกลับเอง */
+            if (registrations.length === 0) {
+                setMessage(message, 'ไม่พบรายชื่อที่ลงทะเบียนด้วยเบอร์นี้ กรุณาตรวจสอบเบอร์อีกครั้ง', 'error');
+
+                return;
+            }
+
             verifiedPhone = value;
-            renderRegistrations(data.registrations || []);
-            setMessage(data.message, 'success');
-            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            if (registrations.length === 1) {
+                await checkInOnly(registrations[0]);
+
+                return;
+            }
+
+            peopleSub.textContent = 'เบอร์ ' + value + ' มีผู้ลงทะเบียน ' + registrations.length + ' คน — กดเช็กอินทีละคน';
+            renderRegistrations(registrations);
+            setMessage(peopleMessage, '', '');
+            showStep('people');
         } catch (error) {
-            setMessage(error.message, 'error');
+            setMessage(message, error.message, 'error');
         } finally {
-            setBusy(lookupButton, false, 'ค้นหารายชื่อ');
+            setBusy(lookupButton, false, '');
         }
     }
 
     phone.addEventListener('input', function () {
         if (normalizedPhone() !== verifiedPhone) {
             verifiedPhone = '';
-            results.hidden = true;
-            setMessage('', '');
+            setMessage(message, '', '');
         }
     });
 
@@ -119,12 +181,21 @@
 
     lookupButton.addEventListener('click', lookup);
 
+    backButton.addEventListener('click', function () {
+        verifiedPhone = '';
+        setMessage(message, '', '');
+        showStep('phone');
+        phone.focus({ preventScroll: true });
+    });
+
+    /* หน้าเลือกชื่อ — เช็กอินได้ทีละคนโดยไม่ต้องออกจากหน้า เพราะคนจองหลายที่นั่ง
+       มักเช็กอินให้ทุกคนในคราวเดียว การเด้งไปหน้าผลลัพธ์ทุกครั้งจะต้องเดินกลับมาใหม่ */
     nameList.addEventListener('click', async function (event) {
         const button = event.target.closest('[data-checkin-code]');
         if (!button || button.disabled || !verifiedPhone) return;
 
         setBusy(button, true, 'กำลังบันทึก…');
-        setMessage('', '');
+        setMessage(peopleMessage, '', '');
 
         try {
             const data = await jsonRequest(config.storeUrl, {
@@ -134,18 +205,15 @@
             const row = button.closest('[data-registration-row]');
             row.classList.add('is-done');
             row.querySelector('.checkin-person-icon').textContent = '✓';
-            button.dataset.label = 'Check-in แล้ว';
-            button.textContent = 'Check-in แล้ว';
+            button.dataset.label = 'เช็กอินแล้ว';
+            setBusy(button, false, '');
             button.disabled = true;
-            setMessage(data.message, 'success');
+            setMessage(peopleMessage, data.message, 'success');
         } catch (error) {
-            setBusy(button, false, 'Check-in');
-            setMessage(error.message, 'error');
+            setBusy(button, false, '');
+            setMessage(peopleMessage, error.message, 'error');
         }
     });
 
-    window.setTimeout(function () {
-        document.getElementById('checkin-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        phone.focus({ preventScroll: true });
-    }, 120);
+    phone.focus({ preventScroll: true });
 })();

@@ -56,7 +56,7 @@ class PublicCheckinService
 
             if ($registration->checked_in_at) {
                 throw ValidationException::withMessages([
-                    'registration_code' => $registration->name.' Check-in แล้ว',
+                    'registration_code' => $registration->name.' เช็กอินแล้ว',
                 ]);
             }
 
@@ -81,7 +81,7 @@ class PublicCheckinService
     {
         if ($activity->visibility !== 'สาธารณะ' || ! $activity->acceptsCheckin()) {
             throw ValidationException::withMessages([
-                'checkin' => 'กิจกรรมนี้ยังไม่เปิด Check-in หรือสิ้นสุดช่วง Check-in แล้ว',
+                'checkin' => 'กิจกรรมนี้ยังไม่เปิดเช็กอิน หรือสิ้นสุดช่วงเช็กอินแล้ว',
             ]);
         }
     }

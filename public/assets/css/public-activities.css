@@ -667,6 +667,41 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .registration-success-icon { display: inline-flex; width: 52px; height: 52px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary); color: #fff; font-size: 26px; }
 .registration-success h2 { margin: 12px 0 4px; font-size: 18px; }
 .registration-success p { margin: 0; color: var(--text-secondary); }
+/* หน้าจอเช็กอินทีละขั้น — หนึ่งหน้าจอทำเรื่องเดียว ชื่อหัวข้อจึงใหญ่กว่าหัวการ์ดทั่วไป
+   ไม่มีเลข "1" "2" นำหน้าแล้ว เพราะไม่ได้เห็นพร้อมกันจึงไม่มีอะไรให้เทียบลำดับ */
+.ck-title { margin: 0 0 6px; color: var(--text-primary); font-size: 20px; font-weight: 600; line-height: 1.35; }
+.ck-sub { margin: 0 0 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+.ck-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+}
+.ck-back::before { content: '‹'; font-size: 17px; line-height: 1; }
+.ck-back:hover { color: var(--dark-green); }
+
+/* หน้าจอผลลัพธ์ — ไล่ความสำคัญจากชื่อกิจกรรมลงมาหาเวลา
+   ชื่อผู้เช็กอินอยู่ใต้หัวข้อ เพราะสิ่งแรกที่ต้องรู้คือ "สำเร็จไหม" แล้วจึง "ของใคร" */
+/* ต้องเจาะจงกว่า .registration-success p ที่ตั้ง margin: 0 ไว้ ไม่งั้นระยะห่างจะหายทั้งชุด */
+.ck-done h2 { margin: 14px 0 0; font-size: 19px; }
+/* คำต้อนรับเป็นตัวเด่น ชื่อกิจกรรมเป็นบรรทัดรอง — คนที่เพิ่งเช็กอินอ่านคำต้อนรับก่อน
+   ชื่องานเขารู้อยู่แล้วว่ามางานไหน มีไว้ยืนยันว่าไม่ได้สแกนผิดงานเท่านั้น */
+.registration-success .ck-done-welcome { margin: 14px 0 0; color: var(--dark-green); font-size: 17px; font-weight: 600; line-height: 1.4; }
+.registration-success .ck-done-activity { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+
+/* สลิปยืนยัน — พื้นอ่อนไม่มีกรอบ แยกจากข้อความต้อนรับด้วยพื้นหลัง ไม่ใช่เส้นขอบ */
+.ck-done-slip { margin: 22px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--primary-soft); text-align: left; }
+.ck-done-slip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ck-done-slip-row + .ck-done-slip-row { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(20, 83, 45, .1); }
+.ck-done-slip dt { color: var(--text-secondary); font-size: 12.5px; }
+.ck-done-slip dd { min-width: 0; margin: 0; color: var(--text-primary); font-size: 13.5px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+
 .checkin-name-list { display: grid; gap: 9px; }
 .checkin-name-row {
     display: grid;
