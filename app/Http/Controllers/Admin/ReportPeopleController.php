@@ -66,78 +66,94 @@ class ReportPeopleController extends Controller
             ? $d->day.' '.$thMonths[$d->month - 1].' '.($d->year + 543)
             : '';
 
-        $people = $registrations
-            ->groupBy(fn (Registration $r) => $this->identityKey($r))
-            ->map(function (Collection $rows) use ($cohortByParticipant, $cohortKeys, $thaiDate) {
-                /* แถวแรกคือครั้งล่าสุด (เรียง desc มาแล้ว) — ใช้ชื่อและช่องทางติดต่อชุดล่าสุด
-                   ของเก่าอาจสะกดชื่อไม่เหมือนกันหรือใช้เบอร์เดิมที่เลิกใช้ไปแล้ว */
-                $latest = $rows->first();
+        /* จัดกลุ่มไว้เพื่อ "นับครั้ง" เท่านั้น ไม่ได้ยุบแถวในตาราง
+           ตารางแสดงทุกครั้งที่มาร่วม ส่วนตัวเลข "เคยมาแล้วกี่ครั้ง" ต้องมองข้ามแถวจึงคำนวณจากตรงนี้ */
+        $byIdentity = $registrations->groupBy(fn (Registration $r) => $this->identityKey($r));
 
-                /* นับเป็น "กิจกรรม" ไม่ใช่ "แถวลงทะเบียน" — คนเดียวจองหลายที่นั่งในกิจกรรมเดียว
-                   ต้องนับเป็นมาหนึ่งครั้ง ไม่ใช่หลายครั้ง
-                   ทุกแถวที่มาถึงตรงนี้เช็คอินแล้วทั้งหมด (กรองที่คิวรี) จึงเป็นจำนวนกิจกรรมที่มาจริง */
-                $activityIds = $rows->pluck('activity_id')->filter()->unique();
+        /* จำนวนกิจกรรมที่แต่ละคนเคยมา — นับเป็นกิจกรรม ไม่ใช่แถวลงทะเบียน
+           คนเดียวจองหลายที่นั่งในกิจกรรมเดียวต้องนับเป็นมาหนึ่งครั้ง */
+        $visitsByIdentity = $byIdentity->map(
+            fn (Collection $rows) => $rows->pluck('activity_id')->filter()->unique()->count()
+        );
 
-                $profile = $rows->pluck('participant_id')->filter()->unique()
-                    ->map(fn ($id) => $cohortByParticipant->get($id))
-                    ->filter()
-                    ->first();
+        /* เป็นกลุ่มตัวอย่างหรือไม่ — ตัดสินระดับ "คน" แล้วเอาไปแปะทุกแถวของคนนั้น
+           คิดครั้งเดียวต่อคน ไม่ใช่ทุกแถว เพราะต้องดู participant_id ของทุกครั้งที่เขาเคยมา */
+        $cohortByIdentity = $byIdentity->map(function (Collection $rows) use ($cohortByParticipant, $cohortKeys) {
+            $profile = $rows->pluck('participant_id')->filter()->unique()
+                ->map(fn ($id) => $cohortByParticipant->get($id))
+                ->filter()
+                ->first();
 
-                /* ไม่เจอจาก participant_id ให้ลองจับจากเบอร์/อีเมลอีกชั้น */
-                $isCohort = $profile !== null
-                    || $cohortKeys->has($this->phoneKey($latest->phone))
-                    || $cohortKeys->has($this->emailKey($latest->email));
+            if ($profile) {
+                return $profile;
+            }
 
-                /* ช่วงเวลาที่มาร่วมจริง คิดจากเวลาเช็คอิน ไม่ใช่เวลาที่ลงทะเบียนไว้ */
-                $dates = $rows->pluck('checked_in_at')->filter()->sort();
+            /* ไม่เจอจาก participant_id ให้ลองจับจากเบอร์/อีเมลอีกชั้น */
+            $matched = $rows->first(fn (Registration $r) => $cohortKeys->has($this->phoneKey($r->phone))
+                || $cohortKeys->has($this->emailKey($r->email)));
 
-                return [
-                    'name' => $latest->name ?: '(ไม่ระบุชื่อ)',
-                    'phone' => $latest->phone ?: '',
-                    'email' => $latest->email ?: '',
-                    'area' => $rows->pluck('area.name')->filter()->first() ?: '',
-                    'activities' => $activityIds->count(),
-                    'isCohort' => $isCohort,
-                    'cohortSince' => $profile?->entry_date ? $thaiDate($profile->entry_date) : '',
-                    'firstJoined' => $thaiDate($dates->first()),
-                    'lastJoined' => $thaiDate($dates->last()),
-                    /* รายการกิจกรรมที่คนนี้มาร่วมจริง — ใช้ใน popup ประวัติ ไม่ต้องยิงคำขอเพิ่มตอนกด */
-                    'history' => $rows
-                        ->unique('activity_id')
-                        ->sortByDesc(fn (Registration $r) => $r->activity?->start_date?->toDateString() ?? '')
-                        ->map(fn (Registration $r) => [
-                            'name' => $r->activity?->name ?? '(กิจกรรมถูกลบแล้ว)',
-                            'date' => $thaiDate($r->activity?->start_date),
-                        ])
-                        ->values()
-                        ->all(),
-                ];
-            })
-            /* คนที่มาบ่อยที่สุดอยู่บน แล้วเรียงตามชื่อเมื่อจำนวนเท่ากัน */
-            ->sortBy([
-                fn (array $a, array $b) => $b['activities'] <=> $a['activities'],
-                fn (array $a, array $b) => strcmp($a['name'], $b['name']),
+            return $matched ? true : null;
+        });
+
+        /* ประวัติกิจกรรมของแต่ละคน — ใช้ใน popup ตอนกดตัวเลข "เคยมา N ครั้ง" */
+        $historyByIdentity = $byIdentity->map(fn (Collection $rows) => $rows
+            ->unique('activity_id')
+            ->sortByDesc(fn (Registration $r) => $r->activity?->start_date?->toDateString() ?? '')
+            ->map(fn (Registration $r) => [
+                'name' => $r->activity?->name ?? '(กิจกรรมถูกลบแล้ว)',
+                'date' => $thaiDate($r->activity?->start_date),
             ])
-            ->values();
+            ->values()
+            ->all());
 
-        $cohortCount = $people->where('isCohort', true)->count();
-        $repeatCount = $people->where('activities', '>=', self::REPEAT_FROM)->count();
+        /* หนึ่งแถว = หนึ่งครั้งที่มาร่วมกิจกรรม ไม่ยุบรวมตามเบอร์/อีเมล
+           คนที่มาสามกิจกรรมจึงมีสามแถว และทุกแถวบอกว่าเขาเคยมาแล้วกี่ครั้ง */
+        $people = $registrations->map(function (Registration $r) use (
+            $visitsByIdentity, $cohortByIdentity, $historyByIdentity, $thaiDate
+        ) {
+            $key = $this->identityKey($r);
+            $profile = $cohortByIdentity->get($key);
 
+            return [
+                'name' => $r->name ?: '(ไม่ระบุชื่อ)',
+                'phone' => $r->phone ?: '',
+                'email' => $r->email ?: '',
+                'area' => $r->area?->name ?: '',
+                /* กิจกรรมของแถวนี้ — ของเดิมไม่มีเพราะหนึ่งแถวคือหนึ่งคน ตอนนี้ต้องบอกว่ามาร่วมงานไหน */
+                'activityName' => $r->activity?->name ?? '(กิจกรรมถูกลบแล้ว)',
+                'activityDate' => $thaiDate($r->activity?->start_date),
+                'joinedAt' => $thaiDate($r->checked_in_at)
+                    .($r->checked_in_at ? ' · '.$r->checked_in_at->format('H:i').' น.' : ''),
+                'activities' => $visitsByIdentity->get($key, 1),
+                'isCohort' => $profile !== null,
+                'cohortSince' => ($profile instanceof CohortProfile && $profile->entry_date)
+                    ? $thaiDate($profile->entry_date)
+                    : '',
+                'history' => $historyByIdentity->get($key, []),
+            ];
+        })->values();
+
+        /* ตัวเลขสรุปยังมองเป็น "คน" ไม่ใช่ "แถว" — คำถามที่หน้านี้ตอบคือฐานคนของโครงการ
+           ส่วนตารางด้านล่างเป็นรายครั้งตามที่หน้างานต้องการไล่ดู */
+        $peopleCount = $byIdentity->count();
+        $cohortCount = $cohortByIdentity->filter()->count();
+        $repeatCount = $visitsByIdentity->filter(fn (int $n) => $n >= self::REPEAT_FROM)->count();
         $summary = [
-            'total' => $people->count(),
+            'total' => $peopleCount,
             'cohort' => $cohortCount,
-            'cohortPct' => $people->count() > 0 ? (int) round($cohortCount / $people->count() * 100) : 0,
+            'cohortPct' => $peopleCount > 0 ? (int) round($cohortCount / $peopleCount * 100) : 0,
             'repeat' => $repeatCount,
-            'repeatPct' => $people->count() > 0 ? (int) round($repeatCount / $people->count() * 100) : 0,
-            'registrations' => $registrations->count(),
+            'repeatPct' => $peopleCount > 0 ? (int) round($repeatCount / $peopleCount * 100) : 0,
+            /* จำนวนแถวในตาราง = จำนวนครั้งที่มีคนมาร่วมกิจกรรม */
+            'registrations' => $people->count(),
         ];
 
         /* การกระจายจำนวนครั้งที่มา — บอกว่าฐานคนของเราเป็นคนหน้าใหม่ล้วนหรือมีคนกลับมาซ้ำจริง */
         $buckets = collect([
-            ['label' => 'มาครั้งเดียว', 'count' => $people->where('activities', 1)->count()],
-            ['label' => 'มา 2 ครั้ง', 'count' => $people->where('activities', 2)->count()],
-            ['label' => 'มา 3–4 ครั้ง', 'count' => $people->whereBetween('activities', [3, 4])->count()],
-            ['label' => 'มา 5 ครั้งขึ้นไป', 'count' => $people->where('activities', '>=', 5)->count()],
+            ['label' => 'มาครั้งเดียว', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 1)->count()],
+            ['label' => 'มา 2 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 2)->count()],
+            ['label' => 'มา 3–4 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 3 && $n <= 4)->count()],
+            ['label' => 'มา 5 ครั้งขึ้นไป', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 5)->count()],
         ]);
         $maxBucket = max(1, $buckets->max('count'));
 

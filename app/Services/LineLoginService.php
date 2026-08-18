@@ -48,6 +48,69 @@ class LineLoginService
             && filled(config('services.line.channel_secret'));
     }
 
+    /**
+     * LIFF ID ของหน้าติดตามสุขภาพ — ว่าง = ยังไม่เปิดใช้ ระบบจะใช้ LINE Login แบบเดิมอย่างเดียว
+     *
+     * LIFF คือการเปิดหน้าเว็บของเรา "ข้างในแอป LINE" ผู้ใช้จึงไม่ต้องออกไปเบราว์เซอร์
+     * แล้วล็อกอินซ้ำ — แก้ปัญหาสแกน QR จากกล้อง iPhone แล้วเข้าสู่ระบบด้วย LINE ไม่ได้
+     */
+    public function liffId(): ?string
+    {
+        $id = config('services.line.liff_id');
+
+        return filled($id) ? (string) $id : null;
+    }
+
+    public function hasLiff(): bool
+    {
+        return $this->isConfigured() && $this->liffId() !== null;
+    }
+
+    /**
+     * ลิงก์ที่เปิดหน้าติดตามสุขภาพในแอป LINE — ใช้กับปุ่มบนการ์ดแจ้งเตือนและ QR
+     *
+     * เป็น universal link: สแกนจากกล้องมือถือแล้วเด้งเข้าแอป LINE ตรง ๆ ไม่ผ่านเบราว์เซอร์ในแอปกล้อง
+     * ปลายทางจริงคือ endpoint URL ที่ตั้งไว้ใน LINE Developers console (ไม่ได้ตั้งในโค้ดนี้)
+     */
+    public function liffUrl(): ?string
+    {
+        return $this->hasLiff() ? 'https://liff.line.me/'.$this->liffId() : null;
+    }
+
+    /**
+     * ตรวจ ID token ที่ได้จาก LIFF แล้วคืนโปรไฟล์ — โครงผลลัพธ์เดียวกับ profileFromCode()
+     *
+     * ต้องตรวจฝั่งเซิร์ฟเวอร์เสมอ ห้ามเชื่อ userId ที่เบราว์เซอร์ส่งมาตรง ๆ
+     * ไม่งั้นใครก็ยิง userId ของคนอื่นเข้ามาสวมสิทธิ์ดูข้อมูลสุขภาพของเขาได้
+     *
+     * ไม่ส่ง nonce ไปตรวจ เพราะ token นี้ LIFF เป็นคนขอให้ ไม่ได้มาจากคำขอที่เราเริ่มเอง
+     * ตัวที่ผูก token กับระบบเราคือ client_id — LINE จะปฏิเสธถ้า token ออกให้ channel อื่น
+     *
+     * @return array{userId: string, displayName: string, pictureUrl: string|null, email: string|null}
+     */
+    public function profileFromIdToken(string $idToken): array
+    {
+        $verified = Http::asForm()
+            ->timeout(10)
+            ->post(self::VERIFY_URL, [
+                'id_token' => $idToken,
+                'client_id' => config('services.line.channel_id'),
+            ]);
+
+        if ($verified->failed() || ! $verified->json('sub')) {
+            $this->logFailure('ตรวจ id_token จาก LIFF ไม่ผ่าน', $verified->status(), $verified->json());
+
+            throw new RuntimeException('ตรวจสอบข้อมูลบัญชี LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        }
+
+        return [
+            'userId' => (string) $verified->json('sub'),
+            'displayName' => (string) ($verified->json('name') ?: 'ผู้ใช้ LINE'),
+            'pictureUrl' => $verified->json('picture') ?: null,
+            'email' => $verified->json('email') ?: null,
+        ];
+    }
+
     /** @return array{url: string, state: string, nonce: string} */
     public function authorizeRequest(string $redirectUri): array
     {

@@ -313,9 +313,10 @@ class TrackingRoundController extends Controller
     {
         $qr = QrCode::where('purpose', 'health')->whereNull('activity_id')->first();
 
-        /* พาธอ่านออกและบอกต่อทางโทรศัพท์ได้ — ไม่มี token ใน URL แล้ว
-           QR ติดตามสุขภาพมีอันเดียวทั้งโครงการ ปลายทางจึงตายตัว */
-        $url = $qr ? route('public.tracking-round-qr') : null;
+        /* ตั้ง LIFF ไว้แล้วใช้ลิงก์ LIFF — สแกนจากกล้องมือถือแล้วเด้งเข้าแอป LINE ตรง ๆ
+           (universal link) ไม่ตกไปอยู่เบราว์เซอร์ในแอปกล้องที่ล็อกอิน LINE ไม่ได้
+           ไม่ตั้งไว้ก็ยังเป็น URL เว็บตรงเหมือนเดิม พาธอ่านออกและบอกต่อทางโทรศัพท์ได้ */
+        $url = $qr ? $this->rounds->healthLinkUrl() : null;
 
         return [
             'exists' => $qr !== null,

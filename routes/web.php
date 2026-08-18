@@ -179,6 +179,10 @@ Route::prefix('health')->group(function () {
 
     Route::get('/line', [PublicLineLoginController::class, 'redirectHealth'])->name('public.tracking-round-qr.line');
     Route::get('/line/return', [PublicTrackingRoundQrController::class, 'lineReturn'])->name('public.tracking-round-qr.line-return');
+
+    /* เข้าสู่ระบบจากในแอป LINE (LIFF) — สคริปต์บนหน้ายิง id_token มาให้ตรวจ
+       ไม่ต้องเด้งออกไปเบราว์เซอร์ จึงใช้ได้แม้เปิดจากตัวสแกน QR ของกล้องมือถือ */
+    Route::post('/liff', [PublicTrackingRoundQrController::class, 'liffLogin'])->name('public.tracking-round-qr.liff');
 })->where('round', '[0-9]+');
 
 /* QR ที่พิมพ์แจกไปแล้วชี้มาที่ /h/<token> — ส่งต่อไปพาธใหม่ ห้ามให้เจอ 404

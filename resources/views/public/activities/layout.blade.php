@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{-- สคริปต์บนหน้าสาธารณะที่ยิง POST (เช่น เข้าสู่ระบบผ่าน LIFF) อ่าน token จากที่นี่
+         ไม่มีแล้วคำขอจะโดนปฏิเสธด้วย 419 โดยที่หน้าจอไม่บอกอะไรเลย --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'กิจกรรมทั้งหมด') | The Farm Concept</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">

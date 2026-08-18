@@ -12,6 +12,7 @@ use App\Services\LineLoginService;
 use App\Services\SurveyAnswerBuilder;
 use App\Services\TrackingRoundService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,6 +20,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 /**
  * QR ทำแบบประเมินติดตามสุขภาพ — QR เดียวทั้งโครงการ
@@ -72,6 +74,8 @@ class PublicTrackingRoundQrController extends Controller
 
         return view('public.tracking-round.identify', [
             'lineEnabled' => $this->line->isConfigured(),
+            /* ตั้ง LIFF ไว้ = หน้านี้เข้าสู่ระบบเองได้เมื่อถูกเปิดในแอป LINE ไม่ต้องให้กดปุ่มใด ๆ */
+            'liffId' => $this->line->liffId(),
             'projectName' => config('farmconcept.tracking_round.project_name'),
             'disclosures' => config('farmconcept.tracking_round.disclosures'),
         ]);
@@ -195,6 +199,53 @@ class PublicTrackingRoundQrController extends Controller
             abort(410);
         }
 
+        return $this->resolveLineIdentity($request);
+    }
+
+    /**
+     * เข้าสู่ระบบผ่าน LIFF — หน้านี้ถูกเปิดอยู่ "ในแอป LINE" จึงขอ ID token ได้เลย
+     *
+     * ต่างจาก lineReturn() แค่ทางที่ได้ตัวตนมา: ที่นั่นมาจากการเด้งออกไป LINE แล้วกลับ
+     * ที่นี่มาจาก LIFF SDK ส่ง id_token มาให้ตรง ๆ — พอตรวจ token เสร็จก็เข้ากติกาเดียวกันทั้งหมด
+     * (บัญชีที่ผูกแล้วเข้าได้เลย · ผูกซ้อนต้องถามก่อน · ยังไม่ผูกให้ไปยืนยันเบอร์)
+     *
+     * คืน JSON เพราะผู้เรียกเป็นสคริปต์บนหน้า ไม่ใช่การกดลิงก์
+     */
+    public function liffLogin(Request $request): JsonResponse
+    {
+        abort_unless($this->line->hasLiff(), 404);
+
+        $validated = $request->validate([
+            'id_token' => ['required', 'string', 'max:4000'],
+        ]);
+
+        try {
+            /* ตรวจกับ LINE ทุกครั้ง — ค่าที่เบราว์เซอร์ส่งมาปลอมได้ ห้ามเชื่อ userId ตรง ๆ */
+            $profile = $this->line->profileFromIdToken($validated['id_token']);
+        } catch (RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        /* เก็บที่ช่องเดียวกับ LINE Login แบบเดิม — signIn() อ่านช่องนี้ไปผูกบัญชีให้อยู่แล้ว
+           แยกช่องเมื่อไรจะมีสองที่ที่ต้องแก้ตามกันทุกครั้งที่กติกาการผูกเปลี่ยน */
+        $request->session()->put(PublicLineLoginController::SESSION_KEY, $profile);
+
+        $redirect = $this->resolveLineIdentity($request);
+
+        return response()->json([
+            'success' => true,
+            'redirect' => $redirect->getTargetUrl(),
+        ]);
+    }
+
+    /**
+     * ตัดสินว่าบัญชี LINE ที่อยู่ใน session ตอนนี้ควรพาไปหน้าไหน
+     *
+     * ใช้ร่วมกันระหว่างการกลับจาก LINE Login และการเข้าผ่าน LIFF — สองทางเข้าต้องได้ผลเหมือนกันเป๊ะ
+     * โดยเฉพาะกติกา "ผูกซ้อนต้องถามก่อน" ที่ถ้าหลุดทางใดทางหนึ่งจะบันทึกคำตอบผิดคน
+     */
+    private function resolveLineIdentity(Request $request): RedirectResponse
+    {
         $lineUserId = $request->session()->get(PublicLineLoginController::SESSION_KEY)['userId'] ?? null;
 
         $participant = $lineUserId

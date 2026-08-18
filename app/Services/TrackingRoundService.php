@@ -13,6 +13,7 @@ use App\Models\RoundBatch;
 use App\Models\RoundBatchMember;
 use App\Models\SurveyResponse;
 use Illuminate\Database\Eloquent\Builder;
+use App\Services\LineLoginService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,7 @@ class TrackingRoundService
         private readonly LinePushService $push,
         private readonly PersonCodeGenerator $personCodes,
         private readonly SurveyAnswerBuilder $answerBuilder,
+        private readonly LineLoginService $lineLogin,
     ) {}
 
     /**
@@ -346,7 +348,7 @@ class TrackingRoundService
             $message,
             $member->followUpRound->name,
             $this->thaiDate($batch->answerDueFor($member->followUpRound)),
-            $this->healthUrl(),
+            $this->healthLinkUrl(),
         );
 
         $member->update([
@@ -444,8 +446,23 @@ class TrackingRoundService
             /* เส้นตายของรอบมาก่อนวันครบกำหนดของใบรายคน ถ้าแอดมินกำหนดไว้
                รอบเก่าที่ไม่ได้กำหนดยังได้วันเดิมเหมือนก่อนมีคอลัมน์นี้ */
             '{วันครบกำหนด}' => $this->thaiDate($batch?->answerDueFor($round) ?? $round->due_date),
-            '{ลิงก์}' => $this->healthUrl(),
+            '{ลิงก์}' => $this->healthLinkUrl(),
         ]);
+    }
+
+    /**
+     * ลิงก์ที่ส่งให้ผู้รับ — LIFF ถ้าตั้งไว้ ไม่งั้นเป็น URL เว็บตรง ๆ
+     *
+     * ลิงก์ LIFF เปิดหน้าติดตามสุขภาพในแอป LINE เลย ผู้รับจึงถูกจดจำได้ทันทีโดยไม่ต้องล็อกอินซ้ำ
+     * และสแกน QR จากกล้องมือถือแล้วเด้งเข้าแอป LINE ตรง ๆ ไม่ตกไปอยู่เบราว์เซอร์ในแอปกล้อง
+     *
+     * แยกจาก healthUrl() เพราะตัวนั้นคือ "ที่อยู่จริงของหน้าเว็บ" ซึ่ง publicLinkReady() ใช้ตรวจ
+     * ว่าลิงก์เปิดจากมือถือได้ไหม — ถ้าเอา liff.line.me ไปตรวจ ตัวกันจะผ่านตลอดแม้ปลายทางจะเป็น
+     * โดเมนของเครื่องพัฒนาที่ไม่มีใครเปิดได้
+     */
+    public function healthLinkUrl(): string
+    {
+        return $this->lineLogin->liffUrl() ?? $this->healthUrl();
     }
 
     public function defaultTemplate(): string

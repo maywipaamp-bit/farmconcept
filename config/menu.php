@@ -52,6 +52,17 @@ return [
                         '^/admin/activities/[^/]+/reports$',
                     ],
                 ],
+                /* รายชื่อคนทั้งหมดที่เคยมาร่วมกิจกรรม — เดิมอยู่ใต้หมวด "รายงาน" ของตัวเอง
+                   ย้ายมาอยู่ใต้กิจกรรมเพราะใช้งานคู่กับรายการกิจกรรมเสมอ ไม่ได้เปิดดูแยกเป็นรายงานประจำ
+                   คีย์ยังเป็น reports-people เหมือนเดิม สิทธิ์ที่ตั้งไว้แล้วจึงไม่ต้องแก้ตาม */
+                [
+                    'key' => 'reports-people',
+                    'label' => 'ผู้เข้าร่วมทั้งหมด',
+                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+                    'href' => 'admin/reports/people',
+                    /* พาธเดิมสมัยอยู่ใต้กิจกรรมครั้งแรก — คงไว้ให้ลิงก์ที่บุ๊กมาร์กไว้ยังไฮไลต์ถูก */
+                    'alsoMatch' => ['admin/activities/people'],
+                ],
                 [
                     'key' => 'activities-registrants',
                     'label' => 'ผู้ลงทะเบียน',
@@ -148,25 +159,6 @@ return [
                     'label' => 'ผลการวิเคราะห์',
                     'icon' => '<path d="M4 20.5V13M9.5 20.5V8M15 20.5v-9M20.5 20.5v-14"/>',
                     'href' => 'admin/evaluations/analysis',
-                ],
-            ],
-        ],
-        /* รายงาน — หน้าที่มองข้อมูลข้ามกิจกรรม/ข้ามโครงการ ไม่ผูกกับรายการใดรายการหนึ่ง
-           อยู่หลังหมวดที่ใช้ทำงานประจำวัน เพราะเป็นการ "อ่านผล" ไม่ใช่การบันทึกข้อมูล */
-        [
-            'key' => 'reports',
-            'label' => 'รายงาน',
-            'icon' => '<path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/>',
-            'children' => [
-                /* รายชื่อคนทั้งหมดที่เคยมาร่วมกิจกรรม — มองเป็น "รายคน" ไม่ใช่ "รายครั้งที่ลงทะเบียน"
-                   ตอบว่าฐานคนของโครงการมีกี่คน เป็นกลุ่มตัวอย่างกี่คน และใครกลับมาซ้ำบ้าง */
-                [
-                    'key' => 'reports-people',
-                    'label' => 'ผู้เข้าร่วมทั้งหมด',
-                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
-                    'href' => 'admin/reports/people',
-                    /* พาธเดิมตอนที่หน้านี้ยังอยู่ใต้หมวดกิจกรรม — คงไว้ให้ลิงก์ที่บุ๊กมาร์กไว้ยังไฮไลต์ถูก */
-                    'alsoMatch' => ['admin/activities/people'],
                 ],
             ],
         ],
@@ -288,8 +280,7 @@ return [
             'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-registration-options',
             'master-data-consents', 'master-data-follow-up-rounds',
         ],
-        'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
-        'reports' => ['reports-people'],
+        'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses', 'reports-people'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],
     ],
 

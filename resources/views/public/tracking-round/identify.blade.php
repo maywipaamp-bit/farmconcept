@@ -3,6 +3,18 @@
 @section('title', 'เข้าสู่ระบบประเมินสุขภาวะ')
 
 @section('content')
+    {{-- เปิดจากในแอป LINE (LIFF) — ระบบรู้ว่าใครเป็นใครเองโดยไม่ต้องกดอะไร
+         คลุมทับหน้าไว้ระหว่างตรวจ ไม่งั้นผู้ใช้จะเห็นฟอร์มกรอกเบอร์แวบหนึ่งแล้วหน้าเด้งหนี
+         ซ่อนไว้ก่อน สคริปต์เปิดเฉพาะตอนที่อยู่ในแอป LINE จริง --}}
+    @if($liffId)
+        <div class="tr-liff-cover" id="tr-liff-cover" hidden>
+            <div class="tr-liff-box">
+                <span class="tr-liff-spinner" aria-hidden="true"></span>
+                <p class="tr-liff-text">กำลังเข้าสู่ระบบด้วย LINE…</p>
+            </div>
+        </div>
+    @endif
+
     <section class="detail-card tr-card">
         <h1 class="tr-login-title">เข้าสู่ระบบประเมินสุขภาวะ</h1>
 
@@ -170,3 +182,77 @@
 })();
 </script>
 @endpush
+
+@if($liffId)
+@push('page-script')
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+/* LIFF — เข้าสู่ระบบอัตโนมัติเมื่อหน้านี้ถูกเปิด "ในแอป LINE"
+
+   ทำไมต้องมี: การเปิดหน้าเว็บในเบราว์เซอร์ของแอปอื่น (ตัวสแกน QR ของกล้องมือถือ) สลับไปแอป LINE
+   เพื่อล็อกอินไม่ได้ ผู้ใช้จึงกดปุ่ม "เข้าสู่ระบบด้วย LINE" แล้วไปเจอหน้า error ของ LINE เอง
+   LIFF ตัดขั้นตอนนั้นทิ้ง — หน้าถูกเปิดในแอป LINE อยู่แล้ว SDK จึงบอกตัวตนได้ทันที
+
+   ทำเฉพาะตอนอยู่ในแอป LINE จริง (isInClient) — เปิดจากเบราว์เซอร์ปกติต้องไม่ถูกบังคับล็อกอิน
+   เพราะทางเข้าด้วยเบอร์โทร + รหัสบุคคลยังต้องใช้ได้ตามเดิม */
+(function () {
+    var cover = document.getElementById('tr-liff-cover');
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+
+    if (!cover || typeof liff === 'undefined') return;
+
+    function fail(message) {
+        /* ล้มเหลวแล้วต้องคืนหน้าเดิมให้ใช้งานได้ ไม่ใช่ค้างที่ "กำลังเข้าสู่ระบบ…" ตลอดไป
+           ผู้ใช้ยังกรอกเบอร์กับรหัสบุคคลเข้าได้เสมอ */
+        cover.hidden = true;
+        if (message) window.alert(message);
+    }
+
+    liff.init({ liffId: @json($liffId) })
+        .then(function () {
+            if (!liff.isInClient()) return;
+
+            cover.hidden = false;
+
+            /* ในแอป LINE ปกติจะล็อกอินอยู่แล้ว เผื่อกรณีที่ไม่ใช่ให้เรียก login() แล้วรอโหลดรอบใหม่ */
+            if (!liff.isLoggedIn()) {
+                liff.login();
+
+                return;
+            }
+
+            var token = liff.getIDToken();
+
+            if (!token) {
+                fail('ขออนุญาตข้อมูลบัญชี LINE ไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยเบอร์โทรแทน');
+
+                return;
+            }
+
+            return fetch(@json(route('public.tracking-round-qr.liff')), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf ? csrf.getAttribute('content') : ''
+                },
+                body: JSON.stringify({ id_token: token })
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (body) {
+                    if (body && body.success && body.redirect) {
+                        window.location.href = body.redirect;
+
+                        return;
+                    }
+
+                    fail(body && body.message ? body.message : 'เข้าสู่ระบบด้วย LINE ไม่สำเร็จ');
+                });
+        })
+        .catch(function () {
+            fail('เชื่อมต่อ LINE ไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยเบอร์โทรแทน');
+        });
+})();
+</script>
+@endpush
+@endif

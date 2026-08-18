@@ -3,10 +3,10 @@
 @section('title', 'ผู้เข้าร่วมทั้งหมด')
 
 @section('content')
-  {{-- "รายงาน" เป็นหัวข้อหมวด ไม่มีหน้าของตัวเอง จึงเป็นข้อความเปล่า ไม่ใช่ลิงก์ --}}
+  {{-- "กิจกรรม" เป็นหัวข้อหมวด ไม่มีหน้าของตัวเอง จึงเป็นข้อความเปล่า ไม่ใช่ลิงก์ --}}
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard">แดชบอร์ด</a> <span>/</span>
-    <span>รายงาน</span> <span>/</span>
+    <span>กิจกรรม</span> <span>/</span>
     <span class="is-current">ผู้เข้าร่วมทั้งหมด</span>
   </nav>
 
@@ -14,7 +14,7 @@
     <div class="aov-header-text">
       <h1 class="aov-title">ผู้เข้าร่วมทั้งหมด</h1>
       {{-- บอกเกณฑ์การนับไว้ตรงนี้ ไม่ให้ตัวเลขถูกตีความผิดว่าเป็นจำนวนครั้งที่ลงทะเบียน --}}
-      <p class="aov-rp-toolbar-note">นับเฉพาะคนที่เช็คอินแล้ว (มาร่วมกิจกรรมจริง) เป็นรายคนจากทุกกิจกรรม โดยยึดเบอร์โทรเป็นหลักและใช้อีเมลเมื่อไม่มีเบอร์</p>
+      <p class="aov-rp-toolbar-note">ทุกครั้งที่มีคนมาร่วมกิจกรรมจริง (เช็คอินแล้ว) หนึ่งแถวคือหนึ่งครั้ง คนที่มาหลายกิจกรรมจึงมีหลายแถว · คอลัมน์ "เคยมาแล้ว" นับรวมทุกกิจกรรมของคนนั้น โดยยึดเบอร์โทรเป็นหลักและใช้อีเมลเมื่อไม่มีเบอร์</p>
     </div>
   </div>
 
@@ -49,7 +49,7 @@
     <div class="aov-pt-toolbar">
       <div>
         <h2 class="aov-section-title mb-0">รายชื่อผู้เข้าร่วม</h2>
-        <div class="aov-pt-toolbar-sub" id="ap-count">ทั้งหมด {{ number_format($summary['total']) }} คน</div>
+        <div class="aov-pt-toolbar-sub" id="ap-count">มาร่วมทั้งหมด {{ number_format($summary['registrations']) }} ครั้ง · {{ number_format($summary['total']) }} คน</div>
       </div>
       <div class="aov-pt-tools">
         <input type="search" class="input aov-ap-search" id="ap-search"
@@ -64,7 +64,7 @@
     {{-- ชิปกรอง — ชุดเดียวกับที่ KPI ด้านบนบอก กดแล้วเห็นว่าคนกลุ่มนั้นเป็นใครบ้าง --}}
     <div class="status-pills aov-ap-filters" id="ap-filters" role="group" aria-label="กรองผู้เข้าร่วม">
       <button type="button" class="status-pill is-active" data-filter="all">
-        ทั้งหมด <span class="status-pill-count">{{ $summary['total'] }}</span>
+        ทั้งหมด <span class="status-pill-count">{{ $summary['registrations'] }}</span>
       </button>
       <button type="button" class="status-pill" data-filter="cohort">
         เป็นกลุ่มตัวอย่าง <span class="status-pill-count">{{ $summary['cohort'] }}</span>
@@ -95,7 +95,8 @@
               <th>พื้นที่</th>
               <th>กลุ่มตัวอย่าง</th>
               <th>กิจกรรมที่มาร่วม</th>
-              <th>มาร่วมล่าสุด</th>
+              <th>วันที่มาร่วม</th>
+              <th>เคยมาแล้ว</th>
             </tr>
           </thead>
           <tbody id="ap-rows">
@@ -103,7 +104,8 @@
               <tr data-index="{{ $index }}"
                   data-cohort="{{ $person['isCohort'] ? '1' : '0' }}"
                   data-activities="{{ $person['activities'] }}"
-                  data-search="{{ mb_strtolower($person['name'].' '.$person['phone'].' '.$person['email']) }}">
+                  data-person="{{ $person['phone'] ?: ($person['email'] ?: 'row:'.$index) }}"
+                  data-search="{{ mb_strtolower($person['name'].' '.$person['phone'].' '.$person['email'].' '.$person['activityName']) }}">
                 <td class="aov-pt-num">{{ $index + 1 }}</td>
                 <td>{{ $person['name'] }}</td>
                 <td>{{ $person['phone'] ?: '—' }}</td>
@@ -120,18 +122,24 @@
                   @endif
                 </td>
                 <td>
-                  {{-- กดเพื่อดูว่าไปกิจกรรมไหนมาบ้าง — ข้อมูลอยู่ในหน้าแล้ว ไม่ต้องยิงคำขอเพิ่ม --}}
+                  <div>{{ $person['activityName'] }}</div>
+                  @if ($person['activityDate'])
+                    <div class="aov-pt-walkin">{{ $person['activityDate'] }}</div>
+                  @endif
+                </td>
+                <td>{{ $person['joinedAt'] ?: '—' }}</td>
+                <td>
+                  {{-- กดเพื่อดูว่าคนนี้ไปกิจกรรมไหนมาบ้าง — ข้อมูลอยู่ในหน้าแล้ว ไม่ต้องยิงคำขอเพิ่ม --}}
                   <button type="button" class="aov-pt-history" data-history-index="{{ $index }}">
-                    {{ $person['activities'] }} กิจกรรม
+                    {{ $person['activities'] }} ครั้ง
                   </button>
                 </td>
-                <td>{{ $person['lastJoined'] ?: '—' }}</td>
               </tr>
             @endforeach
           </tbody>
         </table>
       </div>
-      <div class="aov-pt-foot" id="ap-foot">แสดง {{ $people->count() }} จาก {{ $people->count() }} คน</div>
+      <div class="aov-pt-foot" id="ap-foot">แสดง {{ $people->count() }} จาก {{ $people->count() }} ครั้ง</div>
     @endif
   </div>
 @endsection
@@ -203,8 +211,15 @@
       }
     });
 
-    document.getElementById('ap-foot').textContent = 'แสดง ' + shown + ' จาก ' + rows.length + ' คน';
-    document.getElementById('ap-count').textContent = 'ทั้งหมด ' + rows.length + ' คน';
+    document.getElementById('ap-foot').textContent = 'แสดง ' + shown + ' จาก ' + rows.length + ' ครั้ง';
+    /* นับ "คน" จากเบอร์/อีเมลที่ไม่ซ้ำในแถวที่ยังแสดงอยู่ ไม่ใช่จำนวนแถว
+       เพราะคนเดียวมีได้หลายแถว ตัวเลขสองตัวนี้จึงต่างกันเสมอเมื่อมีคนกลับมาซ้ำ */
+    var seen = {};
+    rows.forEach(function (tr) {
+      if (!tr.hidden) seen[tr.getAttribute('data-person')] = 1;
+    });
+    document.getElementById('ap-count').textContent =
+      'มาร่วมทั้งหมด ' + shown + ' ครั้ง · ' + Object.keys(seen).length + ' คน';
   }
 
   document.getElementById('ap-filters').addEventListener('click', function (e) {
@@ -233,7 +248,7 @@
       if (!person) return;
 
       document.getElementById('ap-history-sub').textContent =
-        person.name + (person.phone ? ' · ' + person.phone : '') + ' · ' + person.activities + ' กิจกรรม';
+        person.name + (person.phone ? ' · ' + person.phone : '') + ' · เคยมาแล้ว ' + person.activities + ' ครั้ง';
 
       document.getElementById('ap-history-rows').innerHTML = person.history.map(function (item, i) {
         return '<tr><td class="aov-pt-num">' + (i + 1) + '</td>' +
@@ -250,11 +265,11 @@
     window.TFC.exportCsv(
       'ผู้เข้าร่วมทั้งหมด.csv',
       ['#', 'ชื่อผู้เข้าร่วม', 'เบอร์โทร', 'อีเมล', 'พื้นที่', 'กลุ่มตัวอย่าง', 'เข้ากลุ่มตัวอย่างเมื่อ',
-       'กิจกรรมที่มาร่วม', 'มาร่วมครั้งแรก', 'มาร่วมล่าสุด'],
+       'กิจกรรมที่มาร่วม', 'วันที่จัดกิจกรรม', 'วันที่มาร่วม', 'เคยมาแล้ว (ครั้ง)'],
       visible.map(function (tr, i) {
         var p = people[parseInt(tr.getAttribute('data-index'), 10)];
         return [i + 1, p.name, p.phone, p.email, p.area, p.isCohort ? 'เป็นกลุ่มตัวอย่าง' : 'ยังไม่เป็น',
-                p.cohortSince, p.activities, p.firstJoined, p.lastJoined];
+                p.cohortSince, p.activityName, p.activityDate, p.joinedAt, p.activities];
       })
     );
   });

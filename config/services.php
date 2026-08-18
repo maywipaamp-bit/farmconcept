@@ -37,6 +37,13 @@ return [
         'channel_id' => env('LINE_LOGIN_CHANNEL_ID'),
         'channel_secret' => env('LINE_LOGIN_CHANNEL_SECRET'),
 
+        /* LIFF app ของหน้าติดตามสุขภาพ (สร้างใน LINE Developers console ใต้ channel LINE Login ตัวเดียวกัน
+           ตั้ง Endpoint URL เป็น <โดเมนจริง>/health) — ว่าง = ปิดใช้ ระบบกลับไปใช้ LINE Login แบบเดิม
+
+           มีไว้เพราะการเปิดหน้าเว็บใน "เบราว์เซอร์ในแอป" (กล้อง iPhone ฯลฯ) ล็อกอิน LINE ไม่ผ่าน
+           LIFF เปิดหน้านี้ในแอป LINE เลย จึงรู้ว่าใครเป็นใครโดยไม่ต้องเด้งออกไปเบราว์เซอร์ */
+        'liff_id' => env('LINE_LIFF_ID'),
+
         /* คนละ channel กับ LINE Login — ตัวนี้ใช้ "ส่งข้อความหา" ผู้ใช้ (Messaging API)
            ยังไม่ตั้งค่า = ระบบจะรายงานว่าส่งแจ้งเตือนไม่สำเร็จ ไม่ใช่ทำเป็นว่าส่งแล้ว */
         'messaging_token' => env('LINE_MESSAGING_CHANNEL_ACCESS_TOKEN'),
