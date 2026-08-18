@@ -421,9 +421,9 @@ class CohortController extends Controller
         return [
             /* ข้อมูลทั่วไปเรียงเป็นคู่ "ป้าย : ค่า" ตามลำดับที่เจ้าหน้าที่อ่านจริง
                ประกอบใน controller ไม่ใช่ใน view เพราะบางค่าต้องรวมจากหลายที่ (ความยินยอม, ตอบครบ) */
+            /* ไม่แสดงชื่อ–นามสกุล (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม อ้างด้วยรหัสบุคคล */
             'info' => [
                 ['รหัสบุคคล', $participant->person_code ?: '—'],
-                ['ชื่อ–นามสกุล', $participant->name],
                 ['เบอร์โทร', $participant->phone ?: '—'],
                 ['เพศ', $this->genders()[$participant->gender] ?? 'ไม่ระบุ'],
                 ['ช่วงอายุ', $participant->ageBand() ?? 'ไม่ระบุ'],
@@ -655,7 +655,8 @@ class CohortController extends Controller
             'db_id' => $cp->id,
             'pid' => $p->code ?? $p->person_code ?? PersonCodeGenerator::PREFIX.$p->id,
             'cohortCode' => $cp->cohort_code,
-            'name' => $p->name,
+            /* ไม่มีคีย์ name ระดับบนสุด — หน้ารายการ/รายละเอียดอ้างด้วยรหัสบุคคลเท่านั้น (คำสั่งทีม)
+               ชื่อเหลืออยู่ที่ edit.name ที่เดียว เพราะฟอร์มแก้ไขยังมีช่องชื่อให้กรอก */
             'phone' => $p->phone ?? '',
             'gender' => $this->genders()[$p->gender] ?? 'ไม่ระบุ',
             'age' => $p->ageBand() ?? 'ไม่ระบุช่วงอายุ',

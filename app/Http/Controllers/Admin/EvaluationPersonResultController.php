@@ -30,10 +30,11 @@ class EvaluationPersonResultController extends Controller
     public function index(): View
     {
         $responses = SurveyResponse::query()
-            ->with(['participant:id,name,person_code', 'form:id,name', 'cohortRound:id,name'])
+            ->with(['participant:id,person_code', 'form:id,name', 'cohortRound:id,name'])
             ->get();
 
-        /* หนึ่งแถวต่อคน ไม่ใช่ต่อใบ — หน้านี้มีไว้เลือก "คน" ก่อนแล้วค่อยไปดูทุกรอบของเขา */
+        /* หนึ่งแถวต่อคน ไม่ใช่ต่อใบ — หน้านี้มีไว้เลือก "คน" ก่อนแล้วค่อยไปดูทุกรอบของเขา
+           ไม่ส่งชื่อลงหน้าเลย (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม อ้างด้วยรหัสบุคคล */
         $people = $responses
             ->filter(fn (SurveyResponse $r) => $r->participant !== null)
             ->groupBy('participant_id')
@@ -42,7 +43,6 @@ class EvaluationPersonResultController extends Controller
 
                 return [
                     'id' => $latest->participant->id,
-                    'name' => $latest->participant->name ?? 'ไม่พบผู้ตอบ',
                     'pid' => $latest->participant->person_code ?? '—',
                     'forms' => $group->pluck('form.name')->filter()->unique()->implode(' · '),
                     'rounds' => $group->count(),

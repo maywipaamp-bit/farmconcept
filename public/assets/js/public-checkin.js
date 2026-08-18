@@ -1,5 +1,8 @@
-/* เช็กอินหน้างาน — แยกเป็นทีละหน้าจอ: กรอกเบอร์ → (เลือกชื่อถ้ามีหลายคน) → ผลลัพธ์
-   เบอร์ที่มีชื่อเดียวไม่ต้องให้กดเลือกซ้ำ ระบบเช็กอินให้เลยแล้วขึ้นผลลัพธ์
+/* เช็กอินหน้างาน — ทีละหน้าจอ: กรอกเบอร์ → ยืนยัน/เลือกชื่อ → ผลลัพธ์
+   ชื่อเดียว  → หน้ายืนยัน ให้ผู้เข้าร่วมกดปุ่มเช็กอินเอง
+   หลายชื่อ  → หน้าเลือกรายชื่อ กดเช็กอินทีละคน
+   ไม่เช็กอินให้อัตโนมัติในทั้งสองทาง เพราะเบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ
+   ผู้เข้าร่วมต้องได้เห็นชื่อก่อนว่าระบบจับถูกคน แล้วจึงกดยืนยันด้วยตัวเอง
    ทุกหน้าจออยู่ใน DOM ตั้งแต่แรก ที่นี่แค่สลับว่าจะให้เห็นอันไหน */
 (function () {
     'use strict';
@@ -10,13 +13,17 @@
 
     const steps = {
         phone: document.getElementById('ck-step-phone'),
+        confirm: document.getElementById('ck-step-confirm'),
         people: document.getElementById('ck-step-people'),
         done: document.getElementById('ck-step-done')
     };
 
     const phone = document.getElementById('checkin-phone');
     const lookupButton = document.getElementById('checkin-lookup');
-    const backButton = document.getElementById('checkin-back');
+    const backButtons = document.querySelectorAll('[data-checkin-back]');
+    const confirmName = document.getElementById('checkin-confirm-name');
+    const confirmMessage = document.getElementById('checkin-confirm-message');
+    const confirmButton = document.getElementById('checkin-confirm-btn');
     const message = document.getElementById('checkin-message');
     const peopleMessage = document.getElementById('checkin-people-message');
     const peopleSub = document.getElementById('checkin-people-sub');
@@ -110,22 +117,45 @@
         }).join('');
     }
 
-    /* เบอร์ที่มีชื่อเดียว — เช็กอินให้เลย ไม่ต้องให้กดยืนยันชื่อตัวเองซ้ำอีกครั้ง */
-    async function checkInOnly(registration) {
+    /* คนที่กำลังจะเช็กอินในหน้ายืนยัน — เก็บไว้เพราะปุ่มเช็กอินอยู่คนละที่กับตอนค้นเจอ */
+    let pendingRegistration = null;
+
+    /* เบอร์ที่มีชื่อเดียว — พาไปหน้ายืนยันให้ผู้เข้าร่วมกดเช็กอินเอง
+       ไม่เช็กอินให้อัตโนมัติ เพราะเบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ
+       ต้องให้เห็นชื่อก่อนว่าระบบจับถูกคน และการกดเองทำให้รู้ตัวว่าเช็กอินแล้วจริง */
+    function askToConfirm(registration) {
+        /* เช็กอินไปแล้วไม่มีอะไรให้กด ข้ามไปหน้าผลลัพธ์เลย */
         if (registration.checkedIn) {
-            /* เคยเช็กอินไว้แล้ว — ไม่ใช่ข้อผิดพลาด บอกให้รู้ว่าเรียบร้อยอยู่แล้ว
-               พร้อมเวลาที่เช็กอินไว้เดิม ไม่ใช่เวลาที่เพิ่งกด */
             showDone('คุณเช็กอินเรียบร้อยแล้ว', registration.name, registration.checkedInAt);
 
             return;
         }
 
-        const data = await jsonRequest(config.storeUrl, {
-            contact: verifiedContact,
-            registration_code: registration.code
-        });
+        pendingRegistration = registration;
+        confirmName.textContent = registration.name;
+        setMessage(confirmMessage, '', '');
+        showStep('confirm');
+    }
 
-        showDone('เช็กอินเรียบร้อยแล้ว', registration.name, (data.registration || {}).checkedInAt);
+    async function submitConfirm() {
+        if (!pendingRegistration) return;
+
+        setBusy(confirmButton, true, 'กำลังเช็กอิน…');
+        setMessage(confirmMessage, '', '');
+
+        try {
+            const data = await jsonRequest(config.storeUrl, {
+                contact: verifiedContact,
+                registration_code: pendingRegistration.code
+            });
+
+            showDone('เช็กอินเรียบร้อยแล้ว', pendingRegistration.name, (data.registration || {}).checkedInAt);
+            pendingRegistration = null;
+        } catch (error) {
+            setMessage(confirmMessage, error.message, 'error');
+        } finally {
+            setBusy(confirmButton, false, '');
+        }
     }
 
     async function lookup() {
@@ -157,7 +187,7 @@
             verifiedContact = value;
 
             if (registrations.length === 1) {
-                await checkInOnly(registrations[0]);
+                askToConfirm(registrations[0]);
 
                 return;
             }
@@ -189,12 +219,17 @@
 
     lookupButton.addEventListener('click', lookup);
 
-    backButton.addEventListener('click', function () {
-        verifiedContact = '';
-        setMessage(message, '', '');
-        showStep('phone');
-        phone.focus({ preventScroll: true });
+    backButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            verifiedContact = '';
+            pendingRegistration = null;
+            setMessage(message, '', '');
+            showStep('phone');
+            phone.focus({ preventScroll: true });
+        });
     });
+
+    confirmButton.addEventListener('click', submitConfirm);
 
     /* หน้าเลือกชื่อ — เช็กอินได้ทีละคนโดยไม่ต้องออกจากหน้า เพราะคนจองหลายที่นั่ง
        มักเช็กอินให้ทุกคนในคราวเดียว การเด้งไปหน้าผลลัพธ์ทุกครั้งจะต้องเดินกลับมาใหม่ */

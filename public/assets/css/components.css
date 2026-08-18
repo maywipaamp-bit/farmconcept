@@ -12672,8 +12672,8 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border-soft);
+  /* ไม่มีเส้นคั่นระหว่างส่วน (คำสั่งทีม) — เว้นช่องไฟแทน */
+  padding-top: var(--space-2);
 }
 .fb-target-row .btn { white-space: nowrap; flex: none; margin-left: auto; }
 
@@ -12775,8 +12775,8 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border-soft);
+  /* ไม่มีเส้นคั่นระหว่างส่วน (คำสั่งทีม) — เว้นช่องไฟแทน */
+  padding-top: var(--space-2);
 }
 
 .fb-msg-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -17171,3 +17171,7 @@ details.an-section:not([open]) .an-section-toggle::after { content: ' ▾'; }
 .an-sources { margin: 0; color: var(--dbo-text-3, #7d8a7c); font-size: 12px; line-height: 1.6; text-wrap: pretty; }
 .an-sources a { color: var(--text-brand); text-decoration: underline; text-underline-offset: 2px; }
 .an-sources b { font-weight: var(--font-weight-semibold); color: var(--dbo-text-2, #4a564a); }
+
+/* ไอคอนคำอธิบายท้าย label — เมาส์ชี้ (หรือโฟกัสคีย์บอร์ด) เห็นข้อความเต็มจาก title */
+.co-hint-icon { display: inline-flex; align-items: center; margin-left: 6px; color: var(--color-text-secondary); cursor: help; vertical-align: middle; }
+.co-hint-icon:hover, .co-hint-icon:focus-visible { color: var(--color-primary-dark); }

@@ -51,22 +51,9 @@
       <div class="fb-msg-col">
         <span class="co-field-label">ตัวอย่างที่ผู้รับเห็น</span>
 
-        {{-- สามจุดที่ข้อความเดียวกันไปโผล่จริงบนเครื่องผู้รับ — แจ้งเตือนเด้ง · แชท LINE OA · หน้าจอล็อก
-             ไม่ทำ in-app bottom sheet กับ in-app banner เพราะระบบนี้ไม่มีแอปของตัวเอง
-             ผู้ตอบเปิดผ่านเบราว์เซอร์จาก LINE ไม่มีจังหวะที่จะแสดงสองอย่างนั้นได้จริง --}}
+        {{-- โชว์เฉพาะการ์ด LINE OA — แจ้งเตือนเด้งกับหน้าจอล็อกถูกตัดออก (คำสั่งทีม)
+             ข้อความสองที่นั่นก็ชุดเดียวกับ altText ของการ์ดนี้อยู่แล้ว ไม่ได้เพิ่มข้อมูลใหม่ --}}
         <div class="cd-notif-previews">
-          <div class="cd-notif">
-            <span class="cd-notif-tag">แจ้งเตือนเด้ง</span>
-            <div class="cd-push">
-              <span class="cd-push-icon" aria-hidden="true">🌱</span>
-              <div class="cd-push-body">
-                <p class="cd-push-app">The Farm Concept <span>ตอนนี้</span></p>
-                <p class="cd-push-title" id="rc-push-title"></p>
-                <p class="cd-push-text" id="rc-push-text"></p>
-              </div>
-            </div>
-          </div>
-
           <div class="cd-notif">
             <span class="cd-notif-tag">LINE OA</span>
             {{-- โครงเดียวกับการ์ด Flex ที่ส่งจริง (LinePushService::pushSurveyInvite) — แก้ฝั่งนั้นต้องแก้ฝั่งนี้ตาม --}}
@@ -78,22 +65,6 @@
                 <span class="cd-bubble-meta" id="rc-bubble-round"></span>
                 <span class="cd-bubble-due" id="rc-bubble-due"></span>
                 <span class="cd-bubble-btn">เริ่มทำแบบประเมิน</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="cd-notif">
-            <span class="cd-notif-tag">หน้าจอล็อก</span>
-            <div class="cd-lock">
-              <p class="cd-lock-time">09:00</p>
-              <p class="cd-lock-date" id="rc-lock-date"></p>
-              <div class="cd-push is-onlock">
-                <span class="cd-push-icon" aria-hidden="true">🌱</span>
-                <div class="cd-push-body">
-                  <p class="cd-push-app">The Farm Concept <span>ตอนนี้</span></p>
-                  <p class="cd-push-title" id="rc-lock-title"></p>
-                  <p class="cd-push-text" id="rc-lock-text"></p>
-                </div>
               </div>
             </div>
           </div>
@@ -156,9 +127,16 @@
 
   /* ---------- ฟอร์มด้านบน ---------- */
   function renderForm() {
-    function field(label, req, control) {
+    function field(label, req, control, hint) {
+      /* คำอธิบายยาวเป็นไอคอนให้เมาส์ชี้ดู (title ของเบราว์เซอร์) — ไม่กินที่ใต้ฟิลด์ */
+      var hintIcon = hint
+        ? '<span class="co-hint-icon" title="' + esc(hint) + '" aria-label="' + esc(hint) + '" tabindex="0">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.6" r="0.4" fill="currentColor"/></svg>' +
+          '</span>'
+        : '';
+
       return '<label class="co-field">' +
-        '<span class="co-field-label">' + esc(label) + (req ? '<span class="form-required">*</span>' : '') + '</span>' +
+        '<span class="co-field-label">' + esc(label) + (req ? '<span class="form-required">*</span>' : '') + hintIcon + '</span>' +
         control + '</label>';
     }
 
@@ -175,8 +153,8 @@
       /* เส้นตายการตอบของทั้งรอบ — คนละอย่างกับสองช่องบน ซึ่งเป็นช่วงที่ใช้กรองว่าใครเข้ารอบนี้
          เว้นว่างได้ ระบบจะใช้วันครบกำหนดของใบรายคนแทน */
       field('วันสุดท้ายที่ตอบได้', false,
-        '<input type="date" class="input" id="rc-answer-due" value="' + esc(form.answerDue) + '" lang="th-TH" min="' + esc(form.to) + '">' +
-        '<span class="co-field-hint">เว้นว่างได้ — ไม่กำหนดจะใช้วันครบกำหนดของแต่ละคน</span>');
+        '<input type="date" class="input" id="rc-answer-due" value="' + esc(form.answerDue) + '" lang="th-TH" min="' + esc(form.to) + '">',
+        'เว้นว่างได้ — ไม่กำหนดจะใช้วันครบกำหนดของแต่ละคน');
   }
 
   function renderTargets() {
@@ -363,19 +341,6 @@
     /* รอบกับวันครบกำหนดบนการ์ดมาจากข้อมูลรายคน ไม่ใช่จากข้อความ — พรีวิวใช้คนแรกในผลค้นหา */
     $('rc-bubble-round').textContent = 'รอบติดตาม ' + p.round;
     $('rc-bubble-due').textContent = 'ตอบได้ถึงวันที่ ' + fmt(p.due);
-
-    /* แจ้งเตือนเด้งกับหน้าจอล็อกใช้ข้อความชุดเดียวกัน ต่างกันแค่ฉากหลัง
-       บรรทัดแรกเป็นหัวเรื่อง ที่เหลือเป็นเนื้อ — ระบบปฏิบัติการตัดแบบนี้เอง */
-    var lines = fillMsg(form.msg, p).split('\n').filter(function (l) { return l.trim() !== ''; });
-    var title = lines.shift() || '';
-    var body = lines.join(' ');
-
-    ['rc-push', 'rc-lock'].forEach(function (prefix) {
-      $(prefix + '-title').textContent = title;
-      $(prefix + '-text').textContent = body;
-    });
-
-    $('rc-lock-date').textContent = window.TFC.formatThaiDate(new Date().toISOString().slice(0, 10));
   }
 
   /* ---------- แถบล่าง ---------- */

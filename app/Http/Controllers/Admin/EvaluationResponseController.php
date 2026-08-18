@@ -76,13 +76,13 @@ class EvaluationResponseController extends Controller
     private function surveyRows(): Collection
     {
         return SurveyResponse::query()
-            ->with(['form:id,name', 'participant:id,name,person_code', 'cohortRound:id,name'])
+            ->with(['form:id,name', 'participant:id,person_code', 'cohortRound:id,name'])
             ->withCount('answers')
             ->get()
+            /* ไม่ส่งชื่อลงหน้าเลย (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม อ้างด้วยรหัสบุคคล */
             ->map(fn (SurveyResponse $r) => [
                 'id' => $r->id,
                 'form' => $r->form?->name ?? 'ไม่ระบุแบบประเมิน',
-                'name' => $r->participant?->name ?? 'ไม่พบผู้ตอบ',
                 'pid' => $r->participant?->person_code ?? '—',
                 /* ใบติดตามสุขภาพผูกกับรอบของคนนั้น ต้องบอกว่ารอบไหน ไม่งั้นเทียบก่อน–หลังไม่ได้ */
                 'context' => $r->cohortRound?->name ?? 'ไม่ระบุรอบ',

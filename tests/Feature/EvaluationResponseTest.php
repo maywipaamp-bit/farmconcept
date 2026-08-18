@@ -115,8 +115,9 @@ class EvaluationResponseTest extends TestCase
             ->assertViewHas('responses', function ($rows) {
                 $row = $rows->first();
 
+                /* ต้องไม่มีคีย์ name เลย — ชื่อห้ามหลุดลง JSON ของหน้า (ข้อมูลนิรนาม) */
                 return $rows->count() === 1
-                    && $row['name'] === 'สมชาย ใจดี'
+                    && ! array_key_exists('name', $row)
                     && $row['pid'] === 'P0001'
                     && $row['context'] === 'ก่อนเข้าร่วม'
                     && $row['answers'] === 1;

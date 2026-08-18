@@ -460,7 +460,7 @@ class CohortTest extends TestCase
                 'phone' => '089-999-9999',
             ]))
             ->assertOk()
-            ->assertJsonPath('data.name', 'สมชาย เปลี่ยนชื่อ');
+            ->assertJsonPath('data.edit.name', 'สมชาย เปลี่ยนชื่อ');
 
         $participant = $profile->participant->fresh();
 

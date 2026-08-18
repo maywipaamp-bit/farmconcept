@@ -37,8 +37,9 @@
     var next = C.nextRound(m);
     var due = C.dueText(next);
 
-    $('cd-crumb').textContent = m.name;
-    document.title = m.name + ' | TheFarmConcept';
+    /* อ้างด้วยรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม */
+    $('cd-crumb').textContent = m.pid;
+    document.title = m.pid + ' | TheFarmConcept';
 
     $('cd-header').innerHTML =
       '<div class="cd-header-main">' +
@@ -47,11 +48,10 @@
         '</a>' +
         '<div class="cd-header-text">' +
           '<div class="cd-title-line">' +
-            '<h1 class="cd-title">' + esc(m.name) + '</h1>' +
+            '<h1 class="cd-title">' + esc(m.pid) + '</h1>' +
             '<span class="co-status ' + STATUS_CLASS[status] + '">' + esc(status) + '</span>' +
           '</div>' +
           '<div class="cd-meta">' +
-            '<span>' + esc(m.pid) + '</span>' +
             '<span>' + esc(m.phone) + '</span>' +
             '<span>' + esc(m.area) + '</span>' +
             '<span>เข้ากลุ่ม ' + esc(C.fmt(m.base)) + '</span>' +

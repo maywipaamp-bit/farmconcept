@@ -41,7 +41,7 @@
         <span class="co-search-arrow"></span>
         <label class="co-field">
           <span class="co-field-label">คำค้นหา</span>
-          <input type="text" class="input" id="co-q" placeholder="ชื่อ รหัสบุคคล หรือเบอร์โทร" autocomplete="off">
+          <input type="text" class="input" id="co-q" placeholder="รหัสบุคคล หรือเบอร์โทร" autocomplete="off">
         </label>
         <label class="co-field">
           <span class="co-field-label">รอบถัดไป</span>
@@ -247,7 +247,7 @@
       /* เทียบเป็นข้อความ ISO ได้ตรง ๆ เพราะ YYYY-MM-DD เรียงตามตัวอักษรเท่ากับเรียงตามวัน */
       if (state.dueFrom && (!m.nextRoundDue || m.nextRoundDue < state.dueFrom)) return false;
       if (state.dueTo && (!m.nextRoundDue || m.nextRoundDue > state.dueTo)) return false;
-      if (q && (m.name + ' ' + m.pid + ' ' + m.phone).toLowerCase().indexOf(q) < 0) return false;
+      if (q && (m.pid + ' ' + m.phone).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
@@ -284,7 +284,7 @@
 
      key ของคอลัมน์รอบใช้ 'r:ชื่อรอบ' เพราะชุดรอบมาจาก master data เปลี่ยนได้ตลอด */
   var COLUMNS = [
-    { key: 'name', label: 'ชื่อ / รหัส', width: 'minmax(190px, 1.6fr)', px: 190, fixed: true },
+    { key: 'name', label: 'รหัสบุคคล', width: 'minmax(190px, 1.6fr)', px: 190, fixed: true },
     { key: 'contact', label: 'เบอร์ / อีเมล', width: 'minmax(150px, 1fr)', px: 150 },
     { key: 'target', label: 'กลุ่มเป้าหมาย', width: '122px', px: 122 },
     { key: 'entry', label: 'วันที่เข้ากลุ่ม', width: '108px', px: 108 },
@@ -370,9 +370,9 @@
 
         switch (c.key) {
           case 'name':
+            /* แสดงเฉพาะรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม */
             return '<div class="co-name-cell">' +
-              '<a href="' + href + '" class="co-name">' + esc(m.name) + '</a>' +
-              '<span class="co-pid">' + esc(m.pid) + '</span></div>';
+              '<a href="' + href + '" class="co-name">' + esc(m.pid) + '</a></div>';
 
           /* เบอร์กับอีเมลซ้อนกันในช่องเดียว ไม่แยกสองคอลัมน์ — สองค่านี้ใช้แทนกันได้อยู่แล้ว
              แยกออกไปก็ได้ตารางกว้างขึ้นโดยที่ช่องอีเมลว่างเกือบทั้งคอลัมน์ */
@@ -514,7 +514,7 @@
       return toast('ไม่มีข้อมูลให้ส่งออกตามเงื่อนไขที่เลือก', 'warning');
     }
 
-    var headers = ['รหัสบุคคล', 'ชื่อ-นามสกุล', 'เบอร์โทร', 'เพศ', 'ช่วงอายุ', 'อาชีพ',
+    var headers = ['รหัสบุคคล', 'เบอร์โทร', 'เพศ', 'ช่วงอายุ', 'อาชีพ',
       'อีเมล', 'พื้นที่', 'กลุ่มเป้าหมาย', 'แหล่งที่มา', 'ที่มาของระเบียน', 'วันที่เข้ากลุ่ม'];
 
     /* รอบละสามคอลัมน์ — สถานะ / ครบกำหนด / ตอบเมื่อ ชื่อคอลัมน์มาจากรอบจริงในระบบ */
@@ -528,7 +528,7 @@
       var rMap = {};
       (m.rounds || []).forEach(function (r) { rMap[r.name] = r; });
 
-      var row = [m.pid, m.name, m.phone, m.gender, m.age, m.job,
+      var row = [m.pid, m.phone, m.gender, m.age, m.job,
         /* ไฟล์ส่งออกเก็บครบทุกฟิลด์เสมอ ไม่ผูกกับคอลัมน์ที่เลือกแสดงบนหน้าจอ
            เอาไปทำรายงานต่อ ไม่ใช่ภาพสำเนาของตาราง */
         m.email || '', m.area, m.target, m.source, m.createdVia || 'ไม่ระบุ', fmt(m.entryDate)];
@@ -787,7 +787,7 @@
     fillFormFrom(m);
     $('co-modal-title').textContent = 'แก้ไขกลุ่มตัวอย่าง · ' + m.pid;
 
-    $('co-del-name').textContent = m.name + ' (' + m.pid + ')';
+    $('co-del-name').textContent = m.pid;
   });
 
   $('co-del-confirm').addEventListener('click', function () {
@@ -1062,7 +1062,7 @@
 
         if (window.TFC.closeModal) window.TFC.closeModal('co-add-modal');
 
-        $('co-saved-name').textContent = res.body.data.name + ' · ' + res.body.data.pid;
+        $('co-saved-name').textContent = res.body.data.pid;
         $('co-saved-link').textContent = res.body.evalLink || '';
         $('co-bind-link').textContent = res.body.lineBindLink || '';
         $('co-saved-copy').textContent = 'คัดลอกลิงก์';

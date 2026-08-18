@@ -12,7 +12,7 @@
             <a class="tr-primary-button" href="{{ route('public.activities.show', $activity->code) }}">กลับไปหน้ากิจกรรม</a>
         </section>
     @else
-        {{-- สามหน้าจออยู่ใน DOM ตั้งแต่แรก JS แค่สลับว่าจะให้เห็นอันไหน
+        {{-- ทุกหน้าจออยู่ใน DOM ตั้งแต่แรก JS แค่สลับว่าจะให้เห็นอันไหน
              ทีละหน้าจอเพราะทำบนมือถือหน้างาน — เห็นสิ่งที่ต้องทำอย่างเดียวไม่มีอะไรให้ลังเล --}}
         <section class="registration-card checkin-card" id="checkin-form">
             <form id="public-checkin-form" novalidate>
@@ -36,10 +36,29 @@
                     <button type="button" class="registration-submit" id="checkin-lookup">ตรวจสอบ</button>
                 </div>
 
-                {{-- หน้าที่ 2 — มีหลายรายชื่อในเบอร์เดียว (จองหลายที่นั่ง) จึงต้องเลือกเอง
-                     ถ้ามีชื่อเดียว JS จะข้ามหน้านี้ไปเช็กอินให้เลย --}}
+                {{-- หน้าที่ 2 — ยืนยันตัวตนแล้วกดเช็กอินเอง
+                     ไม่เช็กอินให้อัตโนมัติทันทีที่ค้นเจอ เพราะสองเหตุผล:
+                     ผู้เข้าร่วมต้องได้เห็นชื่อตัวเองก่อนว่าระบบจับถูกคน (เบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ)
+                     และการกดเองทำให้รู้ตัวว่าเช็กอินแล้วจริง ไม่ใช่หน้าจอเปลี่ยนไปเองโดยไม่ได้ตั้งใจ --}}
+                <div class="ck-step" id="ck-step-confirm" hidden>
+                    <button type="button" class="ck-back" data-checkin-back>เปลี่ยนเบอร์โทรศัพท์</button>
+                    <h2 class="ck-title">ยืนยันการเช็กอิน</h2>
+                    <p class="ck-sub">ตรวจสอบชื่อให้ถูกต้อง แล้วกดปุ่มด้านล่างเพื่อเช็กอิน</p>
+
+                    <div class="ck-confirm-card">
+                        <span class="ck-confirm-label">ผู้เข้าร่วม</span>
+                        <span class="ck-confirm-name" id="checkin-confirm-name"></span>
+                    </div>
+
+                    <p class="registration-message" id="checkin-confirm-message" aria-live="polite"></p>
+
+                    <button type="button" class="registration-submit" id="checkin-confirm-btn">เช็กอิน</button>
+                </div>
+
+                {{-- หน้าที่ 3 — มีหลายรายชื่อในเบอร์เดียว (จองหลายที่นั่ง) จึงต้องเลือกเอง
+                     ชื่อเดียวจะไปหน้ายืนยันด้านบนแทน ไม่ผ่านหน้านี้ --}}
                 <div class="ck-step" id="ck-step-people" hidden>
-                    <button type="button" class="ck-back" id="checkin-back">เปลี่ยนเบอร์โทรศัพท์</button>
+                    <button type="button" class="ck-back" data-checkin-back>เปลี่ยนเบอร์โทรศัพท์</button>
                     <h2 class="ck-title">เลือกรายชื่อเพื่อเช็กอิน</h2>
                     <p class="ck-sub" id="checkin-people-sub"></p>
 
@@ -47,7 +66,7 @@
                     <p class="registration-message" id="checkin-people-message" aria-live="polite"></p>
                 </div>
 
-                {{-- หน้าที่ 3 — ผลลัพธ์ · เป็นที่เดียวที่บอกชื่อกิจกรรม จึงต้องครบพอให้ยืนยันได้ว่ามาถูกงาน --}}
+                {{-- หน้าที่ 4 — ผลลัพธ์ · เป็นที่เดียวที่บอกชื่อกิจกรรม จึงต้องครบพอให้ยืนยันได้ว่ามาถูกงาน --}}
                 <div class="ck-step" id="ck-step-done" hidden>
                     {{-- เรียงจากผลลัพธ์ → คำต้อนรับ → ชื่องาน แล้วปิดท้ายด้วยสลิปยืนยันว่าใคร เวลาไหน
                          สองบรรทัดล่างเป็นข้อมูลอ้างอิง จึงแยกกล่องออกจากข้อความต้อนรับ --}}

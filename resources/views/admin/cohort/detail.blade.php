@@ -6,13 +6,14 @@
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard">แดชบอร์ด</a> <span>/</span>
     <a href="{{ route('admin.cohort.index') }}">กลุ่มตัวอย่าง</a> <span>/</span>
-    <span class="is-current" id="cd-crumb">{{ $member['name'] }} ({{ $member['pid'] }})</span>
+    {{-- อ้างด้วยรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม --}}
+    <span class="is-current" id="cd-crumb">{{ $member['pid'] }}</span>
   </nav>
 
   <div class="cd-header" id="cd-header">
     <div>
-      <h1 class="co-title" style="margin:0;">{{ $member['name'] }}</h1>
-      <span class="text-secondary small">{{ $member['pid'] }} · เข้ากลุ่มตัวอย่างเมื่อ {{ $member['entryDate'] }}</span>
+      <h1 class="co-title" style="margin:0;">{{ $member['pid'] }}</h1>
+      <span class="text-secondary small">เข้ากลุ่มตัวอย่างเมื่อ {{ $member['entryDate'] }}</span>
     </div>
     <div class="flex gap-2">
       @if(!$member['stopped'])

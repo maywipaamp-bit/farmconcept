@@ -27,7 +27,7 @@
         <div class="co-colpick-panel rl-search-panel" id="rl-search-panel" hidden>
           <label class="co-field">
             <span class="co-field-label">คำค้นหา</span>
-            <input type="text" class="input" id="rl-q" placeholder="ชื่อผู้ตอบ รหัสบุคคล หรือชื่อรอบ" autocomplete="off">
+            <input type="text" class="input" id="rl-q" placeholder="รหัสบุคคล หรือชื่อรอบ" autocomplete="off">
           </label>
           <label class="co-field">
             <span class="co-field-label">แบบประเมิน</span>
@@ -47,7 +47,7 @@
       <div class="rl-table">
         <div class="rl-row rl-th">
           <div>#</div>
-          <div>ผู้ตอบ</div>
+          <div>รหัสบุคคล</div>
           <div>แบบประเมิน</div>
           <div>รอบติดตาม</div>
           <div>ส่งเมื่อ</div>
@@ -117,7 +117,7 @@
       if (state.form !== 'ทุกแบบประเมิน' && r.form !== state.form) return false;
       if (!q) return true;
 
-      return [r.name, r.pid, r.context, r.form].some(function (v) {
+      return [r.pid, r.context, r.form].some(function (v) {
         return String(v || '').toLowerCase().indexOf(q) > -1;
       });
     });
@@ -143,9 +143,9 @@
     $('rl-rows').innerHTML = list.slice(start, start + state.pageSize).map(function (r, i) {
       return '<div class="rl-row">' +
         '<div class="rl-no">' + (start + i + 1) + '</div>' +
+        /* แสดงเฉพาะรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม */
         '<div class="rl-person">' +
-          '<span class="rl-name">' + esc(r.name) + '</span>' +
-          '<span class="rl-pid">' + esc(r.pid) + '</span>' +
+          '<span class="rl-name">' + esc(r.pid) + '</span>' +
         '</div>' +
         '<div class="rl-cell">' + esc(r.form) + '</div>' +
         '<div class="rl-cell">' + esc(r.context) + '</div>' +
@@ -218,7 +218,7 @@
     var id = btn.getAttribute('data-view');
     var row = rows.find(function (r) { return String(r.id) === id; });
 
-    $('rl-detail-title').textContent = row ? row.name + ' · ' + row.context : 'คำตอบที่ส่งเข้ามา';
+    $('rl-detail-title').textContent = row ? row.pid + ' · ' + row.context : 'คำตอบที่ส่งเข้ามา';
     $('rl-detail-meta').textContent = 'กำลังโหลด…';
     $('rl-detail-body').innerHTML = '';
     window.TFC.openModal('rl-detail-modal');
@@ -251,9 +251,9 @@
     var list = filtered();
 
     window.TFC.exportCsv('ตอบแบบประเมิน.csv',
-      ['ลำดับ', 'ผู้ตอบ', 'รหัสบุคคล', 'แบบประเมิน', 'รอบติดตาม', 'จำนวนข้อที่ตอบ', 'ส่งเมื่อ'],
+      ['ลำดับ', 'รหัสบุคคล', 'แบบประเมิน', 'รอบติดตาม', 'จำนวนข้อที่ตอบ', 'ส่งเมื่อ'],
       list.map(function (r, i) {
-        return [i + 1, r.name, r.pid, r.form, r.context, r.answers, at(r.at)];
+        return [i + 1, r.pid, r.form, r.context, r.answers, at(r.at)];
       }));
   });
 

@@ -19,7 +19,7 @@
     <span class="rl-count">ตอบแล้ว {{ $people->count() }} คน</span>
     <div class="rl-toolbar-right">
       <input type="text" class="input pr-search" id="pr-q"
-             placeholder="ค้นหาชื่อหรือรหัสบุคคล" autocomplete="off">
+             placeholder="ค้นหารหัสบุคคล" autocomplete="off">
     </div>
   </div>
 
@@ -28,7 +28,7 @@
       <div class="rl-table pr-people">
         <div class="rl-row rl-th">
           <div>#</div>
-          <div>ผู้ตอบ</div>
+          <div>รหัสบุคคล</div>
           <div>แบบประเมิน</div>
           <div>ตอบแล้ว</div>
           <div>รอบล่าสุด</div>
@@ -36,12 +36,12 @@
         </div>
         <div id="pr-rows">
           @forelse($people as $i => $person)
-            {{-- ค้นหากรองฝั่งเบราว์เซอร์จาก data-search — รายชื่อทั้งโครงการมีหลักร้อย ส่งมาทั้งหมดได้ --}}
-            <div class="rl-row" data-search="{{ mb_strtolower($person['name'].' '.$person['pid']) }}">
+            {{-- แสดงเฉพาะรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม
+                 ค้นหากรองฝั่งเบราว์เซอร์จาก data-search — รายชื่อทั้งโครงการมีหลักร้อย ส่งมาทั้งหมดได้ --}}
+            <div class="rl-row" data-search="{{ mb_strtolower($person['pid']) }}">
               <div class="rl-no">{{ $i + 1 }}</div>
               <div class="rl-person">
-                <span class="rl-name">{{ $person['name'] }}</span>
-                <span class="rl-pid">{{ $person['pid'] }}</span>
+                <span class="rl-name">{{ $person['pid'] }}</span>
               </div>
               <div class="rl-cell">{{ $person['forms'] }}</div>
               <div class="rl-cell"><span class="num">{{ $person['rounds'] }}</span> รอบ</div>

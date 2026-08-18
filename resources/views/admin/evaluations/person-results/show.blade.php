@@ -11,12 +11,8 @@
 
   <div class="rl-head">
     <div>
-      {{-- กลุ่มตัวอย่างส่วนใหญ่ไม่มีชื่อจริง (name = person_code) — อย่าโชว์รหัสซ้ำสองที่ --}}
-      <h1 class="rl-title">{{ $participant->name ?? $participant->person_code }}
-        @if($participant->name !== null && $participant->name !== $participant->person_code)
-          <span class="pr-head-pid">{{ $participant->person_code }}</span>
-        @endif
-      </h1>
+      {{-- แสดงเฉพาะรหัสบุคคล ไม่แสดงชื่อ (คำสั่งทีม) — กลุ่มตัวอย่างเป็นข้อมูลนิรนาม --}}
+      <h1 class="rl-title">{{ $participant->person_code }}</h1>
       <p class="pr-subtitle">
         ตอบแล้ว <span class="num">{{ $totalRounds }}</span> รอบ ·
         อ่านแนวโน้มจากลูกศรในช่อง: เทียบกับรอบก่อนหน้าที่มีคำตอบของข้อเดียวกัน

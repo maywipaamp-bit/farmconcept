@@ -725,6 +725,21 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .ck-done-slip dt { color: var(--text-secondary); font-size: 12.5px; }
 .ck-done-slip dd { min-width: 0; margin: 0; color: var(--text-primary); font-size: 13.5px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
 
+/* การ์ดยืนยันชื่อก่อนกดเช็กอิน — ชื่อต้องเด่นที่สุดในหน้า เพราะเป็นสิ่งเดียวที่ต้องตรวจ
+   ก่อนกดปุ่ม ถ้าไม่ใช่ชื่อตัวเองต้องเห็นได้ตั้งแต่ชำเลืองมอง */
+.ck-confirm-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--primary-soft);
+}
+
+.ck-confirm-label { color: var(--text-secondary); font-size: 12.5px; }
+.ck-confirm-name { color: var(--text-primary); font-size: 18px; font-weight: 600; line-height: 1.4; }
+
 .checkin-name-list { display: grid; gap: 9px; }
 .checkin-name-row {
     display: grid;
