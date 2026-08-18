@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityCheckinController;
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\ActivityInsightsController;
 use App\Http\Controllers\Admin\ReportPeopleController;
 use App\Http\Controllers\Admin\ActivityQrController;
 use App\Http\Controllers\Admin\ActivityResponseController;
@@ -245,6 +246,18 @@ Route::middleware('auth')->group(function () {
             Route::get('/people', [ReportPeopleController::class, 'index'])
                 ->middleware('menu:reports-people')
                 ->name('people');
+
+            /* สี่รายงานเชิงบริหาร มองข้ามกิจกรรมทั้งหมด — คนละคำถามต่อหน้า ไม่ใช่แท็บเดียวกัน */
+            Route::prefix('activities-insights')->name('activities-insights.')->group(function () {
+                Route::get('/overview', [ActivityInsightsController::class, 'overview'])
+                    ->middleware('menu:reports-activities-overview')->name('overview');
+                Route::get('/performance', [ActivityInsightsController::class, 'performance'])
+                    ->middleware('menu:reports-activities-performance')->name('performance');
+                Route::get('/participants', [ActivityInsightsController::class, 'participants'])
+                    ->middleware('menu:reports-activities-participants')->name('participants');
+                Route::get('/finance', [ActivityInsightsController::class, 'finance'])
+                    ->middleware('menu:reports-activities-finance')->name('finance');
+            });
         });
 
         /* พาธเดิมตอนหน้านี้ยังอยู่ใต้หมวดกิจกรรม — ส่งต่อไปที่ใหม่แทนที่จะ 404 */
@@ -494,6 +507,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/{cohortProfile}', [CohortController::class, 'update'])->name('update');
             Route::delete('/{cohortProfile}', [CohortController::class, 'destroy'])->name('destroy');
             Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
+            Route::patch('/{cohortProfile}/unlink-line', [CohortController::class, 'unlinkLine'])->name('unlink-line');
         });
 
         Route::redirect('/evaluations/rounds.html', '/admin/tracking-rounds');

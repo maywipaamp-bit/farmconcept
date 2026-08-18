@@ -120,6 +120,26 @@
   </div>
 </div>
 
+<!-- ยืนยันยกเลิกเชื่อม LINE — บัญชี LINE หนึ่งบัญชีผูกได้กับคนเดียว ต้องยกเลิกก่อนถึงจะเชื่อมให้คนใหม่ได้ -->
+<div class="modal-overlay" id="co-unlink-line-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title">ยืนยันยกเลิกการเชื่อม LINE</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="mb-2"><strong id="co-unlink-line-name"></strong> จะไม่ได้รับแจ้งเตือนรอบติดตามผ่าน LINE อีก จนกว่าจะเชื่อมบัญชีใหม่</p>
+      <p class="text-secondary small mb-0">คำตอบและประวัติที่มีอยู่แล้วไม่หายไป</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-danger" id="co-unlink-line-confirm">ยืนยันยกเลิกการเชื่อม</button>
+    </div>
+  </div>
+</div>
+
 <!-- ยืนยันก่อนลบ — ชื่อกับรหัสต้องเห็นก่อนกดยืนยัน ลบผิดคนแล้วกู้คืนเองไม่ได้ -->
 <div class="modal-overlay" id="co-del-modal">
   <div class="modal modal-sm">
@@ -405,12 +425,16 @@
       }
 
       /* เมนู ⋮ ชุดเดียวกับระบบกิจกรรม — สามปุ่มเรียงกันกินความกว้างจนตารางต้องเลื่อนแนวนอน
-         และปุ่มลบอยู่ติดปุ่มแก้ไขทำให้กดพลาดได้ง่าย */
+         และปุ่มลบอยู่ติดปุ่มแก้ไขทำให้กดพลาดได้ง่าย
+         "ยกเลิกเชื่อมไลน์" ใส่เฉพาะคนที่เชื่อมไว้แล้ว — คนที่ยังไม่เชื่อมไม่มีอะไรให้ยกเลิก */
       var actions = JSON.stringify([
         { key: 'view', icon: 'eye', label: 'รายละเอียด', href: href },
-        { key: 'edit', icon: 'edit', label: 'แก้ไข', modal: 'co-add-modal' },
+        { key: 'edit', icon: 'edit', label: 'แก้ไข', modal: 'co-add-modal' }
+      ].concat(m.line ? [
+        { key: 'unlink-line', icon: 'status', label: 'ยกเลิกเชื่อมไลน์', modal: 'co-unlink-line-modal' }
+      ] : []).concat([
         { key: 'delete', icon: 'trash', label: 'ลบ', modal: 'co-del-modal' }
-      ]).replace(/"/g, '&quot;');
+      ])).replace(/"/g, '&quot;');
 
       return '<div class="co-tr" data-row="' + esc(m.id) + '">' +
         shownColumns().map(cellFor).join('') +
@@ -788,6 +812,49 @@
     $('co-modal-title').textContent = 'แก้ไขกลุ่มตัวอย่าง · ' + m.pid;
 
     $('co-del-name').textContent = m.pid;
+    $('co-unlink-line-name').textContent = m.pid;
+  });
+
+  $('co-unlink-line-confirm').addEventListener('click', function () {
+    if (!removeTarget) return;
+
+    var target = removeTarget;
+    var btn = $('co-unlink-line-confirm');
+    btn.disabled = true;
+
+    fetch('{{ url('/admin/cohort') }}/' + target.id + '/unlink-line', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        /* IIS บนเซิร์ฟเวอร์ดัก PATCH ไว้ตั้งแต่ก่อนถึง PHP */
+        'X-HTTP-Method-Override': 'PATCH'
+      },
+      body: '{}'
+    })
+      .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
+      .then(function (res) {
+        btn.disabled = false;
+
+        if (!res.ok || !res.body.success) {
+          toast(firstError(res.body) || res.body.message || 'ยกเลิกการเชื่อมไม่สำเร็จ', 'danger');
+          return;
+        }
+
+        /* เซิร์ฟเวอร์ส่งแถวเดียวกันรูปแบบเดียวกับที่โหลดหน้ามาตอนแรกกลับมาให้ — แทนที่ตรง ๆ
+           ไม่ต้องไล่คัดลอกทีละฟิลด์เอง จะได้ไม่มีจุดที่ลืมอัปเดตตามหลัง */
+        var at = membersList.findIndex(function (x) { return String(x.id) === String(target.id); });
+        if (at >= 0) membersList[at] = res.body.data;
+
+        if (window.TFC.closeModal) window.TFC.closeModal('co-unlink-line-modal');
+        renderTable();
+        toast(res.body.message || 'ยกเลิกการเชื่อมเรียบร้อย', 'success');
+      })
+      .catch(function () {
+        btn.disabled = false;
+        toast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
+      });
   });
 
   $('co-del-confirm').addEventListener('click', function () {

@@ -806,6 +806,12 @@
 .dbo-series--before { --dbo-c: var(--dbo-warn); }
 .dbo-series--after { --dbo-c: var(--dbo-g0); }
 
+/* ชุดสีทั่วไปสำหรับกราฟเส้นหน้ารายงาน (ภาพรวมกิจกรรม/การเงิน) ที่ไม่ได้มีความหมายตายตัว
+   แบบ before/after ด้านบน — ใช้โทนหมวดหมู่ชุดเดียวกับโดนัทประชากร ให้อยู่ในชุดสีเดียวกันทั้งระบบ */
+.dbo-series--a { --dbo-c: var(--dbo-cat-0); }
+.dbo-series--b { --dbo-c: var(--dbo-cat-1); }
+.dbo-series--c { --dbo-c: var(--dbo-cat-2); }
+
 .dbo-trend-axis {
   grid-column: 2;
   display: grid;

@@ -44,7 +44,16 @@
             @foreach($tabs['info'] as [$label, $value])
               <div>
                 <dt>{{ $label }}</dt>
-                <dd>{{ $label === 'วันที่เข้ากลุ่มตัวอย่าง' ? \App\Providers\AppServiceProvider::thaiDate($value) : ($value ?: '—') }}</dd>
+                @if($label === 'LINE' && $member['line'])
+                  {{-- ปุ่มยกเลิกอยู่ติดค่า "ผูกแล้ว" — เห็นสถานะกับทางแก้ในจุดเดียวกัน
+                       บัญชี LINE หนึ่งบัญชีผูกได้กับคนเดียว จึงต้องยกเลิกก่อนถึงจะเชื่อมให้คนใหม่ได้ --}}
+                  <dd class="cd-fact-with-action">
+                    <span>{{ $value }}</span>
+                    <button type="button" class="co-link is-danger" data-open-modal="cd-unlink-line-modal">ยกเลิกเชื่อม</button>
+                  </dd>
+                @else
+                  <dd>{{ $label === 'วันที่เข้ากลุ่มตัวอย่าง' ? \App\Providers\AppServiceProvider::thaiDate($value) : ($value ?: '—') }}</dd>
+                @endif
               </div>
             @endforeach
           </dl>
@@ -197,6 +206,28 @@
 @endsection
 
 @section('modals')
+@if($member['line'])
+<div class="modal-overlay" id="cd-unlink-line-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title">ยืนยันยกเลิกการเชื่อม LINE</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-secondary small mb-0">
+        {{ $member['pid'] }} จะไม่ได้รับแจ้งเตือนรอบติดตามผ่าน LINE อีก จนกว่าจะเชื่อมบัญชีใหม่
+        — คำตอบและประวัติที่มีอยู่แล้วไม่หายไป
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-danger" id="cd-unlink-line-confirm">ยืนยันยกเลิกการเชื่อม</button>
+    </div>
+  </div>
+</div>
+@endif
 @if(!$member['stopped'])
 <div class="modal-overlay" id="cd-stop-modal">
   <div class="modal modal-sm">
@@ -229,6 +260,7 @@
 (function () {
   var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   var stopForm = document.getElementById('cd-stop-form');
+  var unlinkBtn = document.getElementById('cd-unlink-line-confirm');
 
   /* สลับแท็บ — ทุกแผงอยู่ใน DOM แล้ว ที่นี่แค่ซ่อน/แสดง ไม่ยิงเซิร์ฟเวอร์ซ้ำ
      ข้อมูลทั้งสี่แท็บของคนหนึ่งคนรวมกันไม่กี่สิบแถว โหลดทีเดียวเร็วกว่ารอ request ต่อแท็บ */
@@ -276,6 +308,38 @@
         submitBtn.disabled = false;
         if (window.TFC.showToast) window.TFC.showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'danger');
       });
+    });
+  }
+
+  if (unlinkBtn) {
+    unlinkBtn.addEventListener('click', function () {
+      unlinkBtn.disabled = true;
+
+      fetch('{{ route('admin.cohort.unlink-line', $member['db_id']) }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          /* IIS บนเซิร์ฟเวอร์ดัก PATCH ไว้ตั้งแต่ก่อนถึง PHP เหมือนฟอร์มยุติการติดตามข้างบน */
+          'X-HTTP-Method-Override': 'PATCH'
+        },
+        body: '{}'
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (res) {
+          unlinkBtn.disabled = false;
+          if (!res.success) {
+            if (window.TFC.showToast) window.TFC.showToast(res.message || 'เกิดข้อผิดพลาด', 'danger');
+            return;
+          }
+          if (window.TFC.showToast) window.TFC.showToast(res.message, 'success');
+          window.location.reload();
+        })
+        .catch(function () {
+          unlinkBtn.disabled = false;
+          if (window.TFC.showToast) window.TFC.showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'danger');
+        });
     });
   }
 })();

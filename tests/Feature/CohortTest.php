@@ -392,6 +392,68 @@ class CohortTest extends TestCase
         $this->assertNotNull(CohortProfile::orderByDesc('id')->firstOrFail()->stopped_at);
     }
 
+    /**
+     * ยกเลิกการเชื่อม LINE — ต้องคืนบัญชีให้ว่างจริง (ล้าง unique index ด้วย)
+     * ไม่งั้นจะเชื่อมบัญชีเดิมให้คนใหม่ไม่ได้ ทั้งที่เจตนาคือ "ปลดคนนี้ออกจากบัญชีนั้นแล้ว"
+     */
+    public function test_ยกเลิกเชื่อมไลน์คืนบัญชีให้ว่างและปิดสวิตช์แจ้งเตือน(): void
+    {
+        $this->seedRoundTemplates();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/cohort', $this->payload())->assertOk();
+
+        $profile = CohortProfile::firstOrFail();
+        $profile->participant->update(['line_user_id' => 'U-line-1', 'line_notify' => true]);
+
+        $this->actingAs($admin)
+            ->postJson('/admin/cohort/'.$profile->id.'/unlink-line', [], ['X-HTTP-Method-Override' => 'PATCH'])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.line', false);
+
+        $participant = $profile->participant()->withTrashed()->firstOrFail();
+        $this->assertNull($participant->line_user_id);
+        $this->assertFalse((bool) $participant->line_notify);
+
+        /* ต้องผูกกับบัญชีอื่นได้ทันทีหลังยกเลิก — พิสูจน์ว่า unique index ว่างจริง ไม่ใช่แค่ค่าที่โชว์บนจอ */
+        $participant->update(['line_user_id' => 'U-line-2']);
+        $this->assertSame('U-line-2', $participant->fresh()->line_user_id);
+    }
+
+    public function test_คนที่ยังไม่เชื่อมไลน์ยกเลิกไม่ได้(): void
+    {
+        $this->seedRoundTemplates();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/cohort', $this->payload())->assertOk();
+        $profile = CohortProfile::firstOrFail();
+
+        $this->actingAs($admin)
+            ->postJson('/admin/cohort/'.$profile->id.'/unlink-line', [], ['X-HTTP-Method-Override' => 'PATCH'])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_หน้ารายละเอียดแสดงปุ่มยกเลิกเชื่อมเฉพาะคนที่เชื่อมไลน์แล้ว(): void
+    {
+        $this->seedRoundTemplates();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/cohort', $this->payload())->assertOk();
+        $profile = CohortProfile::firstOrFail();
+
+        $this->actingAs($admin)->get('/admin/cohort/'.$profile->id)
+            ->assertOk()
+            ->assertDontSee('ยกเลิกเชื่อม');
+
+        $profile->participant->update(['line_user_id' => 'U-line-1']);
+
+        $this->actingAs($admin)->get('/admin/cohort/'.$profile->id)
+            ->assertOk()
+            ->assertSee('ยกเลิกเชื่อม');
+    }
+
     public function test_detail_page_opens_for_a_person_who_has_follow_up_notes(): void
     {
         $this->seedRoundTemplates();

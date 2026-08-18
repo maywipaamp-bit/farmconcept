@@ -16485,6 +16485,9 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .aov-rp-card--wide { margin-bottom: var(--space-5); }
 
+/* แถบลิงก์สลับหน้าสี่รายงานเชิงบริหาร (partials/insights-nav) */
+.aov-rp-insights-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+
 /* ---------- โดนัท ---------- */
 .aov-rp-donut-wrap {
   display: flex;
@@ -17175,3 +17178,15 @@ details.an-section:not([open]) .an-section-toggle::after { content: ' ▾'; }
 /* ไอคอนคำอธิบายท้าย label — เมาส์ชี้ (หรือโฟกัสคีย์บอร์ด) เห็นข้อความเต็มจาก title */
 .co-hint-icon { display: inline-flex; align-items: center; margin-left: 6px; color: var(--color-text-secondary); cursor: help; vertical-align: middle; }
 .co-hint-icon:hover, .co-hint-icon:focus-visible { color: var(--color-primary-dark); }
+
+/* แถวข้อเท็จจริงที่มีปุ่มดำเนินการต่อท้าย (เช่น สถานะ LINE + ปุ่มยกเลิกเชื่อม)
+   .cd-facts dd ปกติตัดคำด้วย ellipsis แถวเดียว — แถวนี้ต้องเป็น flex ให้ปุ่มไม่ถูกตัดหาย */
+.cd-fact-with-action {
+  display: flex !important;
+  align-items: center;
+  gap: var(--space-2);
+  overflow: visible !important;
+  white-space: normal !important;
+}
+.co-link.is-danger { color: var(--color-danger-text); }
+.co-link.is-danger:hover { color: var(--color-danger-hover); }

@@ -162,6 +162,39 @@ return [
                 ],
             ],
         ],
+        /* รายงานเชิงบริหาร — มองข้ามกิจกรรมทั้งหมด แยกจาก "ผู้เข้าร่วมทั้งหมด" ใต้กิจกรรม
+           ซึ่งเป็นตารางรายชื่อ ไม่ใช่รายงานสรุป จึงยังอยู่คนละหมวดกัน */
+        [
+            'key' => 'reports-activities-insights',
+            'label' => 'รายงาน',
+            'icon' => '<path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/>',
+            'children' => [
+                [
+                    'key' => 'reports-activities-overview',
+                    'label' => 'ภาพรวมกิจกรรม',
+                    'icon' => '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+                    'href' => 'admin/reports/activities-insights/overview',
+                ],
+                [
+                    'key' => 'reports-activities-performance',
+                    'label' => 'ประสิทธิภาพกิจกรรม',
+                    'icon' => '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M8 13v3M12 9v7M16 6v10"/>',
+                    'href' => 'admin/reports/activities-insights/performance',
+                ],
+                [
+                    'key' => 'reports-activities-participants',
+                    'label' => 'ผู้เข้าร่วมและช่องทาง',
+                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+                    'href' => 'admin/reports/activities-insights/participants',
+                ],
+                [
+                    'key' => 'reports-activities-finance',
+                    'label' => 'การเงิน',
+                    'icon' => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+                    'href' => 'admin/reports/activities-insights/finance',
+                ],
+            ],
+        ],
         [
             'key' => 'master-data',
             'label' => 'พื้นฐาน',
@@ -281,6 +314,7 @@ return [
             'master-data-consents', 'master-data-follow-up-rounds',
         ],
         'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses', 'reports-people'],
+        'reports-activities-insights' => ['reports-activities-overview', 'reports-activities-performance', 'reports-activities-participants', 'reports-activities-finance'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],
     ],
 

@@ -506,6 +506,43 @@ class CohortController extends Controller
         ]);
     }
 
+    /**
+     * ยกเลิกการเชื่อม LINE — คืนบัญชีให้ว่าง เพื่อผูกกับบัญชีใหม่หรือคนอื่นได้
+     *
+     * ใช้เมื่อคนนั้นทำบัญชี LINE หาย เปลี่ยนบัญชี หรือกดเชื่อมผิดคน (บัญชี LINE หนึ่งบัญชี
+     * ผูกได้กับคนเดียวเท่านั้น — ไม่ล้างของเดิมก่อน จะเชื่อมให้คนใหม่ไม่ได้เลย)
+     *
+     * ไม่กระทบรอบติดตามหรือคำตอบที่มีอยู่แล้ว กระทบแค่ปลายทางแจ้งเตือนเท่านั้น
+     */
+    public function unlinkLine(CohortProfile $cohortProfile): JsonResponse
+    {
+        $participant = $cohortProfile->participant;
+
+        abort_if($participant === null, 404);
+
+        if (blank($participant->line_user_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'คนนี้ยังไม่ได้เชื่อม LINE',
+            ], 422);
+        }
+
+        $participant->update([
+            'line_user_id' => null,
+            'line_notify' => false,
+            'line_display_name' => null,
+            'line_picture_url' => null,
+        ]);
+
+        $cohortProfile->load(['participant.area', 'participant.targetGroup', 'rounds']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ยกเลิกการเชื่อม LINE เรียบร้อย',
+            'data' => $this->toMemberPayload($cohortProfile, $this->sourceLabels()),
+        ]);
+    }
+
     /** ตัวเลือกทุกช่องของฟอร์ม — หน้าจอไม่มีรายการไหน hardcode ไว้เอง */
     private function lookupPayload(): array
     {
