@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ReportPeopleController;
 use App\Http\Controllers\Admin\ActivityQrController;
 use App\Http\Controllers\Admin\ActivityResponseController;
 use App\Http\Controllers\Admin\CohortController;
+use App\Http\Controllers\Admin\CohortHealthReportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EvaluationController;
 use App\Http\Controllers\Admin\EvaluationAnalysisController;
@@ -258,6 +259,15 @@ Route::middleware('auth')->group(function () {
                 Route::get('/finance', [ActivityInsightsController::class, 'finance'])
                     ->middleware('menu:reports-activities-finance')->name('finance');
             });
+
+            /* สุขภาพกลุ่มตัวอย่าง — ติดตามรายบุคคลข้ามรอบเวลา คนละคำถามกับรายงานกิจกรรม */
+            Route::prefix('cohort-health')->name('cohort-health.')
+                ->middleware('menu:reports-cohort-health')->group(function () {
+                    Route::get('/', [CohortHealthReportController::class, 'index'])->name('index');
+                    /* แนวโน้มรายคน — คำนวณตอนขอ ไม่ฝังมากับหน้าตั้งแต่แรก */
+                    Route::get('/person/{participant}', [CohortHealthReportController::class, 'person'])
+                        ->whereNumber('participant')->name('person');
+                });
         });
 
         /* พาธเดิมตอนหน้านี้ยังอยู่ใต้หมวดกิจกรรม — ส่งต่อไปที่ใหม่แทนที่จะ 404 */

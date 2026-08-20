@@ -151,10 +151,12 @@ class LinePushService
                     'type' => 'box',
                     'layout' => 'vertical',
                     'paddingAll' => '20px',
+                    /* ไม่แสดง $headline ซ้ำในการ์ด — เนื้อความเดียวกันอยู่ในตารางด้านล่างครบแล้ว
+                       (ชื่อผู้ลงทะเบียน + ชื่อกิจกรรม) พูดซ้ำสองรอบทำให้การ์ดยาวโดยไม่ได้ข้อมูลเพิ่ม
+                       ตัว $headline ยังใช้ใน altText ด้านบน ซึ่งเป็นบรรทัดเดียวที่เด้งบนแถบแจ้งเตือน
+                       และต้องอ่านรู้เรื่องโดยไม่ต้องเปิดแอป */
                     'contents' => array_merge([
                         ['type' => 'text', 'text' => $title, 'weight' => 'bold', 'size' => 'md', 'color' => '#2F6D45'],
-                        ['type' => 'text', 'text' => $headline, 'wrap' => true, 'size' => 'sm',
-                            'color' => '#374151', 'margin' => 'sm'],
                         ['type' => 'separator', 'margin' => 'lg'],
                     ], $detail),
                 ],

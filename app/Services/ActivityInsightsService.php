@@ -323,14 +323,16 @@ class ActivityInsightsService
 
         /* ไม่มีเวลาที่บันทึกตอนยืนยันชำระเงินแยกไว้ต่างหาก จึงอิงเดือนที่ลงทะเบียนเป็นตัวแทน
            (รายรับของการจองนั้นถูกนับเข้าเดือนที่จองไว้ ไม่ใช่เดือนที่เจ้าหน้าที่กดยืนยัน) */
-        $monthlyRevenue = collect($months['ranges'])->map(function (array $range) {
-            return (float) DB::table('act_registrations')
-                ->join('act_activities', 'act_activities.id', '=', 'act_registrations.activity_id')
-                ->where('act_activities.has_fee', true)
-                ->where('act_registrations.payment_status', 'ชำระแล้ว')
-                ->whereBetween('act_registrations.registered_at', [$range['start'], $range['end']])
-                ->sum('act_activities.fee');
-        })->all();
+        $revenueByMonth = DB::table('act_registrations')
+            ->join('act_activities', 'act_activities.id', '=', 'act_registrations.activity_id')
+            ->where('act_activities.has_fee', true)
+            ->where('act_registrations.payment_status', 'ชำระแล้ว')
+            ->whereBetween('act_registrations.registered_at', [$months['ranges'][0]['start'], end($months['ranges'])['end']])
+            ->selectRaw("DATE_FORMAT(act_registrations.registered_at, '%Y-%m') as ym, SUM(act_activities.fee) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        $monthlyRevenue = $this->alignToMonths($months, $revenueByMonth, fn ($v) => (float) $v, 0.0);
 
         return [
             'kpis' => [
@@ -365,25 +367,49 @@ class ActivityInsightsService
         return ['labels' => $labels, 'ranges' => $ranges];
     }
 
-    /** @return array<int, float> */
+    /**
+     * จำนวนต่อเดือน — คิวรีเดียวแล้วจัดกลุ่มในฐาน ไม่ใช่ยิงทีละเดือน
+     * (ฐานข้อมูลอยู่คนละเครื่อง ทุกคิวรีมีค่าเดินทางไปกลับ หกคิวรีต่อกราฟหนึ่งเส้นจึงช้าโดยไม่จำเป็น)
+     *
+     * @return array<int, float>
+     */
     private function countByMonth(array $months, $query, string $column): array
     {
-        return collect($months['ranges'])->map(
-            fn (array $range) => (float) (clone $query)->whereBetween($column, [$range['start'], $range['end']])->count()
-        )->all();
+        $counts = (clone $query)
+            ->whereBetween($column, [$months['ranges'][0]['start'], end($months['ranges'])['end']])
+            ->selectRaw("DATE_FORMAT({$column}, '%Y-%m') as ym, COUNT(*) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        return $this->alignToMonths($months, $counts, fn ($v) => (float) $v, 0.0);
     }
 
     /** @return array<int, float|null> */
     private function avgScoreByMonth(array $months): array
     {
-        return collect($months['ranges'])->map(function (array $range) {
-            $value = DB::table('evl_satisfaction_responses as r')
-                ->join('evl_answers as a', fn ($j) => $j->on('a.response_id', '=', 'r.id')->where('a.response_type', 'satisfaction'))
-                ->whereNotNull('a.score')
-                ->whereBetween('r.submitted_at', [$range['start'], $range['end']])
-                ->avg('a.score');
+        $averages = DB::table('evl_satisfaction_responses as r')
+            ->join('evl_answers as a', fn ($j) => $j->on('a.response_id', '=', 'r.id')->where('a.response_type', 'satisfaction'))
+            ->whereNotNull('a.score')
+            ->whereBetween('r.submitted_at', [$months['ranges'][0]['start'], end($months['ranges'])['end']])
+            ->selectRaw("DATE_FORMAT(r.submitted_at, '%Y-%m') as ym, AVG(a.score) as avg_score")
+            ->groupBy('ym')
+            ->pluck('avg_score', 'ym');
 
-            return $value === null ? null : round((float) $value, 2);
+        /* เดือนที่ไม่มีคำตอบต้องเป็น null ไม่ใช่ 0 — 0 หมายถึง "คะแนนแย่ที่สุด" ซึ่งคนละเรื่องกับ "ไม่มีข้อมูล" */
+        return $this->alignToMonths($months, $averages, fn ($v) => round((float) $v, 2), null);
+    }
+
+    /**
+     * เรียงผลที่จัดกลุ่มมาแล้วให้ตรงกับช่องเดือนบนแกน X — เดือนที่ไม่มีข้อมูลได้ค่า $missing
+     *
+     * @return array<int, float|null>
+     */
+    private function alignToMonths(array $months, Collection $byMonth, callable $cast, ?float $missing): array
+    {
+        return collect($months['ranges'])->map(function (array $range) use ($byMonth, $cast, $missing) {
+            $key = $range['start']->format('Y-m');
+
+            return $byMonth->has($key) ? $cast($byMonth->get($key)) : $missing;
         })->all();
     }
 

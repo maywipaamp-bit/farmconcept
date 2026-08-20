@@ -52,17 +52,6 @@ return [
                         '^/admin/activities/[^/]+/reports$',
                     ],
                 ],
-                /* รายชื่อคนทั้งหมดที่เคยมาร่วมกิจกรรม — เดิมอยู่ใต้หมวด "รายงาน" ของตัวเอง
-                   ย้ายมาอยู่ใต้กิจกรรมเพราะใช้งานคู่กับรายการกิจกรรมเสมอ ไม่ได้เปิดดูแยกเป็นรายงานประจำ
-                   คีย์ยังเป็น reports-people เหมือนเดิม สิทธิ์ที่ตั้งไว้แล้วจึงไม่ต้องแก้ตาม */
-                [
-                    'key' => 'reports-people',
-                    'label' => 'ผู้เข้าร่วมทั้งหมด',
-                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
-                    'href' => 'admin/reports/people',
-                    /* พาธเดิมสมัยอยู่ใต้กิจกรรมครั้งแรก — คงไว้ให้ลิงก์ที่บุ๊กมาร์กไว้ยังไฮไลต์ถูก */
-                    'alsoMatch' => ['admin/activities/people'],
-                ],
                 [
                     'key' => 'activities-registrants',
                     'label' => 'ผู้ลงทะเบียน',
@@ -169,6 +158,16 @@ return [
             'label' => 'รายงาน',
             'icon' => '<path d="M3 3v18h18"/><path d="M7 13l4-4 3 3 5-6"/>',
             'children' => [
+                /* รายชื่อคนทั้งหมดที่เคยมาร่วมกิจกรรม — เป็นตารางรายครั้ง ไม่ใช่กราฟสรุป
+                   แต่เป็นการมองข้ามกิจกรรมเหมือนกัน จึงอยู่หมวดรายงานร่วมกับอีกสี่หน้า */
+                [
+                    'key' => 'reports-people',
+                    'label' => 'ผู้เข้าร่วมทั้งหมด',
+                    'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+                    'href' => 'admin/reports/people',
+                    /* พาธเดิมสมัยเคยอยู่ใต้กิจกรรม — คงไว้ให้ลิงก์ที่บุ๊กมาร์กไว้ยังไฮไลต์ถูก */
+                    'alsoMatch' => ['admin/activities/people'],
+                ],
                 [
                     'key' => 'reports-activities-overview',
                     'label' => 'ภาพรวมกิจกรรม',
@@ -192,6 +191,14 @@ return [
                     'label' => 'การเงิน',
                     'icon' => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
                     'href' => 'admin/reports/activities-insights/finance',
+                ],
+                /* ติดตามคนกลุ่มเดิมข้ามหลายรอบเวลา — คนละคำถามกับรายงานกิจกรรมสี่หน้าด้านบน
+                   ที่มองเป็นรายกิจกรรม/รายครั้ง ไม่ได้ไล่ดูว่าคนคนหนึ่งเปลี่ยนไปอย่างไร */
+                [
+                    'key' => 'reports-cohort-health',
+                    'label' => 'สุขภาพกลุ่มตัวอย่าง',
+                    'icon' => '<path d="M3 12h4l2-6 4 12 2-6h6"/>',
+                    'href' => 'admin/reports/cohort-health',
                 ],
             ],
         ],
@@ -313,8 +320,8 @@ return [
             'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-registration-options',
             'master-data-consents', 'master-data-follow-up-rounds',
         ],
-        'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses', 'reports-people'],
-        'reports-activities-insights' => ['reports-activities-overview', 'reports-activities-performance', 'reports-activities-participants', 'reports-activities-finance'],
+        'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
+        'reports-activities-insights' => ['reports-people', 'reports-activities-overview', 'reports-activities-performance', 'reports-activities-participants', 'reports-activities-finance', 'reports-cohort-health'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],
     ],
 

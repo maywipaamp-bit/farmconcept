@@ -142,7 +142,12 @@
                 '<p class="promo-title">' + escapeHtml(item.title) + '</p>' +
                 /* ไม่แสดงสถานที่ในหน้ารายการ — ดูได้ในหน้ารายละเอียด
                    หน้านี้ต้องการแค่ "อะไร เมื่อไหร่ ราคาเท่าไหร่" พอให้ตัดสินใจกดเข้าไปดู */
-                '<span class="promo-meta">' + icon('calendar') + escapeHtml(item.scheduleLabel || '-') + '</span>' +
+                /* วันที่กับเวลาแยกคนละบรรทัด — ต่อกันด้วย " · " บนการ์ดแคบแล้วบรรทัดยาวเกิน
+                   จนตัดคำกลางคัน อ่านวันที่ไม่จบก่อนขึ้นบรรทัดใหม่ (เกณฑ์เดียวกับการ์ดล่างที่แยกอยู่แล้ว) */
+                '<span class="promo-meta">' + icon('calendar') + escapeHtml(splitSchedule(item).date) + '</span>' +
+                (splitSchedule(item).time
+                    ? '<span class="promo-meta">' + icon('clock') + escapeHtml(splitSchedule(item).time) + '</span>'
+                    : '') +
                 '<span class="promo-meta promo-price">฿ ' + escapeHtml(shortPrice(item)) + '</span>' +
             '</div>' +
         '</a>';

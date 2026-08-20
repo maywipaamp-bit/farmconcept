@@ -16488,6 +16488,99 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 /* แถบลิงก์สลับหน้าสี่รายงานเชิงบริหาร (partials/insights-nav) */
 .aov-rp-insights-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
 
+/* Funnel ของหน้า "ผู้เข้าร่วมและช่องทาง" — แท่งเต็มความกว้าง เรียงจากขั้นกว้างไปแคบ
+   ใช้แท่งแนวนอนแทนรูปกรวยจริง เพราะรูปกรวยอ่านสัดส่วนด้วยตายากกว่าความยาวแท่ง */
+.aov-rp-funnel { display: grid; gap: var(--space-4); }
+
+.aov-rp-funnel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.aov-rp-funnel-label { font-size: var(--font-size-body); color: var(--color-text-primary); }
+
+.aov-rp-funnel-value {
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.aov-rp-funnel-pct { color: var(--color-text-secondary); font-weight: 400; }
+
+.aov-rp-funnel-track {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+.aov-rp-funnel-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+/* แถบสัดส่วนขนาดเล็กที่ฝังในช่องตาราง — คู่กับตัวเลข % ไม่ใช่แทนที่ */
+.aov-rp-inline-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 110px;
+}
+
+.aov-rp-inline-bar-track {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+.aov-rp-inline-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+.aov-rp-inline-bar-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* ---------- รายงานสุขภาพกลุ่มตัวอย่าง ---------- */
+
+/* แถบตัวกรอง — ยุบเป็นคอลัมน์เดียวบนจอแคบโดยอัตโนมัติด้วย auto-fit */
+.ch-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.ch-filter-grid .form-group { margin-bottom: 0; }
+
+.ch-filter-actions { display: flex; gap: var(--space-2); }
+
+/* ผลต่างจากรอบก่อน — สีบอกทิศ ไม่ได้พึ่งเครื่องหมาย +/- อย่างเดียว
+   เพราะคนอ่านไล่ตารางเร็ว ๆ จะมองสีก่อนอ่านตัวเลข */
+.ch-change { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ch-change[data-dir="up"] { color: var(--color-success-text); }
+.ch-change[data-dir="down"] { color: var(--color-danger-text); }
+.ch-change[data-dir="same"] { color: var(--color-text-secondary); }
+
+/* popup แนวโน้มรายคน — กว้างกว่า modal-sm เพราะต้องมีที่ให้แกน X ของหลายรอบ */
+.ch-person-modal { width: min(640px, calc(100vw - 32px)); }
+.ch-person-modal .dbo { padding: 0; background: none; }
+
 /* ---------- โดนัท ---------- */
 .aov-rp-donut-wrap {
   display: flex;

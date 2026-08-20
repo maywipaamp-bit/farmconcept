@@ -76,8 +76,8 @@ class PublicTrackingRoundQrController extends Controller
             'lineEnabled' => $this->line->isConfigured(),
             /* ตั้ง LIFF ไว้ = หน้านี้เข้าสู่ระบบเองได้เมื่อถูกเปิดในแอป LINE ไม่ต้องให้กดปุ่มใด ๆ */
             'liffId' => $this->line->liffId(),
-            'projectName' => config('farmconcept.tracking_round.project_name'),
-            'disclosures' => config('farmconcept.tracking_round.disclosures'),
+            /* projectName กับ disclosures ถูกถอดออกพร้อมบล็อก "เกี่ยวกับโครงการและการใช้ข้อมูล"
+               ค่าใน config ยังอยู่ครบ หน้าอื่นที่ยังใช้อยู่จึงไม่กระทบ */
         ]);
     }
 

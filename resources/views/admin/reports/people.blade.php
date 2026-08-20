@@ -3,10 +3,10 @@
 @section('title', 'ผู้เข้าร่วมทั้งหมด')
 
 @section('content')
-  {{-- "กิจกรรม" เป็นหัวข้อหมวด ไม่มีหน้าของตัวเอง จึงเป็นข้อความเปล่า ไม่ใช่ลิงก์ --}}
+  {{-- "รายงาน" เป็นหัวข้อหมวด ไม่มีหน้าของตัวเอง จึงเป็นข้อความเปล่า ไม่ใช่ลิงก์ --}}
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/admin/dashboard">แดชบอร์ด</a> <span>/</span>
-    <span>กิจกรรม</span> <span>/</span>
+    <span>รายงาน</span> <span>/</span>
     <span class="is-current">ผู้เข้าร่วมทั้งหมด</span>
   </nav>
 
