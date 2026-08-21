@@ -52,32 +52,10 @@ return [
                         '^/admin/activities/[^/]+/reports$',
                     ],
                 ],
-                [
-                    'key' => 'activities-registrants',
-                    'label' => 'ผู้ลงทะเบียน',
-                    'icon' => '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>',
-                    /* ย้ายเป็นหน้า Blade แล้ว (ไม่มี .html) — alsoMatch ไว้ให้ลิงก์เดิมยังไฮไลต์ถูก */
-                    'href' => 'admin/activities/registrants',
-                    /* ใส่ href ของตัวเองซ้ำใน alsoMatch ด้วย เพราะ alsoMatch เทียบเฉพาะ path
-                       หน้านี้เลือกกิจกรรมด้วย ?id= ถ้าเทียบทั้ง query string เมนูจะไม่ไฮไลต์ */
-                    'alsoMatch' => ['admin/activities/registrants', 'admin/activities/registrants.html'],
-                ],
-                [
-                    'key' => 'activities-checkin',
-                    'label' => 'Check-in',
-                    'icon' => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
-                    /* ย้ายเป็นหน้า Blade แล้ว (ไม่มี .html) — alsoMatch ไว้ให้ลิงก์เดิมยังไฮไลต์ถูก */
-                    'href' => 'admin/activities/checkin',
-                    'alsoMatch' => ['admin/activities/checkin.html'],
-                ],
-                [
-                    'key' => 'activities-responses',
-                    'label' => 'ประเมินกิจกรรม',
-                    'icon' => '<path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12h5M10 15.5h5"/>',
-                    /* ย้ายเป็นหน้า Blade แล้ว (ไม่มี .html) — alsoMatch ไว้ให้ลิงก์เดิมยังไฮไลต์ถูก */
-                    'href' => 'admin/activities/responses',
-                    'alsoMatch' => ['admin/activities/responses.html'],
-                ],
+                /* ผู้ลงทะเบียน · Check-in · ประเมินกิจกรรม ถูกถอดออกจากแถบเมนูแล้ว
+                   ทั้งสามเรื่องอยู่เป็นแท็บในหน้ารายละเอียดกิจกรรมแล้ว (ผู้เข้าร่วม/Check-in/แบบประเมิน/รายงาน)
+                   ซึ่งผูกกับกิจกรรมที่กำลังดูอยู่ ไม่ต้องเลือกกิจกรรมซ้ำอีกรอบเหมือนหน้าเดิม
+                   ตัวหน้ายังอยู่และเปิดด้วย URL เดิมได้ สิทธิ์ย้ายไปอิง activities-list แทน */
                 /* แบบฟอร์มประเมิน — เดิมเป็นหมวดของตัวเองบนแถบไอคอน ย้ายเข้ามาอยู่ใต้ "กิจกรรม"
                    เพราะใช้งานคู่กับกิจกรรมเสมอ (ผูกแบบฟอร์มให้กิจกรรมแล้วดูผลที่ "ประเมินกิจกรรม")
                    คีย์ยังเป็น evaluations เหมือนเดิม สิทธิ์และการเทียบ path จึงไม่ต้องแก้ตาม */
@@ -320,7 +298,7 @@ return [
             'master-data-activity-formats', 'master-data-payment-accounts', 'master-data-registration-options',
             'master-data-consents', 'master-data-follow-up-rounds',
         ],
-        'activities' => ['activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses'],
+        'activities' => ['activities-list'],
         'reports-activities-insights' => ['reports-people', 'reports-activities-overview', 'reports-activities-performance', 'reports-activities-participants', 'reports-activities-finance', 'reports-cohort-health'],
         'evaluations' => ['cohort', 'evaluations', 'evaluations-rounds', 'evaluations-responses'],
     ],

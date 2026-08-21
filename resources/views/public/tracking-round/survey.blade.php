@@ -109,12 +109,19 @@
                                 </label>
                             </div>
                         @else
+                            {{-- old() คืนค่ามาเป็นสตริงเสมอ และเป็นอาร์เรย์เมื่อเป็นข้อเลือกหลายคำตอบ
+                                 แปลงให้เป็นรูปเดียวกันก่อน จะได้ใช้เงื่อนไขเดียวกันทั้ง radio และ checkbox
+
+                                 ขาดตรงนี้ไปแล้วคำตอบทั้งใบจะหายเมื่อส่งไม่ผ่าน — ชนิดอื่นมี @checked ครบ
+                                 แต่ชนิดตัวเลือกซึ่งเป็นข้อส่วนใหญ่ของแบบประเมินกลับไม่มี --}}
+                            @php($picked = array_map('strval', (array) old('answer_'.$question->id, [])))
                             <div class="tr-options">
                                 @foreach($question->options as $option)
                                     <label class="tr-option">
                                         <input type="{{ $multi ? 'checkbox' : 'radio' }}"
                                                name="answer_{{ $question->id }}{{ $multi ? '[]' : '' }}"
-                                               value="{{ $option->id }}">
+                                               value="{{ $option->id }}"
+                                               @checked(in_array((string) $option->id, $picked, true))>
                                         <span class="tr-option-dot{{ $multi ? ' is-square' : '' }}"></span>
                                         <span class="tr-option-label">{{ $option->label }}</span>
                                     </label>
@@ -150,16 +157,26 @@
     var fill = document.getElementById('tr-fill');
     var index = 0;
 
-    function answered(step) {
-        if (! step.hasAttribute('data-required')) return true;
+    /* ข้อนี้มีคำตอบแล้วหรือยัง — ไม่สนว่าบังคับหรือไม่ */
+    function hasAnswer(step) {
+        if (step.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked').length > 0) return true;
 
-        var picked = step.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked');
-        if (picked.length > 0) return true;
-
-        /* input[type=text] คือคำถามแบบ "ตอบแบบสั้น" — ขาดไปแล้วข้อบังคับตอบจะกดต่อไม่ได้ */
+        /* input[type=text] คือคำถามแบบ "ตอบแบบสั้น" */
         var free = step.querySelector('textarea, select, input[type="text"]');
 
         return !! (free && free.value.trim() !== '');
+    }
+
+    function answered(step) {
+        if (! step.hasAttribute('data-required')) return true;
+
+        return hasAnswer(step);
+    }
+
+    /* ส่งใบเปล่าไม่ได้ — เซิร์ฟเวอร์ปฏิเสธอยู่แล้ว แต่ปล่อยให้กดส่งไปเจอ error
+       หลังไล่ครบทุกข้อคือให้เดินเสียเที่ยว บอกตั้งแต่ปุ่มยังกดไม่ได้ตรงกว่า */
+    function anyAnswer() {
+        return steps.some(hasAnswer);
     }
 
     function render() {
@@ -175,7 +192,8 @@
         back.hidden = index === 0;
         next.textContent = last ? 'ส่งแบบประเมิน' : 'ข้อถัดไป';
         next.type = last ? 'submit' : 'button';
-        next.disabled = ! answered(steps[index]);
+        next.disabled = ! answered(steps[index]) || (last && ! anyAnswer());
+        next.title = (last && ! anyAnswer()) ? 'กรุณาตอบอย่างน้อยหนึ่งข้อก่อนส่ง' : '';
     }
 
     next.addEventListener('click', function (event) {

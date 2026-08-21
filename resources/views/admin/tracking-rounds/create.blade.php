@@ -100,6 +100,8 @@
   var TARGETS = @json($targetGroups);
   var DEFAULT_MSG = @json($defaultMessage);
   var TODAY = @json($today);
+  var MONTH_START = @json($monthStart);
+  var MONTH_END = @json($monthEnd);
   var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   var esc = window.TFC.escapeHtml;
@@ -110,7 +112,7 @@
 
   var form = {
     name: '', formId: FORMS.length ? FORMS[0].value : '',
-    from: TODAY, to: TODAY, answerDue: '', targets: [], msg: DEFAULT_MSG
+    from: MONTH_START, to: MONTH_END, answerDue: '', targets: [], msg: DEFAULT_MSG
   };
 
   var search = {

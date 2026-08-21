@@ -21,7 +21,7 @@ class RoleAndUserSeeder extends Seeder
     /** คีย์เมนูทั้งหมด ต้องตรงกับ assets/js/menu-config.js — เพิ่มเมนูที่นั่นแล้วต้องมาเพิ่มที่นี่ */
     private const MENU_KEYS = [
         'dashboard',
-        'activities', 'activities-list', 'activities-registrants', 'activities-checkin', 'activities-responses',
+        'activities', 'activities-list',
         'reports', 'reports-people',
         'health-assessment', 'cohort', 'evaluations-rounds', 'evaluations-responses', 'evaluations-person-results', 'evaluations-summary', 'evaluations-analysis',
         'evaluations',

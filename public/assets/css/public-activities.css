@@ -1523,6 +1523,21 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 
 .tr-hint-center { margin: 7px 0 0; color: var(--text-muted); font-size: 11.5px; line-height: 1.45; text-align: center; text-wrap: pretty; }
 
+/* กล่องชวนเชื่อม LINE บนแดชบอร์ด — แสดงเฉพาะคนที่ยังไม่ได้เชื่อม
+   วางก่อนไทม์ไลน์เพราะเป็นสิ่งที่ทำให้ "ครั้งหน้า" ง่ายขึ้น ไม่ใช่งานของรอบนี้ */
+.tr-line-invite {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--bg-subtle);
+}
+.tr-line-invite-title { color: var(--text-strong); font-size: 14px; font-weight: 600; line-height: 1.4; }
+.tr-line-invite-text { margin-bottom: 8px; color: var(--text-muted); font-size: 12px; line-height: 1.45; text-wrap: pretty; }
+
 /* select ของเบราว์เซอร์ใช้ฟอนต์ระบบปฏิบัติการ ไม่ใช่ฟอนต์ของหน้า
    ต้องบังคับ inherit ไม่งั้นช่องเพศกับพื้นที่จะเป็นคนละฟอนต์กับช่องอื่นทั้งหน้า */
 .tr-card select,

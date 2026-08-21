@@ -34,13 +34,16 @@
 
                     <h2 class="tr-dialog-title">เชื่อม LINE กับบัญชีของคุณ</h2>
                     <p class="tr-dialog-text">
-                        กรอกเบอร์โทรที่ลงทะเบียนไว้
+                        กรอกเบอร์โทร อีเมล หรือรหัสบุคคลที่ลงทะเบียนไว้ อย่างใดอย่างหนึ่ง
                     </p>
 
+                    {{-- ยิงเข้า verify() ตัวเดียวกับฟอร์มหลัก จึงรับได้ทั้งสามแบบเหมือนกัน
+                         ห้ามใส่ type="tel" / inputmode="tel" กลับมา จะพิมพ์อีเมลกับรหัสไม่ได้ --}}
                     <div class="registration-field">
-                        <label for="tr-link-phone">เบอร์โทรศัพท์ <span>*</span></label>
-                        <input type="tel" id="tr-link-phone" name="phone" inputmode="tel"
-                               autocomplete="tel" placeholder="08x-xxx-xxxx" required>
+                        <label for="tr-link-phone">เบอร์โทรศัพท์ อีเมล หรือรหัสบุคคล <span>*</span></label>
+                        <input type="text" id="tr-link-phone" name="phone" inputmode="email"
+                               autocomplete="username" placeholder="08x-xxx-xxxx · name@email.com · P0001"
+                               maxlength="160" required>
                     </div>
 
                     <div class="tr-dialog-actions">
@@ -67,25 +70,21 @@
         <form method="POST" action="{{ route('public.tracking-round-qr.verify') }}" novalidate>
             @csrf
 
-            {{-- ช่องเดียวรับได้ทั้งเบอร์และอีเมล — อีเมลเป็นทางเลือกสำหรับคนที่ไม่สะดวกใช้เบอร์
-                 ห้ามใส่ inputmode="numeric" / maxlength="10" / pattern ตัวเลขล้วนกลับมา
-                 สามอย่างนั้นบล็อกการพิมพ์อีเมลตั้งแต่แป้นพิมพ์ ทำให้ทางเลือกนี้ใช้ไม่ได้จริง --}}
-            <div class="registration-field">
-                <label for="tr-phone">เบอร์โทรศัพท์หรืออีเมล <span>*</span></label>
-                <input type="text" id="tr-phone" name="phone" inputmode="email" autocomplete="username"
-                       placeholder="08x-xxx-xxxx หรือ name@email.com" value="{{ old('phone') }}"
-                       maxlength="160" required>
-                @error('phone')<span class="registration-message is-error">{{ $message }}</span>@enderror
-            </div>
+            {{-- ช่องเดียวรับได้ทั้งสามอย่าง — เบอร์ · อีเมล · รหัสบุคคล กรอกอย่างใดอย่างหนึ่งพอ
 
-            {{-- รหัสบุคคลอยู่หน้าเดียวกับเบอร์ ไม่ต้องกดผ่านสองจอ
-                 เบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ รหัสจึงเป็นตัวชี้ว่ากำลังตอบในนามใคร
-                 เว้นว่างได้ ระบบจะพาไปถามที่หน้าถัดไปแทน สำหรับคนที่จำรหัสไม่ได้ตอนนั้น --}}
+                 เดิมบังคับกรอกเบอร์ + รหัสคู่กัน ซึ่งทำให้ผู้สูงอายุถอดใจตั้งแต่หน้าแรก
+                 หน้านี้เข้าถึงได้เฉพาะคนที่ได้รับลิงก์/QR ของโครงการอยู่แล้ว ด่านที่สอง
+                 จึงกันคนได้น้อยกว่าที่ทำให้คนที่ควรตอบเลิกตอบ (ทีมตัดสินใจ)
+
+                 ห้ามใส่ inputmode="numeric" / maxlength="10" / pattern ตัวเลขล้วนกลับมา
+                 สามอย่างนั้นบล็อกการพิมพ์อีเมลกับรหัสบุคคลตั้งแต่แป้นพิมพ์ --}}
             <div class="registration-field">
-                <label for="tr-person-code">รหัสบุคคล <span>*</span></label>
-                <input type="text" id="tr-person-code" name="person_code" autocomplete="off"
-                       placeholder="เช่น P0001" value="{{ old('person_code') }}" maxlength="6">
-                @error('person_code')<span class="registration-message is-error">{{ $message }}</span>@enderror
+                <label for="tr-phone">เบอร์โทรศัพท์ อีเมล หรือรหัสบุคคล <span>*</span></label>
+                <input type="text" id="tr-phone" name="phone" inputmode="email" autocomplete="username"
+                       placeholder="08x-xxx-xxxx · name@email.com · P0001" value="{{ old('phone') }}"
+                       maxlength="160" autofocus required>
+                @error('phone')<span class="registration-message is-error">{{ $message }}</span>@enderror
+                <span class="tr-field-hint">กรอกอย่างใดอย่างหนึ่งที่จำได้</span>
             </div>
 
             <button type="submit" class="tr-primary-button">เข้าสู่ระบบ</button>

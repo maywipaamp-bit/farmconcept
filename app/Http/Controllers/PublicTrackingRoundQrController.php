@@ -91,11 +91,18 @@ class PublicTrackingRoundQrController extends Controller
     }
 
     /**
-     * ยืนยันด้วยเบอร์โทร
+     * ยืนยันตัวตนด้วยช่องเดียว — เบอร์โทร หรือ อีเมล หรือ รหัสบุคคล อย่างใดอย่างหนึ่ง
      *
-     * ใช้เบอร์อย่างเดียวตามที่หน้างานต้องการ — ผู้สูงอายุจำนวนมากไม่ได้พกใบยินยอมมาด้วย
-     * แลกมาด้วยความเสี่ยงว่าคนที่รู้เบอร์ของคนอื่นเปิดดูรอบของเขาได้ จึงจำกัดจำนวนครั้งต่อ IP
-     * ทางที่ปลอดภัยกว่าคือให้ผูก LINE แล้วเข้าด้วยปุ่ม LINE ซึ่งพิสูจน์ตัวตนได้จริง
+     * เดิมบังคับกรอกสองอย่างคู่กัน (เบอร์ + รหัส) เพื่อกันคนที่รู้เบอร์ของคนอื่นสวมสิทธิ์
+     * แต่ตัวหน้านี้เข้าถึงได้เฉพาะคนที่ได้รับลิงก์/QR ของโครงการอยู่แล้ว และการบังคับสองชั้น
+     * ทำให้ผู้สูงอายุจำนวนมากถอดใจตั้งแต่หน้าแรก ซึ่งเสียข้อมูลมากกว่าที่ป้องกันได้ (ทีมตัดสินใจ)
+     *
+     * ที่ยังเหลืออยู่:
+     * - รหัสบุคคลชี้ตัวได้คนเดียวโดยธรรมชาติ กรอกมาแล้วเข้าได้ทันที
+     * - เบอร์/อีเมลที่ตรงกับหลายคน (เบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ) ยังต้องถามต่อว่าใคร
+     *   ไม่ใช่เพื่อกันคนนอก แต่เพราะเดาผิด = คำตอบลงระเบียนผิดคนโดยไม่มีใครรู้
+     * - จำกัดจำนวนครั้งต่อ IP ไว้เหมือนเดิม
+     * - ทางที่พิสูจน์ตัวตนได้จริงคือผูก LINE แล้วเข้าด้วยปุ่ม LINE
      */
     public function verify(Request $request): RedirectResponse
     {
@@ -107,13 +114,15 @@ class PublicTrackingRoundQrController extends Controller
 
         $data = $request->validate(
             [
-                /* ช่องเดียวรับทั้งเบอร์และอีเมล — 160 เท่าความยาวคอลัมน์อีเมล */
+                /* ชื่อฟิลด์ยังเป็น phone เพราะกล่องเชื่อม LINE ส่งชื่อนี้มา และลิงก์เก่าที่ค้าง
+                   ในเบราว์เซอร์ก็ส่งชื่อนี้ — เปลี่ยนชื่อฟิลด์จะพังทั้งสองทางโดยไม่ได้อะไรเพิ่ม
+                   160 เท่าความยาวคอลัมน์อีเมล ซึ่งเป็นค่าที่ยาวที่สุดในสามแบบ */
                 'phone' => ['required', 'string', 'max:160'],
-                /* ไม่บังคับ — กล่องเชื่อม LINE ส่งมาแต่เบอร์ และคนที่จำรหัสไม่ได้ตอนนั้น
-                   ยังต้องเข้าต่อได้ โดยไปถามรหัสที่หน้าถัดไปแทน */
+                /* ฟอร์มเดิมมีช่องรหัสแยกต่างหาก หน้าที่เปิดค้างไว้ก่อนอัปเดตอาจยังส่งมา
+                   รับไว้เพื่อไม่ให้ผู้ใช้ที่ค้างอยู่กดส่งแล้วพัง */
                 'person_code' => ['nullable', 'string', 'max:30'],
             ],
-            ['phone.required' => 'กรุณากรอกเบอร์โทรศัพท์หรืออีเมล']
+            ['phone.required' => 'กรุณากรอกเบอร์โทรศัพท์ อีเมล หรือรหัสบุคคล']
         );
 
         $key = 'health-verify:'.$request->ip();
@@ -126,12 +135,30 @@ class PublicTrackingRoundQrController extends Controller
 
         RateLimiter::hit($key, 600);
 
-        $matches = $this->participantsByContact($data['phone']);
+        $typedContact = trim($data['phone']);
+        $kind = $this->contactKind($typedContact);
+
+        /* รหัสบุคคลชี้ตัวได้คนเดียวอยู่แล้ว ไม่มีอะไรให้ถามต่อ */
+        if ($kind === 'code') {
+            $byCode = $this->participantByPersonCode($typedContact);
+
+            if ($byCode === null) {
+                return back()->withInput()->withErrors([
+                    'phone' => 'ไม่พบรหัสบุคคลนี้ในระบบ กรุณาตรวจสอบอีกครั้ง หรือใช้เบอร์โทรศัพท์แทน',
+                ]);
+            }
+
+            RateLimiter::clear($key);
+
+            return $this->signIn($request, $byCode);
+        }
+
+        $matches = $this->participantsByContact($typedContact);
 
         if ($matches->isEmpty()) {
             /* อีเมลที่หาไม่เจอ พาไปหน้าลงทะเบียนไม่ได้ เพราะฟอร์มนั้นรับเฉพาะเบอร์
                ส่งไปก็ไปติดอยู่ตรงนั้นต่อไม่ได้ — บอกตรง ๆ ว่าไม่พบ พร้อมทางออกที่ทำได้จริง */
-            if (str_contains($data['phone'], '@')) {
+            if ($kind === 'email') {
                 return back()->withInput()->withErrors([
                     'phone' => 'ไม่พบอีเมลนี้ในระบบ — ลองใช้เบอร์โทรศัพท์แทน หรือติดต่อเจ้าหน้าที่เพื่อเพิ่มอีเมลให้',
                 ]);
@@ -151,7 +178,8 @@ class PublicTrackingRoundQrController extends Controller
         $ids = $matches->pluck('id')->all();
         $typed = trim((string) ($data['person_code'] ?? ''));
 
-        /* กรอกรหัสมาพร้อมเบอร์ในจอเดียวแล้ว ก็ให้เข้าได้เลย ไม่ต้องเด้งไปถามซ้ำอีกจอ */
+        /* ฟอร์มปัจจุบันไม่มีช่องนี้แล้ว ทางนี้เหลือไว้สำหรับหน้าที่เปิดค้างไว้ก่อนอัปเดต
+           ซึ่งยังส่งเบอร์กับรหัสมาคู่กัน — ให้เข้าได้เลยเหมือนเดิม ไม่ต้องเด้งไปถามซ้ำ */
         if ($typed !== '') {
             $matched = $this->matchesCode($ids, $typed);
 
@@ -160,9 +188,14 @@ class PublicTrackingRoundQrController extends Controller
             }
         }
 
-        /* เจอเบอร์แล้วยังเข้าไม่ได้ทันที ต้องยืนยันด้วยรหัสบุคคลอีกชั้นเสมอ
-           เบอร์โทรเป็นสิ่งที่คนอื่นรู้ได้ ถ้าให้ผ่านด้วยเบอร์อย่างเดียวเท่ากับใครก็ตอบแทนได้
-           และเบอร์เดียวใช้กันทั้งบ้านเป็นเรื่องปกติ ต้องรู้ให้ชัดว่ากำลังตอบในนามใคร */
+        /* เบอร์/อีเมลนี้ตรงกับคนเดียว ไม่มีอะไรกำกวมให้ถามต่อ เข้าได้เลย
+           นี่คือทางที่คนส่วนใหญ่เดิน — จบในจอเดียว ไม่ต้องจำรหัสอะไร */
+        if ($matches->count() === 1) {
+            return $this->signIn($request, $matches->first());
+        }
+
+        /* เหลือกรณีเดียวที่ยังต้องถามต่อ: เบอร์เดียวมีหลายคนในระบบ (ใช้ร่วมกันทั้งบ้าน)
+           ไม่ได้ถามเพื่อกันคนนอก แต่เพราะเดาผิด = คำตอบลงระเบียนผิดคนโดยไม่มีใครรู้ */
         $redirect = redirect()
             ->route('public.tracking-round-qr.choose')
             ->with('candidateIds', $ids)
@@ -429,6 +462,13 @@ class PublicTrackingRoundQrController extends Controller
             return $qr;
         }
 
+        /* QR ที่พิมพ์แจกชี้มาที่หน้านี้แล้ว ยอดสแกนจึงต้องนับที่นี่ ไม่ใช่ที่ landing()
+           นับเฉพาะที่มี src=qr ติดมา ซึ่งมีแต่ในลิงก์ที่ฝังอยู่ใน QR — คนที่กดลิงก์
+           "ลงทะเบียน" จากหน้ายืนยันตัวตนเข้ามาไม่ได้สแกนอะไร ไม่ควรถูกนับรวม */
+        if ($request->query('src') === 'qr') {
+            $qr->increment('scan_count');
+        }
+
         /* ไม่ reflash — เบอร์ที่เติมให้กับข้อความแจ้งควรอยู่แค่ครั้งแรกที่ถูกพามา
            กดรีเฟรชแล้วต้องหาย ส่วนกรณี validation error ฟอร์มเติมกลับด้วย old() อยู่แล้ว */
         return view('public.tracking-round.register', [
@@ -539,6 +579,11 @@ class PublicTrackingRoundQrController extends Controller
         return view('public.tracking-round.dashboard', [
             'participant' => $participant,
             'switchTo' => $switchTo,
+            /* ไม่ได้ตั้งค่า LINE ไว้ = กล่องชวนเชื่อมกดไปก็ไม่มีอะไรเกิดขึ้น ต้องไม่แสดง */
+            'lineEnabled' => $this->line->isConfigured(),
+            /* ยังกรอกแทนคนอื่นค้างอยู่หรือไม่ — หน้านี้แสดงรอบของผู้กรอก ไม่ใช่ของผู้ถูกประเมิน
+               ถ้าไม่บอก ผู้กรอกจะกด "เริ่มทำ" ที่ไทม์ไลน์แล้วเจอ 404 โดยไม่รู้สาเหตุ */
+            'proxyFor' => $this->proxyFor($request),
             /* หน้าหลักแสดงไทม์ไลน์เต็มชุดแทนการ์ดรอบเดียว จึงใช้ข้อมูลชุดเดียวกับหน้ารายการรอบ */
             'rounds' => $this->allRoundsFor($participant),
             'openIds' => $this->rounds->openRoundsFor($participant)->pluck('id')->all(),
@@ -891,6 +936,35 @@ class PublicTrackingRoundQrController extends Controller
         abort_if($open === null, 404, 'รอบนี้ไม่ได้เปิดให้ตอบอยู่');
 
         return $open;
+    }
+
+    /**
+     * ค่าที่พิมพ์มาในช่องเดียวนั้น เป็นอีเมล เบอร์โทร หรือรหัสบุคคล
+     *
+     * แยกด้วยรูปร่างของค่า ไม่ใช่ให้ผู้ใช้เลือกชนิดเอง — ผู้ใช้ไม่ควรต้องรู้ว่าระบบเรียกมันว่าอะไร
+     * @ มีได้เฉพาะในอีเมล · เหลือแต่ตัวเลขกับเครื่องหมายคั่นคือเบอร์ · นอกนั้นเป็นรหัสบุคคล (P0001)
+     */
+    private function contactKind(string $typed): string
+    {
+        if (str_contains($typed, '@')) {
+            return 'email';
+        }
+
+        return preg_match('/^[0-9\s()+-]+$/', $typed) === 1 ? 'phone' : 'code';
+    }
+
+    /**
+     * หาคนจากรหัสบุคคล — เทียบแบบไม่สนตัวพิมพ์และช่องว่างหัวท้าย
+     *
+     * ตัดคนที่ยังไม่ได้เป็นกลุ่มตัวอย่างออก ด้วยเหตุผลเดียวกับ participantsByContact()
+     * คือยังไม่มีรอบให้ตอบ เข้ามาแล้วก็เจอหน้าว่าง
+     */
+    private function participantByPersonCode(string $code): ?Participant
+    {
+        return Participant::with('cohortProfile')
+            ->whereHas('cohortProfile')
+            ->whereRaw('LOWER(TRIM(person_code)) = ?', [mb_strtolower(trim($code))])
+            ->first();
     }
 
     /** @return \Illuminate\Support\Collection<int, Participant> */

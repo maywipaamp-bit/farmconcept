@@ -19,6 +19,30 @@
   <div id="rd-panel"></div>
 @endsection
 
+@section('modals')
+{{-- คีย์คำตอบจากกระดาษ — สำหรับกลุ่มตัวอย่างที่ทำแบบประเมินในแอปเองไม่ได้
+     คำถามวาดจากโครงชุดเดียวกับที่ผู้ตอบเห็น เจ้าหน้าที่จึงไล่คีย์ตามกระดาษได้ตรงบรรทัด --}}
+<div class="modal-overlay" id="rd-answer-modal">
+  <div class="modal rd-answer-modal" role="dialog" aria-modal="true" aria-labelledby="rd-answer-title">
+    <div class="modal-header">
+      <h3 class="modal-title" id="rd-answer-title">คีย์คำตอบจากกระดาษ</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-secondary small" id="rd-answer-who"></p>
+      <p class="rd-answer-hint">ช่องที่มี <span class="form-required">*</span> จำเป็นต้องกรอก · ระบบจะบันทึกว่าคุณเป็นผู้คีย์แทน</p>
+      <div id="rd-answer-body"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+      <button type="button" class="btn btn-primary" id="rd-answer-save">บันทึกคำตอบ</button>
+    </div>
+  </div>
+</div>
+@endsection
+
 @push('page-script')
 <script>
 /* หน้ารายละเอียดรอบติดตาม
@@ -29,6 +53,9 @@
 (function () {
   var batch = @json($batch);
   var NOTE_KINDS = @json(config('farmconcept.tracking_round.offline_kinds'));
+  var QUESTIONS = @json($formQuestions);
+  /* ป้ายคะแนนชุดเดียวกับที่ผู้ตอบเห็น ไม่งั้นคนคีย์ตีความคะแนนคนละแบบกับคนตอบ */
+  var RATING = @json(array_values(config('farmconcept.tracking_round.rating_labels')));
   var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   var esc = window.TFC.escapeHtml;
@@ -36,7 +63,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var GROUPS = ['แจ้งเตือนได้ (LINE)', 'แจ้งเตือนไม่ได้ (ติดตามนอกระบบ)'];
-  var state = { group: GROUPS[0], editId: null };
+  var state = { group: GROUPS[0], editId: null, answerFor: null, saving: false };
 
   var STATE_CLASS = {
     'กำลังดำเนินการ': 'is-active', 'รอเริ่ม': 'is-waiting',
@@ -96,6 +123,19 @@
       '</div>';
   }
 
+  /* ปุ่มคีย์คำตอบจากกระดาษ — มีเมื่อยังไม่ตอบ และแบบประเมินมีคำถามให้คีย์จริง
+     ไม่มีคำถามเลยแปลว่าตั้งค่าฝั่งแบบประเมินยังไม่เสร็จ เปิด popup ไปก็เจอกล่องเปล่า */
+  function keyInButton(p) {
+    if (batch.cancelled || answerable().length === 0) return '';
+
+    return '<button type="button" class="cd-mini-btn" data-key-in="' + esc(p.memberId) + '">คีย์คำตอบ</button>';
+  }
+
+  /* หัวข้อคั่นไม่ใช่คำถาม ไม่มีคำตอบให้คีย์ */
+  function answerable() {
+    return QUESTIONS.filter(function (q) { return q.type !== 'section'; });
+  }
+
   /* ---------- กลุ่มที่แจ้งเตือนได้ ---------- */
   function renderNotifiable() {
     var list = notifiable();
@@ -119,11 +159,12 @@
         '<div><span class="cd-badge ' + MEMBER_CLASS[p.state] + '">' + esc(p.state) + '</span></div>' +
         /* ส่งทีละคนโดยเห็นสถานะของคนนั้นอยู่ตรงหน้า — คนที่ตอบไปแล้วไม่ต้องส่งซ้ำให้รบกวน
            ปุ่มจึงปิดไว้ ต่างจากการส่งทั้งรอบที่ยิงถึงทุกคนพร้อมกัน */
-        '<div class="text-center">' +
+        '<div class="text-center rd-row-actions">' +
           (p.state === 'ตอบแล้ว'
             ? '<span class="text-muted">—</span>'
             : '<button type="button" class="btn btn-outline btn-sm" data-notify-member="' + esc(p.memberId) + '"' +
-                (batch.cancelled ? ' disabled' : '') + '>' + (sent ? 'ส่งอีกครั้ง' : 'ส่งแจ้งเตือน') + '</button>') +
+                (batch.cancelled ? ' disabled' : '') + '>' + (sent ? 'ส่งอีกครั้ง' : 'ส่งแจ้งเตือน') + '</button>' +
+              keyInButton(p)) +
         '</div>' +
         '</div>';
     }).join('');
@@ -170,6 +211,7 @@
                   '<button type="button" class="cd-mini-btn" data-edit="' + p.memberId + '">แก้ไข</button>'
                 : '<button type="button" class="cd-mini-btn" data-edit="' + p.memberId + '">บันทึกผลติดตาม</button>')) +
         '</div>' +
+        '<div class="text-center">' + (p.state === 'ตอบแล้ว' ? '<span class="text-muted">—</span>' : keyInButton(p)) + '</div>' +
         '</div>';
     }).join('');
 
@@ -182,8 +224,83 @@
         '<div class="fb-tr fb-th">' +
           '<div>ชื่อ / รหัส</div><div>เบอร์โทร</div><div>รอบที่ติดตาม</div>' +
           '<div>ครบกำหนด</div><div>สถานะ</div><div>ผลการติดตามนอกระบบ</div>' +
+          '<div class="text-center">คำตอบ</div>' +
         '</div>' + (rows || emptyHtml('ทุกคนในรอบนี้ผูก LINE แล้ว')) +
       '</div></div></div>';
+  }
+
+  /* ---------- คีย์คำตอบจากกระดาษ ----------
+     วาดคำถามชุดเดียวกับที่ผู้ตอบเห็น เรียงตามลำดับเดิม เจ้าหน้าที่จึงไล่คีย์ตามกระดาษได้ตรงบรรทัด
+     ไม่แบ่งทีละข้อแบบฝั่งผู้ตอบ — คนคีย์มีคำตอบครบอยู่ในมือแล้ว กดผ่านทีละข้อมีแต่ช้าลง */
+  function answerFieldHtml(q, n) {
+    var name = 'answer_' + q.id;
+    var star = q.required ? '<span class="form-required">*</span>' : '';
+    var head = '<span class="co-field-label">ข้อ ' + n + ': ' + esc(q.text) + star + '</span>';
+    var body;
+
+    if (q.type === 'rating') {
+      body = '<select class="select" data-answer="' + q.id + '"><option value="">— ไม่ระบุ —</option>' +
+        RATING.map(function (label, i) {
+          return '<option value="' + (i + 1) + '">' + esc((i + 1) + ' · ' + label) + '</option>';
+        }).join('') + '</select>';
+    } else if (q.type === 'paragraph') {
+      body = '<textarea class="input" rows="3" maxlength="5000" data-answer="' + q.id + '"></textarea>';
+    } else if (q.type === 'text') {
+      body = '<input type="text" class="input" maxlength="5000" data-answer="' + q.id + '">';
+    } else if (q.type === 'consent') {
+      body = '<label class="rd-answer-consent"><input type="checkbox" data-answer="' + q.id + '" value="1">' +
+        '<span>ผู้ตอบยอมรับตามที่ระบุในเอกสาร</span></label>';
+    } else if (q.type === 'multi' || q.type === 'chips') {
+      body = '<div class="rd-answer-options">' + q.options.map(function (o) {
+        return '<label class="rd-answer-option"><input type="checkbox" data-answer-multi="' + q.id +
+          '" value="' + o.id + '"><span>' + esc(o.label) + '</span></label>';
+      }).join('') + '</div>';
+    } else {
+      body = '<div class="rd-answer-options">' + q.options.map(function (o) {
+        return '<label class="rd-answer-option"><input type="radio" name="' + name +
+          '" data-answer="' + q.id + '" value="' + o.id + '"><span>' + esc(o.label) + '</span></label>';
+      }).join('') + '</div>';
+    }
+
+    return '<div class="co-field rd-answer-field">' + head + body + '</div>';
+  }
+
+  function openAnswerModal(memberId) {
+    var p = batch.members.find(function (m) { return m.memberId === Number(memberId); });
+    if (!p) return;
+
+    state.answerFor = Number(memberId);
+
+    $('rd-answer-who').textContent = p.name + ' · ' + (p.cohortCode || p.pid) + ' · รอบ ' + p.round;
+
+    var n = 0;
+    $('rd-answer-body').innerHTML = QUESTIONS.map(function (q) {
+      if (q.type === 'section') return '<p class="rd-answer-section">' + esc(q.text) + '</p>';
+      n += 1;
+      return answerFieldHtml(q, n);
+    }).join('');
+
+    window.TFC.openModal('rd-answer-modal');
+  }
+
+  /* เก็บค่าจาก popup — ส่งเฉพาะข้อที่คีย์ไว้จริง ข้อที่เว้นว่างไม่ต้องส่งไปให้ตัวตรวจ
+     ฝั่งเซิร์ฟเวอร์จะเป็นคนบอกเองว่าข้อบังคับตอบข้อไหนขาด */
+  function collectAnswers() {
+    var out = {};
+
+    $('rd-answer-body').querySelectorAll('[data-answer]').forEach(function (el) {
+      var id = el.getAttribute('data-answer');
+      if (el.type === 'radio') { if (el.checked) out['answer_' + id] = el.value; return; }
+      if (el.type === 'checkbox') { if (el.checked) out['answer_' + id] = '1'; return; }
+      if (el.value.trim() !== '') out['answer_' + id] = el.value.trim();
+    });
+
+    $('rd-answer-body').querySelectorAll('[data-answer-multi]:checked').forEach(function (el) {
+      var key = 'answer_' + el.getAttribute('data-answer-multi');
+      (out[key] = out[key] || []).push(el.value);
+    });
+
+    return out;
   }
 
   function renderPanel() {
@@ -230,6 +347,9 @@
       return;
     }
 
+    var keyIn = t.closest('[data-key-in]');
+    if (keyIn) return openAnswerModal(keyIn.getAttribute('data-key-in'));
+
     var ed = t.closest('[data-edit]');
     if (ed) { state.editId = Number(ed.getAttribute('data-edit')); return renderPanel(); }
 
@@ -260,6 +380,45 @@
       });
       return;
     }
+  });
+
+  /* บันทึกคำตอบที่คีย์ — ปุ่มเข้าสถานะรอทันทีและกดซ้ำไม่ได้
+     คีย์ซ้ำสองครั้งคือคำตอบสองใบของคนเดียวในรอบเดียว ซึ่งฝั่งเซิร์ฟเวอร์กันไว้แล้ว
+     แต่ผู้ใช้ควรเห็นตั้งแต่ปุ่มว่ากำลังทำงานอยู่ ไม่ใช่กดแล้วเงียบ */
+  $('rd-answer-save').addEventListener('click', function () {
+    if (state.saving || !state.answerFor) return;
+
+    var button = this;
+    var id = state.answerFor;
+
+    state.saving = true;
+    button.disabled = true;
+    button.textContent = 'กำลังบันทึก…';
+
+    api('{{ url('admin/tracking-rounds/'.$batch['code'].'/members') }}/' + id + '/record-answers',
+      'POST', collectAnswers()).then(function (res) {
+      state.saving = false;
+      button.disabled = false;
+      button.textContent = 'บันทึกคำตอบ';
+
+      if (!res.ok) {
+        /* ข้อความของข้อบังคับตอบอยู่ใน errors ไม่ใช่ message — ต้องหยิบมาแสดง
+           ไม่งั้นผู้คีย์เห็นแค่ "บันทึกไม่สำเร็จ" โดยไม่รู้ว่าขาดข้อไหน */
+        var detail = res.body && res.body.errors
+          ? res.body.errors[Object.keys(res.body.errors)[0]][0]
+          : (res.body && res.body.message);
+
+        return window.TFC.showToast(detail || 'บันทึกคำตอบไม่สำเร็จ', 'danger');
+      }
+
+      var i = batch.members.findIndex(function (m) { return m.memberId === id; });
+      if (i > -1) batch.members[i] = res.body.data;
+
+      state.answerFor = null;
+      window.TFC.closeModal('rd-answer-modal');
+      render();
+      window.TFC.showToast('บันทึกคำตอบแล้ว', 'success');
+    });
   });
 
   render();

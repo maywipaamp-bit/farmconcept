@@ -9457,6 +9457,54 @@ textarea.ac-detail-input { flex: 1; min-height: 120px; resize: vertical; }
 .ec-questions-empty-text { max-width: 56ch; font-size: var(--font-size-caption); color: var(--color-text-muted); text-wrap: pretty; }
 .ec-questions-empty .btn { margin-top: var(--space-2); }
 
+/* ---------- popup คีย์คำตอบจากกระดาษ (หน้ารายละเอียดรอบติดตาม) ---------- */
+.rd-answer-modal { max-width: 720px; }
+.rd-answer-hint { margin: var(--space-1) 0 var(--space-4); font-size: var(--font-size-caption); color: var(--color-text-muted); }
+.rd-answer-field { margin-bottom: var(--space-5); }
+.rd-answer-field:last-child { margin-bottom: 0; }
+
+/* หัวข้อคั่นของแบบสอบถาม — วางให้ต่างจากคำถามชัดเจน คนคีย์จะได้รู้ว่าข้ามส่วนแล้ว */
+.rd-answer-section {
+  margin: var(--space-6) 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-strong);
+  font-size: var(--font-size-t4);
+  font-weight: 600;
+  line-height: var(--line-height-t4);
+}
+.rd-answer-section:first-child { margin-top: 0; }
+
+.rd-answer-options { display: flex; flex-direction: column; gap: var(--space-2); }
+.rd-answer-option,
+.rd-answer-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-t3);
+  line-height: var(--line-height-t3);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.rd-answer-option input,
+.rd-answer-consent input { margin-top: 3px; flex: none; }
+
+/* ปุ่มในคอลัมน์เดียวกันหลายตัว ต้องไม่ชนกันและตัดบรรทัดได้เมื่อจอแคบ */
+.rd-row-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: center; }
+
+/* คำเตือนใต้หัวข้อส่วนที่ไม่มีคำถามอยู่ใต้มัน — ผู้ตอบจะไม่เห็นหัวข้อนั้นเลย */
+.ec-section-warn {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--status-warning-border);
+  border-radius: var(--r-sm);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-t5);
+  text-wrap: pretty;
+}
+
 /* ---------- บรรทัดข้อมูลผู้ตอบ ---------- */
 .ec-audience-line {
   display: flex;
@@ -12627,8 +12675,8 @@ a.fb-name:hover { color: var(--color-primary-dark); text-decoration: none; }
 }
 
 /* คอลัมน์สุดท้ายคือปุ่มส่งแจ้งเตือนรายคน — การส่งทั้งรอบถูกตัดออกไปแล้ว */
-.fb-member-table .fb-tr { grid-template-columns: minmax(180px, 1.4fr) 140px 150px 130px 120px 100px 120px 130px; min-width: 1130px; }
-.fb-offline-table .fb-tr { grid-template-columns: minmax(180px, 1.2fr) 140px 130px 120px 120px minmax(280px, 1.6fr); min-width: 1080px; }
+.fb-member-table .fb-tr { grid-template-columns: minmax(180px, 1.4fr) 140px 150px 130px 120px 100px 120px 200px; min-width: 1200px; }
+.fb-offline-table .fb-tr { grid-template-columns: minmax(180px, 1.2fr) 140px 130px 120px 120px minmax(280px, 1.6fr) 120px; min-width: 1200px; }
 
 .fb-offline { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-width: 0; }
 .fb-offline .btn { white-space: nowrap; flex: none; }

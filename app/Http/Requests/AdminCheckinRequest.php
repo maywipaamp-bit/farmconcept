@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * เช็คอินหนึ่งคนจากหน้าจอเจ้าหน้าที่
  *
- * สิทธิ์ตรวจที่ middleware `menu:activities-checkin` และ policy ของกิจกรรมแล้ว
+ * สิทธิ์ตรวจที่ middleware `menu:activities-list` และ policy ของกิจกรรมแล้ว
  * ที่นี่จึงเหลือแค่ตรวจรูปของข้อมูล
  */
 class AdminCheckinRequest extends FormRequest

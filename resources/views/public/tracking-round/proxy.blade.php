@@ -24,11 +24,11 @@
             </div>
 
             <div class="registration-field">
-                <label for="tr-proxy-prefix">รหัสบุคคลผู้ถูกประเมิน <span>*</span></label>
+                <label for="tr-proxy-prefix">รหัสบุคคลหรือชื่อผู้ถูกประเมิน <span>*</span></label>
                 {{-- ตัวอย่างอยู่ใน placeholder ไม่ใช่บรรทัดใต้ช่อง — บรรทัดใต้ช่องดันปุ่มลงไป
                      และหายตั้งแต่เริ่มพิมพ์ก็ไม่เสียอะไร เพราะเป็นแค่ตัวอย่างรูปแบบ --}}
                 <input type="text" id="tr-proxy-prefix" name="name_prefix"
-                       placeholder="เช่น P0002" maxlength="6" autocomplete="off"
+                       placeholder="เช่น P0002 หรือ สมหญิง" maxlength="20" autocomplete="off"
                        value="{{ old('name_prefix') }}" required>
             </div>
 

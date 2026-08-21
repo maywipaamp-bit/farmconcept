@@ -10,10 +10,18 @@
 
   <div class="rl-head">
     <h1 class="rl-title">ตอบแบบประเมิน</h1>
-    <button type="button" class="btn btn-outline" id="rl-export">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
-      ส่งออก Excel
-    </button>
+    {{-- QR เป็นปุ่มไม่ใช่การ์ดเต็มความกว้าง — QR ตัวเดียวใช้ตลอดโครงการ ไม่เคยเปลี่ยน
+         เปิดดูตอนจะพิมพ์หรือส่งต่อเท่านั้น กินพื้นที่หัวหน้าถาวรไม่คุ้ม --}}
+    <div class="flex gap-2">
+      <button type="button" class="btn btn-outline" id="fb-qr-open" @disabled(! $qr['exists'])>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
+        QR ลงทะเบียน
+      </button>
+      <button type="button" class="btn btn-outline" id="rl-export">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11.5l4 4 4-4M5 19.5h14"/></svg>
+        ส่งออก Excel
+      </button>
+    </div>
   </div>
 
   <div class="rl-toolbar">
@@ -78,6 +86,36 @@
     </div>
   </div>
 </div>
+
+{{-- Popup ขยาย QR สำหรับพิมพ์ติดที่ศูนย์ชุมชนหรือแนบใบยินยอม --}}
+<div class="modal-overlay" id="fb-qr-modal">
+  <div class="modal fb-qr-modal" role="dialog" aria-modal="true" aria-labelledby="fb-qr-modal-title">
+    <div class="modal-header">
+      <h3 class="modal-title" id="fb-qr-modal-title">QR ลงทะเบียนกลุ่มตัวอย่าง</h3>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="fb-qr-sheet" id="fb-qr-sheet">
+        <span class="fb-qr-sheet-title">ลงทะเบียนกลุ่มตัวอย่าง</span>
+        <div class="fb-qr is-large" id="fb-qr-large" aria-hidden="true">{!! $qr['svg'] !!}</div>
+        <span class="fb-qr-sheet-url">{{ $qr['url'] ?? '' }}</span>
+        <span class="fb-qr-sheet-note">สแกนเพื่อลงทะเบียนเข้าร่วมกลุ่มตัวอย่าง · ลงทะเบียนแล้วทำแบบประเมินติดตามได้ทันที</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      {{-- คัดลอกลิงก์ ดาวน์โหลด และพิมพ์ อยู่รวมกับ QR ในที่เดียว
+           ทั้งสามอย่างเป็นงานเดียวกันคือเอา QR ไปใช้ต่อ --}}
+      <button type="button" class="btn btn-outline" data-close-modal>ปิด</button>
+      <button type="button" class="btn btn-outline" id="fb-qr-copy">
+        <span id="fb-qr-copy-text">คัดลอกลิงก์</span>
+      </button>
+      <button type="button" class="btn btn-outline" id="fb-qr-download">ดาวน์โหลด</button>
+      <button type="button" class="btn btn-outline" id="fb-qr-print">พิมพ์</button>
+    </div>
+  </div>
+</div>
 @endsection
 
 @push('page-script')
@@ -93,6 +131,7 @@
   var rows = @json($responses);
   var ROUNDS = @json($rounds);
   var FORMS = @json($forms);
+  var QR_URL = @json($qr['url']);
 
   var esc = window.TFC.escapeHtml;
   var $ = function (id) { return document.getElementById(id); };
@@ -257,8 +296,58 @@
       }));
   });
 
+  /* ---------- QR ถาวรของระบบติดตามสุขภาพ ----------
+     URL คงที่ตัวเดียว ไม่มีรหัสคน / รหัสรอบ / รหัสแบบประเมินอยู่ข้างใน
+     จึงพิมพ์ครั้งเดียวใช้ได้ตลอด และหลุดถึงคนนอกก็ไม่เสียหาย เพราะปลายทางเป็นหน้าลงทะเบียน
+     ห้ามเอาลิงก์เฉพาะบุคคลมาทำ QR แจก นั่นเท่ากับแจกกุญแจของคนนั้น
+
+     ตัว SVG วาดมาจากฝั่งเซิร์ฟเวอร์แล้ว (สแกนได้จริง) ที่นี่ทำแค่คัดลอก/ขยาย/ดาวน์โหลด/พิมพ์ */
+  function initQr() {
+    if (!QR_URL) return;
+
+    var copyText = $('fb-qr-copy-text');
+    var copyTimer = null;
+
+    /* clipboard ล้มเหลวได้จริง (ไม่ใช่ https หรือผู้ใช้ไม่อนุญาต)
+       จึงต้องรอผลก่อนค่อยขึ้น "คัดลอกแล้ว" ไม่งั้นปุ่มจะบอกว่าสำเร็จทั้งที่ไม่ได้คัดลอก */
+    $('fb-qr-copy').addEventListener('click', function () {
+      var done = function () {
+        copyText.textContent = 'คัดลอกแล้ว';
+        clearTimeout(copyTimer);
+        copyTimer = setTimeout(function () { copyText.textContent = 'คัดลอกลิงก์'; }, 2000);
+        window.TFC.showToast('คัดลอกลิงก์ ' + QR_URL + ' แล้ว', 'success');
+      };
+      var fail = function () { window.TFC.showToast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + QR_URL, 'warning'); };
+      if (!navigator.clipboard) return fail();
+      navigator.clipboard.writeText(QR_URL).then(done, fail);
+    });
+
+    $('fb-qr-open').addEventListener('click', function () { window.TFC.openModal('fb-qr-modal'); });
+
+    $('fb-qr-download').addEventListener('click', function () {
+      var el = $('fb-qr-large').querySelector('svg');
+      if (!el) return;
+      var blob = new Blob([el.outerHTML], { type: 'image/svg+xml' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'cohort-register-qr.svg';
+      link.click();
+      URL.revokeObjectURL(url);
+      window.TFC.showToast('ดาวน์โหลด QR แล้ว', 'success');
+    });
+
+    /* พิมพ์เฉพาะแผ่น QR — .is-printing ทำให้ @media print ซ่อนส่วนอื่นทั้งหมด */
+    $('fb-qr-print').addEventListener('click', function () {
+      document.body.classList.add('is-printing');
+      window.print();
+      document.body.classList.remove('is-printing');
+    });
+  }
+
   renderTabs();
   render();
+  initQr();
 })();
 </script>
 @endpush

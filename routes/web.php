@@ -307,14 +307,14 @@ Route::middleware('auth')->group(function () {
             Route::redirect('/checkin.html', '/admin/activities/checkin');
 
             Route::get('/checkin', [ActivityCheckinController::class, 'index'])
-                ->middleware('menu:activities-checkin')
+                ->middleware('menu:activities-list')
                 ->name('checkin');
 
             /* ชุด endpoint JSON ของหน้าเช็คอิน — รูป URL ต้องตรงกับ assets/js/checkin-service.js
                ที่ตั้ง checkinApiBase = '/admin' ไว้ (ดู checkin.blade.php)
                รับสองสิทธิ์ เพราะแท็บ Check-in ในหน้ารายละเอียดกิจกรรมก็เรียกชุดนี้เหมือนกัน
                คนที่จัดการกิจกรรมได้จึงเช็คอินแทนจากแท็บนั้นได้โดยไม่ต้องเปิดสิทธิ์เมนู Check-in เพิ่ม */
-            Route::middleware('menu:activities-checkin|activities-list')->name('checkin.')->group(function () {
+            Route::middleware('menu:activities-list')->name('checkin.')->group(function () {
                 Route::get('/{activity}/checkin', [ActivityCheckinController::class, 'snapshot'])->name('snapshot');
                 Route::post('/{activity}/checkin', [ActivityCheckinController::class, 'store'])->name('store');
                 Route::get('/{activity}/checkin/audit', [ActivityCheckinController::class, 'audit'])->name('audit');
@@ -335,7 +335,7 @@ Route::middleware('auth')->group(function () {
             /* รับสองสิทธิ์ด้วยเหตุผลเดียวกับชุด checkin — แท็บลงทะเบียนในหน้ารายละเอียดกิจกรรม
                เรียก endpoint ยืนยันการชำระเงินและเปิดดูสลิปจากชุดนี้ */
             Route::prefix('registrants')->name('registrants.')
-                ->middleware('menu:activities-registrants|activities-list')->group(function () {
+                ->middleware('menu:activities-list')->group(function () {
                     Route::get('/', [RegistrantController::class, 'index'])->name('index');
                     /* แก้ไข/ลบผู้ลงทะเบียน — เรียกจากแท็บ "รายชื่อลงทะเบียน" ในหน้ารายละเอียดกิจกรรม */
                     Route::put('/{registration:code}', [RegistrantController::class, 'update'])->name('update');
@@ -352,7 +352,7 @@ Route::middleware('auth')->group(function () {
             Route::redirect('/responses.html', '/admin/activities/responses');
 
             Route::prefix('responses')->name('responses.')
-                ->middleware('menu:activities-responses')->group(function () {
+                ->middleware('menu:activities-list')->group(function () {
                     Route::get('/', [ActivityResponseController::class, 'index'])->name('index');
                     Route::get('/data', [ActivityResponseController::class, 'data'])->name('data');
                     Route::get('/summary', [ActivityResponseController::class, 'summary'])->name('summary');
@@ -559,6 +559,9 @@ Route::middleware('auth')->group(function () {
                 ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.notify');
             Route::post('/{trackingRound}/members/{member}/offline-log', [TrackingRoundController::class, 'offlineLog'])
                 ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.offline-log');
+            /* คีย์คำตอบจากกระดาษแทนผู้ตอบ — สำหรับกลุ่มตัวอย่างที่ทำในแอปเองไม่ได้ */
+            Route::post('/{trackingRound}/members/{member}/record-answers', [TrackingRoundController::class, 'recordAnswers'])
+                ->where('trackingRound', '[A-Za-z0-9-]+')->name('members.record-answers');
         });
 
         /* ลิงก์ Legacy ส่งต่อไป clean URL เท่านั้น ไม่ใช้ .html เป็น URL หลัก */

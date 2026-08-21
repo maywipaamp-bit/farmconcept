@@ -9,6 +9,7 @@ use App\Models\FollowUpRound;
 use App\Models\FollowUpRoundTemplate;
 use App\Models\Form;
 use App\Models\Participant;
+use App\Models\QrCode;
 use App\Models\RoundBatch;
 use App\Models\RoundBatchMember;
 use App\Models\SurveyResponse;
@@ -19,6 +20,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode as EndroidQrCode;
+use Endroid\QrCode\Writer\SvgWriter;
 
 /**
  * รอบติดตาม — ตรรกะที่หน้ารายการ · หน้าสร้าง · QR สาธารณะ ใช้ร่วมกัน
@@ -155,6 +160,18 @@ class TrackingRoundService
 
             /* ตรวจคำตอบให้ครบก่อนสร้างระเบียน ถ้าตกข้อบังคับกลางทางจะได้ไม่มีคำตอบครึ่ง ๆ ค้างไว้ */
             $rows = $this->answerBuilder->rowsFor($form, $answers);
+
+            /* ใบเปล่าต้องไม่ผ่าน — แบบประเมินที่ไม่ได้ตั้ง "จำเป็น" ไว้สักข้อ (ซึ่งเป็นค่าเริ่มต้น)
+               จะกด "ข้อถัดไป" รวดจนจบแล้วส่งได้โดยไม่ตอบอะไรเลย ระบบก็ปิดรอบให้และกดทำซ้ำไม่ได้อีก
+               ผลคือได้ระเบียนที่ใช้วิเคราะห์ไม่ได้ และเสียโอกาสเก็บข้อมูลรอบนั้นไปถาวร
+
+               กันที่ชั้นนี้ไม่ใช่ที่ SurveyAnswerBuilder เพราะแบบประเมินหลังกิจกรรมใช้ตัวนั้นร่วมกัน
+               และมีเงื่อนไขคนละแบบ (ตอบไม่ระบุตัวตน ข้ามได้ทั้งใบโดยตั้งใจ) */
+            if ($rows === []) {
+                throw ValidationException::withMessages([
+                    'answers' => 'กรุณาตอบอย่างน้อยหนึ่งข้อก่อนส่งแบบประเมิน',
+                ]);
+            }
 
             $response = $this->recordResponse($round, $form);
 
@@ -485,6 +502,68 @@ class TrackingRoundService
         $base = config('farmconcept.tracking_round.public_url') ?: config('app.url');
 
         return rtrim((string) $base, '/').'/health';
+    }
+
+    /**
+     * ปลายทางของ QR ที่พิมพ์แจก — หน้าลงทะเบียนกลุ่มตัวอย่าง
+     *
+     * คนที่สแกน QR แผ่นนี้คือคนที่ยังไม่อยู่ในระบบ พาไปหน้ายืนยันตัวตนจะเจอทางตัน
+     * เพราะยังไม่มีเบอร์กับรหัสบุคคลให้กรอก ส่วนคนเก่าที่สแกนไม่ตกหล่น เพราะหน้าลงทะเบียน
+     * มีลิงก์ "เคยลงทะเบียนแล้ว เข้าสู่ระบบด้วยเบอร์โทร" กลับไปหน้ายืนยันตัวตนอยู่แล้ว
+     *
+     * ไม่ใช้ลิงก์ LIFF อย่าง healthLinkUrl() เพราะการลงทะเบียนไม่ต้องรู้จัก LINE ของคนกรอก
+     * บังคับให้เปิดในแอป LINE มีแต่จะกันคนที่ไม่ได้ใช้ LINE ออกไปเปล่า ๆ
+     * (healthLinkUrl() ยังเป็น LIFF ตามเดิม เพราะปลายทางของมันคือหน้าที่ต้องรู้ว่าใครเปิด)
+     *
+     * src=qr มีไว้ให้ register() นับยอดสแกน — ถ้าไม่มีตัวคั่นนี้ ยอดจะรวมคนที่กดลิงก์
+     * "ลงทะเบียน" จากหน้ายืนยันตัวตนเข้ามาด้วย ซึ่งไม่ได้สแกนอะไรเลย
+     */
+    public function healthRegisterUrl(): string
+    {
+        return $this->healthUrl().'/register?src=qr';
+    }
+
+    /**
+     * QR ถาวรของระบบติดตามสุขภาพ — แถวเดียวทั้งระบบ activity_id เป็น NULL
+     *
+     * URL ไม่มีรหัสคน รหัสรอบ หรือรหัสแบบประเมินอยู่ข้างใน จึงพิมพ์ครั้งเดียวใช้ได้ตลอด
+     * ห้ามเอาลิงก์เฉพาะบุคคลมาทำ QR แจก นั่นเท่ากับแจกกุญแจของคนนั้น
+     *
+     * อยู่ที่ชั้น service เพราะหน้าที่แสดง QR ย้ายที่ได้ (เคยอยู่หน้ารอบติดตาม ตอนนี้อยู่หน้า
+     * ตอบแบบประเมิน) แต่ตัว QR เป็นของระบบติดตามสุขภาพเสมอ ไม่ใช่ของหน้าจอใดหน้าจอหนึ่ง
+     *
+     * @return array{exists: bool, url: string|null, scanCount: int, svg: string|null}
+     */
+    public function qrPayload(): array
+    {
+        $qr = QrCode::where('purpose', 'health')->whereNull('activity_id')->first();
+        $url = $qr ? $this->healthRegisterUrl() : null;
+
+        return [
+            'exists' => $qr !== null,
+            'url' => $url,
+            'scanCount' => $qr?->scan_count ?? 0,
+            /* วาดเป็น SVG จริงตั้งแต่ฝั่งเซิร์ฟเวอร์ ไม่ใช่ลายตัวอย่างที่สแกนไม่ติดแบบต้นแบบ
+               ใช้ SVG (ไม่ใช่ PNG) เพราะ .fb-qr มีกฎ svg { width:100% } อยู่แล้ว
+               และปุ่มดาวน์โหลดฝั่งหน้าจอหยิบ outerHTML ของ <svg> ไปทำไฟล์ได้ตรง ๆ */
+            'svg' => $url ? $this->qrSvg($url) : null,
+        ];
+    }
+
+    private function qrSvg(string $url): string
+    {
+        $result = (new SvgWriter)->write(
+            new EndroidQrCode(
+                data: $url,
+                encoding: new Encoding('UTF-8'),
+                errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+                size: 512,
+                margin: 8,
+            ),
+            options: [SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true],
+        );
+
+        return $result->getString();
     }
 
     /**

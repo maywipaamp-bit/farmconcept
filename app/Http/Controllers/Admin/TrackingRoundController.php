@@ -6,15 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TrackingRoundRequest;
 use App\Models\FollowUpNote;
 use App\Models\Form;
-use App\Models\QrCode;
 use App\Models\RoundBatch;
 use App\Models\RoundBatchMember;
 use App\Models\TargetGroup;
 use App\Services\TrackingRoundService;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\QrCode as EndroidQrCode;
-use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,7 +40,6 @@ class TrackingRoundController extends Controller
             'batches' => $batches,
             'forms' => $this->healthForms(),
             'states' => RoundBatch::STATES,
-            'qr' => $this->healthQrPayload(),
         ]);
     }
 
@@ -59,7 +53,12 @@ class TrackingRoundController extends Controller
             'defaultMessage' => $this->rounds->defaultTemplate(),
             'placeholders' => config('farmconcept.tracking_round.placeholders'),
             'today' => now()->toDateString(),
-        ]);
+            /* ค่าตั้งต้นของช่วง "ครบกำหนด" — ทั้งเดือนปัจจุบัน ไม่ใช่วันนี้ถึงวันนี้
+               ช่วงวันเดียวมักค้นได้ 0 คน แล้วหน้าจอก็ไม่มีอะไรบอกว่าควรขยายเป็นเท่าไร
+               คนสร้างรอบจึงเดาไปเรื่อย ๆ ทั้งเดือนเป็นหน่วยที่ตรงกับวิธีทำงานจริงมากกว่า
+               และครอบคลุมคนที่เลยกำหนดไปแล้วต้นเดือนด้วย */
+            'monthStart' => now()->startOfMonth()->toDateString(),
+            'monthEnd' => now()->endOfMonth()->toDateString(),        ]);
     }
 
     /**
@@ -138,7 +137,12 @@ class TrackingRoundController extends Controller
             return response()->json(['data' => $payload]);
         }
 
-        return view('admin.tracking-rounds.show', ['batch' => $payload]);
+        return view('admin.tracking-rounds.show', [
+            'batch' => $payload,
+            /* โครงคำถามของแบบประเมินที่รอบนี้ใช้ — popup "คีย์คำตอบ" วาดจากชุดนี้
+               ส่งมาพร้อมหน้าเพราะเป็นชุดเดียวทั้งรอบ ยิงซ้ำทุกครั้งที่เปิด popup ไม่ได้อะไรเพิ่ม */
+            'formQuestions' => $this->formQuestions($trackingRound),
+        ]);
     }
 
     /** ส่งแจ้งเตือนซ้ำ — คนที่ส่งสำเร็จไปแล้วจะไม่โดนข้อความซ้ำ */
@@ -294,6 +298,93 @@ class TrackingRoundController extends Controller
         ] + $stats;
     }
 
+    /**
+     * บันทึกคำตอบที่แอดมินคีย์จากกระดาษ
+     *
+     * มีไว้เพราะกลุ่มตัวอย่างส่วนหนึ่งทำแบบประเมินในแอปเองไม่ได้ (ไม่มีสมาร์ตโฟน อ่านจอไม่ไหว)
+     * เจ้าหน้าที่ลงพื้นที่เก็บด้วยกระดาษแล้วต้องมีที่คีย์กลับเข้าระบบ ไม่งั้นคนกลุ่มนี้จะค้าง
+     * สถานะ "ยังไม่ตอบ" ตลอดไป และหายไปจากรายงานสุขภาพกลุ่มตัวอย่างทั้งที่มีข้อมูลอยู่จริง
+     *
+     * บันทึกผ่าน submitSurvey() ตัวเดียวกับฝั่งผู้ตอบ — กติกาการตรวจคำตอบจึงเป็นชุดเดียวกัน
+     * ทั้งข้อบังคับตอบ ความถูกต้องของตัวเลือก และการกันใบเปล่า
+     *
+     * ร่องรอยว่าใครเป็นคนคีย์เก็บที่ ptp_follow_up_notes ไม่ใช่ที่ตัวใบคำตอบ
+     * เพราะคอลัมน์ submitted_by_participant_id ของใบคำตอบเก็บได้แต่ id ของกลุ่มตัวอย่าง
+     * ไม่ใช่ id ของผู้ใช้ระบบ — จะเก็บที่ใบต้องเพิ่มคอลัมน์ใหม่ ซึ่งยังไม่ได้รับอนุญาตให้ทำ
+     */
+    public function recordAnswers(Request $request, RoundBatch $trackingRound, RoundBatchMember $member): JsonResponse
+    {
+        abort_unless($member->batch_id === $trackingRound->id, 404);
+
+        if ($trackingRound->state === RoundBatch::STATE_CANCELLED) {
+            return response()->json(['message' => 'รอบนี้ถูกยกเลิกแล้ว คีย์คำตอบไม่ได้'], 422);
+        }
+
+        $member->loadMissing(['followUpRound', 'cohortProfile']);
+        $round = $member->followUpRound;
+
+        /* ตอบไปแล้วต้องไม่ให้คีย์ทับ — คำตอบชุดเดิมคือข้อมูลวิจัยที่อ้างอิงไปแล้ว
+           แก้ของเดิมเป็นคนละเรื่องกับการคีย์ของที่ยังไม่มี ต้องมีขั้นตอนของตัวเอง */
+        if ($round->answered_at !== null) {
+            return response()->json(['message' => 'รอบนี้มีคำตอบอยู่แล้ว คีย์ซ้ำไม่ได้'], 422);
+        }
+
+        /* คำตอบมาเป็น answer_<id> เหมือนฝั่งผู้ตอบ แปลงกลับเป็นคีย์ id ล้วนก่อนส่งให้ตัวตรวจ */
+        $answers = [];
+
+        foreach ($request->all() as $key => $value) {
+            if (str_starts_with($key, 'answer_')) {
+                $answers[substr($key, 7)] = $value;
+            }
+        }
+
+        $this->rounds->submitSurvey($round, $answers);
+
+        FollowUpNote::create([
+            'participant_id' => $member->cohortProfile->participant_id,
+            'source' => 'แอดมินคีย์แทน',
+            'kind' => 'คีย์คำตอบจากกระดาษ',
+            'noted_at' => now(),
+            'body' => 'คีย์คำตอบแบบประเมินแทนผู้ตอบ (รอบ '.$trackingRound->name.')',
+            'created_by' => auth()->id(),
+        ]);
+
+        $member->load(['cohortProfile.participant.area', 'cohortProfile.participant.targetGroup', 'followUpRound', 'offlineBy']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'บันทึกคำตอบแล้ว',
+            'data' => $this->rounds->toMemberPayload($member->followUpRound->fresh(), $member),
+        ]);
+    }
+
+    /**
+     * โครงคำถามของแบบประเมินที่รอบนี้ใช้ — รูปแบบเดียวกับที่ฝั่งผู้ตอบเห็น
+     *
+     * หัวข้อคั่น (section) ส่งไปด้วย เพราะ popup ต้องวาดหัวข้อให้ตรงกับกระดาษที่เจ้าหน้าที่ถืออยู่
+     * ไม่งั้นไล่คีย์ตามลำดับแล้วหลงว่าอยู่ส่วนไหนของแบบสอบถาม
+     */
+    private function formQuestions(RoundBatch $batch): array
+    {
+        /* ผ่าน formForRound() ไม่ใช่อ่าน $batch->form ตรง ๆ — ตัวนั้นกันแบบที่ถูกปิดไปแล้ว
+           หรือเป็นชนิดอื่นออก และมีทางสำรองไปแบบเริ่มต้นให้ ต้องเป็นชุดเดียวกับที่ผู้ตอบเห็น
+           ไม่งั้นแอดมินคีย์ตามคำถามชุดหนึ่ง แต่ระบบตรวจด้วยอีกชุด */
+        $round = $batch->members->first()?->followUpRound;
+        $form = $round ? $this->rounds->formForRound($round) : null;
+
+        if ($form === null) {
+            return [];
+        }
+
+        return $form->questions->map(fn ($q) => [
+            'id' => $q->id,
+            'type' => $q->question_type,
+            'text' => $q->text,
+            'required' => (bool) $q->is_required,
+            'options' => $q->options->map(fn ($o) => ['id' => $o->id, 'label' => $o->label])->values(),
+        ])->values()->all();
+    }
+
     /** รอบติดตามล็อกไว้ที่แบบประเมินชนิดติดตามสุขภาพเท่านั้น — ชนิดอื่นใช้กับรอบไม่ได้ */
     private function healthForms()
     {
@@ -303,45 +394,5 @@ class TrackingRoundController extends Controller
             ->get(['id', 'name'])
             ->map(fn (Form $f) => ['value' => $f->id, 'label' => $f->name])
             ->values();
-    }
-
-    /**
-     * QR ถาวรของระบบติดตามสุขภาพ — แถวเดียวทั้งระบบ activity_id เป็น NULL
-     * URL ไม่มีรหัสคน รหัสรอบ หรือรหัสแบบประเมินอยู่ข้างใน จึงพิมพ์ครั้งเดียวใช้ได้ตลอด
-     */
-    private function healthQrPayload(): array
-    {
-        $qr = QrCode::where('purpose', 'health')->whereNull('activity_id')->first();
-
-        /* ตั้ง LIFF ไว้แล้วใช้ลิงก์ LIFF — สแกนจากกล้องมือถือแล้วเด้งเข้าแอป LINE ตรง ๆ
-           (universal link) ไม่ตกไปอยู่เบราว์เซอร์ในแอปกล้องที่ล็อกอิน LINE ไม่ได้
-           ไม่ตั้งไว้ก็ยังเป็น URL เว็บตรงเหมือนเดิม พาธอ่านออกและบอกต่อทางโทรศัพท์ได้ */
-        $url = $qr ? $this->rounds->healthLinkUrl() : null;
-
-        return [
-            'exists' => $qr !== null,
-            'url' => $url,
-            'scanCount' => $qr?->scan_count ?? 0,
-            /* วาดเป็น SVG จริงตั้งแต่ฝั่งเซิร์ฟเวอร์ ไม่ใช่ลายตัวอย่างที่สแกนไม่ติดแบบต้นแบบ
-               ใช้ SVG (ไม่ใช่ PNG) เพราะ .fb-qr มีกฎ svg { width:100% } อยู่แล้ว
-               และปุ่มดาวน์โหลดฝั่งหน้าจอหยิบ outerHTML ของ <svg> ไปทำไฟล์ได้ตรง ๆ */
-            'svg' => $url ? $this->qrSvg($url) : null,
-        ];
-    }
-
-    private function qrSvg(string $url): string
-    {
-        $result = (new SvgWriter)->write(
-            new EndroidQrCode(
-                data: $url,
-                encoding: new Encoding('UTF-8'),
-                errorCorrectionLevel: ErrorCorrectionLevel::Medium,
-                size: 512,
-                margin: 8,
-            ),
-            options: [SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true],
-        );
-
-        return $result->getString();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Answer;
 use App\Models\SurveyResponse;
+use App\Services\TrackingRoundService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -18,6 +19,8 @@ use Illuminate\Support\Collection;
  */
 class EvaluationResponseController extends Controller
 {
+    public function __construct(private readonly TrackingRoundService $rounds) {}
+
     public function index(): View
     {
         /* เรียงจากใหม่ไปเก่า — คนเปิดหน้านี้มาดูว่าเมื่อวานมีใครตอบเข้ามาบ้าง
@@ -30,6 +33,10 @@ class EvaluationResponseController extends Controller
                รอบที่ยังไม่มีใครตอบขึ้นเป็นแท็บว่างก็ไม่มีประโยชน์ */
             'rounds' => $rows->pluck('context')->unique()->sort()->values(),
             'forms' => $rows->pluck('form')->unique()->sort()->values(),
+            /* QR ถาวรของระบบติดตามสุขภาพ — ย้ายมาจากหน้ารอบติดตาม
+               อยู่ที่นี่เพราะคนที่เปิดหน้านี้คือคนที่ดูแลว่ามีใครตอบเข้ามาบ้าง
+               ซึ่งเป็นคนเดียวกับที่ต้องพิมพ์ QR ไปแจกให้มีคนเข้ามาตอบเพิ่ม */
+            'qr' => $this->rounds->qrPayload(),
         ]);
     }
 

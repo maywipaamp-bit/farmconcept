@@ -269,7 +269,13 @@
     $('ec-items').innerHTML = state.items.length
       ? state.items.map(function (q, i) {
           var n = nums[i];
-          return q.kind === 'section' ? sectionHtml(q, n) : questionHtml(q, n);
+          if (q.kind !== 'section') return questionHtml(q, n);
+
+          /* หัวข้อส่วนถูกผูกไว้กับคำถามที่อยู่ "ใต้มัน" ตอนแสดงให้ผู้ตอบ
+             ถ้าไม่มีคำถามตามหลังเลย หัวข้อนั้นจะหายไปเงียบ ๆ โดยที่คนสร้างไม่มีทางรู้ */
+          var orphan = ! state.items.slice(i + 1).some(function (x) { return x.kind !== 'section'; });
+
+          return sectionHtml(q, n, orphan);
         }).join('')
       : '<div class="ec-questions-empty">' +
           '<span class="ec-questions-empty-title">' + (isRegistration() ? 'ยังไม่มีคำถามเพิ่มเติม' : 'ยังไม่มีคำถามในแบบประเมิน') + '</span>' +
@@ -311,8 +317,11 @@
       '</div>';
   }
 
-  function sectionHtml(q, n) {
+  function sectionHtml(q, n, orphan) {
     var on = String(state.activeId) === String(q.id);
+    var warn = orphan
+      ? '<p class="ec-section-warn">หัวข้อนี้ยังไม่มีคำถามอยู่ใต้มัน ผู้ตอบจะไม่เห็นหัวข้อนี้ — เพิ่มคำถามต่อท้าย หรือลบหัวข้อนี้ทิ้ง</p>'
+      : '';
     return '<div class="ec-card ec-card-section' + (on ? ' is-active' : '') + '" data-row="' + q.id + '" data-activate="' + q.id + '">' +
       gripHtml(q.id) +
       '<div class="ec-card-body">' +
@@ -327,6 +336,7 @@
               '<span class="ec-section-badge">' + esc(n.sectionNo) + '</span>' +
               '<span class="ec-view-title">' + esc(q.title.trim() || 'หัวข้อส่วน') + '</span>' +
             '</div>') +
+        warn +
       '</div>' +
       (on ? toolbarHtml(q.id) : '') +
       '</div>';
