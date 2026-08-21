@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เช็กอินหน้างาน · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · ขั้นที่ 5</span>
+    <h1>เช็กอินหน้างาน</h1>
+    <p class="m-lead">
+      ยืนยันว่าคนที่ลงทะเบียนไว้มาถึงงานจริง — ผู้เข้าร่วมสแกน QR แล้วกดเอง เจ้าหน้าที่เห็นยอดขึ้นสดบนหน้าจอ
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+
+    <!-- ============ 01 ============ -->
+    <section class="m-section" id="prep">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>เตรียมจุดสแกน</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-checkin.png" alt="เมนูจุดสามจุดของกิจกรรม เน้นที่ Check-in" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ที่ <b>รายการกิจกรรม</b> กด <b>⋮</b> ท้ายแถวของงานวันนั้น แล้วเลือก <b>Check-in</b></span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-shots m-shots--tall">
+        <figure class="m-shot m-shot--sm">
+          <img src="img/a-checkin-scan.png" alt="กล่อง QR สำหรับให้ผู้เข้าร่วมสแกน" width="752" height="832">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">กด <b>แสดงเต็มจอ</b> ที่กล่อง QR แล้วหันจอออกให้ผู้เข้าร่วมสแกน</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note m-note--tip">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.5 4 12.4"/></svg>
+        <span>เข้ามาแล้วกิจกรรมผิด ให้กด <b>เปลี่ยนกิจกรรม</b> ที่ชื่องานด้านบน ไม่ต้องย้อนกลับไปหน้ารายการ</span>
+      </div>
+    </section>
+
+    <!-- ============ 02 ============ -->
+    <section class="m-section" id="people">
+      <div class="m-track">
+        <span class="m-track-pill">ผู้เข้าร่วม</span>
+        <h3>เช็กอินด้วยมือถือตัวเอง</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--phone">
+        <figure class="m-shot">
+          <img src="img/p-checkin-1-phone.png" alt="หน้ากรอกเบอร์โทรศัพท์เพื่อเช็กอิน" width="796" height="1280">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">กรอก <b>เบอร์โทรหรืออีเมล</b> ที่ใช้ลงทะเบียน</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-checkin-2-confirm.png" alt="หน้ายืนยันชื่อผู้เข้าร่วมก่อนเช็กอิน" width="796" height="1280">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">ตรวจชื่อให้ถูกคน แล้วกด <b>เช็กอิน</b></span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-checkin-3-done.png" alt="หน้าจอแจ้งว่าเช็กอินเรียบร้อยแล้ว" width="796" height="1280">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">ขึ้นชื่อและเวลา = <b>เรียบร้อย</b></span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>เบอร์เดียวลงทะเบียนไว้หลายคน ระบบจะให้ <b>เลือกรายชื่อ</b> ก่อน</span>
+      </div>
+    </section>
+
+    <!-- ============ 03 ============ -->
+    <section class="m-section" id="watch">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>ดูยอดสด และเพิ่มคนหน้างาน</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--two">
+        <figure class="m-shot">
+          <img src="img/a-checkin-list.png" alt="ยอดเช็กอินและรายชื่อผู้เข้าร่วม" width="1496" height="1120">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ยอดและรายชื่อ <b>อัปเดตเอง</b> · กด <b>เช็คอิน</b> ท้ายแถวเพื่อเช็กอินให้ · ปุ่มลูกศรย้อนคือยกเลิก</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-checkin-walkin.png" alt="หน้าต่างเพิ่มผู้เข้าร่วมหน้างาน" width="1072" height="1190">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">คนที่ไม่ได้ลงทะเบียนมาก่อน กด <b>เพิ่มผู้เข้าร่วมหน้างาน</b> กรอกชื่อกับเบอร์ ระบบเช็กอินให้ทันที</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ 04 ============ -->
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>หน้าจอขึ้นว่า</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ยังไม่เปิดเช็กอิน</td>
+              <td>ยังไม่ถึงเวลา หรือปิดไปแล้ว — แก้ช่วงเวลาได้ที่หน้าแก้ไขกิจกรรม</td>
+            </tr>
+            <tr>
+              <td>ไม่พบข้อมูลการลงทะเบียน</td>
+              <td>ลองใช้อีเมลแทนเบอร์ · ถ้ายังไม่เจอ ให้เจ้าหน้าที่เพิ่มเป็น Walk-in</td>
+            </tr>
+            <tr>
+              <td>เช็กอินไปแล้ว</td>
+              <td>ปกติ ไม่ต้องทำซ้ำ — ระบบนับให้ครั้งเดียว</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+
+</body>
+</html>

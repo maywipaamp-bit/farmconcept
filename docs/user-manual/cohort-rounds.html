@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แจ้งเตือนติดตาม · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · กลุ่มตัวอย่าง ขั้นที่ 3</span>
+    <h1>แจ้งเตือนติดตาม</h1>
+    <p class="m-lead">
+      ถึงกำหนดรอบ 3 · 6 · 12 เดือน เจ้าหน้าที่สร้างรอบแล้วส่งแจ้งเตือนเข้า LINE ทีเดียวทั้งกลุ่ม
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+    <section class="m-section" id="rounds">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>สร้างรอบติดตามและส่งแจ้งเตือน</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-rounds.png" alt="หน้ารอบติดตาม" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">เมนูซ้าย <b>ประเมินสุขภาพ › รอบติดตาม</b> — เห็นรอบที่เคยส่งไปแล้วทั้งหมด</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-round-create.png" alt="หน้าสร้างรอบติดตาม" width="2560" height="1800">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">กด <b>สร้างรอบติดตาม</b> · ตั้งชื่อรอบ เลือกแบบประเมิน ช่วงวันที่ และวันครบกำหนดตอบ</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-shots m-shots--tall">
+        <figure class="m-shot m-shot--sm">
+          <img src="img/a-round-line.png" alt="แผงตัวอย่างการ์ด LINE ในหน้าสร้างรอบติดตาม" width="1395" height="1182">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">แผงขวาคือ <b>ตัวอย่างที่ผู้รับเห็น</b> เปลี่ยนตามข้อความที่พิมพ์ทันที ใช้ตรวจก่อนกดส่ง</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>ช่องในหน้าสร้างรอบ</th><th>ใส่อะไร</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>กลุ่มเป้าหมาย</td><td>เลือกกลุ่ม แล้วกด <b>ค้นหารายชื่อ</b> — ระบบจะขึ้นรายชื่อคนที่ถึงกำหนดให้ติ๊กเลือก</td></tr>
+            <tr><td>ข้อความแจ้งเตือน LINE</td><td>แก้ข้อความได้ · กดปุ่มตัวแปรเพื่อแทรก ระบบจะแทนค่าให้รายคน — <b>อย่าพิมพ์ชื่อตัวแปรเอง</b> ผิดสระเดียวระบบก็ไม่แทนค่าให้</td></tr>
+            <tr><td>ตัวอย่างที่ผู้รับเห็น</td><td>อัปเดตสดตามที่พิมพ์ ใช้ตรวจก่อนกดส่ง</td></tr>
+            <tr><td>ปุ่มล่างขวา</td><td><b>บันทึกร่าง</b> = เก็บไว้ก่อน ยังไม่ส่ง · <b>สร้างรอบและส่งแจ้งเตือน</b> = ส่งเข้า LINE ทุกคนที่ติ๊กไว้ทันที</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="m-note m-note--warn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4M12 17v.2"/></svg>
+        <span>กดส่งแล้วเรียกคืนไม่ได้ — ตรวจชื่อรอบ วันครบกำหนด และจำนวนคนในแถบล่างให้ครบก่อนกด</span>
+      </div>
+    </section>
+
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อาการ</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ค้นหารายชื่อแล้วไม่เจอใครเลย</td>
+              <td>ยังไม่ถึงวันครบกำหนดของใคร หรือเลือกกลุ่มเป้าหมายผิดกลุ่ม</td>
+            </tr>
+            <tr>
+              <td>ส่งแล้วบางคนไม่ได้รับ</td>
+              <td>คนนั้นยังไม่ได้เชื่อม LINE — ระบบส่งได้เฉพาะคนที่เชื่อมแล้ว ที่เหลือต้องแจ้งทางอื่น</td>
+            </tr>
+            <tr>
+              <td>ส่งผิดรอบ</td>
+              <td>เรียกคืนข้อความไม่ได้ — สร้างรอบที่ถูกแล้วส่งใหม่ พร้อมแจ้งกลุ่มว่าให้ใช้อันไหน</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

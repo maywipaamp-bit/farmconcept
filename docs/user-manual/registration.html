@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ผู้เข้าร่วมลงทะเบียน · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · ขั้นที่ 3</span>
+    <h1>ผู้เข้าร่วมลงทะเบียน</h1>
+    <p class="m-lead">
+      สแกน QR จากใบปลิวหรือกดลิงก์ แล้วทำเองบนมือถือ 3 หน้าจอ — ลงทะเบียนเสร็จ แอดมินได้แจ้งเตือนทาง LINE ทันที
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+
+    <!-- ============ 3 หน้าจอ ============ -->
+    <section class="m-section" id="steps">
+      <div class="m-track">
+        <span class="m-track-pill">ผู้เข้าร่วม</span>
+        <h3>ทำเองบนมือถือ 3 หน้าจอ</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--phone">
+        <figure class="m-shot">
+          <img src="img/p-reg-2-form.png" alt="หน้ากรอกข้อมูลผู้ลงทะเบียน" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">กรอกเบอร์โทรและข้อมูลผู้ลงทะเบียน เลือกจำนวนที่นั่ง</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-reg-3-pay.png" alt="หน้าชำระเงินและแนบสลิป" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">โอนเงินแล้วแนบสลิป</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-reg-4-done.png" alt="หน้าจอลงทะเบียนสำเร็จพร้อมรหัสการลงทะเบียน" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">ได้รหัสลงทะเบียน เก็บไว้</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note m-note--tip">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.5 4 12.4"/></svg>
+        <span>กิจกรรมที่ไม่มีค่าใช้จ่าย จะข้ามหน้าจอที่ 2 ไปหน้าสำเร็จเลย เหลือแค่ 2 หน้าจอ</span>
+      </div>
+    </section>
+
+    <!-- ============ แจ้งเตือนแอดมิน ============ -->
+    <section class="m-section" id="notify">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>รับแจ้งเตือนผ่าน LINE</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <p>
+        ทุกครั้งที่มีคนลงทะเบียนสำเร็จ ระบบส่งการ์ดแจ้งเตือนเข้ากลุ่ม LINE ของทีมงานทันที
+        ไม่ต้องคอยเปิดหน้าจอเช็กเอง
+      </p>
+
+      <div class="m-shots m-shots--two">
+        <figure class="m-shot m-shot--bare">
+          <div class="m-line">
+            <span class="m-line-title">มีผู้ลงทะเบียนใหม่</span>
+            <dl class="m-line-rows">
+              <dt>กิจกรรม</dt><dd>ชวนเพลิดเพลิน สร้างสวนในขวดแก้ว</dd>
+              <dt>ผู้ลงทะเบียน</dt><dd>เมวิภา สุขใจ และอีก 1 คน</dd>
+              <dt>เบอร์โทร</dt><dd class="num">08X-XXX-XXXX</dd>
+              <dt>จำนวนที่นั่ง</dt><dd class="num">2 ที่นั่ง</dd>
+              <dt>ยอดที่ต้องชำระ</dt><dd class="num">398 บาท</dd>
+            </dl>
+            <span class="m-line-btn">ดูรายชื่อลงทะเบียน</span>
+          </div>
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">หน้าตาการ์ดที่เข้ากลุ่ม LINE — กดปุ่มเขียวเปิดหน้ารายชื่อของกิจกรรมนั้นได้เลย</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>
+          บรรทัด <b>ยอดที่ต้องชำระ</b> จะขึ้นเฉพาะกิจกรรมที่เก็บเงิน · ถ้ากลุ่มไม่ได้รับการ์ด
+          ให้แจ้งผู้ดูแลระบบตรวจการเชื่อมต่อ LINE — การลงทะเบียนของผู้เข้าร่วมยังสำเร็จตามปกติ
+        </span>
+      </div>
+    </section>
+
+    <!-- ============ สิ่งที่ต้องเตรียม ============ -->
+    <section class="m-section" id="prepare">
+      <div class="m-section-head">
+        <h2>สิ่งที่ผู้เข้าร่วมต้องเตรียม</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>หน้าจอ</th><th>กรอกอะไรบ้าง</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 · ข้อมูล</td>
+              <td>เบอร์โทรหรืออีเมล (ระบบเช็กให้ว่าเคยลงทะเบียนไว้แล้วหรือยัง) · ชื่อ-นามสกุล · จำนวนที่นั่ง · ติ๊กยอมรับเงื่อนไข</td>
+            </tr>
+            <tr>
+              <td>2 · ชำระเงิน</td>
+              <td>โอนตามเลขบัญชีที่แสดง (กดคัดลอกได้) แล้วแนบภาพสลิป JPG หรือ PNG</td>
+            </tr>
+            <tr>
+              <td>3 · สำเร็จ</td>
+              <td>ได้รหัสลงทะเบียน · กด "ดาวน์โหลดรายละเอียด" เก็บไว้ใช้อ้างอิงหน้างาน</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>เลือกที่นั่งมากกว่า 1 ระบบจะเปิดหน้าต่างให้กรอกชื่อผู้ร่วมเพิ่มทีละคนก่อนไปหน้าชำระเงิน</span>
+      </div>
+    </section>
+
+    <!-- ============ ปัญหา ============ -->
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>ผู้เข้าร่วมโทรมาถามบ่อย</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>เขาบอกว่า</th><th>ตอบไปแบบนี้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ขึ้นว่าเคยลงทะเบียนแล้ว</td>
+              <td>เบอร์นั้นจองไว้แล้ว ให้กด "ดูประวัติการลงทะเบียน" ในกล่องที่เด้งขึ้นมา</td>
+            </tr>
+            <tr>
+              <td>กดลงทะเบียนไม่ได้</td>
+              <td>ปิดรับสมัครไปแล้ว หรือที่นั่งเต็ม — เจ้าหน้าที่เช็กได้ที่หน้าแก้ไขกิจกรรม</td>
+            </tr>
+            <tr>
+              <td>แนบสลิปไม่ผ่าน</td>
+              <td>ต้องเป็นภาพ JPG หรือ PNG · ถ่ายจากมือถือได้เลย ไม่ต้องแปลงไฟล์</td>
+            </tr>
+            <tr>
+              <td>ปิดหน้าไปก่อนแนบสลิป</td>
+              <td>เปิดลิงก์เดิมอีกครั้ง ระบบจะพากลับมาที่หน้าชำระเงินให้ทำต่อ</td>
+            </tr>
+            <tr>
+              <td>ลืมรหัสลงทะเบียน</td>
+              <td>ไม่เป็นไร หน้างานใช้เบอร์โทรเช็กอินได้เลย</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+
+</body>
+</html>

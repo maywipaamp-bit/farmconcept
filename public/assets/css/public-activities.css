@@ -871,6 +871,11 @@ body.is-detail-page .registration-cta:hover { background: #2bb14e; border-color:
 .tr-or span { position: relative; padding: 0 10px; background: var(--surface); color: var(--text-secondary); font-size: 12px; }
 
 .tr-note { margin: 12px 0 0; color: var(--text-secondary); font-size: 12px; text-align: center; }
+
+/* หน้าเชิญเชื่อม LINE ที่แอดมินส่งลิงก์ให้รายคน */
+.tr-invite-lead { margin: 0 0 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+/* กล่องยืนยันตัวตนใช้สไตล์ชุดเดียวกับสลิปหน้าเช็กอิน (.ck-done-slip) ไม่ต้องมีสองชุดที่ต้องแก้ตามกัน */
+.tr-invite-slip { margin-bottom: 16px; }
 .tr-note a { color: var(--dark-green); }
 
 .tr-banner { margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; }

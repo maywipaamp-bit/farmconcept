@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -388,6 +389,16 @@ class CohortController extends Controller
             'member' => $payload,
             'cohortProfile' => $cohortProfile,
             'tabs' => $this->detailTabs($cohortProfile),
+            /* ลิงก์เชิญเชื่อม LINE รายคน — เซ็นด้วย APP_KEY จึงไม่ต้องเก็บ token ลงฐานข้อมูล
+               อายุ 7 วัน พอให้ส่งทางแชตแล้วรอคนเปิด แต่ไม่ค้างเป็นกุญแจถาวรถ้าลิงก์หลุด
+               สร้างใหม่ทุกครั้งที่เปิดหน้า หมดอายุแล้วแค่รีเฟรชก็ได้ลิงก์ใหม่ */
+            'lineInviteUrl' => $cohortProfile->participant
+                ? URL::temporarySignedRoute(
+                    'public.tracking-round-qr.invite',
+                    now()->addDays(7),
+                    ['participant' => $cohortProfile->participant->id],
+                )
+                : null,
         ]);
     }
 

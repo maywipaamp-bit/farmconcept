@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รับแจ้งเตือนผ่าน LINE · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · กลุ่มตัวอย่าง ขั้นที่ 4</span>
+    <h1>รับแจ้งเตือนผ่าน LINE</h1>
+    <p class="m-lead">
+      เชื่อมบัญชีครั้งเดียว ครั้งต่อไปกดจากการ์ดเข้าแบบประเมินได้เลย ไม่ต้องกรอกเบอร์ซ้ำ
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+    <section class="m-section" id="line">
+      <div class="m-track">
+        <span class="m-track-pill">ผู้เข้าร่วม</span>
+        <h3>รับแจ้งเตือนผ่าน LINE</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--tall">
+        <figure class="m-shot m-shot--sm">
+          <img src="img/p-cohort-line-real.png" alt="การ์ดแจ้งเตือนแบบประเมินสุขภาวะในแชท LINE จริง" width="720" height="880">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">การ์ดเด้งเข้าแชท LINE ของผู้เข้าร่วม บอกชื่อรอบและวันครบกำหนด · กดปุ่ม <b>เริ่มทำแบบประเมิน</b> เข้าตอบได้เลย ไม่ต้องกรอกเบอร์ซ้ำ</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อยากได้แจ้งเตือน ต้องทำอะไร</th><th>ทำอย่างไร</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>เชื่อมบัญชี LINE ก่อน</td><td>ที่หน้าหลักของผู้เข้าร่วม เปิดสวิตช์ <b>แจ้งเตือนรอบถัดไปผ่าน LINE</b> ระบบจะพาไปเชื่อมให้ — ทำครั้งเดียว</td></tr>
+            <tr><td>ไม่อยากรับแล้ว</td><td>ปิดสวิตช์ตัวเดิม · คำตอบและประวัติที่มีอยู่ไม่หายไป</td></tr>
+            <tr><td>ไม่ได้เชื่อม LINE</td><td>ยังตอบได้ตามปกติ แค่ต้องเข้าเองผ่าน QR หรือ <code>/health</code> แล้วกรอกเบอร์กับรหัสบุคคล</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>บัญชี LINE หนึ่งบัญชีผูกได้กับ <b>คนเดียว</b> — บ้านที่ใช้ไลน์ร่วมกัน ให้เชื่อมของคนที่จะรับแจ้งเตือนเป็นหลัก ที่เหลือเข้าด้วยเบอร์กับรหัสบุคคล</span>
+      </div>
+    </section>
+
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อาการ</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>"บัญชี LINE นี้ถูกผูกกับผู้ใช้อื่นแล้ว"</td>
+              <td>เจ้าหน้าที่เปิดหน้ารายละเอียดของคนเดิม กดยกเลิกการเชื่อม แล้วให้เชื่อมใหม่</td>
+            </tr>
+            <tr>
+              <td>กดปุ่ม LINE บน iPhone แล้วเข้าไม่ได้</td>
+              <td>เกิดจากเปิดผ่านเบราว์เซอร์ในแอปกล้อง — กดปุ่ม <b>เปิดใน Safari</b> ที่ระบบแนะนำ แล้วลองใหม่</td>
+            </tr>
+            <tr>
+              <td>เข้า LINE แล้วขึ้นว่าจะสลับไปรหัสอื่น</td>
+              <td>บัญชีนั้นผูกอยู่กับคนอื่น เลือกให้ตรงกับคนที่กำลังจะตอบ อย่ากดสลับมั่ว</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

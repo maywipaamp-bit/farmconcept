@@ -1,0 +1,650 @@
+/* ============================================================
+   คู่มือผู้เข้าร่วม — สไตล์เฉพาะหน้าคู่มือ
+   ต้องโหลดหลัง standard/tokens.css และ standard/base.css เสมอ
+   ทุกค่าสี ขนาด ระยะห่าง มาจาก tokens.css ไม่มีค่า hardcode
+   ============================================================ */
+
+/* เนื้อความของคู่มือใช้ 15px (--fs-n-md) ไม่ใช่ 13.5px แบบหน้าจอระบบ
+   เพราะเป็นเอกสารสำหรับอ่านต่อเนื่อง และผู้อ่านรวมกลุ่มผู้สูงอายุ
+   15px เป็นระดับที่มีอยู่แล้วในสเกล ไม่ได้สร้างระดับใหม่ */
+:root {
+  --manual-body: var(--fs-n-md);
+  --manual-lh: 1.7;
+  --manual-max: 760px;
+}
+
+body {
+  font-size: var(--manual-body);
+  line-height: var(--manual-lh);
+  background: var(--bg-app);
+}
+
+/* ---------- โครงหน้า ---------- */
+
+.m-shell {
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  gap: var(--sp-6) var(--sp-12);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-16);
+  align-items: start;
+}
+
+.m-main { max-width: var(--manual-max); min-width: 0; }
+
+/* ---------- เมนูของคู่มือ ---------- */
+
+.m-nav {
+  position: sticky;
+  top: var(--sp-8);
+  padding: var(--sp-4) var(--sp-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.m-nav-brand {
+  display: block;
+  font-size: var(--fs-t4);
+  line-height: var(--lh-t4);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  padding: 0 var(--sp-3) var(--sp-4);
+}
+
+.m-nav-group + .m-nav-group { margin-top: var(--sp-4); }
+
+.m-nav-title {
+  display: block;
+  font-size: var(--fs-t6);
+  line-height: var(--lh-t6);
+  letter-spacing: .06em;
+  color: var(--text-overline);
+  padding: 0 var(--sp-3) var(--sp-2);
+}
+
+.m-nav-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  border-left: 2px solid transparent;
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-body);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+a.m-nav-item:hover { background: var(--bg-subtle); color: var(--text-primary); text-decoration: none; }
+
+.m-nav-item.is-active {
+  background: var(--bg-brand-soft);
+  border-left-color: var(--brand-600);
+  color: var(--brand-700);
+  font-weight: var(--fw-medium);
+}
+
+/* หัวข้อที่ยังไม่ได้เขียน — เห็นว่ามีอยู่ในแผน แต่กดไม่ได้ */
+.m-nav-item.is-soon { color: var(--text-faint); cursor: default; }
+
+.m-nav-item em {
+  font-style: normal;
+  flex: none;
+  font-size: var(--fs-t6);
+  line-height: var(--lh-t6);
+  color: var(--text-faint);
+}
+
+/* ---------- หัวเอกสาร ---------- */
+
+/* หัวเอกสารกินเต็มความกว้างของ shell — สารบัญและเนื้อหาอยู่ใต้มันทั้งคู่ */
+.m-cover { grid-column: 1 / -1; margin-bottom: var(--sp-6); }
+
+.m-overline {
+  display: block;
+  font-size: var(--fs-overline);
+  line-height: var(--lh-t5);
+  letter-spacing: .06em;
+  color: var(--text-overline);
+  margin-bottom: var(--sp-2);
+}
+
+.m-cover h1 { font-size: var(--fs-t7); line-height: 1.15; letter-spacing: -.015em; }
+
+.m-lead {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-n-md);
+  line-height: var(--manual-lh);
+  color: var(--text-secondary);
+  max-width: 56ch;
+}
+
+/* ---------- บท ---------- */
+
+.m-section { margin-bottom: var(--sp-8); scroll-margin-top: var(--sp-6); }
+
+.m-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.m-section-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-default);
+}
+
+
+.m-section-no {
+  font-size: var(--fs-t5);
+  line-height: var(--lh-t5);
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-600);
+  font-weight: var(--fw-medium);
+}
+
+.m-section-head h2 { font-size: var(--fs-t2); line-height: var(--lh-t2); white-space: nowrap; }
+
+.m-section > p { margin-bottom: var(--sp-4); }
+
+.m-sub {
+  font-size: var(--fs-t2);
+  line-height: var(--lh-t2);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  margin: var(--sp-8) 0 var(--sp-3);
+}
+
+.m-section > .m-sub:first-of-type { margin-top: 0; }
+
+/* เส้นเชื่อมระหว่างขั้น — ขั้นสุดท้ายไม่มี */
+
+/* ---------- ตาราง ---------- */
+
+.m-table-wrap {
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--sp-4);
+}
+
+.m-table { width: 100%; border-collapse: collapse; min-width: 420px; }
+
+.m-table th {
+  text-align: left;
+  font-size: var(--fs-t4);
+  line-height: var(--lh-t4);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.m-table td {
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-body);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-row);
+  vertical-align: top;
+}
+
+.m-table tbody tr:last-child td { border-bottom: 0; }
+.m-table td:first-child { color: var(--text-strong); font-weight: var(--fw-medium); }
+.m-table td b { font-weight: var(--fw-medium); color: var(--text-strong); }
+
+/* ---------- กล่องเน้น ---------- */
+
+.m-note {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--status-neutral-border);
+  background: var(--status-neutral-bg);
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-body);
+  margin-bottom: var(--sp-4);
+}
+
+.m-note svg { flex: none; margin-top: 2px; }
+.m-note b { font-weight: var(--fw-medium); }
+
+.m-note--tip { border-color: var(--border-brand-soft); background: var(--bg-brand-soft); color: var(--status-success-text); }
+.m-note--tip svg { color: var(--brand-600); }
+
+.m-note--warn { border-color: var(--status-warning-border); background: var(--status-warning-bg); color: var(--status-warning-text); }
+.m-note--warn svg { color: var(--status-warning-text); }
+
+.m-note--stop { border-color: var(--status-danger-border); background: var(--status-danger-bg); color: var(--status-danger-text); }
+.m-note--stop svg { color: var(--status-danger-text); }
+
+/* ---------- ป้ายและโค้ด ---------- */
+
+.m-req { color: var(--status-danger-text); }
+
+/* ---------- ท้ายเอกสาร ---------- */
+
+.m-foot {
+  margin-top: var(--sp-12);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-t6);
+  line-height: var(--lh-t6);
+  color: var(--text-muted);
+}
+
+/* ---------- จอเล็ก ---------- */
+
+@media (max-width: 900px) {
+  .m-shell { grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); padding: var(--sp-6) var(--sp-4) var(--sp-12); }
+
+  .m-nav { position: static; }
+  .m-nav-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); }
+  .m-nav-title { grid-column: 1 / -1; }
+
+  .m-cover h1 { font-size: var(--fs-n-lg); }
+  .m-main { max-width: none; }
+}
+
+/* ---------- พิมพ์ ---------- */
+
+@media print {
+  body { background: var(--bg-surface); }
+  .m-shell { display: block; max-width: none; padding: 0; }
+  .m-nav { display: none; }
+  .m-section { break-inside: avoid-page; margin-bottom: var(--sp-8); }
+  .m-card, .m-table-wrap, .m-note { box-shadow: none; }
+}
+
+/* ============================================================
+   ส่วนที่ใช้ภาพหน้าจอนำ ข้อความเป็นคำอธิบายสั้น ๆ ใต้ภาพ
+   ============================================================ */
+
+/* แถบบอกว่ากำลังอ่านฝั่งไหน — ผู้เข้าร่วม หรือ เจ้าหน้าที่ */
+.m-track {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-8) 0 var(--sp-4);
+}
+
+.m-track:first-of-type { margin-top: 0; }
+
+.m-track h3 {
+  font-size: var(--fs-t2);
+  line-height: var(--lh-t2);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.m-track-pill {
+  font-size: var(--fs-badge);
+  line-height: 1.4;
+  font-weight: var(--fw-medium);
+  padding: 2px var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--bg-brand-soft);
+  border: 1px solid var(--border-brand-soft);
+  color: var(--status-success-text);
+  white-space: nowrap;
+}
+
+.m-track-pill--staff {
+  background: var(--status-neutral-bg);
+  border-color: var(--status-neutral-border);
+  color: var(--status-neutral-text);
+}
+
+.m-track-line { flex: 1; height: 1px; background: var(--border-default); }
+
+/* กริดภาพหน้าจอ — จอมือถือเรียงสาม จอกว้างเต็มแถว */
+.m-shots {
+  display: grid;
+  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.m-shots--wide { grid-template-columns: minmax(0, 1fr); }
+
+.m-shot {
+  margin: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* จองพื้นที่ภาพไว้ก่อนโหลด ภาพขึ้นแล้วเลย์เอาต์จะไม่กระโดด */
+.m-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+.m-shot figcaption {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.m-shot-no {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: var(--brand-600);
+  color: var(--text-on-brand);
+  font-size: var(--fs-t6);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  margin-top: 1px;
+}
+
+.m-shot-text {
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-body);
+}
+
+.m-shot-text b { font-weight: var(--fw-medium); color: var(--text-strong); }
+
+/* ช่องที่ยังไม่มีภาพจริง */
+
+/* สองภาพต่อแถวบนจอกว้าง — ใช้กับภาพหน้าจอคอมพิวเตอร์ที่ต้องอ่านตัวอักษรออก */
+.m-shots--two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+
+/* ภาพแนวตั้งแคบ ๆ (เช่น แผงตัวอย่างด้านขวาของฟอร์ม) — อย่าให้ยืดเต็มคอลัมน์จนใหญ่เกินจริง */
+.m-shot--sm { max-width: 380px; }
+
+/* ============================================================
+   ทำให้ภาพในแถวเดียวกัน "สูงเท่ากันทุกใบ"
+   ภาพหน้าจอมาจากคนละหน้า สัดส่วนไม่เท่ากันโดยธรรมชาติ
+   ถ้าปล่อยตามจริง การ์ดจะสูงต่ำสลับกันจนต้องกวาดสายตาขึ้นลง
+   จึงล็อกสัดส่วนกรอบไว้ แล้วให้ภาพ contain อยู่ข้างใน
+   ============================================================ */
+
+.m-shots > .m-shot > img {
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: var(--bg-subtle);
+  padding: var(--sp-2);
+}
+
+/* แถวภาพมือถือ — สัดส่วนเดียวกับที่ถ่ายมา (430 × 640) จึงเต็มกรอบพอดีไม่มีขอบว่าง */
+.m-shots--phone > .m-shot > img { aspect-ratio: 43 / 64; padding: 0; }
+
+/* ภาพเต็มความกว้างมีใบเดียวต่อแถวอยู่แล้ว ไม่ต้องล็อกสัดส่วน */
+.m-shots--wide > .m-shot > img { aspect-ratio: auto; background: none; padding: 0; }
+
+/* ---------- แถบลำดับงาน ---------- */
+
+.m-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.m-flow a,
+.m-flow span.m-flow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-body);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.m-flow a:hover { background: var(--bg-brand-soft); border-color: var(--border-brand-soft); color: var(--brand-700); text-decoration: none; }
+
+.m-flow .m-flow-no {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--bg-brand-soft);
+  color: var(--brand-700);
+  font-size: var(--fs-t6);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-flow-arrow { color: var(--text-faint); font-size: var(--fs-t5); }
+
+.m-flow .is-here { background: var(--bg-brand-soft); border-color: var(--border-brand-soft); color: var(--brand-700); font-weight: var(--fw-medium); }
+
+/* เลขลำดับหน้าในเมนู — ชิดซ้าย ป้าย "เร็ว ๆ นี้" ยังชิดขวาเหมือนเดิม */
+.m-nav-item { justify-content: flex-start; }
+.m-nav-item > span { flex: 1; min-width: 0; }
+.m-nav-item em { margin-left: auto; }
+
+.m-nav-item > i {
+  font-style: normal;
+  flex: none;
+  min-width: 14px;
+  font-size: var(--fs-t6);
+  line-height: var(--lh-t6);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.m-nav-item.is-active > i { color: var(--brand-600); }
+
+/* แถวภาพมือถือเรียงให้ครบในแถวเดียวเมื่อทำได้ — เล่าเป็นลำดับซ้ายไปขวาเหมือนแผ่นพับ */
+.m-shots--phone { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.m-shots--phone .m-shot-text { font-size: var(--fs-t5); line-height: var(--lh-t5); }
+.m-shots--phone figcaption { padding: var(--sp-3); gap: var(--sp-2); }
+
+/* ============================================================
+   ปรับหัวเอกสารให้กระชับ + กันจอกระพริบตอนเปลี่ยนหน้า
+   ============================================================ */
+
+/* หน้าสั้นไม่มีแถบเลื่อน หน้ายาวมี — ถ้าไม่จองรางไว้ ความกว้างจะขยับทุกครั้งที่เปลี่ยนหน้า
+   เห็นเป็นอาการ "กระพริบ/เด้งซ้ายขวา" ทั้งที่ไม่มีอะไรเปลี่ยนจริง */
+html { scrollbar-gutter: stable; }
+
+.m-shell { padding-top: var(--sp-6); }
+
+.m-cover { margin-bottom: var(--sp-4); }
+.m-cover h1 { font-size: var(--fs-t1); line-height: var(--lh-t1); }
+
+.m-overline { margin-bottom: var(--sp-1); }
+
+.m-lead {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  max-width: 72ch;
+}
+
+/* แถบลำดับงานอยู่ใต้ชื่อบท — ทำให้เตี้ยลง เพราะเป็นตัวนำทาง ไม่ใช่เนื้อหา */
+.m-flow { margin: var(--sp-4) 0 0; gap: var(--sp-1); }
+
+.m-flow a,
+.m-flow span.m-flow-step {
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-t5);
+  line-height: var(--lh-t5);
+}
+
+.m-flow .m-flow-no { width: 17px; height: 17px; }
+
+.m-nav { top: var(--sp-6); }
+
+@media (max-width: 900px) {
+  .m-shell { padding-top: var(--sp-4); }
+}
+
+/* ---------- ตัวอย่างข้อความแจ้งเตือนใน LINE ---------- */
+
+/* วาดด้วย HTML ไม่ใช่ภาพหน้าจอ เพราะการ์ดจริงถูกส่งเข้าไลน์ของทีมงาน
+   จะถ่ายมาได้ก็ต่อเมื่อยิงข้อความจริงออกไป ซึ่งไม่ควรทำเพื่อทำคู่มือ
+   โครงและข้อความตรงกับ PublicRegistrationService::notifyAdmins() */
+.m-line {
+  max-width: 340px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-4);
+}
+
+.m-line-title {
+  display: block;
+  font-size: var(--fs-t2);
+  line-height: var(--lh-t2);
+  font-weight: var(--fw-semibold);
+  color: var(--brand-700);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.m-line-rows {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+  margin: 0 0 var(--sp-4);
+}
+
+.m-line-rows dt {
+  font-size: var(--fs-t5);
+  line-height: var(--lh-t5);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.m-line-rows dd {
+  margin: 0;
+  font-size: var(--fs-t3);
+  line-height: var(--lh-t3);
+  color: var(--text-strong);
+}
+
+.m-line-rows dd.num { font-variant-numeric: tabular-nums; }
+
+.m-line-btn {
+  display: block;
+  padding: 10px var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--brand-500);
+  color: var(--text-on-brand);
+  font-size: var(--fs-btn);
+  font-weight: var(--fw-medium);
+  text-align: center;
+}
+
+/* การ์ดที่วาดเองไม่ต้องมีกรอบซ้อนกรอบ — ตัวเนื้อในมีกรอบของตัวเองอยู่แล้ว */
+.m-shot--bare { border: 0; box-shadow: none; background: none; }
+.m-shot--bare figcaption { padding-left: 0; padding-right: 0; }
+
+/* แถวที่ภาพเป็นแนวตั้งทั้งแถว (เมนู ⋮ · การ์ดในหน้าจอ · popup)
+   ใช้กรอบแนวตั้งแทน 4:3 ภาพจะได้เต็มกรอบ ไม่เหลือขอบว่างบนล่างจนภาพเล็กเกินอ่าน */
+.m-shots--tall > .m-shot > img { aspect-ratio: 3 / 4; }
+
+/* ---------- ภาพจำลองการสแกน QR ---------- */
+
+/* ขั้นตอน "สแกน QR" ถ่ายเป็นภาพหน้าจอไม่ได้ เพราะเป็นการกระทำนอกจอ
+   จึงวาดกรอบเล็งกล้องครอบ QR จริงของกิจกรรมแทน */
+.m-scan {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: var(--sp-3);
+  aspect-ratio: 43 / 64;
+  padding: var(--sp-6);
+  background: var(--bg-subtle);
+}
+
+.m-scan-frame {
+  position: relative;
+  width: min(100%, 190px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-3);
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+}
+
+/* มุมเล็งสี่มุม — วาดด้วยเส้นขอบของ ::before/::after อย่างละสองมุม */
+.m-scan-frame::before,
+.m-scan-frame::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--brand-600);
+}
+
+.m-scan-frame::before {
+  top: -6px; left: -6px;
+  border-right: 0; border-bottom: 0;
+  border-top-left-radius: var(--r-sm);
+}
+
+.m-scan-frame::after {
+  bottom: -6px; right: -6px;
+  border-left: 0; border-top: 0;
+  border-bottom-right-radius: var(--r-sm);
+}
+
+.m-scan-frame img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.m-scan-hint {
+  font-size: var(--fs-t5);
+  line-height: var(--lh-t5);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* กฎภาพในกริดตั้ง aspect-ratio ไว้ ต้องยกเว้นให้ QR ในกรอบเล็งกล้อง ไม่งั้นจะถูกยืดผิดส่วน */
+.m-shots > .m-shot .m-scan-frame img { aspect-ratio: 1; padding: 0; background: none; border-bottom: 0; }
+
+/* พาธและโค้ดสั้น ๆ ในเนื้อความ เช่น /health */
+code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-t5);
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  white-space: nowrap;
+}

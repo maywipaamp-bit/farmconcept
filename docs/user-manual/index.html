@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มือการใช้งาน · The Farm Concept</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">THE FARM CONCEPT</span>
+    <h1>คู่มือการใช้งาน</h1>
+    <p class="m-lead">
+      ดูภาพหน้าจอจริงทีละขั้น ไม่ต้องอ่านเยอะ — ครอบคลุมทั้งงานของเจ้าหน้าที่ และสิ่งที่ผู้เข้าร่วมเห็นบนมือถือ
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+    <!-- ============ เข้าสู่ระบบ ============ -->
+    <section class="m-section" id="login">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>เข้าสู่ระบบ</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--tall">
+        <figure class="m-shot">
+          <img src="img/a-login.png" alt="หน้าเข้าสู่ระบบ" width="872" height="1034">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">กรอก <b>ชื่อผู้ใช้งาน</b> กับ <b>รหัสผ่าน</b> ที่ได้รับ แล้วกด <b>เข้าสู่ระบบ</b></span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-menu.png" alt="เมนูด้านซ้ายของระบบ" width="536" height="660">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">เมนูอยู่ด้านซ้าย — กดไอคอนแถบเขียวเพื่อเปลี่ยนหมวด แล้วเลือกหน้าที่ต้องการ</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>เห็นเมนูไม่ครบเป็นเรื่องปกติ — ระบบแสดงเฉพาะเมนูที่บทบาทของคุณมีสิทธิ์ใช้</span>
+      </div>
+    </section>
+
+    <!-- ============ เมนูของแต่ละกิจกรรม ============ -->
+    <section class="m-section" id="row-menu">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>เปิดงานของแต่ละกิจกรรม</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <p>
+        งานเกือบทั้งหมดของกิจกรรมหนึ่ง ๆ — ผู้ลงทะเบียน · Check-in · แบบประเมิน · รายงาน —
+        เปิดจาก <b>ปุ่มจุดสามจุด</b> ท้ายแถวในหน้ารายการกิจกรรม ไม่ต้องหาในเมนูซ้าย
+      </p>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-menu.png" alt="หน้ารายการกิจกรรม เปิดเมนูจุดสามจุดของแถวหนึ่งอยู่" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">หา <b>แถวของกิจกรรมที่ต้องการ</b> แล้วกด <b>⋮</b> ท้ายแถวขวาสุด — เมนูจะเปิดตรงนั้น</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>เมนูในปุ่ม ⋮</th><th>ใช้ทำอะไร</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>ดูรายละเอียด</td><td>ดูข้อมูลกิจกรรม รอบ และ QR ทั้งหมด</td></tr>
+            <tr><td>แก้ไข</td><td>กลับไปแก้ฟอร์มกิจกรรม</td></tr>
+            <tr><td>ลงทะเบียน</td><td>รายชื่อผู้ลงทะเบียน ตรวจสลิป และยืนยันการชำระเงิน</td></tr>
+            <tr><td>Check-in</td><td>หน้ารับคนหน้างาน — ดูวิธีใช้ที่ <a href="checkin.html">เช็กอินหน้างาน</a></td></tr>
+            <tr><td>แบบประเมิน</td><td>ดูคำตอบแบบประเมินของกิจกรรมนี้</td></tr>
+            <tr><td>รายงาน</td><td>สรุปผลรายกิจกรรม</td></tr>
+            <tr><td>ลบกิจกรรม</td><td>ลบได้เฉพาะกิจกรรมที่ยังไม่มีผู้ลงทะเบียน</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ แดชบอร์ด ============ -->
+    <section class="m-section" id="dashboard">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>หน้าแรก — ภาพรวมการดำเนินงาน</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-dashboard.png" alt="หน้าแดชบอร์ดภาพรวมการดำเนินงาน" width="2248" height="234">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ตัวเลขสำคัญอยู่แถวบน · กดชิป <b>3 / 6 / 12 เดือน</b> มุมขวาบนเพื่อดูเฉพาะช่วงเวลานั้น</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน — ภาพหน้าจอทั้งหมดมาจากระบบจริง หน้าตาที่คุณเห็นจะตรงกับในคู่มือ
+    </footer>
+
+  </main>
+</div>
+
+
+</body>
+</html>

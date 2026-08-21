@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ดูผลการลงทะเบียน · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · ขั้นที่ 4</span>
+    <h1>ดูผลการลงทะเบียน</h1>
+    <p class="m-lead">
+      ดูว่ามีคนจองมากี่คน ใครโอนเงินแล้ว แล้วกดยืนยันการชำระเงินทีละรายการ
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+
+    <!-- ============ เปิดหน้า ============ -->
+    <section class="m-section" id="open">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>เปิดหน้ารายชื่อ</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-register.png" alt="เมนูจุดสามจุดของกิจกรรม เน้นที่ ลงทะเบียน" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ที่ <b>รายการกิจกรรม</b> กด <b>⋮</b> ท้ายแถวของกิจกรรมนั้น แล้วเลือก <b>ลงทะเบียน</b></span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-reg-stats.png" alt="แถบสรุปยอดผู้ลงทะเบียน" width="2264" height="282">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">แถวบนคือ <b>ยอดสรุป</b> — จองมาแล้วกี่คน ชำระแล้วกี่คน ได้เงินเท่าไร</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-reg-table.png" alt="ตารางรายชื่อผู้ลงทะเบียน" width="2248" height="1240">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">คอลัมน์ <b>การชำระเงิน</b> กดได้ = เปิดสลิป · คอลัมน์ <b>Check-in</b> ใช้เช็กอินให้ได้จากหน้านี้เลย</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-shots m-shots--tall">
+        <figure class="m-shot m-shot--sm">
+          <img src="img/a-reg-slip.png" alt="หน้าต่างตรวจสลิปการชำระเงิน" width="952" height="1348">
+          <figcaption>
+            <span class="m-shot-no">4</span>
+            <span class="m-shot-text">กดที่สถานะการชำระเงินของแถวไหน จะเปิด <b>สลิป</b> ของคนนั้นขึ้นมา แล้วกดยืนยันได้เลย</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>ต้องการรายชื่อไปทำงานต่อ กด <b>ส่งออก Excel</b> มุมขวาบน — ได้เฉพาะรายการที่กรองอยู่ตอนนั้น</span>
+      </div>
+    </section>
+
+    <!-- ============ สถานะ ============ -->
+    <section class="m-section" id="status">
+      <div class="m-section-head">
+        <h2>สถานะการชำระเงินหมายถึงอะไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>สถานะ</th><th>หมายความว่า</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>รอตรวจสอบ</td><td>ผู้เข้าร่วมแจ้งโอนแล้ว รอเจ้าหน้าที่เปิดสลิปดู</td></tr>
+            <tr><td>ชำระแล้ว</td><td>เจ้าหน้าที่กด "ยืนยันการชำระเงิน" แล้ว</td></tr>
+            <tr><td>สลิปไม่ถูกต้อง</td><td>ยอดหรือสลิปไม่ตรง — ต้องติดต่อผู้เข้าร่วมให้ส่งใหม่</td></tr>
+            <tr><td>ไม่มีค่าใช้จ่าย</td><td>กิจกรรมฟรี ไม่ต้องตรวจอะไร</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ ปัญหา ============ -->
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อาการ</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ไม่มีสลิปให้ดู</td>
+              <td>ผู้เข้าร่วมยังไม่ได้แนบ — ติดต่อให้ส่งเข้ามา หรือเปลี่ยนสถานะเองหลังตรวจยอดจากธนาคาร</td>
+            </tr>
+            <tr>
+              <td>โอนมาแล้วแต่ยังขึ้นรอตรวจสอบ</td>
+              <td>ปกติ — ระบบไม่ตัดยอดอัตโนมัติ ต้องมีคนกดยืนยัน</td>
+            </tr>
+            <tr>
+              <td>ยอดในสลิปไม่ตรง</td>
+              <td>กด "สลิปไม่ถูกต้อง" แล้วติดต่อผู้เข้าร่วม ระบบจะเปลี่ยนสถานะให้เห็นชัด</td>
+            </tr>
+            <tr>
+              <td>มีคนจองซ้ำสองรายการ</td>
+              <td>ยืนยันรายการที่ถูกต้อง แล้วปล่อยอีกรายการไว้ — ยอดเช็กอินนับตามคนที่มาจริง</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+
+</body>
+</html>

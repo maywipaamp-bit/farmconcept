@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\TrackingRoundController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
+use App\Http\Controllers\ManualController;
 use App\Http\Controllers\LineWebhookController;
 use App\Http\Controllers\PublicActivityController;
 use App\Http\Controllers\PublicCheckinController;
@@ -180,6 +181,16 @@ Route::prefix('health')->group(function () {
     Route::post('/sign-out', [PublicTrackingRoundQrController::class, 'signOut'])->name('public.tracking-round-qr.sign-out');
 
     Route::get('/line', [PublicLineLoginController::class, 'redirectHealth'])->name('public.tracking-round-qr.line');
+
+    /* ลิงก์เชิญเชื่อม LINE ที่แอดมินสร้างให้รายคน — ลงลายเซ็นด้วย APP_KEY (middleware signed)
+       รหัสคนและวันหมดอายุอยู่ในตัวลิงก์ ไม่ต้องเก็บ token ลงฐานข้อมูล
+       แก้ตัวเลขใน URL แม้แต่หลักเดียวลายเซ็นจะไม่ตรงและถูกปฏิเสธทันที */
+    Route::middleware('signed')->group(function () {
+        Route::get('/invite/{participant}', [PublicTrackingRoundQrController::class, 'invite'])
+            ->whereNumber('participant')->name('public.tracking-round-qr.invite');
+        Route::get('/invite/{participant}/line', [PublicTrackingRoundQrController::class, 'inviteToLine'])
+            ->whereNumber('participant')->name('public.tracking-round-qr.invite.line');
+    });
     Route::get('/line/return', [PublicTrackingRoundQrController::class, 'lineReturn'])->name('public.tracking-round-qr.line-return');
 
     /* เข้าสู่ระบบจากในแอป LINE (LIFF) — สคริปต์บนหน้ายิง id_token มาให้ตรวจ
@@ -591,6 +602,15 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{form}', [EvaluationController::class, 'destroy'])->where('form', '[A-Za-z0-9-]+')->name('destroy');
         });
     });
+
+    /*
+     | คู่มือการใช้งาน — ไฟล์อยู่ที่ docs/user-manual/ ไม่ได้อยู่ใน public/
+     | เสิร์ฟผ่านคอนโทรลเลอร์เพื่อให้ผ่านการล็อกอินก่อน เพราะมีภาพหน้าจอหลังบ้าน
+     | ไม่ผูก middleware menu — ทุกบทบาทที่ล็อกอินแล้วเปิดคู่มือได้
+     */
+    Route::get('/manual/{path?}', [ManualController::class, 'show'])
+        ->where('path', '.*')
+        ->name('manual');
 
     /*
      | หน้า HTML เดิมที่ยังไม่ได้ย้าย — ต้องประกาศ "ท้ายสุด" ของกลุ่ม admin

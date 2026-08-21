@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แบบประเมินหลังกิจกรรม · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · ขั้นที่ 6</span>
+    <h1>แบบประเมินหลังกิจกรรม</h1>
+    <p class="m-lead">
+      จบงานให้ผู้เข้าร่วมสแกน QR ตอบทีละข้อ — เจ้าหน้าที่เห็นคะแนนเฉลี่ยและคะแนนรายข้อทันที
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+    <!-- ============ ฝั่งผู้เข้าร่วม ============ -->
+    <section class="m-section" id="answer">
+      <div class="m-track">
+        <span class="m-track-pill">ผู้เข้าร่วม</span>
+        <h3>ตอบจากมือถือ ทีละข้อ</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--phone">
+        <figure class="m-shot">
+          <div class="m-scan">
+            <div class="m-scan-frame">
+              <img src="img/p-survey-qr.png" alt="QR แบบประเมินหลังกิจกรรม" width="840" height="840">
+            </div>
+            <span class="m-scan-hint">เล็งกล้องมือถือที่ QR</span>
+          </div>
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">สแกน QR แบบประเมินที่เจ้าหน้าที่ขึ้นจอไว้</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-survey-1-question.png" alt="หน้าคำถามข้อแรกของแบบประเมิน" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">เลือกคำตอบ แล้วปุ่มเขียวจะกดได้</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-survey-2-next.png" alt="หน้าคำถามข้อถัดไปพร้อมแถบความคืบหน้า" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">แถบด้านบนบอกว่าถึงข้อที่เท่าไรจากทั้งหมด</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-survey-3-done.png" alt="หน้าจอส่งแบบประเมินแล้ว" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">4</span>
+            <span class="m-shot-text">ตอบครบแล้วกดส่ง ขึ้นหน้าขอบคุณ</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note m-note--tip">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.5 4 12.4"/></svg>
+        <span><b>ไม่ระบุชื่อ</b> — ระบบไม่เก็บว่าใครตอบอะไร ตอบตามจริงได้เต็มที่ · ข้อที่มี <span class="m-req">*</span> ต้องตอบก่อนไปข้อถัดไป</span>
+      </div>
+    </section>
+
+    <!-- ============ ฝั่งเจ้าหน้าที่ ============ -->
+    <section class="m-section" id="result">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>ดูผลคะแนน</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-survey.png" alt="เมนูจุดสามจุดของกิจกรรม เน้นที่ แบบประเมิน" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ที่ <b>รายการกิจกรรม</b> กด <b>⋮</b> ท้ายแถวของกิจกรรมนั้น แล้วเลือก <b>แบบประเมิน</b></span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-survey-summary.png" alt="แผงสรุปคะแนนแบบประเมิน" width="2264" height="864">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">คะแนนเฉลี่ย · จำนวนผู้ตอบ · อัตราการตอบ · และคะแนนแยกรายข้อ อยู่ครบในแผงเดียว</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-survey-table.png" alt="ตารางคำตอบรายชุด" width="2248" height="1120">
+          <figcaption>
+            <span class="m-shot-no">3</span>
+            <span class="m-shot-text">ตารางด้านล่างคือคำตอบรายชุด — กรองตามช่วงคะแนนได้ และกด <b>ส่งออก Excel</b> มุมขวาบน</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/></svg>
+        <span>ตารางไม่มีชื่อ เบอร์โทร หรือรหัสลงทะเบียน ไม่ใช่ข้อมูลขาด — เป็นข้อกำหนดของแบบประเมินแบบไม่ระบุตัวตน</span>
+      </div>
+    </section>
+
+    <!-- ============ อ่านตัวเลข ============ -->
+    <section class="m-section" id="numbers">
+      <div class="m-section-head">
+        <h2>ตัวเลขแต่ละตัวหมายถึงอะไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>ตัวเลข</th><th>อ่านว่า</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>คะแนนเฉลี่ย</td><td>ค่าเฉลี่ยรวมทุกข้อ เต็ม 5 · ใต้ตัวเลขมีคำอธิบายระดับให้ เช่น "ดีมาก"</td></tr>
+            <tr><td>จำนวนผู้ตอบ</td><td>นับเป็น "ชุด" ไม่ใช่คน เพราะไม่รู้ว่าใครตอบ</td></tr>
+            <tr><td>อัตราการตอบ</td><td>ผู้ตอบ ÷ ผู้เข้าร่วมจริง (คนที่เช็กอิน) — ต่ำแปลว่าควรชวนให้สแกนตอนจบงานมากขึ้น</td></tr>
+            <tr><td>ให้คะแนน 4–5</td><td>สัดส่วนคนที่พอใจมากถึงมากที่สุด ใช้รายงานผู้บริหารได้ตรง ๆ</td></tr>
+            <tr><td>คะแนนรายข้อ</td><td>บอกว่าจุดไหนได้คะแนนต่ำกว่าเพื่อน เช่น วิทยากร หรือเนื้อหา</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ ปัญหา ============ -->
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อาการ</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>สแกนแล้วขึ้นว่ายังไม่เปิดแบบประเมิน</td>
+              <td>ยังไม่ถึงช่วงเวลาที่ตั้งไว้ หรือปิดไปแล้ว — แก้ที่ "ช่วงเวลาเปิด–ปิดระบบ" ในฟอร์มกิจกรรม</td>
+            </tr>
+            <tr>
+              <td>เมนู "แบบประเมิน" กดแล้วไม่มีข้อมูล</td>
+              <td>กิจกรรมนี้ยังไม่ได้ผูกแบบประเมินหลังกิจกรรม — กลับไปเลือกในส่วนที่ 3 ของฟอร์ม</td>
+            </tr>
+            <tr>
+              <td>อัตราการตอบต่ำมาก</td>
+              <td>ขึ้น QR บนจอตอนปิดงาน และบอกปากเปล่าอีกครั้ง ได้ผลกว่าส่งลิงก์ตามทีหลัง</td>
+            </tr>
+            <tr>
+              <td>อยากรู้ว่าใครให้คะแนนต่ำ</td>
+              <td>ดูไม่ได้โดยการออกแบบ — ถ้าต้องติดตามรายคน ให้ใช้แบบประเมินตอนลงทะเบียนแทน</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

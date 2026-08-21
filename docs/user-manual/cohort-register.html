@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ลงทะเบียนกลุ่มตัวอย่าง · คู่มือการใช้งาน</title>
+
+<link rel="stylesheet" href="../../public/assets/css/standard/tokens.css">
+<link rel="stylesheet" href="../../public/assets/css/standard/base.css">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="m-shell">
+
+  <header class="m-cover">
+    <span class="m-overline">คู่มือการใช้งาน · กลุ่มตัวอย่าง ขั้นที่ 1</span>
+    <h1>ลงทะเบียนกลุ่มตัวอย่าง</h1>
+    <p class="m-lead">
+      เข้ากลุ่มได้ 2 ทาง — ผู้เข้าร่วมทำเองจากมือถือ หรือเจ้าหน้าที่คีย์ให้
+    </p>
+    <div class="m-flow" id="manual-flow" aria-label="ลำดับการทำงาน"></div>
+  </header>
+
+  <nav class="m-nav" id="manual-nav" aria-label="เมนูคู่มือ"></nav>
+  <script src="manual-menu.js"></script>
+
+  <main class="m-main">
+
+    <section class="m-section" id="overview">
+      <div class="m-section-head">
+        <h2>ทั้งเรื่องมีแค่ 4 จังหวะ</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>จังหวะ</th><th>เกิดอะไรขึ้น</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 · เข้ากลุ่ม</td><td>ลงทะเบียนเป็นกลุ่มตัวอย่าง — ทำเองหรือให้เจ้าหน้าที่ทำให้ก็ได้ · ได้ <b>รหัสบุคคล</b> มาหนึ่งรหัส</td></tr>
+            <tr><td>2 · ตอบครั้งแรก</td><td>ตอบแบบประเมินรอบ <b>ก่อนเข้าร่วม</b> ไว้เป็นจุดตั้งต้นสำหรับเทียบ</td></tr>
+            <tr><td>3 · ถึงรอบ</td><td>เจ้าหน้าที่สร้างรอบติดตามแล้วส่งแจ้งเตือน · ผู้เข้าร่วมได้การ์ดใน LINE</td></tr>
+            <tr><td>4 · ตอบรอบถัดไป</td><td>ตอบซ้ำที่ 3 · 6 · 12 เดือน แล้วระบบเทียบให้เองว่าดีขึ้นหรือแย่ลง</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="m-section" id="self">
+      <div class="m-track">
+        <span class="m-track-pill">ผู้เข้าร่วม</span>
+        <h3>ทางที่ 1 — ลงทะเบียนเอง</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <p>สแกน QR ติดตามสุขภาวะ (QR เดียวใช้ได้ทั้งโครงการ ไม่ผูกกับกิจกรรม) หรือเปิด <code>/health</code></p>
+
+      <div class="m-shots m-shots--phone">
+        <figure class="m-shot">
+          <img src="img/p-cohort-1-identify.png" alt="หน้าเข้าสู่ระบบประเมินสุขภาวะ" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">ยังไม่เคยลงทะเบียน กด <b>ลงทะเบียนเพิ่ม</b> ท้ายหน้า</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/p-cohort-2-register.png" alt="หน้าลงทะเบียนกลุ่มตัวอย่าง" width="860" height="1280">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">กรอกเบอร์ เพศ ช่วงอายุ แล้วติ๊กยินยอม</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note m-note--stop">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13M12 16v.2"/></svg>
+        <span>
+          <b>ระบบไม่เก็บชื่อ</b> — ออก <b>รหัสบุคคล</b> ให้แทน เช่น <code>P0001</code> แล้วแสดงครั้งเดียวหลังลงทะเบียน
+          ต้องจดไว้ เพราะใช้คู่กับเบอร์โทรทุกครั้งที่เข้าระบบ ลืมแล้วต้องให้เจ้าหน้าที่เปิดดูให้
+        </span>
+      </div>
+    </section>
+
+    <section class="m-section" id="by-staff">
+      <div class="m-track">
+        <span class="m-track-pill m-track-pill--staff">เจ้าหน้าที่</span>
+        <h3>ทางที่ 2 — เจ้าหน้าที่ลงทะเบียนให้</h3>
+        <span class="m-track-line"></span>
+      </div>
+
+      <p>ใช้กับคนที่กรอกเองไม่สะดวก หรือเก็บข้อมูลมาจากหน้างานเป็นกระดาษแล้วมาคีย์เข้าระบบทีหลัง</p>
+
+      <div class="m-shots m-shots--wide">
+        <figure class="m-shot">
+          <img src="img/a-full-cohort.png" alt="หน้ากลุ่มตัวอย่าง มีปุ่มเพิ่มกลุ่มตัวอย่างมุมขวาบน" width="2560" height="1520">
+          <figcaption>
+            <span class="m-shot-no">1</span>
+            <span class="m-shot-text">เมนูซ้าย <b>ประเมินสุขภาพ › กลุ่มตัวอย่าง</b> แล้วกด <b>เพิ่มกลุ่มตัวอย่าง</b> มุมขวาบน</span>
+          </figcaption>
+        </figure>
+
+        <figure class="m-shot">
+          <img src="img/a-cohort-add.png" alt="หน้าต่างเพิ่มกลุ่มตัวอย่าง" width="1760" height="1570">
+          <figcaption>
+            <span class="m-shot-no">2</span>
+            <span class="m-shot-text">กรอกชื่อ เบอร์ เพศ พื้นที่ กลุ่มเป้าหมาย · ติ๊ก <b>รอบการติดตาม</b> ที่จะให้ตอบ · ติ๊กยืนยันว่าได้รับความยินยอมแล้ว แล้วกดบันทึก</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="m-note m-note--tip">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.5 4 12.4"/></svg>
+        <span>
+          ช่อง <b>รหัสบุคคล</b> ปล่อยว่างไว้ ระบบออกให้เองหลังบันทึก · ตารางวันครบกำหนดคำนวณจากวันที่เข้ากลุ่มให้อัตโนมัติ แก้รายรอบได้ถ้าต้องการ
+        </span>
+      </div>
+    </section>
+
+    <section class="m-section" id="trouble">
+      <div class="m-section-head">
+        <h2>เจอปัญหาให้ทำอย่างไร</h2>
+      </div>
+
+      <div class="m-table-wrap">
+        <table class="m-table">
+          <thead>
+            <tr><th>อาการ</th><th>ให้ทำ</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ผู้เข้าร่วมลืมรหัสบุคคล</td>
+              <td>เจ้าหน้าที่เปิดหน้ากลุ่มตัวอย่าง ค้นด้วยเบอร์โทร แล้วบอกรหัสให้ — กู้เองไม่ได้</td>
+            </tr>
+            <tr>
+              <td>ลงทะเบียนซ้ำด้วยเบอร์เดิม</td>
+              <td>เบอร์เดียวมีได้หลายคนในบ้าน ระบบแยกด้วยรหัสบุคคล — ถ้าเป็นคนเดิมจริงให้ใช้รหัสเดิม อย่าสร้างใหม่</td>
+            </tr>
+            <tr>
+              <td>ผู้เข้าร่วมขอออกจากโครงการ</td>
+              <td>เจ้าหน้าที่เปิดหน้ารายละเอียดของคนนั้น แล้วกด <b>ยุติการติดตาม</b> — ประวัติเดิมยังอยู่</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <footer class="m-foot">
+      The Farm Concept · คู่มือการใช้งาน
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -45,6 +46,14 @@ class PublicTrackingRoundQrController extends Controller
 
     /** คนที่รอการยืนยันว่าจะสลับไปใช้บัญชีนั้นไหม — ตั้งตอนกลับจาก LINE ที่เป็นของคนอื่น */
     public const SWITCH_KEY = 'health_survey_switch_to';
+
+    /**
+     * คนที่ลิงก์เชิญของแอดมินระบุไว้ — ตั้งตอนกดปุ่มเชื่อมในหน้าเชิญ อ่านตอนกลับจาก LINE
+     *
+     * ต้องผ่าน session ไม่ใช่ผ่าน URL ที่ส่งไป LINE เพราะ Callback URL ของ LINE
+     * ลงทะเบียนไว้เป็นค่าตายตัว แนบพารามิเตอร์ไปกับมันไม่ได้
+     */
+    public const INVITE_KEY = 'health_survey_invite_for';
 
     public function __construct(
         private readonly TrackingRoundService $rounds,
@@ -191,6 +200,60 @@ class PublicTrackingRoundQrController extends Controller
      * นี่คือเหตุผลของปุ่ม LINE: ผูกครั้งเดียวแล้วไม่ต้องกรอกเบอร์ทุกครั้งที่ทำแบบประเมิน
      * และเป็นการพิสูจน์ตัวตนที่แน่นกว่าเบอร์โทร ซึ่งคนอื่นรู้ได้
      */
+    /**
+     * หน้าเชิญเชื่อม LINE ที่แอดมินส่งลิงก์ให้รายคน
+     *
+     * ทางลัดสำหรับคนที่จำรหัสบุคคลไม่ได้หรือกรอกเบอร์ไม่ผ่าน — แอดมินคัดลอกลิงก์ส่งให้ทางแชต
+     * เปิดแล้วกดปุ่มเดียวก็เชื่อม LINE และเข้าระบบได้เลย
+     *
+     * ตัวลิงก์เซ็นด้วย APP_KEY (middleware signed) จึงไม่ต้องเก็บ token ลงฐานข้อมูล
+     * และแก้เลข id ใน URL ไม่ได้ — ลายเซ็นจะไม่ตรงทันที
+     *
+     * หน้านี้ยัง "ไม่" ให้สิทธิ์เข้าระบบ แค่แสดงว่ากำลังจะเชื่อมให้ใคร
+     * สิทธิ์เกิดหลังยืนยันกับ LINE สำเร็จเท่านั้น ลิงก์ที่ถูกส่งต่อจึงเปิดดูได้แต่สวมสิทธิ์ไม่ได้
+     * ถ้าไม่ยืนยัน LINE
+     */
+    public function invite(Request $request, int $participant): View|RedirectResponse
+    {
+        $person = Participant::with('cohortProfile')->whereHas('cohortProfile')->find($participant);
+
+        abort_if($person === null, 404, 'ไม่พบกลุ่มตัวอย่างรายนี้');
+
+        /* เชื่อมไว้แล้วไม่ต้องเชื่อมซ้ำ — พาไปหน้าเข้าสู่ระบบตามปกติ
+           (กดปุ่ม LINE ที่นั่นแล้วเข้าได้เลยเพราะบัญชีผูกอยู่แล้ว) */
+        if (filled($person->line_user_id)) {
+            return redirect()->route('public.tracking-round-qr')
+                ->with('lineError', 'บัญชีนี้เชื่อม LINE ไว้แล้ว เข้าสู่ระบบด้วยปุ่ม LINE ได้เลย');
+        }
+
+        return view('public.tracking-round.invite', [
+            'person' => $person,
+            'lineEnabled' => $this->line->isConfigured(),
+            /* ลิงก์ขั้นถัดไปต้องเซ็นใหม่ ใช้อายุสั้นกว่าลิงก์เชิญเพราะกดต่อทันทีอยู่แล้ว */
+            'startUrl' => URL::temporarySignedRoute(
+                'public.tracking-round-qr.invite.line',
+                now()->addHour(),
+                ['participant' => $person->id],
+            ),
+        ]);
+    }
+
+    /** กดปุ่มในหน้าเชิญ — จำว่าจะเชื่อมให้ใคร แล้วส่งต่อไปหน้าอนุญาตของ LINE */
+    public function inviteToLine(Request $request, int $participant): RedirectResponse
+    {
+        $person = Participant::whereHas('cohortProfile')->find($participant);
+
+        abort_if($person === null, 404);
+
+        if (! $this->line->isConfigured()) {
+            return redirect()->route('public.tracking-round-qr')
+                ->with('lineError', 'ระบบยังไม่ได้ตั้งค่าการเชื่อม LINE');
+        }
+
+        $request->session()->put(self::INVITE_KEY, $person->id);
+
+        return redirect()->route('public.tracking-round-qr.line');
+    }
     public function lineReturn(Request $request): RedirectResponse
     {
         $qr = $this->activeQr();
@@ -247,6 +310,21 @@ class PublicTrackingRoundQrController extends Controller
     private function resolveLineIdentity(Request $request): RedirectResponse
     {
         $lineUserId = $request->session()->get(PublicLineLoginController::SESSION_KEY)['userId'] ?? null;
+
+        /* มาจากลิงก์เชิญของแอดมิน — ตัวลิงก์ระบุไว้แล้วว่าเป็นของใคร ไม่ต้องให้กรอกเบอร์หรือรหัสบุคคล
+           ต้องเช็กก่อนทุกกรณี เพราะจุดประสงค์ของลิงก์คือ "เชื่อมให้คนนี้" ไม่ใช่ "ดูว่า LINE นี้เป็นของใคร"
+           pull ทิ้งทันที ใช้ได้ครั้งเดียวต่อการกดหนึ่งครั้ง กดค้างแท็บเก่าแล้วย้อนกลับมาไม่ทำงานซ้ำ */
+        $invitedId = $request->session()->pull(self::INVITE_KEY);
+
+        if ($invitedId !== null) {
+            $invited = Participant::with('cohortProfile')->whereHas('cohortProfile')->find($invitedId);
+
+            /* signIn() เป็นที่เดียวที่ผูก LINE รวมถึงกติกากันผูกซ้อน (บัญชี LINE นี้เป็นของคนอื่นอยู่แล้ว)
+               จึงไม่ต้องเขียนเงื่อนไขซ้ำที่นี่ — ถ้าผูกไม่ได้ ผู้ใช้จะเห็นข้อความบอกเหตุผลบนแดชบอร์ด */
+            if ($invited !== null) {
+                return $this->signIn($request, $invited);
+            }
+        }
 
         $participant = $lineUserId
             ? Participant::with('cohortProfile')->whereHas('cohortProfile')

@@ -51,6 +51,14 @@
                     <span>{{ $value }}</span>
                     <button type="button" class="co-link is-danger" data-open-modal="cd-unlink-line-modal">ยกเลิกเชื่อม</button>
                   </dd>
+                @elseif($label === 'LINE' && $lineInviteUrl)
+                  {{-- ยังไม่ได้เชื่อม — ให้ลิงก์เชิญไปเลย เจ้าหน้าที่คัดลอกส่งทางแชตได้ทันที
+                       ผู้รับเปิดแล้วกดปุ่มเดียวก็เชื่อมและเข้าระบบได้ ไม่ต้องจำรหัสบุคคล --}}
+                  <dd class="cd-fact-with-action">
+                    <span>{{ $value }}</span>
+                    <button type="button" class="co-link" id="cd-copy-invite"
+                            data-url="{{ $lineInviteUrl }}">คัดลอกลิงก์เชิญ</button>
+                  </dd>
                 @else
                   <dd>{{ $label === 'วันที่เข้ากลุ่มตัวอย่าง' ? \App\Providers\AppServiceProvider::thaiDate($value) : ($value ?: '—') }}</dd>
                 @endif
@@ -261,6 +269,43 @@
   var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   var stopForm = document.getElementById('cd-stop-form');
   var unlinkBtn = document.getElementById('cd-unlink-line-confirm');
+
+  /* คัดลอกลิงก์เชิญเชื่อม LINE — เปลี่ยนข้อความปุ่มเป็นผลลัพธ์ชั่วครู่แทนการเด้ง toast
+     ผู้ใช้กำลังมองปุ่มอยู่แล้วตอนกด คำตอบจึงควรอยู่ตรงนั้น ไม่ใช่มุมจอ
+     clipboard API ใช้ไม่ได้บน http ที่ไม่ใช่ localhost จึงมีทางสำรองด้วย execCommand */
+  var copyInvite = document.getElementById('cd-copy-invite');
+
+  if (copyInvite) {
+    copyInvite.addEventListener('click', function () {
+      var url = copyInvite.getAttribute('data-url');
+      var label = copyInvite.dataset.label || copyInvite.textContent;
+      copyInvite.dataset.label = label;
+
+      function done(ok) {
+        copyInvite.textContent = ok ? 'คัดลอกแล้ว' : 'คัดลอกไม่สำเร็จ';
+        window.setTimeout(function () { copyInvite.textContent = label; }, 2000);
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+        return;
+      }
+
+      var box = document.createElement('textarea');
+      box.value = url;
+      box.setAttribute('readonly', '');
+      box.style.position = 'fixed';
+      box.style.opacity = '0';
+      document.body.appendChild(box);
+      box.select();
+
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+
+      document.body.removeChild(box);
+      done(ok);
+    });
+  }
 
   /* สลับแท็บ — ทุกแผงอยู่ใน DOM แล้ว ที่นี่แค่ซ่อน/แสดง ไม่ยิงเซิร์ฟเวอร์ซ้ำ
      ข้อมูลทั้งสี่แท็บของคนหนึ่งคนรวมกันไม่กี่สิบแถว โหลดทีเดียวเร็วกว่ารอ request ต่อแท็บ */

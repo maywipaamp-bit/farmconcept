@@ -220,7 +220,9 @@
         '<div class="subnav-group">' + items + '</div>' +
       '</nav>' +
       '<div class="subnav-foot">' +
-        '<a class="subnav-foot-link" href="' + base + 'home.html">' + itemIcon(ICON.help) + '<span>คู่มือการใช้งาน</span></a>' +
+        /* คู่มืออยู่ที่ docs/user-manual/ เสิร์ฟผ่าน /manual (หลัง middleware auth)
+           เปิดแท็บใหม่เพราะคนมักเปิดคู่มือค้างไว้แล้วสลับกลับมาทำงานต่อ */
+        '<a class="subnav-foot-link" href="' + base + 'manual" target="_blank" rel="noopener">' + itemIcon(ICON.help) + '<span>คู่มือการใช้งาน</span></a>' +
         '<div class="subnav-foot-meta">' +
           '<span>เวอร์ชัน ' + esc((window.TFC_APP && window.TFC_APP.version) || '1.0.0') + '</span>' +
           '<span>TheFarmConcept © ' + esc((window.TFC_APP && window.TFC_APP.year) || '') + '</span>' +
