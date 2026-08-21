@@ -58,6 +58,8 @@
                     <span>{{ $value }}</span>
                     <button type="button" class="co-link" id="cd-copy-invite"
                             data-url="{{ $lineInviteUrl }}">คัดลอกลิงก์เชิญ</button>
+                    {{-- QR สำหรับกรณีเจอกันหน้างาน — ส่งลิงก์ทางแชตไม่ได้ ให้สแกนจากจอแทน --}}
+                    <button type="button" class="co-link" data-open-modal="cd-invite-qr-modal">QR</button>
                   </dd>
                 @else
                   <dd>{{ $label === 'วันที่เข้ากลุ่มตัวอย่าง' ? \App\Providers\AppServiceProvider::thaiDate($value) : ($value ?: '—') }}</dd>
@@ -214,6 +216,32 @@
 @endsection
 
 @section('modals')
+@if($lineInviteUrl)
+{{-- QR ลิงก์เชิญเชื่อม LINE — เนื้อในคือ URL ที่เซ็นแล้วตัวเดียวกับปุ่มคัดลอก หมดอายุพร้อมกัน --}}
+<div class="modal-overlay" id="cd-invite-qr-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">QR เชื่อมบัญชี LINE</h3>
+        <div class="cd-qr-sub">ให้ {{ $member['pid'] }} สแกนด้วยมือถือ · ลิงก์มีอายุ 7 วัน</div>
+      </div>
+      <button type="button" class="modal-close" data-close-modal aria-label="ปิด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body cd-qr-body">
+      {{-- โหลดตอนเปิดหน้า ไม่ใช่ตอนกด — ภาพเล็กและ QR ต้องพร้อมทันทีที่ยื่นจอให้สแกน --}}
+      <img src="{{ route('admin.cohort.line-invite-qr', $member['db_id']) }}" alt="QR เชื่อมบัญชี LINE ของ {{ $member['pid'] }}">
+      <p class="cd-qr-note">สแกนแล้วกดปุ่มยืนยันด้วย LINE ในหน้าที่เปิดขึ้น</p>
+    </div>
+    <div class="modal-footer">
+      <a class="btn btn-outline" href="{{ route('admin.cohort.line-invite-qr', ['cohortProfile' => $member['db_id'], 'download' => 1]) }}">ดาวน์โหลด</a>
+      <button type="button" class="btn btn-primary" data-close-modal>ปิด</button>
+    </div>
+  </div>
+</div>
+@endif
+
 @if($member['line'])
 <div class="modal-overlay" id="cd-unlink-line-modal">
   <div class="modal modal-sm">

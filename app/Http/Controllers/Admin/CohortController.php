@@ -13,9 +13,14 @@ use App\Models\Option;
 use App\Models\Participant;
 use App\Models\TargetGroup;
 use App\Services\PersonCodeGenerator;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -221,7 +226,9 @@ class CohortController extends Controller
             'message' => 'เพิ่มกลุ่มตัวอย่างสำเร็จ',
             'data' => $payload,
             'evalLink' => $payload['assessmentLink'],
-            'lineBindLink' => url('/line/bind?code='.$payload['cohortCode']),
+            /* ของเดิมชี้ไป /line/bind ซึ่งไม่มี route รองรับ กดแล้วได้ 404
+               เปลี่ยนมาใช้ลิงก์เชิญที่เซ็นแล้วตัวเดียวกับหน้ารายการ */
+            'lineBindLink' => $payload['lineInviteLink'],
         ]);
     }
 
@@ -518,6 +525,50 @@ class CohortController extends Controller
     }
 
     /**
+     * QR ของลิงก์เชิญเชื่อม LINE — ให้กลุ่มตัวอย่างสแกนจากหน้าจอเจ้าหน้าที่หรือกระดาษที่พิมพ์
+     *
+     * ทางเลือกของการคัดลอกลิงก์ส่งทางแชต ซึ่งใช้ไม่ได้ตอนเจอกันหน้างาน
+     * เนื้อใน QR คือ URL ที่เซ็นด้วย APP_KEY ตัวเดียวกับปุ่มคัดลอก จึงหมดอายุพร้อมกัน (7 วัน)
+     *
+     * ระดับกู้คืนความผิดพลาดเป็น High เพราะกระดาษที่พิมพ์แล้วมีโอกาสยับหรือเปื้อน
+     * ต่างจาก QR ของกิจกรรมที่แสดงบนจอเป็นหลัก
+     */
+    public function lineInviteQr(Request $request, CohortProfile $cohortProfile): Response
+    {
+        $participant = $cohortProfile->participant;
+
+        abort_if($participant === null, 404);
+
+        $result = (new PngWriter)->write(new QrCode(
+            data: URL::temporarySignedRoute(
+                'public.tracking-round-qr.invite',
+                now()->addDays(7),
+                ['participant' => $participant->id],
+            ),
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 512,
+            margin: 20,
+        ));
+
+        $headers = [
+            'Content-Type' => $result->getMimeType(),
+            /* ห้าม cache ร่วมกัน — ลิงก์ข้างในเป็นของคนคนเดียวและมีวันหมดอายุติดมาด้วย */
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        if ($request->boolean('download')) {
+            $headers['Content-Disposition'] = sprintf(
+                'attachment; filename="line-invite-%s.png"',
+                strtolower($participant->person_code ?: 'p'.$participant->id),
+            );
+        }
+
+        return response($result->getString(), 200, $headers);
+    }
+
+    /**
      * ยกเลิกการเชื่อม LINE — คืนบัญชีให้ว่าง เพื่อผูกกับบัญชีใหม่หรือคนอื่นได้
      *
      * ใช้เมื่อคนนั้นทำบัญชี LINE หาย เปลี่ยนบัญชี หรือกดเชื่อมผิดคน (บัญชี LINE หนึ่งบัญชี
@@ -703,6 +754,13 @@ class CohortController extends Controller
             'db_id' => $cp->id,
             'pid' => $p->code ?? $p->person_code ?? PersonCodeGenerator::PREFIX.$p->id,
             'cohortCode' => $cp->cohort_code,
+            /* ลิงก์เชิญเชื่อม LINE รายคน — เซ็นด้วย APP_KEY อายุ 7 วัน ไม่ต้องเก็บ token ลงฐาน
+               ส่งมากับทุกแถวเพื่อให้กดคัดลอกจากหน้ารายการได้เลย ไม่ต้องเปิดหน้ารายละเอียดทีละคน */
+            'lineInviteLink' => URL::temporarySignedRoute(
+                'public.tracking-round-qr.invite',
+                now()->addDays(7),
+                ['participant' => $p->id],
+            ),
             /* ไม่มีคีย์ name ระดับบนสุด — หน้ารายการ/รายละเอียดอ้างด้วยรหัสบุคคลเท่านั้น (คำสั่งทีม)
                ชื่อเหลืออยู่ที่ edit.name ที่เดียว เพราะฟอร์มแก้ไขยังมีช่องชื่อให้กรอก */
             'phone' => $p->phone ?? '',

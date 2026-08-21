@@ -405,10 +405,24 @@
           case 'target': return '<div class="co-cell">' + esc(m.target) + '</div>';
           case 'entry': return '<div class="co-cell">' + esc(fmt(m.entryDate)) + '</div>';
 
-          /* คนที่ยังไม่เชื่อม LINE คือคนที่ระบบส่งแจ้งเตือนให้ไม่ได้ ต้องเห็นตั้งแต่หน้ารายการ */
+          /* คนที่ยังไม่เชื่อม LINE คือคนที่ระบบส่งแจ้งเตือนให้ไม่ได้ ต้องเห็นตั้งแต่หน้ารายการ
+             และมีปุ่มคัดลอกลิงก์เชิญอยู่ตรงนั้นเลย — เห็นปัญหากับทางแก้ในช่องเดียวกัน
+             ไม่ต้องเปิดหน้ารายละเอียดทีละคนเพื่อไปหาปุ่ม */
           case 'line':
-            return '<div class="co-line ' + (m.line ? 'is-linked' : 'is-unlinked') + '">' +
-              (m.line ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม') + '</div>';
+            if (m.line) return '<div class="co-line is-linked">เชื่อมแล้ว</div>';
+
+            return '<div class="co-line is-unlinked co-line-cell">' +
+              '<span>ยังไม่เชื่อม</span>' +
+              (m.lineInviteLink
+                ? '<button type="button" class="co-copy-invite" data-copy-invite="' + esc(m.lineInviteLink) + '"' +
+                  ' title="คัดลอกลิงก์เชิญเชื่อม LINE" aria-label="คัดลอกลิงก์เชิญเชื่อม LINE">' +
+                  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"' +
+                  ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                  '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
+                  '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' +
+                  '</svg></button>'
+                : '') +
+              '</div>';
 
           case 'next':
             return '<div class="co-next">' +
@@ -799,6 +813,17 @@
   var removeTarget = null;
 
   $('co-rows').addEventListener('click', function (e) {
+    /* ปุ่มคัดลอกลิงก์เชิญในคอลัมน์ LINE — ต้องดักก่อนเมนู ⋮ และหยุดไม่ให้ไหลต่อ
+       ไม่งั้นการกดปุ่มจะไปเปิดเมนูของแถวนั้นตามไปด้วย */
+    var copyBtn = e.target.closest('[data-copy-invite]');
+
+    if (copyBtn) {
+      e.stopPropagation();
+      copyInviteLink(copyBtn.getAttribute('data-copy-invite'));
+
+      return;
+    }
+
     var trigger = e.target.closest('[data-action-menu]');
     if (!trigger) return;
 
@@ -1155,6 +1180,37 @@
         function () { toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + link, 'warning'); }
       );
     });
+  }
+
+  /* คัดลอกลิงก์เชิญจากปุ่มในตาราง — ลิงก์อยู่ใน data attribute ของปุ่มอยู่แล้ว ไม่ต้องยิงคำขอ
+     clipboard API ใช้ไม่ได้บน http ที่ไม่ใช่ localhost จึงมีทางสำรองด้วย execCommand */
+  function copyInviteLink(link) {
+    if (!link) return;
+
+    function done(ok) {
+      ok ? toast('คัดลอกลิงก์เชิญเชื่อม LINE แล้ว', 'success')
+         : toast('คัดลอกไม่สำเร็จ — ลิงก์คือ ' + link, 'warning');
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link).then(function () { done(true); }, function () { done(false); });
+
+      return;
+    }
+
+    var box = document.createElement('textarea');
+    box.value = link;
+    box.setAttribute('readonly', '');
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.appendChild(box);
+    box.select();
+
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+
+    document.body.removeChild(box);
+    done(ok);
   }
 
   bindCopy('co-saved-copy', 'co-saved-link', 'คัดลอกลิงก์เรียบร้อย');

@@ -21,7 +21,6 @@ use App\Http\Controllers\Admin\TrackingRoundController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\LegacyPageController;
-use App\Http\Controllers\ManualController;
 use App\Http\Controllers\LineWebhookController;
 use App\Http\Controllers\PublicActivityController;
 use App\Http\Controllers\PublicCheckinController;
@@ -65,6 +64,11 @@ Route::view('/about', 'public.activities.about')->name('public.about');
 
 /* หน้าช่องทางติดต่อ — แยกออกมาจากท้ายหน้าเกี่ยวกับเรา */
 Route::view('/contact', 'public.activities.contact')->name('public.contact');
+
+/* คู่มือการใช้งานเป็นไฟล์สแตติกใน public/manual/ เว็บเซิร์ฟเวอร์ส่งให้เอง ไม่ผ่าน Laravel
+   เหลือแค่ทางลัด /manual -> หน้าแรก เพราะไม่ได้เปิด default document ไว้
+   พิมพ์ /manual เฉย ๆ จะได้ไม่เจอ 404 */
+Route::redirect('/manual', '/manual/index.html')->name('manual');
 
 Route::get('/activities/{activity}', [PublicActivityController::class, 'show'])
     ->where('activity', '[A-Za-z0-9-]+')
@@ -529,6 +533,8 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{cohortProfile}', [CohortController::class, 'destroy'])->name('destroy');
             Route::patch('/{cohortProfile}/stop', [CohortController::class, 'stopFollowUp'])->name('stop');
             Route::patch('/{cohortProfile}/unlink-line', [CohortController::class, 'unlinkLine'])->name('unlink-line');
+            /* QR ของลิงก์เชิญเชื่อม LINE — ให้กลุ่มตัวอย่างสแกนหน้างานแทนการส่งลิงก์ทางแชต */
+            Route::get('/{cohortProfile}/line-invite-qr', [CohortController::class, 'lineInviteQr'])->name('line-invite-qr');
         });
 
         Route::redirect('/evaluations/rounds.html', '/admin/tracking-rounds');
@@ -602,15 +608,6 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{form}', [EvaluationController::class, 'destroy'])->where('form', '[A-Za-z0-9-]+')->name('destroy');
         });
     });
-
-    /*
-     | คู่มือการใช้งาน — ไฟล์อยู่ที่ docs/user-manual/ ไม่ได้อยู่ใน public/
-     | เสิร์ฟผ่านคอนโทรลเลอร์เพื่อให้ผ่านการล็อกอินก่อน เพราะมีภาพหน้าจอหลังบ้าน
-     | ไม่ผูก middleware menu — ทุกบทบาทที่ล็อกอินแล้วเปิดคู่มือได้
-     */
-    Route::get('/manual/{path?}', [ManualController::class, 'show'])
-        ->where('path', '.*')
-        ->name('manual');
 
     /*
      | หน้า HTML เดิมที่ยังไม่ได้ย้าย — ต้องประกาศ "ท้ายสุด" ของกลุ่ม admin
