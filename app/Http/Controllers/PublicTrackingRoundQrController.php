@@ -91,6 +91,9 @@ class PublicTrackingRoundQrController extends Controller
             'linking' => $request->boolean('link') && $this->verifiedParticipant($request) !== null,
             /* ตั้ง LIFF ไว้ = หน้านี้เข้าสู่ระบบเองได้เมื่อถูกเปิดในแอป LINE ไม่ต้องให้กดปุ่มใด ๆ */
             'liffId' => $this->line->liffId(),
+            /* ปลายทางของปุ่ม LINE — ลิงก์ LIFF ถ้าตั้งไว้ ไม่งั้นตกไปที่ OAuth เดิม (ดู lineButtonUrl) */
+            'lineButtonUrl' => $this->lineButtonUrl($request->boolean('link')),
+            'lineIsLiff' => $this->line->liffUrl() !== null,
             /* projectName กับ disclosures ถูกถอดออกพร้อมบล็อก "เกี่ยวกับโครงการและการใช้ข้อมูล"
                ค่าใน config ยังอยู่ครบ หน้าอื่นที่ยังใช้อยู่จึงไม่กระทบ */
         ]);
@@ -634,10 +637,10 @@ class PublicTrackingRoundQrController extends Controller
         /* ยังไม่เชื่อม LINE — เปิดสวิตช์ไปข้อความก็ส่งไม่ถึง พาไปเชื่อมเลยแทนที่จะ toggle ค่าเปล่า ๆ
            กลับมาจาก LINE แล้ว line_notify เป็นค่าเริ่มต้น (เปิด) อยู่แล้ว ตรงกับความตั้งใจของคนกด
 
-           ใช้ lineLinkUrl() ไม่ใช่เส้น OAuth ตรง ๆ — สวิตช์นี้เป็นทางเข้าเดียวที่เหลือของการเชื่อม LINE
-           ถ้ายังพาไป OAuth คนใช้ iPhone ก็ยังติดปัญหาเดิม (ดูเหตุผลเต็มที่ lineLinkUrl) */
+           ใช้ lineButtonUrl() ไม่ใช่เส้น OAuth ตรง ๆ — ถ้ายังพาไป OAuth คนใช้ iPhone
+           ก็ยังติดปัญหาเดิม (ดูเหตุผลเต็มที่ lineButtonUrl) */
         if (blank($participant->line_user_id)) {
-            return redirect()->away($this->lineLinkUrl());
+            return redirect()->away($this->lineButtonUrl(linking: true));
         }
 
         $participant->update(['line_notify' => ! $participant->line_notify]);
@@ -900,27 +903,30 @@ class PublicTrackingRoundQrController extends Controller
     }
 
     /**
-     * ปลายทางของปุ่ม "เชื่อมบัญชี LINE"
+     * ปลายทางของปุ่ม LINE — ใช้ทั้งตอน "เข้าสู่ระบบด้วย LINE" และ "เชื่อมบัญชี LINE"
      *
      * ตั้ง LIFF ไว้ก็ใช้ลิงก์ LIFF ไม่ใช่ /health/line ที่เป็น OAuth เต็มรูปแบบ
      *
-     * เหตุผล: บน iPhone การกดปุ่มที่พาออกไป LINE Login ต้องสลับแอปไป-กลับหลายจังหวะ
-     * (เบราว์เซอร์ → แอป LINE → กลับเบราว์เซอร์) ซึ่งพังง่ายมาก โดยเฉพาะเมื่อหน้าถูกเปิดอยู่
-     * ในเบราว์เซอร์ในแอปอยู่แล้ว — สลับแอปไม่ได้ ผู้ใช้เลยไปจบที่หน้า error ของ LINE เอง
-     * ลิงก์ LIFF เปิดหน้าเดิมในเบราว์เซอร์ของแอป LINE ตรง ๆ แล้วสคริปต์บนหน้ายืนยันตัวตน
-     * ยิง id_token ให้ ไม่มีการสลับแอปเลยสักจังหวะ
+     * เหตุผล: บน iPhone ปุ่มที่พาออกไป LINE Login ต้องสลับแอปไป-กลับหลายจังหวะ
+     * (เบราว์เซอร์ → แอป LINE → กลับเบราว์เซอร์) ซึ่งพังง่ายมาก โดยเฉพาะเมื่อหน้าถูกเปิดอยู่ใน
+     * เบราว์เซอร์ในแอป (จาก LINE เอง จาก Facebook จากตัวสแกน QR ของกล้อง) — พวกนั้นสลับแอปไม่ได้
+     * ผู้ใช้เลยไปจบที่หน้า error ของ LINE หรือไม่ก็ไม่มีอะไรเกิดขึ้นเลย
      *
-     * link=1 ติดไปด้วยเพื่อบอก landing() ว่ามาเพื่อ "เชื่อม" ไม่ใช่ "เข้าสู่ระบบ"
-     * — ถ้าไม่มีตัวนี้ คนที่ล็อกอินค้างอยู่แล้วจะถูกเด้งไปหน้าหลักก่อนที่สคริปต์ LIFF จะได้ทำงาน
-     * แล้วกดกี่ครั้งก็ไม่เชื่อมสักที
+     * ลิงก์ LIFF เป็น universal link ของแอป LINE กดแล้วเปิดแอป LINE ตรง ๆ ไม่ต้องผ่าน OAuth
+     * แล้วสคริปต์ LIFF บนหน้ายืนยันตัวตนยิง id_token ให้เอง จบในแอปเดียว
+     *
+     * link=1 ใส่เฉพาะตอนมาเพื่อ "เชื่อม" — บอก landing() ว่าห้ามเด้งไปหน้าหลัก
+     * ไม่งั้นคนที่ล็อกอินค้างอยู่แล้วจะถูกเด้งก่อนสคริปต์ LIFF ได้ทำงาน กดกี่ครั้งก็ไม่เชื่อมสักที
      */
-    private function lineLinkUrl(): string
+    private function lineButtonUrl(bool $linking = false): string
     {
         $liff = $this->line->liffUrl();
 
-        return $liff !== null
-            ? $liff.'?link=1'
-            : route('public.tracking-round-qr.line');
+        if ($liff === null) {
+            return route('public.tracking-round-qr.line');
+        }
+
+        return $linking ? $liff.'?link=1' : $liff;
     }
 
     /** เจ้าของ session — คนที่ยืนยันตัวตนไว้ คืน null ถ้ายังไม่ยืนยันหรือระเบียนหายไปแล้ว */
