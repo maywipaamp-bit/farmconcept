@@ -46,7 +46,7 @@
 
         <p class="tr-note">
             ไม่ใช่ของท่าน?
-            <a href="{{ route('public.tracking-round-qr') }}">เข้าสู่ระบบด้วยเบอร์โทรศัพท์</a>
+            <a href="{{ route('public.tracking-round-qr') }}">เข้าสู่ระบบ</a>
         </p>
     </section>
 @endsection

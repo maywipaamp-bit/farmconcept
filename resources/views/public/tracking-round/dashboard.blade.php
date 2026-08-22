@@ -77,7 +77,7 @@
         @endif
 
         @if(session('lineLinked'))
-            <div class="tr-notice is-success" role="status">เชื่อม LINE เรียบร้อยแล้ว · จะได้รับแจ้งเตือนรอบถัดไปทาง LINE</div>
+            <div class="tr-notice is-success" role="status">เชื่อม LINE สำเร็จ · จะได้รับแจ้งเตือนรอบถัดไปทาง LINE</div>
         @endif
 
         @if(session('lineConflict'))

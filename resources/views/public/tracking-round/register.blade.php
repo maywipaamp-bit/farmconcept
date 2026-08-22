@@ -83,7 +83,7 @@
 
         <p class="tr-note">
             เคยลงทะเบียนแล้ว?
-            <a href="{{ route('public.tracking-round-qr') }}">เข้าสู่ระบบด้วยเบอร์โทร</a>
+            <a href="{{ route('public.tracking-round-qr') }}">เข้าสู่ระบบ</a>
         </p>
     </section>
 @endsection

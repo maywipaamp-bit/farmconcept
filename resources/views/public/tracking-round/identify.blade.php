@@ -68,7 +68,6 @@
                        placeholder="08x-xxx-xxxx · name@email.com · P0001" value="{{ old('phone') }}"
                        maxlength="160" autofocus required>
                 @error('phone')<span class="registration-message is-error">{{ $message }}</span>@enderror
-                <span class="tr-field-hint">กรอกอย่างใดอย่างหนึ่งที่จำได้</span>
             </div>
 
             <button type="submit" class="tr-primary-button">เข้าสู่ระบบ</button>
@@ -230,7 +229,7 @@
             var token = liff.getIDToken();
 
             if (!token) {
-                fail('ขออนุญาตข้อมูลบัญชี LINE ไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยเบอร์โทรแทน');
+                fail('ขออนุญาตข้อมูลบัญชี LINE ไม่สำเร็จ กรุณากรอกเบอร์โทร อีเมล หรือรหัสบุคคลแทน');
 
                 return;
             }
@@ -256,7 +255,7 @@
                 });
         })
         .catch(function () {
-            fail('เชื่อมต่อ LINE ไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยเบอร์โทรแทน');
+            fail('เชื่อมต่อ LINE ไม่สำเร็จ กรุณากรอกเบอร์โทร อีเมล หรือรหัสบุคคลแทน');
         });
 })();
 </script>

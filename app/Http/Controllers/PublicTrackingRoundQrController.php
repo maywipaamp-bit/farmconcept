@@ -901,7 +901,14 @@ class PublicTrackingRoundQrController extends Controller
         $justLinked = $lineUserId && blank($participant->line_user_id) && ! $ownedByOther;
 
         if ($justLinked) {
-            $participant->update(['line_user_id' => $lineUserId]);
+            /* เปิดแจ้งเตือนให้ทันทีที่ผูกสำเร็จ — คนกดเชื่อม LINE ก็เพราะอยากได้แจ้งเตือน
+               การผูกเสร็จแล้วแต่สวิตช์ยังปิดอยู่ แปลว่าเขาต้องไปกดอีกทีถึงจะได้สิ่งที่ตั้งใจมาแต่แรก
+               ซึ่งไม่มีใครเดาออกว่าต้องกด แล้วรอบถัดไปก็เงียบไปทั้งที่เชื่อมไว้แล้ว
+               ปิดทีหลังได้ตลอดที่สวิตช์เดิม การเปิดให้จึงไม่ได้ปิดทางเลือกของใคร */
+            $participant->update([
+                'line_user_id' => $lineUserId,
+                'line_notify' => true,
+            ]);
         }
 
         return redirect()
