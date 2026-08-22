@@ -6,7 +6,7 @@
     {{-- เปิดจากในแอป LINE (LIFF) — ระบบรู้ว่าใครเป็นใครเองโดยไม่ต้องกดอะไร
          คลุมทับหน้าไว้ระหว่างตรวจ ไม่งั้นผู้ใช้จะเห็นฟอร์มกรอกเบอร์แวบหนึ่งแล้วหน้าเด้งหนี
          ซ่อนไว้ก่อน สคริปต์เปิดเฉพาะตอนที่อยู่ในแอป LINE จริง --}}
-    @if($liffId)
+    @if($liffAuto)
         <div class="tr-liff-cover" id="tr-liff-cover" hidden>
             <div class="tr-liff-box">
                 <span class="tr-liff-spinner" aria-hidden="true"></span>
@@ -24,8 +24,9 @@
             </p>
         @endif
 
-        {{-- กลับมาจาก LINE แต่ยังไม่มีใครผูกบัญชีนี้ — เด้ง popup ให้กรอกเบอร์ทันที
-             การผูก LINE คือการให้สิทธิ์เข้าถึงข้อมูลสุขภาพของคนนั้นตลอดไป จะข้ามขั้นยืนยันไม่ได้ --}}
+        {{-- กลับมาจาก LINE แต่ยังไม่มีใครผูกบัญชีนี้ — บอกด้วยแถบข้อความ ไม่ใช่ popup ครอบจอ
+             การผูก LINE คือการให้สิทธิ์เข้าถึงข้อมูลสุขภาพของคนนั้นตลอดไป จะข้ามขั้นยืนยันไม่ได้
+             แต่ตัวฟอร์มด้านล่างถามสิ่งเดียวกันเป๊ะอยู่แล้ว จึงไม่ต้องมีช่องกรอกซ้ำใน popup --}}
         {{-- เชื่อม LINE ไม่สำเร็จแล้วถูกพากลับมาหน้านี้ ต้องบอกเหตุผล
              ไม่งั้นผู้ใช้เห็นแค่หน้าเดิมกลับมาเฉย ๆ แล้วสรุปว่า "กดปุ่มแล้วไม่มีอะไรเกิดขึ้น"
              รายละเอียดเชิงเทคนิคอยู่ใน storage/logs (LineLoginService เขียน Log::warning ไว้ทุกขั้น) --}}
@@ -34,34 +35,11 @@
         @endif
 
         @if(session('linkLine'))
-            <dialog class="tr-dialog" id="tr-link-dialog">
-                <form method="POST" action="{{ route('public.tracking-round-qr.verify') }}" class="tr-dialog-body">
-                    @csrf
-
-                    <h2 class="tr-dialog-title">เชื่อม LINE กับบัญชีของคุณ</h2>
-                    <p class="tr-dialog-text">
-                        กรอกเบอร์โทร อีเมล หรือรหัสบุคคลที่ลงทะเบียนไว้ อย่างใดอย่างหนึ่ง
-                    </p>
-
-                    {{-- ยิงเข้า verify() ตัวเดียวกับฟอร์มหลัก จึงรับได้ทั้งสามแบบเหมือนกัน
-                         ห้ามใส่ type="tel" / inputmode="tel" กลับมา จะพิมพ์อีเมลกับรหัสไม่ได้ --}}
-                    <div class="registration-field">
-                        <label for="tr-link-phone">เบอร์โทรศัพท์ อีเมล หรือรหัสบุคคล <span>*</span></label>
-                        <input type="text" id="tr-link-phone" name="phone" inputmode="email"
-                               autocomplete="username" placeholder="08x-xxx-xxxx · name@email.com · P0001"
-                               maxlength="160" required>
-                    </div>
-
-                    <div class="tr-dialog-actions">
-                        <button type="submit" class="tr-primary-button">เชื่อมบัญชี</button>
-                        <button type="button" class="tr-ghost-button" onclick="this.closest('dialog').close()">ไว้ทีหลัง</button>
-                    </div>
-                </form>
-            </dialog>
-
-            @push('page-script')
-                <script>document.getElementById('tr-link-dialog')?.showModal();</script>
-            @endpush
+            <div class="tr-notice is-success" role="status">
+                เชื่อม LINE ได้แล้ว เหลืออีกขั้นเดียว —
+                กรอกเบอร์โทร อีเมล หรือรหัสบุคคลที่ลงทะเบียนไว้ด้านล่าง
+                ระบบจะผูก LINE ให้กับบัญชีของคุณอัตโนมัติ
+            </div>
         @endif
 
         {{-- บล็อก "เกี่ยวกับโครงการและการใช้ข้อมูล" ถูกตัดออกตามคำสั่ง
@@ -200,7 +178,7 @@
 </script>
 @endpush
 
-@if($liffId)
+@if($liffAuto)
 @push('page-script')
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
@@ -218,16 +196,27 @@
 
     if (!cover || typeof liff === 'undefined') return;
 
+    var settled = false;
+
     function fail(message) {
         /* ล้มเหลวแล้วต้องคืนหน้าเดิมให้ใช้งานได้ ไม่ใช่ค้างที่ "กำลังเข้าสู่ระบบ…" ตลอดไป
-           ผู้ใช้ยังกรอกเบอร์กับรหัสบุคคลเข้าได้เสมอ */
+           ผู้ใช้ยังกรอกเบอร์ อีเมล หรือรหัสบุคคลเข้าได้เสมอ */
+        settled = true;
         cover.hidden = true;
         if (message) window.alert(message);
     }
 
+    /* กันหน้าค้างที่จอโหลด — SDK ของ LINE ค้างได้จริงเมื่อเน็ตช้าหรือถูกบล็อก
+       แล้ว init() จะไม่ resolve และไม่ reject ทั้ง then และ catch จึงไม่มีวันถูกเรียก
+       ผู้ใช้จะเห็นวงกลมหมุนอยู่อย่างนั้นโดยไม่มีทางออก
+       ครบเวลาแล้วเปิดหน้าให้ใช้งานเงียบ ๆ ไม่ต้องขึ้น alert เพราะทางกรอกเองยังใช้ได้ปกติ */
+    setTimeout(function () {
+        if (! settled) fail('');
+    }, 8000);
+
     liff.init({ liffId: @json($liffId) })
         .then(function () {
-            if (!liff.isInClient()) return;
+            if (!liff.isInClient()) { settled = true; return; }
 
             cover.hidden = false;
 

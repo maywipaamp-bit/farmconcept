@@ -91,6 +91,14 @@ class PublicTrackingRoundQrController extends Controller
             'linking' => $request->boolean('link') && $this->verifiedParticipant($request) !== null,
             /* ตั้ง LIFF ไว้ = หน้านี้เข้าสู่ระบบเองได้เมื่อถูกเปิดในแอป LINE ไม่ต้องให้กดปุ่มใด ๆ */
             'liffId' => $this->line->liffId(),
+
+            /* ให้สคริปต์ LIFF ยิงอัตโนมัติหรือไม่ — ต้องปิดเมื่อ linkLine ถูก flash มา
+
+               linkLine แปลว่า "เพิ่งยิง LIFF ไปแล้ว และบัญชี LINE นั้นยังไม่ผูกกับใคร"
+               ถ้าปล่อยให้ยิงซ้ำ สคริปต์จะส่ง id_token เดิม ได้ผลเดิม แล้วถูกพากลับมาหน้านี้อีก
+               วนไม่รู้จบ ผู้ใช้เห็นเป็นหน้าที่โหลดค้างตลอดเวลาและกดอะไรไม่ได้
+               ขั้นตอนต่อไปต้องมาจากคน (กรอกเบอร์/อีเมล/รหัส) ไม่ใช่จากสคริปต์ */
+            'liffAuto' => $this->line->liffId() !== null && ! session('linkLine'),
             /* ปลายทางของปุ่ม LINE — ลิงก์ LIFF ถ้าตั้งไว้ ไม่งั้นตกไปที่ OAuth เดิม (ดู lineButtonUrl) */
             'lineButtonUrl' => $this->lineButtonUrl($request->boolean('link')),
             'lineIsLiff' => $this->line->liffUrl() !== null,
