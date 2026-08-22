@@ -18,31 +18,23 @@
     </div>
   </div>
 
-  {{-- ตัวเลขสรุป — ตอบสองคำถามหลักของหน้านี้ในบรรทัดเดียว --}}
-  <div class="aov-rp-kpis">
-    <div class="aov-rp-kpi">
-      <span class="aov-rp-kpi-label">ผู้มาร่วมกิจกรรมจริง</span>
-      <span class="aov-rp-kpi-value">{{ number_format($summary['total']) }}<span class="aov-rp-kpi-of">คน</span></span>
-    </div>
-    <div class="aov-rp-kpi">
-      <span class="aov-rp-kpi-label">เป็นกลุ่มตัวอย่าง</span>
-      <span class="aov-rp-kpi-value">{{ number_format($summary['cohort']) }}<span class="aov-rp-kpi-of">คน · {{ $summary['cohortPct'] }}%</span></span>
-    </div>
-    <div class="aov-rp-kpi">
-      <span class="aov-rp-kpi-label">กลับมาร่วมซ้ำ</span>
-      <span class="aov-rp-kpi-value">{{ number_format($summary['repeat']) }}<span class="aov-rp-kpi-of">คน · {{ $summary['repeatPct'] }}%</span></span>
-    </div>
-    <div class="aov-rp-kpi">
-      <span class="aov-rp-kpi-label">ครั้งที่มาร่วมรวม</span>
-      <span class="aov-rp-kpi-value">{{ number_format($summary['registrations']) }}<span class="aov-rp-kpi-of">ครั้ง</span></span>
-    </div>
-  </div>
+  {{-- ภาพรวมฐานคนเป็นโดนัทสองวง แทนแถวการ์ดตัวเลขแบบเดิม
 
+       การ์ดตัวเลขบอกได้แค่ยอดกับเปอร์เซ็นต์ทีละตัว ต้องอ่านทีละใบแล้วประกอบภาพเอง
+       โดนัทบอกสัดส่วนได้ในสายตาเดียว ซึ่งเป็นสิ่งที่หน้านี้ต้องการจริง ๆ
+       ส่วนยอดดิบยังอยู่ครบที่หัวตารางและชิปกรองด้านล่าง จึงไม่มีตัวเลขไหนหายไป --}}
   @if ($summary['total'] > 0)
-    <section class="card aov-rp-card aov-rp-card--wide">
-      <h2 class="aov-section-title">จำนวนกิจกรรมที่เข้าร่วมต่อคน</h2>
-      @include('admin.activities.partials.report-bar-list', ['bars' => $frequency, 'unit' => 'คน'])
-    </section>
+    <div class="aov-rp-row aov-rp-row--donuts">
+      <section class="card aov-rp-card">
+        <h2 class="aov-section-title">ผู้เข้าร่วมแยกตามกลุ่ม</h2>
+        @include('admin.activities.partials.report-donut', ['donut' => $byGroup, 'unit' => 'คน'])
+      </section>
+
+      <section class="card aov-rp-card">
+        <h2 class="aov-section-title">จำนวนกิจกรรมที่เข้าร่วมต่อคน</h2>
+        @include('admin.activities.partials.report-donut', ['donut' => $frequency, 'unit' => 'คน'])
+      </section>
+    </div>
   @endif
 
   <div class="card aov-pt-card">

@@ -72,8 +72,11 @@ class PublicTrackingRoundQrController extends Controller
         $qr->increment('scan_count');
 
         /* เคยยืนยันตัวตนไว้แล้วในเครื่องนี้ (หรือเพิ่งกลับมาจาก LINE) ก็ข้ามไปหน้ารอบเลย
-           ไม่ต้องให้กรอกเบอร์ซ้ำทุกครั้งที่สแกน */
-        if ($this->verifiedParticipant($request) !== null) {
+           ไม่ต้องให้กรอกเบอร์ซ้ำทุกครั้งที่สแกน
+
+           ยกเว้นมาจากปุ่ม "เชื่อมบัญชี LINE" (link=1) — คนกลุ่มนั้นล็อกอินอยู่แล้วโดยนิยาม
+           เด้งไปหน้าหลักตรงนี้เท่ากับสคริปต์ LIFF บนหน้านี้ไม่มีวันได้ทำงาน แล้วการเชื่อมจะไม่เกิดขึ้นเลย */
+        if ($this->verifiedParticipant($request) !== null && ! $request->boolean('link')) {
             /* ข้อความผลการเชื่อม LINE ถูก flash มาจาก callback แล้วเด้งต่ออีกหนึ่งจังหวะมาที่นี่
                ไม่ reflash ไว้ ข้อความจะหมดอายุก่อนถึงแดชบอร์ด ผู้ใช้เลยไม่เห็นเหตุผลอะไรเลย */
             $request->session()->reflash();
@@ -83,6 +86,9 @@ class PublicTrackingRoundQrController extends Controller
 
         return view('public.tracking-round.identify', [
             'lineEnabled' => $this->line->isConfigured(),
+            /* มาจากปุ่ม "เชื่อมบัญชี LINE" ของคนที่ล็อกอินอยู่แล้ว — หน้านี้เปลี่ยนบทบาท
+               จาก "เข้าสู่ระบบ" เป็น "เชื่อมบัญชี" ช่องกรอกเบอร์จึงไม่ต้องมี เขารู้อยู่แล้วว่าตัวเองเป็นใคร */
+            'linking' => $request->boolean('link') && $this->verifiedParticipant($request) !== null,
             /* ตั้ง LIFF ไว้ = หน้านี้เข้าสู่ระบบเองได้เมื่อถูกเปิดในแอป LINE ไม่ต้องให้กดปุ่มใด ๆ */
             'liffId' => $this->line->liffId(),
             /* projectName กับ disclosures ถูกถอดออกพร้อมบล็อก "เกี่ยวกับโครงการและการใช้ข้อมูล"
@@ -626,9 +632,12 @@ class PublicTrackingRoundQrController extends Controller
         }
 
         /* ยังไม่เชื่อม LINE — เปิดสวิตช์ไปข้อความก็ส่งไม่ถึง พาไปเชื่อมเลยแทนที่จะ toggle ค่าเปล่า ๆ
-           กลับมาจาก LINE แล้ว line_notify เป็นค่าเริ่มต้น (เปิด) อยู่แล้ว ตรงกับความตั้งใจของคนกด */
+           กลับมาจาก LINE แล้ว line_notify เป็นค่าเริ่มต้น (เปิด) อยู่แล้ว ตรงกับความตั้งใจของคนกด
+
+           ใช้ lineLinkUrl() ไม่ใช่เส้น OAuth ตรง ๆ — สวิตช์นี้เป็นทางเข้าเดียวที่เหลือของการเชื่อม LINE
+           ถ้ายังพาไป OAuth คนใช้ iPhone ก็ยังติดปัญหาเดิม (ดูเหตุผลเต็มที่ lineLinkUrl) */
         if (blank($participant->line_user_id)) {
-            return redirect()->route('public.tracking-round-qr.line');
+            return redirect()->away($this->lineLinkUrl());
         }
 
         $participant->update(['line_notify' => ! $participant->line_notify]);
@@ -888,6 +897,30 @@ class PublicTrackingRoundQrController extends Controller
             ->route('public.tracking-round-qr.dashboard')
             ->with('lineLinked', $justLinked)
             ->with('lineConflict', $ownedByOther && blank($participant->line_user_id));
+    }
+
+    /**
+     * ปลายทางของปุ่ม "เชื่อมบัญชี LINE"
+     *
+     * ตั้ง LIFF ไว้ก็ใช้ลิงก์ LIFF ไม่ใช่ /health/line ที่เป็น OAuth เต็มรูปแบบ
+     *
+     * เหตุผล: บน iPhone การกดปุ่มที่พาออกไป LINE Login ต้องสลับแอปไป-กลับหลายจังหวะ
+     * (เบราว์เซอร์ → แอป LINE → กลับเบราว์เซอร์) ซึ่งพังง่ายมาก โดยเฉพาะเมื่อหน้าถูกเปิดอยู่
+     * ในเบราว์เซอร์ในแอปอยู่แล้ว — สลับแอปไม่ได้ ผู้ใช้เลยไปจบที่หน้า error ของ LINE เอง
+     * ลิงก์ LIFF เปิดหน้าเดิมในเบราว์เซอร์ของแอป LINE ตรง ๆ แล้วสคริปต์บนหน้ายืนยันตัวตน
+     * ยิง id_token ให้ ไม่มีการสลับแอปเลยสักจังหวะ
+     *
+     * link=1 ติดไปด้วยเพื่อบอก landing() ว่ามาเพื่อ "เชื่อม" ไม่ใช่ "เข้าสู่ระบบ"
+     * — ถ้าไม่มีตัวนี้ คนที่ล็อกอินค้างอยู่แล้วจะถูกเด้งไปหน้าหลักก่อนที่สคริปต์ LIFF จะได้ทำงาน
+     * แล้วกดกี่ครั้งก็ไม่เชื่อมสักที
+     */
+    private function lineLinkUrl(): string
+    {
+        $liff = $this->line->liffUrl();
+
+        return $liff !== null
+            ? $liff.'?link=1'
+            : route('public.tracking-round-qr.line');
     }
 
     /** เจ้าของ session — คนที่ยืนยันตัวตนไว้ คืน null ถ้ายังไม่ยืนยันหรือระเบียนหายไปแล้ว */

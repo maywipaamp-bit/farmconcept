@@ -16558,6 +16558,14 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 
 .aov-rp-card--wide { margin-bottom: var(--space-5); }
 
+/* แถวโดนัทคู่บนหัวหน้า "ผู้เข้าร่วมทั้งหมด" — สองวงเท่ากันเป๊ะ ไม่ใช่ auto-fit ที่ยืดไม่เท่ากัน
+   แต่ละใบต้องกว้างพอให้โดนัทกับ legend อยู่ข้างกันได้ ไม่งั้น legend ตกลงไปใต้วง */
+.aov-rp-row--donuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 1080px) {
+  .aov-rp-row--donuts { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* แถบลิงก์สลับหน้าสี่รายงานเชิงบริหาร (partials/insights-nav) */
 .aov-rp-insights-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
 
@@ -16787,6 +16795,10 @@ input[data-picker]::placeholder { color: var(--color-text-muted); }
 .aov-rp-donut-seg.is-info { stroke: var(--color-info); }
 .aov-rp-swatch.is-info { background: var(--color-info); }
 
+/* เขียวแบรนด์ — เข้มกว่า is-success พอให้แยกออกเมื่อวงเดียวมีเขียวสองระดับ
+   ใช้กับชิ้นที่เป็น "กลุ่มหลักของโครงการ" เช่น กลุ่มตัวอย่าง หรือคนที่มาบ่อยที่สุด */
+.aov-rp-donut-seg.is-primary { stroke: var(--color-primary); }
+.aov-rp-swatch.is-primary { background: var(--color-primary); }
 /* สีวนตามอันดับ (rank 0–4) — ใช้กับข้อมูลที่ไม่มีความหมายสถานะตายตัว เช่น เพศ ช่องทางที่รู้จัก
    วนผ่านโทนหลักของระบบที่มีอยู่แล้ว ไม่เพิ่มสีใหม่ จึงยังกลมกลืนไม่ฉูดฉาด */
 .aov-rp-donut-seg.aov-rp-r0 { stroke: var(--color-primary); }

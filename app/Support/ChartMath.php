@@ -19,9 +19,12 @@ class ChartMath
      * @param  array<int, array{label: string, count: int, tone?: string}>  $items
      * @return array{total: int, segments: array<int, array<string, mixed>>}
      */
-    public static function donut(array $items): array
+    public static function donut(array $items, bool $keepEmpty = false): array
     {
-        $items = array_values(array_filter($items, fn (array $i) => $i['count'] > 0));
+        /* ปกติทิ้งชิ้นที่เป็นศูนย์ เพราะโดนัทวาดชิ้นขนาดศูนย์ไม่ได้อยู่แล้ว และ legend ที่มีแต่ 0%
+           รกเปล่า ๆ — แต่บางกราฟ "ศูนย์" คือคำตอบ (เช่น ยังไม่มีใครมาครบ 5 ครั้ง)
+           keepEmpty เก็บชิ้นนั้นไว้ใน legend โดยไม่วาดเส้น (ตัวพาร์เชียลกรอง count > 0 อยู่แล้ว) */
+        $items = array_values(array_filter($items, fn (array $i) => $keepEmpty || $i['count'] > 0));
         $total = array_sum(array_column($items, 'count'));
         $circumference = 2 * M_PI * 76;
         $offset = 0.0;

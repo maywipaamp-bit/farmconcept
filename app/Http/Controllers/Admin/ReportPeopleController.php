@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CohortProfile;
 use App\Models\Registration;
+use App\Support\ChartMath;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
@@ -148,21 +149,33 @@ class ReportPeopleController extends Controller
             'registrations' => $people->count(),
         ];
 
-        /* การกระจายจำนวนครั้งที่มา — บอกว่าฐานคนของเราเป็นคนหน้าใหม่ล้วนหรือมีคนกลับมาซ้ำจริง */
+        /* การกระจายจำนวนครั้งที่มา — บอกว่าฐานคนของเราเป็นคนหน้าใหม่ล้วนหรือมีคนกลับมาซ้ำจริง
+
+           สีกำหนดเองไม่ใช้ลำดับอัตโนมัติ (rank) เพราะชุดสีลำดับจบที่แดง ซึ่งจะไปตกที่
+           "มา 5 ครั้งขึ้นไป" — กลุ่มที่ดีที่สุดของโครงการกลับถูกระบายเป็นสีเตือน อ่านกลับด้านทันที
+           ไล่ฟ้า → ส้ม → เขียวอ่อน → เขียวเข้ม ตามทิศทางที่ดีขึ้นจริง
+           และไม่ใช้เทากับช่วงแรก เพราะช่วงนั้นมักเป็นก้อนใหญ่สุด วงจะกลายเป็นเทาเกือบทั้งวง */
         $buckets = collect([
-            ['label' => 'มาครั้งเดียว', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 1)->count()],
-            ['label' => 'มา 2 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 2)->count()],
-            ['label' => 'มา 3–4 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 3 && $n <= 4)->count()],
-            ['label' => 'มา 5 ครั้งขึ้นไป', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 5)->count()],
+            ['label' => 'มาครั้งเดียว', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 1)->count(), 'tone' => 'info'],
+            ['label' => 'มา 2 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n === 2)->count(), 'tone' => 'warning'],
+            ['label' => 'มา 3–4 ครั้ง', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 3 && $n <= 4)->count(), 'tone' => 'success'],
+            ['label' => 'มา 5 ครั้งขึ้นไป', 'count' => $visitsByIdentity->filter(fn (int $n) => $n >= 5)->count(), 'tone' => 'primary'],
         ]);
-        $maxBucket = max(1, $buckets->max('count'));
+
+        /* แยกกลุ่มตัวอย่างกับคนทั่วไป — คำถามแรกของหน้านี้คือ "ฐานคนที่มาร่วมงานเป็นใคร"
+           เป็นการแบ่งที่ครอบคลุมทุกคนพอดี ไม่ทับกัน จึงอ่านเป็นสัดส่วนของวงเดียวได้ตรง ๆ */
+        $groups = [
+            ['label' => 'กลุ่มตัวอย่าง', 'count' => $cohortCount, 'tone' => 'primary'],
+            ['label' => 'กลุ่มทั่วไป', 'count' => $peopleCount - $cohortCount, 'tone' => 'info'],
+        ];
 
         return view('admin.reports.people', [
             'people' => $people,
             'summary' => $summary,
-            'frequency' => $buckets->map(fn (array $b) => $b + [
-                'pct' => (int) round($b['count'] / $maxBucket * 100),
-            ])->all(),
+            /* keepEmpty — ช่วงที่ยังไม่มีใครถึงต้องอยู่ใน legend ต่อ
+               "ยังไม่มีใครมาครบ 5 ครั้ง" คือข้อมูลที่โครงการต้องเห็น ไม่ใช่ช่องว่างที่ตัดทิ้งได้ */
+            'frequency' => ChartMath::donut($buckets->all(), keepEmpty: true),
+            'byGroup' => ChartMath::donut($groups, keepEmpty: true),
         ]);
     }
 
